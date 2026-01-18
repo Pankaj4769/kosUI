@@ -1,0 +1,419 @@
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside [class.collapsed]="sidebarCollapsed">
+    <div class="brand">
+      <button (click)="toggleSidebar()">☰</button>
+      <span *ngIf="!sidebarCollapsed">KOS</span>
+    </div>
+
+    <nav>
+      <a>📊 Inventory Dashboard</a>
+      <a class="active">📦 Manage Inventory</a>
+      <a>🍽 Menu</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main>
+
+    <!-- HEADER -->
+    <header class="top">
+      <h2>Manage Inventory</h2>
+    </header>
+
+    <!-- KPI BAR -->
+    <section class="kpi-bar">
+
+      <div class="kpi kpi-value">
+        <div class="icon">💰</div>
+        <div>
+          <span>Total Inventory Value</span>
+          <h3>₹ {{ inventoryValue }}</h3>
+        </div>
+      </div>
+
+      <div class="kpi kpi-total">
+        <div class="icon">📦</div>
+        <div>
+          <span>Total Items</span>
+          <h3>{{ totalItems }}</h3>
+        </div>
+      </div>
+
+      <div class="kpi kpi-low" (click)="stockView='LOW'">
+        <div class="icon">⚠️</div>
+        <div>
+          <span>Low Stock</span>
+          <h3>{{ lowStock }}</h3>
+        </div>
+      </div>
+
+      <div class="kpi kpi-sold" (click)="stockView='SOLD'">
+        <div class="icon">🔴</div>
+        <div>
+          <span>Sold Out</span>
+          <h3>{{ soldOut }}</h3>
+        </div>
+      </div>
+
+      <div class="kpi kpi-disabled" (click)="stockView='DISABLED'">
+        <div class="icon">🚫</div>
+        <div>
+          <span>Disabled</span>
+          <h3>{{ disabled }}</h3>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ACTION BAR -->
+    <section class="action-bar">
+
+      <div class="left-actions">
+
+        <input class="search-box"
+               placeholder="🔍 Search items..."
+               [(ngModel)]="search">
+
+        <select [(ngModel)]="categoryFilter">
+          <option value="ALL">All Categories</option>
+          <option *ngFor="let c of categories">{{ c }}</option>
+        </select>
+
+        <select [(ngModel)]="groupFilter">
+          <option value="ALL">All Groups</option>
+          <option>Veg</option>
+          <option>Non-Veg</option>
+        </select>
+
+      </div>
+
+      <div class="right-actions">
+
+        <button class="ghost" (click)="stockView='ALL'">
+          Clear Filters
+        </button>
+
+        <button class="primary" (click)="openDrawer()">
+          + Add Item
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- SOLD OUT QUICK PANEL -->
+    <section class="soldout-panel" *ngIf="soldOut > 0">
+
+      <h4>🔴 Sold Out Items – Quick Restock</h4>
+
+      <div class="soldout-grid">
+
+        <div class="sold-card"
+             *ngFor="let i of soldOutItems">
+
+          <div class="sold-left">
+
+            <img [src]="i.image || 'https://placehold.co/60x60?text=Food'"
+                 [alt]="i.name">
+
+            <div class="sold-text">
+              <div class="sold-name">{{ i.name }}</div>
+
+              <div class="sold-meta">
+                {{ i.category }}
+                <span class="dot">•</span>
+
+                <span class="group-chip"
+                      [class.veg]="i.group==='Veg'"
+                      [class.nonveg]="i.group==='Non-Veg'">
+                  {{ i.group }}
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="sold-right">
+            <input type="number" placeholder="Qty" #q />
+
+            <button class="restock-btn"
+                    (click)="i.qty = q.valueAsNumber || 0; validateStock(i); q.value=''">
+              Restock
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- MAIN TABLE -->
+    <table>
+
+      <thead>
+        <tr class="sortable-header">
+
+          <th (click)="sortBy='NAME'; sortOrder = sortOrder==='ASC'?'DESC':'ASC'">
+            Item
+            <span *ngIf="sortBy==='NAME'">
+              {{ sortOrder==='ASC' ? '⬆️' : '⬇️' }}
+            </span>
+          </th>
+
+          <th (click)="sortBy='CATEGORY'; sortOrder = sortOrder==='ASC'?'DESC':'ASC'">
+            Category
+            <span *ngIf="sortBy==='CATEGORY'">
+              {{ sortOrder==='ASC' ? '⬆️' : '⬇️' }}
+            </span>
+          </th>
+
+          <th>Group</th>
+
+          <th (click)="sortBy='STOCK'; sortOrder = sortOrder==='ASC'?'DESC':'ASC'">
+            Stock
+          </th>
+
+          <th (click)="sortBy='PRICE'; sortOrder = sortOrder==='ASC'?'DESC':'ASC'">
+            Price
+          </th>
+
+          <th>Actions</th>
+
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <tr *ngFor="let i of viewItems"
+            [class.low-stock]="i.qty > 0 && i.qty <= 5"
+            [class.sold-stock]="i.qty === 0">
+
+          <td>
+            <div class="item-with-image">
+
+              <img class="item-img"
+                   [src]="i.image || 'https://placehold.co/60x60?text=Food'"
+                   [alt]="i.name">
+
+              <div class="item-cell">
+                <div class="item-name">
+                    {{ i.name }}
+                    <span *ngIf="i.qty > 0 && i.qty <= 5">🟠</span>
+                    <span *ngIf="i.qty === 0">🔴</span>
+                </div>
+                    <div class="item-time">
+                        🕒 {{ formatTime(i.from) }} – {{ formatTime(i.to) }}
+                    </div>
+              </div>
+
+            </div>
+          </td>
+
+          <td>{{ i.category }}</td>
+
+          <td>
+            <span class="group-chip"
+                  [class.veg]="i.group==='Veg'"
+                  [class.nonveg]="i.group==='Non-Veg'">
+              {{ i.group }}
+            </span>
+          </td>
+
+          <td>
+            <input
+                type="number"
+                class="inline-input"
+                [(ngModel)]="i.qty"
+                (blur)="validateStock(i)"
+                [class.input-low]="i.qty > 0 && i.qty <= 5"
+                [class.input-sold]="i.qty === 0"
+                />
+
+                <span class="stock-badge"
+                    *ngIf="i.qty > 0 && i.qty <= 5">
+                Low
+                </span>
+
+                <span class="stock-badge sold"
+                    *ngIf="i.qty === 0">
+                Sold Out
+                </span>
+
+          </td>
+
+          <td>
+            <input
+              type="number"
+              class="inline-input"
+              [(ngModel)]="i.price"
+              (blur)="i.price = i.price < 0 ? 0 : i.price" />
+          </td>
+
+          <td class="row-actions-cell">
+
+            <div class="row-actions">
+
+              <label class="switch">
+                <input type="checkbox"
+                       [(ngModel)]="i.enabled"
+                       (change)="toggleItem(i)">
+                <span></span>
+              </label>
+
+              <button class="icon-btn edit"
+                      title="Edit Item"
+                      (click)="editItem(i)">
+                ✏️
+              </button>
+
+              <button class="icon-btn delete"
+                      title="Delete Item"
+                      (click)="deleteItem(i.id)">
+                🗑️
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+    <footer class="app-footer">© tech2copyright</footer>
+
+  </main>
+
+  <!-- ADD / EDIT DRAWER -->
+ <div class="drawer modern" *ngIf="drawerOpen">
+
+  <div class="drawer-header">
+    <h3>{{ editingItem ? '✏️ Edit Item' : '➕ Add New Item' }}</h3>
+    <button class="close-btn" (click)="closeDrawer()">✖</button>
+  </div>
+
+  <!-- MODE SWITCHER -->
+  <div class="add-mode-switch">
+
+    <button (click)="activeAddMode='SINGLE'"
+            [class.active]="activeAddMode==='SINGLE'">
+      ➕ Single Item
+    </button>
+
+    <button (click)="activeAddMode='BULK'"
+            [class.active]="activeAddMode==='BULK'">
+      📤 Bulk Upload
+    </button>
+
+  </div>
+
+  <!-- ============ SINGLE ITEM FORM ============ -->
+  <div *ngIf="activeAddMode==='SINGLE'" class="drawer-body">
+
+    <div class="form-section">
+      <label class="section-title">🖼 Item Image</label>
+
+      <div class="image-upload">
+        <img [src]="selectedImage || 'https://placehold.co/100x100?text=Food'"
+             class="preview">
+
+        <label class="upload-btn">
+          Choose Image
+          <input type="file" hidden (change)="onImageSelect($event)">
+        </label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="section-title">📌 Basic Details</label>
+
+      <input class="input-box"
+             placeholder="Item Name *"
+             [(ngModel)]="name">
+
+      <div class="row">
+        <select class="input-box" [(ngModel)]="category">
+          <option *ngFor="let c of categories">{{ c }}</option>
+        </select>
+
+        <select class="input-box" [(ngModel)]="group">
+          <option>Veg</option>
+          <option>Non-Veg</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="section-title">💵 Pricing & Stock</label>
+
+      <div class="row">
+        <input type="number"
+               class="input-box"
+               placeholder="Price *"
+               [(ngModel)]="price">
+
+        <input type="number"
+               class="input-box"
+               placeholder="Stock *"
+               [(ngModel)]="qty">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="section-title">⏰ Availability Time</label>
+
+      <div class="row">
+        <input type="time" class="input-box" [(ngModel)]="from">
+        <input type="time" class="input-box" [(ngModel)]="to">
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="ghost" (click)="closeDrawer()">Cancel</button>
+
+      <button class="primary"
+              [disabled]="!name || !price || !qty"
+              (click)="saveItem()">
+        {{ editingItem ? 'Update Item' : 'Save Item' }}
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ============ BULK UPLOAD SECTION ============ -->
+  <div *ngIf="activeAddMode==='BULK'" class="drawer-body bulk-body">
+
+    <div class="bulk-upload-container">
+
+      <h4>📦 Upload Items in Bulk</h4>
+
+      <p class="bulk-info">
+        Upload an Excel file to add multiple items at once.
+        Supported categories: Breakfast, Lunch, Snacks, Dinner
+      </p>
+
+      <div class="excel-drop">
+        <label class="excel-btn-large">
+          📂 Choose Excel File
+          <input type="file" hidden (change)="uploadExcel($event)">
+        </label>
+      </div>
+
+      <div class="template-info">
+        <span>Download Sample Template:</span>
+        <button class="ghost">⬇ Download Template</button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</div>
