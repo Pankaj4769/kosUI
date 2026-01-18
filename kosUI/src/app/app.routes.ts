@@ -1,6 +1,24 @@
 import { Routes } from '@angular/router';
-import { HeaderComponent } from './header/header.component';
+
+import { DashboardComponent } from './inventory/inventory-dashboard/dashboard.component';
+import { ManageInventoryComponent } from './inventory/manage-inventory/manage-inventory';
 
 export const routes: Routes = [
-    { path: 'inventory', component: HeaderComponent }
+
+  {
+    path: 'dashboard',
+    component: DashboardComponent
+  },
+
+  {
+    path: 'manage-inventory',
+    component: ManageInventoryComponent
+  },
+
+  {
+    path: '',
+    redirectTo: 'dashboard',
+    pathMatch: 'full'
+  }
+
 ];
