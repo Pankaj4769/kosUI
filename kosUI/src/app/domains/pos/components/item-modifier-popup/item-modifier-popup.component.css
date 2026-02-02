@@ -1,0 +1,41 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup {
+  background: white;
+  width: 320px;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.section {
+  margin-bottom: 12px;
+}
+
+.section button {
+  margin-right: 6px;
+  padding: 6px 10px;
+}
+
+.section button.active {
+  background: var(--accent-green);
+  color: white;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.confirm {
+  background: var(--accent-green);
+  color: white;
+}

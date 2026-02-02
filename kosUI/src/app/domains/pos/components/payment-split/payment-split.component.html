@@ -1,0 +1,57 @@
+<div class="split-container">
+
+  <h3>Split Payment</h3>
+
+  <p>Total Amount: ₹{{ total }}</p>
+
+  <div class="split-options">
+    <button (click)="equalSplit()">Equal Split</button>
+    <button (click)="addRow()">Add Payment Method</button>
+  </div>
+
+  <table class="split-table">
+
+    <tr>
+      <th>Mode</th>
+      <th>Amount</th>
+      <th>Action</th>
+    </tr>
+
+    <tr
+      *ngFor="let p of payments; let i = index; trackBy: trackByIndex">
+
+      <td>
+        <select [(ngModel)]="p.mode">
+          <option *ngFor="let m of modes" [ngValue]="m">
+            {{ m }}
+          </option>
+        </select>
+      </td>
+
+      <td>
+        <input
+          type="number"
+          min="0"
+          [(ngModel)]="p.amount"
+          (input)="recalculateBalance()" />
+      </td>
+
+      <td>
+        <button (click)="removeRow(i)">✕</button>
+      </td>
+
+    </tr>
+
+  </table>
+
+  <p class="balance">
+    Remaining Balance: ₹{{ balance }}
+  </p>
+
+  <button
+    [disabled]="balance !== 0"
+    (click)="finalize()">
+    Finalize Payment
+  </button>
+
+</div>

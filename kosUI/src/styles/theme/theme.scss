@@ -1,0 +1,15 @@
+@import 'variables';
+@import 'buttons';
+@import 'layout';
+
+// 🆕 NEW - Import shared utilities
+@import '../shared/accessibility';
+@import '../shared/responsive';
+@import '../shared/utilities';
+
+body {
+  font-family: $font-main;
+  color: $text-color;
+  margin: 0;
+  background: $light-bg;
+}

@@ -1,0 +1,16 @@
+.split-container {
+  padding: 10px;
+}
+
+.split-options {
+  margin-bottom: 10px;
+}
+
+.split-table {
+  width: 100%;
+}
+
+.balance {
+  font-weight: bold;
+  color: red;
+}

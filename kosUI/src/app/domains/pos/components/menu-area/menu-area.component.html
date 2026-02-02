@@ -1,0 +1,287 @@
+<div class="menu-area">
+
+  <!-- ================= HEADER WITH SEARCH ================= -->
+  <div class="menu-header">
+    
+    <!-- Search Bar -->
+    <div class="search-section">
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input 
+          type="text"
+          class="search-input"
+          placeholder="Search menu items..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange(searchQuery)">
+        <button 
+          class="clear-search-btn"
+          *ngIf="searchQuery"
+          (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- View Mode Toggle -->
+      <div class="view-toggle">
+        <button 
+          class="view-btn"
+          [class.active]="viewMode === 'grid'"
+          (click)="setViewMode('grid')"
+          matTooltip="Grid View">
+          <mat-icon>grid_view</mat-icon>
+        </button>
+        <button 
+          class="view-btn"
+          [class.active]="viewMode === 'list'"
+          (click)="setViewMode('list')"
+          matTooltip="List View">
+          <mat-icon>view_list</mat-icon>
+        </button>
+      </div>
+
+      <!-- Refresh Button -->
+      <button 
+        class="refresh-btn"
+        (click)="refreshMenu()"
+        matTooltip="Refresh Menu">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+      
+      <!-- Tag Filters -->
+      <div class="tag-filters">
+        <button 
+          *ngFor="let tag of availableTags"
+          class="tag-chip"
+          [class.active]="isTagSelected(tag)"
+          (click)="toggleTag(tag)">
+          <mat-icon *ngIf="isTagSelected(tag)">check_circle</mat-icon>
+          {{ tag }}
+        </button>
+      </div>
+
+      <!-- Sort Dropdown -->
+      <div class="sort-section">
+        <button class="sort-btn" [matMenuTriggerFor]="sortMenu">
+          <mat-icon>sort</mat-icon>
+          <span>Sort: {{ sortBy }}</span>
+          <mat-icon>expand_more</mat-icon>
+        </button>
+
+        <mat-menu #sortMenu="matMenu">
+          <button mat-menu-item (click)="changeSortBy('name')">
+            <mat-icon>sort_by_alpha</mat-icon>
+            <span>Name</span>
+          </button>
+          <button mat-menu-item (click)="changeSortBy('price')">
+            <mat-icon>currency_rupee</mat-icon>
+            <span>Price</span>
+          </button>
+          <button mat-menu-item (click)="changeSortBy('popular')">
+            <mat-icon>star</mat-icon>
+            <span>Popular</span>
+          </button>
+        </mat-menu>
+      </div>
+
+      <!-- Clear Filters -->
+      <button 
+        class="clear-filters-btn"
+        *ngIf="selectedTags.length > 0 || searchQuery"
+        (click)="clearAllFilters()">
+        <mat-icon>clear_all</mat-icon>
+        Clear Filters
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ================= CATEGORY TABS ================= -->
+  <div class="category-tabs">
+    <button 
+      *ngFor="let category of categories; trackBy: trackByCategoryId"
+      class="category-tab"
+      [class.active]="selectedCategory === category.id"
+      (click)="selectCategory(category.id)">
+      <mat-icon>{{ category.icon }}</mat-icon>
+      <span class="category-name">{{ category.name }}</span>
+      <span class="category-count">{{ category.itemCount }}</span>
+    </button>
+  </div>
+
+  <!-- ================= MENU ITEMS GRID/LIST ================= -->
+  <div class="menu-content" *ngIf="!loading && !error">
+
+    <!-- Grid View -->
+    <div 
+      class="menu-grid"
+      *ngIf="viewMode === 'grid' && filteredItems.length > 0">
+      
+      <div 
+        class="menu-card"
+        *ngFor="let item of filteredItems; trackBy: trackByItemId">
+        
+        <!-- Item Image -->
+        <div class="card-image">
+          <img 
+            *ngIf="item.image"
+            [src]="item.image" 
+            [alt]="item.name">
+          <div class="image-placeholder" *ngIf="!item.image">
+            <mat-icon>restaurant</mat-icon>
+          </div>
+
+          <!-- Badges Overlay -->
+          <div class="badges-overlay">
+            <span 
+              *ngFor="let badge of getItemBadges(item)"
+              class="item-badge"
+              [ngClass]="'badge-' + badge.toLowerCase()">
+              <mat-icon>{{ getBadgeIcon(badge) }}</mat-icon>
+              {{ badge }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Card Content -->
+        <div class="card-content">
+          
+          <h3 class="item-name">{{ item.name }}</h3>
+          
+          <p class="item-description" *ngIf="item.description">
+            {{ item.description }}
+          </p>
+
+          <!-- Addons Preview -->
+          <div class="addons-preview" *ngIf="item.addons?.length">
+            <mat-icon>add_circle_outline</mat-icon>
+            <span>{{ item.addons?.length }} addon(s) available</span>
+          </div>
+
+          <!-- Price & Actions -->
+          <div class="card-footer">
+            <div class="price-section">
+              <span class="currency">₹</span>
+              <span class="price">{{ item.price }}</span>
+            </div>
+
+            <!-- Add Button with Portions -->
+            <div class="add-actions" *ngIf="!item.portions?.length">
+              <button 
+                class="add-btn quick"
+                (click)="quickAddItem(item)"
+                matTooltip="Add to cart">
+                <mat-icon>add_shopping_cart</mat-icon>
+              </button>
+            </div>
+
+            <!-- Portion Selection -->
+            <div class="portion-actions" *ngIf="item.portions?.length">
+              <button 
+                class="portion-btn"
+                *ngFor="let portion of item.portions"
+                (click)="quickAddItem(item, portion)"
+                [matTooltip]="'Add ' + portion">
+                {{ portion }}
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- List View -->
+    <div 
+      class="menu-list"
+      *ngIf="viewMode === 'list' && filteredItems.length > 0">
+      
+      <div 
+        class="list-item"
+        *ngFor="let item of filteredItems; trackBy: trackByItemId">
+        
+        <div class="list-item-content">
+          
+          <!-- Item Info -->
+          <div class="item-info">
+            <h3 class="item-name">
+              {{ item.name }}
+              <span 
+                *ngFor="let badge of getItemBadges(item)"
+                class="inline-badge"
+                [ngClass]="'badge-' + badge.toLowerCase()">
+                {{ badge }}
+              </span>
+            </h3>
+            <p class="item-description" *ngIf="item.description">
+              {{ item.description }}
+            </p>
+            <span class="item-category">{{ item.category }}</span>
+          </div>
+
+          <!-- Price & Actions -->
+          <div class="list-item-actions">
+            <div class="price-large">₹{{ item.price }}</div>
+
+            <div class="action-buttons">
+              <button 
+                *ngIf="!item.portions?.length"
+                class="add-btn-large"
+                (click)="quickAddItem(item)">
+                <mat-icon>add_shopping_cart</mat-icon>
+                Add to Cart
+              </button>
+
+              <div class="portion-buttons" *ngIf="item.portions?.length">
+                <button 
+                  class="portion-btn-large"
+                  *ngFor="let portion of item.portions"
+                  (click)="quickAddItem(item, portion)">
+                  <mat-icon>add_shopping_cart</mat-icon>
+                  Add {{ portion }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredItems.length === 0">
+      <mat-icon>search_off</mat-icon>
+      <h3>No items found</h3>
+      <p>Try adjusting your search or filters</p>
+      <button class="clear-btn" (click)="clearAllFilters()">
+        Clear All Filters
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ================= LOADING STATE ================= -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading menu...</p>
+  </div>
+
+  <!-- ================= ERROR STATE ================= -->
+  <div class="error-state" *ngIf="error">
+    <mat-icon>error_outline</mat-icon>
+    <h3>Failed to load menu</h3>
+    <p>{{ error }}</p>
+    <button class="retry-btn" (click)="refreshMenu()">
+      <mat-icon>refresh</mat-icon>
+      Retry
+    </button>
+  </div>
+
+</div>

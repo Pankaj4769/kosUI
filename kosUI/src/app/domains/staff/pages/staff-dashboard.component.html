@@ -1,0 +1,243 @@
+<div class="staff-dashboard compact">
+
+  <!-- ================= COMPACT KPI ROW ================= -->
+  <div class="kpi-row">
+
+    <div class="kpi-card">
+      <span class="kpi-icon">👥</span>
+      <div class="kpi-content">
+        <span class="kpi-label">Total Staff</span>
+        <strong class="kpi-value">{{ kpi.totalStaff }}</strong>
+      </div>
+    </div>
+
+    <div class="kpi-card busy">
+      <span class="kpi-icon">🔥</span>
+      <div class="kpi-content">
+        <span class="kpi-label">Busy Staff</span>
+        <strong class="kpi-value">{{ kpi.busyStaff }}</strong>
+      </div>
+    </div>
+
+    <div class="kpi-card idle">
+      <span class="kpi-icon">💤</span>
+      <div class="kpi-content">
+        <span class="kpi-label">Idle Staff</span>
+        <strong class="kpi-value">{{ kpi.idleStaff }}</strong>
+      </div>
+    </div>
+
+    <div class="kpi-card efficiency">
+      <span class="kpi-icon">⚡</span>
+      <div class="kpi-content">
+        <span class="kpi-label">Avg Efficiency</span>
+        <strong class="kpi-value">{{ kpi.avgEfficiency }}%</strong>
+      </div>
+    </div>
+
+    <div class="kpi-card revenue">
+      <span class="kpi-icon">💰</span>
+      <div class="kpi-content">
+        <span class="kpi-label">Total Revenue</span>
+        <strong class="kpi-value">₹{{ kpi.totalRevenue | number:'1.0-0' }}</strong>
+      </div>
+    </div>
+
+    <div class="kpi-card avg-revenue">
+      <span class="kpi-icon">📊</span>
+      <div class="kpi-content">
+        <span class="kpi-label">Avg Revenue</span>
+        <strong class="kpi-value">₹{{ kpi.avgRevenue | number:'1.0-0' }}</strong>
+      </div>
+    </div>
+
+    <div class="kpi-card tables">
+      <span class="kpi-icon">🍽️</span>
+      <div class="kpi-content">
+        <span class="kpi-label">Active Tables</span>
+        <strong class="kpi-value">{{ kpi.totalActiveTables }}</strong>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= COMPACT CONTROLS ================= -->
+  <div class="controls-bar">
+    
+    <div class="filters">
+      <button 
+        class="filter-chip"
+        [class.active]="filterStatus === 'ALL'"
+        (click)="setFilter('ALL')">
+        All ({{ kpi.totalStaff }})
+      </button>
+
+      <button 
+        class="filter-chip busy"
+        [class.active]="filterStatus === 'BUSY'"
+        (click)="setFilter('BUSY')">
+        Busy ({{ kpi.busyStaff }})
+      </button>
+
+      <button 
+        class="filter-chip normal"
+        [class.active]="filterStatus === 'NORMAL'"
+        (click)="setFilter('NORMAL')">
+        Normal ({{ getStaffCountByStatus('NORMAL') }})
+      </button>
+
+      <button 
+        class="filter-chip idle"
+        [class.active]="filterStatus === 'IDLE'"
+        (click)="setFilter('IDLE')">
+        Idle ({{ kpi.idleStaff }})
+      </button>
+    </div>
+
+    <div class="sort-group">
+      <label>Sort by:</label>
+      <select [(ngModel)]="sortBy" (change)="buildDashboard()">
+        <option value="rank">Overall Score</option>
+        <option value="revenue">Revenue</option>
+        <option value="efficiency">Efficiency</option>
+        <option value="load">Workload</option>
+      </select>
+    </div>
+
+  </div>
+
+  <!-- ================= COMPACT STAFF GRID ================= -->
+  <div class="staff-grid-compact">
+
+    <div class="staff-card-compact"
+         *ngFor="let staff of staffCards; trackBy: trackByName"
+         [class.status-busy]="staff.status === 'BUSY'"
+         [class.status-idle]="staff.status === 'IDLE'"
+         [class.heat-high]="staff.heatLevel === 'HIGH'"
+         [class.heat-medium]="staff.heatLevel === 'MEDIUM'">
+
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="header-left">
+          <span class="rank-badge" [class.top3]="staff.rank <= 3">#{{ staff.rank }}</span>
+          <span class="staff-name">{{ staff.name }}</span>
+        </div>
+        <div class="header-right">
+          <span class="status-chip" [class]="'status-' + staff.status.toLowerCase()">
+            {{ staff.status }}
+          </span>
+          <span class="heat-chip" [class]="'heat-' + (staff.heatLevel || 'LOW').toLowerCase()">
+            {{ staff.heatLevel }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Score Bar -->
+      <div class="score-compact">
+        <div class="score-bar-mini">
+          <div class="score-fill-mini" 
+               [style.width.%]="staff.score || 0"
+               [style.background]="getScoreColor(staff.score || 0)">
+          </div>
+        </div>
+        <span class="score-text">Score: {{ staff.score }}%</span>
+      </div>
+
+      <!-- Metrics Row -->
+      <div class="metrics-compact">
+        <div class="metric-mini">
+          <span class="metric-label-mini">Load</span>
+          <div class="metric-bar-mini">
+            <div class="metric-fill-mini load" [style.width.%]="staff.load"></div>
+          </div>
+          <span class="metric-value-mini">{{ staff.load }}%</span>
+        </div>
+
+        <div class="metric-mini">
+          <span class="metric-label-mini">Efficiency</span>
+          <div class="metric-bar-mini">
+            <div class="metric-fill-mini efficiency" [style.width.%]="staff.efficiency"></div>
+          </div>
+          <span class="metric-value-mini">{{ staff.efficiency }}%</span>
+        </div>
+      </div>
+
+      <!-- Intelligence Compact Grid -->
+      <div class="intel-compact">
+        <div class="intel-mini">
+          <span>Workload</span>
+          <strong>{{ staff.workloadIndex }}%</strong>
+        </div>
+        <div class="intel-mini">
+          <span>Productivity</span>
+          <strong>{{ staff.productivityIndex }}%</strong>
+        </div>
+        <div class="intel-mini">
+          <span>Consistency</span>
+          <strong>{{ staff.consistencyScore }}%</strong>
+        </div>
+        <div class="intel-mini" [class.high-fatigue]="(staff.fatigueScore || 0) > 70">
+          <span>Fatigue</span>
+          <strong>{{ staff.fatigueScore }}%</strong>
+        </div>
+      </div>
+
+      <!-- Stats Compact Row -->
+      <div class="stats-compact">
+        <div class="stat-mini">
+          <span class="stat-icon-mini">🍽️</span>
+          <div>
+            <span class="stat-label-mini">Active Tables</span>
+            <strong class="stat-value-mini">{{ staff.activeTables }}</strong>
+          </div>
+        </div>
+
+        <div class="stat-mini revenue">
+          <span class="stat-icon-mini">💰</span>
+          <div>
+            <span class="stat-label-mini">Revenue</span>
+            <strong class="stat-value-mini">₹{{ staff.revenue | number:'1.0-0' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="footer-compact">
+        <span class="footer-item">📦 {{ staff.completedOrders }} orders</span>
+        <span class="footer-item">⏱️ {{ staff.avgServiceTime }}m</span>
+        <span class="footer-item" 
+              [class.trend-up]="staff.trend === 'UP'"
+              [class.trend-down]="staff.trend === 'DOWN'">
+          📈 {{ staff.trend }}
+        </span>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="actions-compact">
+        <button class="action-btn-mini primary" (click)="viewStaffDetails(staff)">
+          👁️ View
+        </button>
+        <button class="action-btn-mini secondary" (click)="assignTable(staff)">
+          🍽️ Assign
+        </button>
+      </div>
+
+      <!-- Alert Indicator -->
+      <div class="alert-indicator critical" *ngIf="staff.alertLevel === 'CRITICAL'">
+        🚨
+      </div>
+      <div class="alert-indicator warning" *ngIf="staff.alertLevel === 'WARNING'">
+        ⚠️
+      </div>
+
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-compact" *ngIf="staffCards.length === 0">
+      <span class="empty-icon">👥</span>
+      <p>No staff members found</p>
+    </div>
+
+  </div>
+
+</div>

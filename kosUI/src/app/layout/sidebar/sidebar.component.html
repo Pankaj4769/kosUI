@@ -1,0 +1,65 @@
+<div class="sidebar" [class.collapsed]="layout.isCollapsed()">
+
+  <!-- Toggle -->
+  <button class="toggle" (click)="layout.toggle()">
+    <span class="material-icons">menu</span>
+  </button>
+
+  <!-- Logo -->
+  <div class="logo">
+    {{ layout.isCollapsed() ? 'K' : 'KOS' }}
+  </div>
+
+  <nav>
+
+    <ng-container *ngFor="let item of menuItems; trackBy: trackByLabel">
+
+      <!-- SINGLE MENU ITEM -->
+      <a
+        *ngIf="!item.children"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        class="menu-item"
+        [title]="getTooltip(item.label)">
+        
+        <span class="material-icons icon">{{ item.icon }}</span>
+        <span class="text" *ngIf="!layout.isCollapsed()">{{ item.label }}</span>
+      </a>
+
+      <!-- GROUP MENU -->
+      <div *ngIf="item.children"
+           class="menu-group"
+           [class.expanded]="item.expanded">
+
+        <div class="menu-item group-header"
+             (click)="toggleGroup(item)"
+             [class.active-group]="item.expanded"
+             [title]="getTooltip(item.label)">
+          
+          <span class="material-icons icon">{{ item.icon }}</span>
+          <span class="text" *ngIf="!layout.isCollapsed()">{{ item.label }}</span>
+          <span class="material-icons arrow" *ngIf="!layout.isCollapsed()">
+            {{ item.expanded ? 'expand_less' : 'expand_more' }}
+          </span>
+        </div>
+
+        <!-- ✅ Always in DOM (no hover bug) -->
+        <div class="submenu">
+          <a
+            *ngFor="let child of item.children"
+            [routerLink]="child.route"
+            routerLinkActive="active"
+            class="submenu-item">
+            
+            <span class="material-icons icon">{{ child.icon }}</span>
+            <span>{{ child.label }}</span>
+          </a>
+        </div>
+
+      </div>
+
+    </ng-container>
+
+  </nav>
+
+</div>

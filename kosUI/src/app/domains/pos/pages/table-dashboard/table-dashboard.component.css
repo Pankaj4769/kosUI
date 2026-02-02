@@ -1,0 +1,472 @@
+/* =====================================================
+   TABLE DASHBOARD - COMPLETE POS DESIGN
+===================================================== */
+
+/* ================= DASHBOARD CONTAINER ================= */
+
+.dashboard {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* ================= SUMMARY (ENTERPRISE POS KPI) ================= */
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.summary-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  border: 2px solid #e5e7eb;
+  border-left: 5px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.summary-card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.summary-card .label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summary-card strong {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1;
+}
+
+/* ================= POS STATUS COLORS ================= */
+
+.summary-card.free {
+  border-left-color: #22c55e;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.summary-card.open {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+}
+
+.summary-card.hold {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+}
+
+.summary-card.paid {
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.summary-card.pending {
+  border-left-color: #fb923c;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
+}
+
+.summary-card.revenue {
+  border-left-color: #16a34a;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.summary-card.revenue strong {
+  color: #16a34a;
+  font-size: 24px;
+}
+
+/* ================= FILTERS (POS CHIP STYLE) ================= */
+
+.filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.filters button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 24px;
+  border: 2px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #374151;
+  min-height: 40px;
+
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.filters button:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.filters button.active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  transform: translateY(-1px);
+}
+
+.filters button .count {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.filters button.active .count {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ================= TABLE GRID ================= */
+
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* ================= TABLE WRAPPER (for reset button) ================= */
+
+.table-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ================= RESET BUTTON (Paid → Free) ================= */
+
+.reset-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid #22c55e;
+  background: #f0fdf4;
+  color: #16a34a;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.reset-btn:hover {
+  background: #22c55e;
+  color: white;
+  border-color: #16a34a;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  transform: translateY(-2px);
+}
+
+.reset-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ================= PRIORITY TABLE (SMART POS HIGHLIGHT) ================= */
+
+.table-wrapper .priority {
+  border: 3px solid #dc2626 !important;
+  background: linear-gradient(135deg, #fff5f5, #ffffff);
+  animation: urgentPulse 2s infinite;
+  position: relative;
+}
+
+@keyframes urgentPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+  }
+}
+
+.table-wrapper .priority::before {
+  content: "⚠️";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 18px;
+  z-index: 10;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* ================= EMPTY STATE ================= */
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 48px 24px;
+  color: #6b7280;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 2px dashed #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-state .icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.empty-state .text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+/* ================= TABLE CARD STATUS ANIMATIONS ================= */
+
+/* 🔴 OPEN TABLE BLINKING */
+.table-card.status-open {
+  position: relative;
+}
+
+.table-card.status-open::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: blinkOpen 1.5s infinite;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+@keyframes blinkOpen {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+}
+
+/* 🟢 FREE TABLE PULSE GLOW */
+.table-card.status-free {
+  animation: freePulse 3s infinite;
+}
+
+@keyframes freePulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15);
+  }
+}
+
+/* 🟡 HOLD TABLE BORDER */
+.table-card.status-hold {
+  border-left: 5px solid #f59e0b;
+}
+
+/* 🔵 PAID TABLE STYLE */
+.table-card.status-paid {
+  border-left: 5px solid #3b82f6;
+  opacity: 0.85;
+}
+
+/* ================= RESPONSIVE POS ================= */
+
+@media (max-width: 1400px) {
+  .summary {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+
+  .table-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .summary-card strong {
+    font-size: 24px;
+  }
+
+  .table-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .summary-card {
+    padding: 12px;
+  }
+
+  .summary-card strong {
+    font-size: 20px;
+  }
+
+  .filters {
+    gap: 6px;
+  }
+
+  .filters button {
+    padding: 8px 14px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+
+  .table-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .summary-card .label {
+    font-size: 11px;
+  }
+
+  .summary-card strong {
+    font-size: 18px;
+  }
+
+  .filters button span {
+    display: none;
+  }
+
+  .filters button .count {
+    display: inline;
+  }
+
+  .table-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+
+  .empty-state {
+    padding: 32px 16px;
+  }
+
+  .empty-state .icon {
+    font-size: 36px;
+  }
+
+  .empty-state .text {
+    font-size: 14px;
+  }
+}
+
+/* ================= LOADING STATE ================= */
+
+.dashboard.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.dashboard.loading .table-card {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ================= ACCESSIBILITY ================= */
+
+.filters button:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.reset-btn:focus-visible {
+  outline: 3px solid #22c55e;
+  outline-offset: 2px;
+}
+
+/* ================= PRINT STYLES ================= */
+
+@media print {
+  .filters,
+  .reset-btn {
+    display: none !important;
+  }
+
+  .dashboard {
+    padding: 0;
+  }
+
+  .table-card {
+    break-inside: avoid;
+  }
+}

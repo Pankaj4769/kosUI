@@ -1,0 +1,121 @@
+<div class="dashboard">
+
+  <!-- ================= KPI SUMMARY ================= -->
+  <div class="summary">
+
+    <div class="summary-card free" title="Free Tables">
+      <span class="label">🟢 Free</span>
+      <strong>{{ stats.free }}</strong>
+    </div>
+
+    <div class="summary-card open" title="Open Tables">
+      <span class="label">🔴 Open</span>
+      <strong>{{ stats.open }}</strong>
+    </div>
+
+    <div class="summary-card hold" title="Tables On Hold">
+      <span class="label">🟡 Hold</span>
+      <strong>{{ stats.hold }}</strong>
+    </div>
+
+    <div class="summary-card paid" title="Paid Tables">
+      <span class="label">🔵 Paid</span>
+      <strong>{{ stats.paid }}</strong>
+    </div>
+
+    <div class="summary-card pending" title="Pending Orders">
+      <span class="label">⚠ Pending</span>
+      <strong>{{ stats.pending }}</strong>
+    </div>
+
+    <div class="summary-card revenue" title="Total Revenue">
+      <span class="label">💰 Revenue</span>
+      <strong>₹ {{ stats.revenue | number:'1.0-0' }}</strong>
+    </div>
+
+  </div>
+
+  <!-- ================= FILTER BAR ================= -->
+  <div class="filters" role="tablist" aria-label="Table status filters">
+
+    <button
+      role="tab"
+      type="button"
+      (click)="setFilter('ALL')"
+      [attr.aria-selected]="filter === 'ALL'"
+      [class.active]="filter === 'ALL'">
+      All
+      <span class="count">({{ stats.total }})</span>
+    </button>
+
+    <button
+      role="tab"
+      type="button"
+      (click)="setFilter('available')"
+      [attr.aria-selected]="filter === 'available'"
+      [class.active]="filter === 'available'">
+      Free
+      <span class="count">({{ stats.free }})</span>
+    </button>
+
+    <button
+      role="tab"
+      type="button"
+      (click)="setFilter('occupied')"
+      [attr.aria-selected]="filter === 'occupied'"
+      [class.active]="filter === 'occupied'">
+      Open
+      <span class="count">({{ stats.open }})</span>
+    </button>
+
+    <button
+      role="tab"
+      type="button"
+      (click)="setFilter('reserved')"
+      [attr.aria-selected]="filter === 'reserved'"
+      [class.active]="filter === 'reserved'">
+      Hold
+      <span class="count">({{ stats.hold }})</span>
+    </button>
+
+    <button
+      role="tab"
+      type="button"
+      (click)="setFilter('available')"
+      [attr.aria-selected]="filter === 'available'"
+      [class.active]="filter === 'available'">
+      Paid
+      <span class="count">({{ stats.paid }})</span>
+    </button>
+
+  </div>
+
+  <!-- ================= TABLE GRID ================= -->
+  <div class="table-grid">
+
+    <div *ngFor="let table of filteredTables; trackBy: trackById" class="table-wrapper">
+      <app-table-card
+        [table]="table"
+        (tableSelected)="openTable(table)">
+      </app-table-card>
+
+      <!-- ✅ Reset Button for Paid Tables -->
+      <button
+        *ngIf="table.status === 'available'"
+        class="reset-btn"
+        type="button"
+        (click)="resetTableToFree(table)"
+        title="Reset to Free">
+        ♻️ Free
+      </button>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredTables.length === 0">
+      <span class="icon">🚫</span>
+      <span class="text">No tables found for selected filter</span>
+    </div>
+
+  </div>
+
+</div>

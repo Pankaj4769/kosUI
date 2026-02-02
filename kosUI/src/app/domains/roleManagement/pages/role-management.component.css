@@ -1,0 +1,372 @@
+/* =====================================================
+   ROOT DESIGN TOKENS (POS ALIGNED)
+===================================================== */
+
+:root {
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+
+  --color-primary: #2e7d32;
+  --color-primary-hover: #1b5e20;
+
+  --color-border: #e5e7eb;
+  --color-chip-bg: rgba(46, 125, 50, 0.12);
+  --color-chip-border: rgba(46, 125, 50, 0.25);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+
+  --shadow-panel: 0 6px 16px rgba(0, 0, 0, 0.08);
+
+  --transition: 0.2s ease;
+}
+
+/* =====================================================
+   PAGE WRAPPER (POS DENSITY)
+===================================================== */
+
+.staff-role-mgmt {
+  min-height: 100vh;
+  background: var(--color-bg);
+  padding: 16px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--color-text);
+}
+
+.staff-role-mgmt * {
+  box-sizing: border-box;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.staff-role-mgmt .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.staff-role-mgmt .header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* =====================================================
+   BUTTONS (POS STYLE)
+===================================================== */
+
+.staff-role-mgmt .btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+
+.staff-role-mgmt .btn-primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  color: #fff;
+}
+
+.staff-role-mgmt .btn-primary:hover {
+  opacity: 0.95;
+}
+
+.staff-role-mgmt .btn-secondary {
+  background: #eef2f7;
+  color: var(--color-text);
+}
+
+/* =====================================================
+   ROLES GRID (POS PANELS)
+===================================================== */
+
+.staff-role-mgmt .roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* =====================================================
+   ROLE CARD (MATCHES POS PANELS)
+===================================================== */
+
+.staff-role-mgmt .role-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  transition: var(--transition);
+}
+
+.staff-role-mgmt .role-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-panel);
+}
+
+/* =====================================================
+   ROLE HEADER
+===================================================== */
+
+.staff-role-mgmt .role-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--color-border);
+  margin-bottom: 12px;
+}
+
+.staff-role-mgmt .role-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.staff-role-mgmt .role-description {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/* =====================================================
+   ACTION ICONS (POS CONTROLS)
+===================================================== */
+
+.staff-role-mgmt .role-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.staff-role-mgmt .icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.staff-role-mgmt .icon-btn:hover {
+  background: var(--color-chip-bg);
+  border-color: var(--color-primary);
+}
+
+.staff-role-mgmt .icon-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* =====================================================
+   PERMISSIONS (POS CHIPS)
+===================================================== */
+
+.staff-role-mgmt .permissions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.staff-role-mgmt .permission-tag {
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-chip-border);
+  color: var(--color-primary);
+}
+
+/* =====================================================
+   EMPTY STATE
+===================================================== */
+
+.staff-role-mgmt .empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-text-secondary);
+}
+
+.staff-role-mgmt .empty-state svg {
+  width: 56px;
+  height: 56px;
+  opacity: 0.35;
+  margin-bottom: 12px;
+}
+
+.staff-role-mgmt .empty-state h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+/* =====================================================
+   MODAL (POS DIALOG STYLE)
+===================================================== */
+
+.staff-role-mgmt .modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.staff-role-mgmt .modal.active {
+  display: flex;
+}
+
+.staff-role-mgmt .modal-content {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.staff-role-mgmt .modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.staff-role-mgmt .modal-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.staff-role-mgmt .close-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.staff-role-mgmt .modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+
+/* =====================================================
+   FORM CONTROLS (POS INPUTS)
+===================================================== */
+
+.staff-role-mgmt .form-group {
+  margin-bottom: 14px;
+}
+
+.staff-role-mgmt .form-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.staff-role-mgmt .form-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border);
+  font-size: 13px;
+}
+
+.staff-role-mgmt .form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* =====================================================
+   PERMISSION GROUPS
+===================================================== */
+
+.staff-role-mgmt .permissions-section {
+  margin-top: 16px;
+}
+
+.staff-role-mgmt .permission-category {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #f9fafb;
+}
+
+.staff-role-mgmt .category-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--color-primary);
+}
+
+.staff-role-mgmt .permission-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.staff-role-mgmt .checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.staff-role-mgmt input[type="checkbox"] {
+  accent-color: var(--color-primary);
+}
+
+/* =====================================================
+   MODAL FOOTER
+===================================================== */
+
+.staff-role-mgmt .modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 768px) {
+  .staff-role-mgmt .roles-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-role-mgmt .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

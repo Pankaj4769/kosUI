@@ -1,0 +1,121 @@
+/**
+ * Responsive Utilities
+ * Mobile-first breakpoints and fluid helpers
+ * Progressive enhancement - won't break desktop
+ */
+
+// Breakpoint variables
+$breakpoint-xs: 375px;
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1440px;
+
+// Mobile-first media query mixins
+@mixin xs {
+  @media (min-width: $breakpoint-xs) {
+    @content;
+  }
+}
+
+@mixin sm {
+  @media (min-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin md {
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin lg {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin xl {
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
+}
+
+@mixin xxl {
+  @media (min-width: $breakpoint-2xl) {
+    @content;
+  }
+}
+
+// Max-width (mobile-specific) mixins
+@mixin mobile-only {
+  @media (max-width: #{$breakpoint-md - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet-only {
+  @media (min-width: $breakpoint-md) and (max-width: #{$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+// Fluid spacing mixin - SIMPLIFIED (no calc issues)
+@mixin fluid-padding($min, $max) {
+  padding: clamp(#{$min}, 3vw, #{$max});
+}
+
+@mixin fluid-margin($min, $max) {
+  margin: clamp(#{$min}, 3vw, #{$max});
+}
+
+// Responsive grid helper
+@mixin responsive-grid($min-width: 240px, $gap: 16px) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, #{$min-width}), 1fr));
+  gap: $gap;
+}
+
+// Container with max-width
+@mixin container($max-width: 1280px) {
+  width: 100%;
+  max-width: $max-width;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+  
+  @include md {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+// Hide/show utilities
+.hide-on-mobile {
+  @include mobile-only {
+    display: none !important;
+  }
+}
+
+.hide-on-tablet {
+  @include tablet-only {
+    display: none !important;
+  }
+}
+
+.hide-on-desktop {
+  @include lg {
+    display: none !important;
+  }
+}
+
+.show-on-mobile {
+  display: none !important;
+  
+  @include mobile-only {
+    display: block !important;
+  }
+}

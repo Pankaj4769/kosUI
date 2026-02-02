@@ -1,0 +1,16 @@
+// Import all theme and shared files
+@import 'styles/theme/theme';
+@import 'styles/material-theme';
+
+// Global resets
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
