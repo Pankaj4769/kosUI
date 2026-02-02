@@ -25,19 +25,19 @@
     <!-- KPI BAR -->
     <section class="kpi-bar">
 
-      <div class="kpi kpi-value">
-        <div class="icon">💰</div>
-        <div>
-          <span>Total Inventory Value</span>
-          <h3>₹ {{ inventoryValue }}</h3>
-        </div>
-      </div>
-
       <div class="kpi kpi-total">
         <div class="icon">📦</div>
         <div>
           <span>Total Items</span>
           <h3>{{ totalItems }}</h3>
+        </div>
+      </div>
+
+      <div class="kpi kpi-value" (click)="stockView='ALL'">
+        <div class="icon">💰</div>
+        <div>
+          <span>Available Items</span>
+          <h3>₹ {{ inventoryValue }}</h3>
         </div>
       </div>
 
@@ -196,7 +196,7 @@
             <div class="item-with-image">
 
               <img class="item-img"
-                   [src]="i.image || 'https://placehold.co/60x60?text=Food'"
+                   [src]="'assets/images/image.png'"
                    [alt]="i.name">
 
               <div class="item-cell">
@@ -338,14 +338,26 @@
              [(ngModel)]="name">
 
       <div class="row">
-        <select class="input-box" [(ngModel)]="category">
-          <option *ngFor="let c of categories">{{ c }}</option>
-        </select>
-
-        <select class="input-box" [(ngModel)]="group">
-          <option>Veg</option>
-          <option>Non-Veg</option>
-        </select>
+        <div class="input-box">
+          <mat-label>Categories</mat-label>
+          <mat-select [(value)]="selectedCategories">
+            <mat-option *ngFor="let c of categories">
+              <mat-checkbox [checked]="selectedCategories.includes(c)" (change)="toggleCategory(c, $event)" (click)="$event.stopPropagation()">
+                {{ c }}
+              </mat-checkbox>
+            </mat-option>
+          </mat-select>
+        </div>
+        <div class="input-box">
+          <mat-label>Type</mat-label>
+          <mat-select [(value)]="group">
+            <mat-option *ngFor="let t of types" [value]="t">
+              
+                {{ t }}
+             
+            </mat-option>
+          </mat-select>
+      </div>
       </div>
     </div>
 

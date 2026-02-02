@@ -5,24 +5,19 @@ export type Group = 'Veg' | 'Non-Veg';
 export interface Item {
 
   // Core fields used by Manage Inventory
-  id: number;
-  code: string;
+  id: number | null;
   name: string;
 
   from: string;     // maybe supplier or source
   to: string;       // maybe destination / location
 
   // Classification
-  category: string;
+  category: string[];
   group: 'Veg' | 'Non-Veg';
 
   // Stock & Pricing
   price: number;
   qty: number;
-
-  // Sales Analytics (used by Dashboard)
-  sold: number;
-
   // UI related
   image?: string;
 

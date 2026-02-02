@@ -17,14 +17,10 @@ import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
-
-// Services
-import { InventoryService } from '../services/inventory.service';
-import { OrderManagementService } from '../../order/services/order-management.service';
-
-// Models
-import { Order, OrderStatus, OrderType } from '../../order/models/order.model';
-import { Item } from '../models/item.model';
+import { Order, OrderStatus, OrderType } from '../../domains/order/models/order.model';
+import { Item } from '../../domains/dashboard/models/item.model';
+import { InventoryService } from '../../domains/dashboard/services/inventory.service';
+import { OrderManagementService } from '../../domains/order/services/order-management.service';
 
 // Interfaces
 interface DashboardMetric {
@@ -213,7 +209,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private initializeDashboard(): void {
     this.loading = true;
-    this.loadInventoryData();
+    //this.loadInventoryData();
     this.generateAlerts();
     this.loading = false;
     this.cdr.markForCheck();
@@ -271,16 +267,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // DATA LOADING
   // ============================================================
 
-  private loadInventoryData(): void {
-    try {
-      this.inventoryItems = this.inventoryService.getAllItems();
-      this.calculateCategoryStats();
-      //this.buildCategoryOptions();
-    } catch (error) {
-      console.error('Error loading inventory:', error);
-      this.addAlert('error', 'Inventory Error', 'Failed to load inventory data');
-    }
-  }
+  // private loadInventoryData(): void {
+  //   try {
+  //     this.inventoryItems = this.inventoryService.getAllItems();
+  //     this.calculateCategoryStats();
+  //     this.buildCategoryOptions();
+  //   } catch (error) {
+  //     console.error('Error loading inventory:', error);
+  //     this.addAlert('error', 'Inventory Error', 'Failed to load inventory data');
+  //   }
+  // }
+
+  // private buildCategoryOptions(): void {
+  //   const categories = [...new Set(this.inventoryItems.map(item => item.category))];
+  //   this.categoryOptions = [
+  //     { value: 'all', label: 'All Categories' },
+  //     ...categories.map(cat => ({ value: cat, label: cat }))
+  //   ];
+  // }
 
   // private buildCategoryOptions(): void {
   //   const categories = [...new Set(this.inventoryItems.map(item => item.category))];
@@ -906,7 +910,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   refreshDashboard(): void {
     this.loading = true;
-    this.loadInventoryData();
+    //this.loadInventoryData();
     this.orderManagementService.refreshAllOrders();
     this.generateAlerts();
     this.generateMockNotifications();

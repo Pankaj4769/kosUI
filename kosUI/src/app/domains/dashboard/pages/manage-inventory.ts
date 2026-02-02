@@ -1,9 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { InventoryService } from '../../dashboard/services/inventory.service';
 import { Item } from '../../dashboard/models/item.model';
+import { MatSelect, MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 type Category = 'Breakfast' | 'Lunch' | 'Snacks' | 'Dinner';
 type Group = 'Veg' | 'Non-Veg';
@@ -12,13 +14,28 @@ type StockView = 'ALL' | 'LOW' | 'SOLD' | 'DISABLED';
 @Component({
   selector: 'app-manage-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,MatSelectModule,
+    MatCheckboxModule],
   templateUrl: './manage-inventory.html',
   styleUrls: ['./manage-inventory.css']
 })
 export class ManageInventoryComponent {
 
   constructor(private inventoryService: InventoryService) {}
+
+  ngOnInit(): void {
+    this.inventoryService.getItemlist();
+  }
+
+  @ViewChild('categorySelect') categorySelect!: MatSelect;
+
+  @HostListener('document:click')
+  onOutsideClick() {
+    if (this.categorySelect) {
+      this.categorySelect.close();
+    }
+  }
+
 
   bulkPreview: any[] = [];
   bulkErrors: string[] = [];
@@ -34,6 +51,7 @@ export class ManageInventoryComponent {
   saveSuccess: boolean = false;
 
   categories: Category[] = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
+  types:Group[]= ['Veg', 'Non-Veg'];
 
   /* ---------- Filters ---------- */
   search = '';
@@ -42,8 +60,8 @@ export class ManageInventoryComponent {
   stockView: StockView = 'ALL';
 
   /* ---------- Sorting ---------- */
-  sortBy: 'NAME' | 'PRICE' | 'STOCK' | 'CATEGORY' = 'NAME';
-  sortOrder: 'ASC' | 'DESC' = 'ASC';
+  sortBy: 'NAME' | 'PRICE' | 'STOCK' | 'CATEGORY' | ''='';
+  sortOrder: 'ASC' | 'DESC' = 'DESC';
 
   /* ---------- Add/Edit Form ---------- */
   name = '';
@@ -53,6 +71,7 @@ export class ManageInventoryComponent {
   qty: number | null = null;
   from = '06:00';
   to = '11:00';
+  selectedCategories: string[] = [];
 
   editingItem: Item | null = null;
 
@@ -67,7 +86,7 @@ export class ManageInventoryComponent {
   }
 
   get inventoryValue() {
-    return this.inventoryService.getInventoryValue();
+    return this.inventoryService.getAllItems().length - (this.inventoryService.getSoldOutCount()+this.inventoryService.getDisabledCount());
   }
 
   get lowStock() {
@@ -141,7 +160,28 @@ export class ManageInventoryComponent {
 
   /* ---------- SAVE ITEM ---------- */
 
+  onCategoryChange(category: string, event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+  
+    if (checked) {
+      this.selectedCategories.push(category);
+    } else {
+      this.selectedCategories = this.selectedCategories.filter(c => c !== category);
+    }
+  }
+
+  toggleCategory(category: string, event: any) {
+    if (event.checked) {
+      this.selectedCategories.push(category);
+    } else {
+      this.selectedCategories =
+        this.selectedCategories.filter(c => c !== category);
+    }
+  }
+
   saveItem() {
+
+    console.log(this.selectedCategories.length)
 
     if (!this.validateForm()) {
       return;
@@ -152,7 +192,7 @@ export class ManageInventoryComponent {
       const updated: Item = {
         ...this.editingItem,
         name: this.name,
-        category: this.category,
+        category: this.selectedCategories,
         group: this.group,
         price: this.price!,
         qty: this.qty!,
@@ -166,10 +206,9 @@ export class ManageInventoryComponent {
     } else {
 
       const newItem: Item = {
-        id: Date.now(),
-        code: 'ITM-' + Math.floor(1000 + Math.random() * 9000),
+        id: null,
         name: this.name,
-        category: this.category,
+        category: this.selectedCategories,
         group: this.group,
         price: this.price!,
         qty: this.qty!,
@@ -177,7 +216,6 @@ export class ManageInventoryComponent {
         from: this.from,
         to: this.to,
         image: this.selectedImage || undefined,
-        sold: 0
       };
 
       this.inventoryService.addItem(newItem);
@@ -203,7 +241,7 @@ export class ManageInventoryComponent {
     this.editingItem = item;
 
     this.name = item.name;
-    this.category = item.category as Category;
+    this.selectedCategories= item.category;
     this.group = item.group as Group;
     this.price = item.price;
     this.qty = item.qty;
@@ -216,7 +254,7 @@ export class ManageInventoryComponent {
 
   /* ---------- DELETE ITEM ---------- */
 
-  deleteItem(id: number) {
+  deleteItem(id: number | null) {
     const ok = confirm('Delete this item?');
     if (ok) {
       this.inventoryService.deleteItem(id);
@@ -226,7 +264,7 @@ export class ManageInventoryComponent {
   /* ---------- TOGGLE STATUS ---------- */
 
   toggleItem(item: Item) {
-    this.inventoryService.toggleItemStatus(item.id);
+    this.inventoryService.toggleItemStatus(item.id, item.enabled);
   }
 
   /* ---------- STOCK VALIDATION ---------- */
