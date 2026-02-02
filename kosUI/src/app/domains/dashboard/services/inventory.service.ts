@@ -1,86 +1,77 @@
 import { Injectable } from '@angular/core';
 import { Item } from '../models/item.model';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
 export class InventoryService {
 
-    private items: Item[] = [
-  {
-    id: 1,
-    code: 'ITEM001',
-    name: 'Margherita Pizza',
-    from: '08:00',
-    to: '12:00',
-    category: 'Dinner',
-    group: 'Veg',
-    price: 250,
-    qty: 10,
-    sold: 5,
-    image: 'assets/food/pizza.jpg',
-    enabled: true
-  },
-  {
-    id: 2,
-    code: 'ITEM002',
-    name: 'Chicken Burger',
-    from: '08:00',
-    to: '09:00',
-    category: 'Snacks',
-    group: 'Non-Veg',
-    price: 120,
-    qty: 5,
-    sold: 8,
-    image: 'assets/food/burger.jpg',
-    enabled: true
-  },
-      
-  {
-    id: 3,
-    code: 'ITEM003',
-    name: 'Pancakes',
-    from: '08:00',
-    to: '10:00',
-    category: 'Breakfast',
-    group: 'Veg',
-    price: 90,
-    qty: 12,
-    sold: 2,
-    image: 'assets/food/pancake.jpg',
-    enabled: true
-  }
+  baseUrl='http://localhost:8080'
 
-];
+    private items: Item[] = [];
 
-  constructor() {}
+  constructor(
+    private readonly httpclient: HttpClient
+  ) {}
 
   getAllItems(): Item[] {
+
     return this.items;
+
   }
 
+  getItemlist(){
+    this.httpclient.get<Item[]>(this.baseUrl+'/getAllItems').subscribe(res=>{
+      let itemList: Item[] = res;
+      itemList.sort((a, b) => {
+        if (a.id == null) return 1;
+        if (b.id == null) return -1;
+        return Number(b.id) - Number(a.id);
+      });
+      this.items = itemList;
+  }); 
+  }
   addItem(item: Item) {
-    this.items.push(item);
+
+    this.httpclient.post<Item>(this.baseUrl+'/addItem',item).subscribe(response=>{
+      let newItem= response;
+      if(newItem.id != null && newItem.id > 0){
+        this.getItemlist();
+      }
+    });
   }
 
   updateItem(updated: Item) {
-    const index = this.items.findIndex(i => i.id === updated.id);
 
-    if (index !== -1) {
-      this.items[index] = updated;
-    }
+    this.httpclient.patch<Item>(this.baseUrl+'/restockItem',updated).subscribe(res=>{
+
+      let itm = res;
+      const index = this.items.findIndex(i => i.id === updated.id);
+
+      if (index !== -1) {
+        this.items[index] = updated;
+      }
+    });
   }
 
-  deleteItem(id: number) {
+  deleteItem(id: number | null) {
+this.httpclient.delete<String>(this.baseUrl+'/deleteItemById/'+id).subscribe(res=>{
+  if(res == 'Success'){
     this.items = this.items.filter(i => i.id !== id);
   }
+});
+  }
 
-  toggleItemStatus(id: number) {
-    const item = this.items.find(i => i.id === id);
+  toggleItemStatus(id: number|null, status:boolean) {
+    this.httpclient.patch<Item>(this.baseUrl+'/updateItemStatus/'+id+'/'+status,null).subscribe(res=>{
+      let itm = res;
+      const item = this.items.find(i => i.id === id);
 
     if (item) {
-      item.enabled = !item.enabled;
+      item.enabled = itm.enabled;
     }
+    });
   }
 
   restockItem(id: number, qty: number) {
@@ -127,7 +118,7 @@ export class InventoryService {
         !i.name.toLowerCase().includes(search.toLowerCase()))
         return false;
 
-      if (category !== 'ALL' && i.category !== category)
+      if (category !== 'ALL' && i.category.includes (category))
         return false;
 
       if (group !== 'ALL' && i.group !== group)
@@ -166,13 +157,18 @@ export class InventoryService {
           break;
 
         case 'CATEGORY':
-          valA = a.category.toLowerCase();
-          valB = b.category.toLowerCase();
+          valA = a.category.length;
+          valB = b.category.length;
           break;
-
-        default:
+        case 'NAME':
           valA = a.name.toLowerCase();
           valB = b.name.toLowerCase();
+          break;
+  
+
+        default:
+          valA = a.id;
+          valB = b.id;
       }
 
       if (valA < valB) return order === 'ASC' ? -1 : 1;
@@ -184,24 +180,24 @@ export class InventoryService {
 
   // NEW METHODS FOR DASHBOARD
 
-  getTopSellingItems(): Item[] {
-    return [...this.items]
-      .sort((a, b) => b.sold - a.sold)
-      .slice(0, 5);
-  }
+  // getTopSellingItems(): Item[] {
+  //   return [...this.items]
+  //     .sort((a, b) => b.sold - a.sold)
+  //     .slice(0, 5);
+  // }
 
-  getCategoryDistribution() {
-    const total = this.items.length;
+  // getCategoryDistribution() {
+  //   const total = this.items.length;
 
-    const categories = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
+  //   const categories = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
 
-    return categories.map(cat => {
-      const count = this.items.filter(i => i.category === cat).length;
+  //   return categories.map(cat => {
+  //     const count = this.items.filter(i => i.category === cat).length;
 
-      return {
-        name: cat,
-        percent: total ? Math.round((count / total) * 100) : 0
-      };
-    });
-  }
+  //     return {
+  //       name: cat,
+  //       percent: total ? Math.round((count / total) * 100) : 0
+  //     };
+  //   });
+  // }
 }

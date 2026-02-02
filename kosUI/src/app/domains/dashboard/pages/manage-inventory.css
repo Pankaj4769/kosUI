@@ -209,6 +209,7 @@ th, td {
 
 tbody tr {
   transition: all .2s ease;
+  border: 5px solid red;
 }
 
 tbody tr:hover {
@@ -566,6 +567,11 @@ tbody tr:hover .row-actions {
   margin-bottom: 10px;
   transition: all .2s ease;
   background: #f8fafc;
+  .cdk-overlay-pane{
+    width: 168px;
+    top: 511px;
+    left: 1328px;
+  }
 }
 
 .input-box:focus {
@@ -582,6 +588,11 @@ tbody tr:hover .row-actions {
   margin-bottom: 14px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 4px 12px rgba(0,0,0,.05);
+  .row{
+    display: flex;
+    flex-direction: row;
+    gap: 7px;
+  }
 }
 
 .form-section:hover {

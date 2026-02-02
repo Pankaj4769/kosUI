@@ -84,35 +84,35 @@ export class DashboardAnalyticsService {
 
   // ===== CATEGORY STATS WITH COLORS =====
 
-  categoryStats(): CategoryStat[] {
+  // categoryStats(): CategoryStat[] {
 
-    const items = this.inventory.getAllItems();
+  //   const items = this.inventory.getAllItems();
 
-    const categories = Array.from(
-      new Set(items.map(i => i.category))
-    );
+  //   const categories = Array.from(
+  //     new Set(items.map(i => i.category))
+  //   );
 
-    const colorMap: any = {
-      Breakfast: '#3b82f6',
-      Lunch: '#22c55e',
-      Snacks: '#f59e0b',
-      Dinner: '#6366f1'
-    };
+  //   const colorMap: any = {
+  //     Breakfast: '#3b82f6',
+  //     Lunch: '#22c55e',
+  //     Snacks: '#f59e0b',
+  //     Dinner: '#6366f1'
+  //   };
 
-    return categories.map(cat => {
+  //   return categories.map(cat => {
 
-      const count = items.filter(i => i.category === cat).length;
+  //     const count = items.filter(i => i.category === cat).length;
 
-      return {
-        name: cat,
-        percent: items.length
-          ? Math.round((count / items.length) * 100)
-          : 0,
-        color: colorMap[cat] || '#94a3b8'
-      };
+  //     return {
+  //       name: cat,
+  //       percent: items.length
+  //         ? Math.round((count / items.length) * 100)
+  //         : 0,
+  //       color: colorMap[cat[0]] || '#94a3b8'
+  //     };
 
-    });
-  }
+  //   });
+  // }
 
   // ===== ALERTS =====
 
@@ -167,22 +167,22 @@ export class DashboardAnalyticsService {
 
   // ===== TOP SELLING ITEMS =====
 
-  getTopSellingItems(): TopSellingItem[] {
+  // getTopSellingItems(): TopSellingItem[] {
 
-    const items = this.inventory.getAllItems();
+  //   const items = this.inventory.getAllItems();
 
-    return items
-      .filter(i => i.qty > 0)
-      .sort((a, b) => (b.price * b.qty) - (a.price * a.qty))
-      .slice(0, 5)
-      .map(i => ({
-        name: i.name,
-        sold: i.qty,
-        revenue: `₹${i.price * i.qty}`,
-        image: i.image || 'assets/food/default.jpg',
-        category: i.category
-      }));
-  }
+  //   return items
+  //     .filter(i => i.qty > 0)
+  //     .sort((a, b) => (b.price * b.qty) - (a.price * a.qty))
+  //     .slice(0, 5)
+  //     .map(i => ({
+  //       name: i.name,
+  //       sold: i.qty,
+  //       revenue: `₹${i.price * i.qty}`,
+  //       image: i.image || 'assets/food/default.jpg',
+  //       category: i.category
+  //     }));
+  // }
     getRecentOrders(): RecentOrder[] {
 
   // Later this can be replaced with API call

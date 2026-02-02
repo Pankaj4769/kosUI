@@ -1,0 +1,105 @@
+<div class="container">
+    <header>
+        <h2>Manage Inventory</h2>
+        <button onclick="openModal()">+ Add Item</button>
+    </header>
+    <div class="stats">
+        <div class="stat">Total Items<br><b id="tItems">0</b></div>
+        <div class="stat">Low Stock<br><b id="tLow">0</b></div>
+        <div class="stat">Sold Out<br><b id="tOut">0</b></div>
+    </div>
+</div>
+<div class="stockItems">
+    <div class="sold_out">
+        <h2>Sold Out Items</h2>
+        <div class="sold-grid" id="sold">
+
+            <div class="sold-card compact" *ngFor="let number of numbers">
+
+                <div class="sold-left">
+                    <input type="checkbox" class="bulk-check">
+                    <img src="assets/images/image.png" class="sold-img">
+                    <input id="r${number}" class="qty-below" placeholder="Qty">
+                </div>
+
+                <div class="sold-info">
+                    <div class="sold-title">
+                        <b>Pizza</b>
+                        <span class="badge veg">veg</span>
+                    </div>
+                    <div class="price">{{currency}}149</div>
+
+                    <button class="restock-btn">
+                        Restock
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <div class="vertical-rule"></div>
+
+    <div class="low_stock">
+        <h2>Low Stock Items</h2>
+        <div class="sold-grid" id="sold">
+
+            <div class="sold-card compact" *ngFor="let number of numbers">
+
+                <div class="sold-left">
+                    <input type="checkbox" class="bulk-check">
+                    <img src="assets/images/image.png" class="sold-img">
+                    <input id="r${number}" class="qty-below" placeholder="Qty">
+                </div>
+
+                <div class="sold-info">
+                    <div class="sold-title">
+                        <b>Pizza</b>
+                        <span class="badge veg">veg</span>
+                    </div>
+                    <div class="price">{{currency}}149</div>
+
+                    <button class="restock-btn">
+                        Restock
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3 style="margin-top:20px">Available Items</h3>
+<table>
+<thead>
+<tr>
+  <th>Item</th>
+  <th>Type</th>
+  <th>Category</th>
+  <th>Stock</th>
+  <th>Price</th>
+  <th>Status</th>
+  <th>Edit</th>
+</tr>
+</thead>
+<tbody>
+    <tr *ngFor="let item of items">
+        
+        
+      <td><div>
+        <span>
+            <img src="assets/images/image.png" class="sold-img" height="40px" width="40px">
+        </span>
+      </div>
+    {{item.name}}</td>
+      <td>{{ item.type }}</td>
+      <td>{{item.categoriesx}}</td>
+      <td>{{ item.qty }}</td>
+      <td>{{ item.price }}</td>
+      <td>{{ item.enabled }}</td>
+      <td>
+        <button>✏️</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
