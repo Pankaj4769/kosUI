@@ -1,0 +1,24 @@
+@import 'variables';
+
+.panel {
+  background: $panel-bg;
+  border: 1px solid $border-color;
+  border-radius: $radius;
+  padding: $padding;
+}
+
+.card {
+  border: 1px solid $border-color;
+  border-radius: $radius;
+  padding: $padding;
+  transition: $transition;
+
+  &:hover {
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  }
+}
+
+.top-bar-theme {
+  background: $secondary-color;
+  color: white;
+}

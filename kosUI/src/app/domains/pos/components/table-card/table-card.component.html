@@ -1,0 +1,75 @@
+<div class="table-card"
+     [ngClass]="statusClass()"
+     (click)="onSelect()"
+     role="button"
+     tabindex="0">
+
+  <!-- ================= HEADER ================= -->
+  <div class="table-header">
+
+    <!-- Table Name -->
+    <h4 class="table-name">
+      {{ table.name }}
+    </h4>
+
+    <!-- Status Badge -->
+    <span class="status-badge" [ngClass]="statusClass()">
+      {{ statusLabel() }}
+      <span class="overdue-icon" *ngIf="isOverdue()">⚠️</span>
+    </span>
+
+  </div>
+
+  <!-- ================= BODY ================= -->
+  <div class="table-body">
+
+    <!-- Waiter Info -->
+    <p class="waiter">
+      👤 <span>{{ waiterName() }}</span>
+    </p>
+    
+
+    <!-- Amount -->
+    <p class="amount" *ngIf="hasAmount()">
+      💰 ₹ {{ table.amount | number:'1.0-0' }}
+    </p>
+
+    <!-- 🔥 Priority Score -->
+    <div class="priority" *ngIf="priorityScore() > 0">
+      <span>Priority</span>
+      <strong>{{ priorityScore() }}%</strong>
+    </div>
+
+    <!-- ⏳ Time Progress -->
+    <div class="progress-bar" *ngIf="table.status === 'occupied'">
+      <div class="progress-fill"
+           [style.width.%]="timeProgress()">
+      </div>
+    </div>
+
+    <!-- 👤 Waiter Workload -->
+    <div class="workload" *ngIf="table.status === 'occupied'">
+      <span class="label">Waiter Load</span>
+      <div class="workload-bar">
+        <div class="workload-fill"
+             [style.width.%]="waiterLoad()">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= FOOTER (SMART POS UX) ================= -->
+  <div class="table-footer" *ngIf="table.status === 'occupied' || hasAmount()">
+
+    <span class="footer-item" *ngIf="elapsedMinutes() > 0">
+      🕒 {{ elapsedMinutes() }} min
+    </span>
+
+    <span class="footer-item" *ngIf="hasAmount()">
+      🧾 Active Bill
+    </span>
+
+  </div>
+
+</div>

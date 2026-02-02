@@ -1,0 +1,40 @@
+@import 'variables';
+
+.btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: $radius;
+  cursor: pointer;
+  transition: $transition;
+  font-family: $font-main;
+}
+
+.btn-primary {
+  @extend .btn;
+  background: $primary-color;
+  color: white;
+
+  &:hover {
+    background: lighten($primary-color, 10%);
+  }
+}
+
+.btn-success {
+  @extend .btn;
+  background: $success-color;
+  color: white;
+
+  &:hover {
+    background: darken($success-color, 10%);
+  }
+}
+
+.btn-danger {
+  @extend .btn;
+  background: $danger-color;
+  color: white;
+
+  &:hover {
+    background: darken($danger-color, 10%);
+  }
+}

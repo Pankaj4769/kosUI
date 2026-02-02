@@ -1,0 +1,433 @@
+<div class="hold-orders-overlay" (click)="onClose()">
+  
+  <div class="hold-orders-popup" (click)="$event.stopPropagation()">
+
+    <!-- ================= HEADER ================= -->
+    <div class="popup-header">
+      <div class="header-left">
+        <mat-icon>pause_circle</mat-icon>
+        <div class="header-info">
+          <h2>Hold Orders</h2>
+          <span class="header-stats">
+            {{ totalHeldOrders }} orders • {{ formatCurrency(totalHeldAmount) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button 
+          class="header-btn"
+          (click)="refreshOrders()"
+          matTooltip="Refresh">
+          <mat-icon>refresh</mat-icon>
+        </button>
+
+        <button 
+          class="header-btn"
+          (click)="onClose()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= TOOLBAR ================= -->
+    <div class="toolbar">
+      
+      <!-- Search -->
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input 
+          type="text"
+          class="search-input"
+          placeholder="Search by order, customer, table..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange(searchQuery)">
+        <button 
+          class="clear-search-btn"
+          *ngIf="searchQuery"
+          (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-tabs">
+        <button 
+          class="filter-tab"
+          [class.active]="selectedFilter === 'all'"
+          (click)="selectFilter('all')">
+          All
+          <span class="count">{{ heldOrders.length }}</span>
+        </button>
+        <button 
+          class="filter-tab"
+          [class.active]="selectedFilter === 'dine-in'"
+          (click)="selectFilter('dine-in')">
+          <mat-icon>restaurant</mat-icon>
+          Dine-In
+        </button>
+        <button 
+          class="filter-tab"
+          [class.active]="selectedFilter === 'takeaway'"
+          (click)="selectFilter('takeaway')">
+          <mat-icon>shopping_bag</mat-icon>
+          Takeaway
+        </button>
+        <button 
+          class="filter-tab"
+          [class.active]="selectedFilter === 'delivery'"
+          (click)="selectFilter('delivery')">
+          <mat-icon>delivery_dining</mat-icon>
+          Delivery
+        </button>
+      </div>
+
+      <!-- View Controls -->
+      <div class="view-controls">
+        <button 
+          class="sort-btn"
+          [matMenuTriggerFor]="sortMenu">
+          <mat-icon>sort</mat-icon>
+          <span>{{ sortBy }}</span>
+          <mat-icon class="expand-icon">expand_more</mat-icon>
+        </button>
+
+        <mat-menu #sortMenu="matMenu">
+          <button mat-menu-item (click)="changeSortBy('recent')">
+            <mat-icon>schedule</mat-icon>
+            <span>Recent First</span>
+          </button>
+          <button mat-menu-item (click)="changeSortBy('oldest')">
+            <mat-icon>history</mat-icon>
+            <span>Oldest First</span>
+          </button>
+          <button mat-menu-item (click)="changeSortBy('amount')">
+            <mat-icon>currency_rupee</mat-icon>
+            <span>Highest Amount</span>
+          </button>
+        </mat-menu>
+
+        <div class="view-toggle">
+          <button 
+            class="view-btn"
+            [class.active]="viewMode === 'grid'"
+            (click)="setViewMode('grid')"
+            matTooltip="Grid View">
+            <mat-icon>grid_view</mat-icon>
+          </button>
+          <button 
+            class="view-btn"
+            [class.active]="viewMode === 'list'"
+            (click)="setViewMode('list')"
+            matTooltip="List View">
+            <mat-icon>view_list</mat-icon>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= CONTENT ================= -->
+    <div class="popup-content">
+
+      <!-- Orders Grid/List -->
+      <div class="orders-container" [class.with-details]="showDetailsPanel">
+
+        <!-- Grid View -->
+        <div 
+          class="orders-grid"
+          *ngIf="viewMode === 'grid' && filteredOrders.length > 0">
+          
+          <div 
+            class="order-card"
+            *ngFor="let order of filteredOrders; trackBy: trackByOrderId"
+            [class.selected]="selectedOrderId === order.id"
+            (click)="selectOrder(order.id)">
+            
+            <!-- Card Header -->
+            <div class="card-header">
+              <div class="order-type-badge" [style.background]="getOrderTypeColor(order.orderType)">
+                <mat-icon>{{ getOrderTypeIcon(order.orderType) }}</mat-icon>
+                <span>{{ order.orderType }}</span>
+              </div>
+
+              <button 
+                class="card-menu-btn"
+                [matMenuTriggerFor]="orderMenu"
+                (click)="$event.stopPropagation()">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+
+              <mat-menu #orderMenu="matMenu">
+                <button mat-menu-item (click)="onRecallOrder(order)">
+                  <mat-icon>replay</mat-icon>
+                  <span>Recall Order</span>
+                </button>
+                <button mat-menu-item (click)="selectOrder(order.id)">
+                  <mat-icon>visibility</mat-icon>
+                  <span>View Details</span>
+                </button>
+                <button mat-menu-item (click)="onDeleteOrder(order.id, order.orderNumber)">
+                  <mat-icon class="delete-icon">delete</mat-icon>
+                  <span>Delete</span>
+                </button>
+              </mat-menu>
+            </div>
+
+            <!-- Card Content -->
+            <div class="card-content">
+              <h3 class="order-number">{{ order.orderNumber }}</h3>
+
+              <div class="order-context">
+                <mat-icon>{{ order.tableNumber ? 'table_restaurant' : 'person' }}</mat-icon>
+                <span>
+                  {{ order.tableNumber ? 'Table ' + order.tableNumber : order.customerName }}
+                </span>
+              </div>
+
+              <div class="items-summary">
+                <mat-icon>shopping_cart</mat-icon>
+                <span>{{ order.items.length }} item{{ order.items.length > 1 ? 's' : '' }}</span>
+              </div>
+
+              <div class="order-amount">{{ formatCurrency(order.total) }}</div>
+
+              <div class="order-meta">
+                <div 
+                  class="time-badge"
+                  [class.old]="getOrderAge(order.createdAt).isOld">
+                  <mat-icon>schedule</mat-icon>
+                  <span>{{ getTimeAgo(order.createdAt) }}</span>
+                </div>
+
+                <div class="held-by">
+                  <mat-icon>person</mat-icon>
+                  <span>{{ order.heldBy }}</span>
+                </div>
+              </div>
+
+              <div class="notes-preview" *ngIf="order.notes">
+                <mat-icon>note</mat-icon>
+                <span>{{ order.notes }}</span>
+              </div>
+            </div>
+
+            <!-- Card Actions -->
+            <div class="card-actions">
+              <button 
+                class="action-btn secondary"
+                (click)="onDeleteOrder(order.id, order.orderNumber); $event.stopPropagation()">
+                <mat-icon>delete</mat-icon>
+              </button>
+              <button 
+                class="action-btn primary"
+                (click)="onRecallOrder(order); $event.stopPropagation()">
+                <mat-icon>replay</mat-icon>
+                Recall
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- List View -->
+        <div 
+          class="orders-list"
+          *ngIf="viewMode === 'list' && filteredOrders.length > 0">
+          
+          <div 
+            class="list-item"
+            *ngFor="let order of filteredOrders; trackBy: trackByOrderId"
+            [class.selected]="selectedOrderId === order.id"
+            (click)="selectOrder(order.id)">
+            
+            <div class="list-item-main">
+              
+              <!-- Left Info -->
+              <div class="item-info">
+                <div class="type-icon" [style.color]="getOrderTypeColor(order.orderType)">
+                  <mat-icon>{{ getOrderTypeIcon(order.orderType) }}</mat-icon>
+                </div>
+
+                <div class="info-details">
+                  <h3 class="order-number">{{ order.orderNumber }}</h3>
+                  <div class="order-meta-row">
+                    <span class="type-label">{{ order.orderType }}</span>
+                    <span class="separator">•</span>
+                    <span>{{ order.tableNumber ? 'Table ' + order.tableNumber : order.customerName }}</span>
+                    <span class="separator">•</span>
+                    <span>{{ order.items.length }} items</span>
+                  </div>
+                  <div class="time-info">
+                    <mat-icon>schedule</mat-icon>
+                    <span>{{ getTimeAgo(order.createdAt) }}</span>
+                    <span class="held-by-label">by {{ order.heldBy }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Actions -->
+              <div class="item-actions">
+                <div class="amount-display">{{ formatCurrency(order.total) }}</div>
+                <div class="action-buttons">
+                  <button 
+                    class="list-action-btn secondary"
+                    (click)="onDeleteOrder(order.id, order.orderNumber); $event.stopPropagation()"
+                    matTooltip="Delete">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                  <button 
+                    class="list-action-btn primary"
+                    (click)="onRecallOrder(order); $event.stopPropagation()">
+                    <mat-icon>replay</mat-icon>
+                    <span>Recall</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="filteredOrders.length === 0 && !loading">
+          <mat-icon>inbox</mat-icon>
+          <h3>No held orders</h3>
+          <p *ngIf="searchQuery || selectedFilter !== 'all'">
+            Try adjusting your filters or search
+          </p>
+          <p *ngIf="!searchQuery && selectedFilter === 'all'">
+            Orders on hold will appear here
+          </p>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-state" *ngIf="loading">
+          <div class="spinner"></div>
+          <p>Loading held orders...</p>
+        </div>
+
+      </div>
+
+      <!-- Details Panel -->
+      <div class="details-panel" *ngIf="showDetailsPanel && selectedOrder">
+        
+        <div class="details-header">
+          <h3>Order Details</h3>
+          <button class="close-details-btn" (click)="closeDetailsPanel()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <div class="details-content">
+          
+          <!-- Order Info -->
+          <div class="detail-section">
+            <div class="detail-row">
+              <span class="label">Order Number:</span>
+              <span class="value">{{ selectedOrder.orderNumber }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Type:</span>
+              <span class="value">
+                <span class="type-chip" [style.background]="getOrderTypeColor(selectedOrder.orderType)">
+                  {{ selectedOrder.orderType }}
+                </span>
+              </span>
+            </div>
+            <div class="detail-row" *ngIf="selectedOrder.tableNumber">
+              <span class="label">Table:</span>
+              <span class="value">{{ selectedOrder.tableNumber }}</span>
+            </div>
+            <div class="detail-row" *ngIf="selectedOrder.customerName">
+              <span class="label">Customer:</span>
+              <span class="value">{{ selectedOrder.customerName }}</span>
+            </div>
+            <div class="detail-row" *ngIf="selectedOrder.customerPhone">
+              <span class="label">Phone:</span>
+              <span class="value">{{ selectedOrder.customerPhone }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Held By:</span>
+              <span class="value">{{ selectedOrder.heldBy }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Time:</span>
+              <span class="value">{{ getTimeAgo(selectedOrder.createdAt) }}</span>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="detail-section" *ngIf="selectedOrder.notes">
+            <h4>Notes</h4>
+            <div class="notes-box">
+              <mat-icon>note</mat-icon>
+              <p>{{ selectedOrder.notes }}</p>
+            </div>
+          </div>
+
+          <!-- Items -->
+          <div class="detail-section">
+            <h4>Items ({{ selectedOrder.items.length }})</h4>
+            <div class="items-list">
+              <div class="item-row" *ngFor="let item of selectedOrder.items">
+                <div class="item-info-detail">
+                  <span class="item-qty">{{ item.qty }}×</span>
+                  <div class="item-name-detail">
+                    {{ item.name }}
+                    <span class="portion-label" *ngIf="item.portion">{{ item.portion }}</span>
+                  </div>
+                </div>
+                <span class="item-price-detail">{{ formatCurrency(item.price * item.qty) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pricing -->
+          <div class="detail-section pricing">
+            <div class="price-row">
+              <span>Subtotal:</span>
+              <span>{{ formatCurrency(selectedOrder.subtotal) }}</span>
+            </div>
+            <div class="price-row">
+              <span>Tax:</span>
+              <span>{{ formatCurrency(selectedOrder.tax) }}</span>
+            </div>
+            <div class="price-row" *ngIf="selectedOrder.discount > 0">
+              <span>Discount:</span>
+              <span class="discount">-{{ formatCurrency(selectedOrder.discount) }}</span>
+            </div>
+            <div class="total-row">
+              <span>TOTAL:</span>
+              <span>{{ formatCurrency(selectedOrder.total) }}</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="details-actions">
+            <button 
+              class="details-btn secondary"
+              (click)="onDeleteOrder(selectedOrder.id, selectedOrder.orderNumber)">
+              <mat-icon>delete</mat-icon>
+              Delete Order
+            </button>
+            <button 
+              class="details-btn primary"
+              (click)="onRecallOrder(selectedOrder)">
+              <mat-icon>replay</mat-icon>
+              Recall Order
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

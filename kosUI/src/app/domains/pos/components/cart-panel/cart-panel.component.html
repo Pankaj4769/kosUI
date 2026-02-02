@@ -1,0 +1,247 @@
+<div class="cart-panel">
+
+  <!-- ================= HEADER ================= -->
+  <div class="cart-header">
+    <div class="header-info">
+      <h2>
+        <mat-icon>shopping_cart</mat-icon>
+        Cart
+      </h2>
+      <span class="item-count" *ngIf="hasItems">
+        {{ totalItems }} {{ totalItems === 1 ? 'item' : 'items' }}
+      </span>
+    </div>
+
+    <!-- Context Badge -->
+    <div class="context-badge" *ngIf="orderType === 'Dine-In' && tableNumber">
+      <mat-icon>table_restaurant</mat-icon>
+      <span>Table {{ tableNumber }}</span>
+    </div>
+    <div class="context-badge" *ngIf="orderType === 'Takeaway'">
+      <mat-icon>shopping_bag</mat-icon>
+      <span>Takeaway</span>
+    </div>
+    <div class="context-badge" *ngIf="orderType === 'Delivery'">
+      <mat-icon>delivery_dining</mat-icon>
+      <span>Delivery</span>
+    </div>
+  </div>
+
+  <!-- ================= BULK ACTIONS ================= -->
+  <div class="bulk-actions" *ngIf="selectedItemsCount > 0">
+    <span class="selected-count">{{ selectedItemsCount }} selected</span>
+    <button class="action-btn" (click)="clearSelection()">
+      <mat-icon>close</mat-icon>
+      Clear
+    </button>
+    <button class="action-btn danger" (click)="removeSelectedItems()">
+      <mat-icon>delete</mat-icon>
+      Remove
+    </button>
+  </div>
+
+  <!-- ================= CART ITEMS LIST ================= -->
+  <div class="cart-items" *ngIf="hasItems">
+    
+    <div 
+      class="cart-item"
+      *ngFor="let item of cart; trackBy: trackByItemId"
+      [class.selected]="isItemSelected(item.id)"
+      [class.editing]="editingItemId === item.id">
+
+      <!-- Selection Checkbox -->
+      <div class="item-checkbox">
+        <input 
+          type="checkbox"
+          [checked]="isItemSelected(item.id)"
+          (change)="toggleItemSelection(item.id)">
+      </div>
+
+      <!-- Item Content -->
+      <div class="item-content">
+        
+        <!-- Item Header -->
+        <div class="item-header">
+          <div class="item-name-section">
+            <h4 class="item-name">
+              {{ item.name }}
+              <span class="portion-label" *ngIf="item.portion">
+                {{ getPortionLabel(item.portion) }}
+              </span>
+            </h4>
+            <span class="item-category" *ngIf="item.category">
+              {{ item.category }}
+            </span>
+          </div>
+
+          <!-- Item Actions Menu -->
+          <button class="item-menu-btn" [matMenuTriggerFor]="itemMenu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+
+          <mat-menu #itemMenu="matMenu">
+            <button mat-menu-item (click)="duplicateItem(item)">
+              <mat-icon>content_copy</mat-icon>
+              <span>Duplicate</span>
+            </button>
+            <button mat-menu-item (click)="toggleNotes(item.id)">
+              <mat-icon>note_add</mat-icon>
+              <span>Add Notes</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="removeItem(item.id)" class="danger-action">
+              <mat-icon>delete</mat-icon>
+              <span>Remove</span>
+            </button>
+          </mat-menu>
+        </div>
+
+        <!-- Addons -->
+        <div class="item-addons" *ngIf="item.addons?.length">
+          <div class="addon-item" *ngFor="let addon of item.addons">
+            <mat-icon class="addon-icon">add_circle_outline</mat-icon>
+            <span class="addon-name">{{ addon.name }}</span>
+            <span class="addon-price">+₹{{ addon.price }}</span>
+          </div>
+        </div>
+
+        <!-- Notes Input -->
+        <div class="item-notes" *ngIf="showNotes.get(item.id)">
+          <textarea 
+            class="notes-input"
+            placeholder="Add special instructions..."
+            [value]="item.notes || ''"
+            (blur)="updateItemNotes(item.id, $any($event.target).value)"
+            rows="2"></textarea>
+        </div>
+
+        <!-- Existing Notes Display -->
+        <div class="notes-display" *ngIf="item.notes && !showNotes.get(item.id)">
+          <mat-icon>note</mat-icon>
+          <span>{{ item.notes }}</span>
+        </div>
+
+        <!-- Item Footer (Quantity + Price) -->
+        <div class="item-footer">
+          
+          <!-- Quantity Controls -->
+          <div class="quantity-controls">
+            <button 
+              class="qty-btn"
+              (click)="decrementQuantity(item)"
+              [disabled]="editingItemId === item.id"
+              matTooltip="Decrease quantity">
+              <mat-icon>remove</mat-icon>
+            </button>
+
+            <!-- Quantity Display/Edit -->
+            <div class="quantity-display" *ngIf="editingItemId !== item.id">
+              <span 
+                class="qty-value"
+                (click)="startEditQuantity(item)">
+                {{ item.qty }}
+              </span>
+            </div>
+
+            <input 
+              *ngIf="editingItemId === item.id"
+              type="number"
+              class="qty-input"
+              [(ngModel)]="editingQuantity"
+              (keyup.enter)="saveEditQuantity()"
+              (keyup.escape)="cancelEdit()"
+              min="1"
+              autofocus>
+
+            <button 
+              class="qty-btn"
+              (click)="incrementQuantity(item)"
+              [disabled]="editingItemId === item.id"
+              matTooltip="Increase quantity">
+              <mat-icon>add</mat-icon>
+            </button>
+
+            <!-- Edit Actions -->
+            <div class="edit-actions" *ngIf="editingItemId === item.id">
+              <button class="save-btn" (click)="saveEditQuantity()">
+                <mat-icon>check</mat-icon>
+              </button>
+              <button class="cancel-btn" (click)="cancelEdit()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Price Breakdown -->
+          <div class="price-section">
+            <div class="price-row">
+              <span class="price-label">{{ item.qty }} × ₹{{ item.price }}</span>
+              <span class="price-value">₹{{ getItemSubtotal(item) }}</span>
+            </div>
+            <div class="price-row addon-price" *ngIf="getAddonsTotal(item) > 0">
+              <span class="price-label">Addons</span>
+              <span class="price-value">+₹{{ getAddonsTotal(item) }}</span>
+            </div>
+            <div class="price-row total-price">
+              <span class="price-label">Total</span>
+              <span class="price-value total">₹{{ getItemTotal(item) }}</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ================= EMPTY CART STATE ================= -->
+  <div class="empty-cart" *ngIf="!hasItems">
+    <div class="empty-icon">
+      <mat-icon>shopping_cart</mat-icon>
+    </div>
+    <h3>Cart is Empty</h3>
+    <p>Start adding items from the menu</p>
+  </div>
+
+  <!-- ================= PRICING SUMMARY ================= -->
+  <div class="cart-summary" *ngIf="hasItems">
+    
+    <div class="summary-row">
+      <span class="summary-label">Subtotal</span>
+      <span class="summary-value">{{ formatCurrency(subtotal) }}</span>
+    </div>
+
+    <div class="summary-row" *ngIf="discount > 0">
+      <span class="summary-label discount">Discount</span>
+      <span class="summary-value discount">-{{ formatCurrency(discount) }}</span>
+    </div>
+
+    <div class="summary-row">
+      <span class="summary-label">Tax (5%)</span>
+      <span class="summary-value">{{ formatCurrency(tax) }}</span>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="summary-row total-row">
+      <span class="summary-label">Total</span>
+      <span class="summary-value total">{{ formatCurrency(total) }}</span>
+    </div>
+
+  </div>
+
+  <!-- ================= CHECKOUT BUTTON ================= -->
+  <div class="cart-footer" *ngIf="hasItems">
+    <button 
+      class="checkout-btn"
+      (click)="proceedToCheckout()"
+      [disabled]="!canCheckout">
+      <mat-icon>payments</mat-icon>
+      <span>Proceed to Payment</span>
+      <span class="checkout-amount">{{ formatCurrency(total) }}</span>
+    </button>
+  </div>
+
+</div>

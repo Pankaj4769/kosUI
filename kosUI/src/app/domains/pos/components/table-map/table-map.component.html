@@ -1,0 +1,248 @@
+<div class="table-map">
+
+  <!-- GRID LAYOUT -->
+  <div class="table-grid">
+
+    <div
+      class="table-card"
+      *ngFor="let table of tables; trackBy: trackById"
+      [ngClass]="getStatusClass(table)"
+      (click)="openTable(table)"
+    >
+
+      <!-- HEADER -->
+      <div class="table-header">
+        <span class="table-name">Table {{ table.number }}</span>
+
+        <span class="status-badge"
+              [ngClass]="table.status.toLowerCase()">
+          {{ table.status }}
+        </span>
+      </div>
+
+      <!-- BODY -->
+      <div class="table-body">
+
+        <div class="row">
+          <span class="waiter">👤 {{ getWaiterName(table) }}</span>
+        </div>
+
+        <div class="row" *ngIf="(table.amount ?? 0) > 0">
+          <span class="amount">💰 ₹{{ table.amount }}</span>
+        </div>
+
+        <div class="row pending" *ngIf="isBillingPending(table)">
+          ⚠ Billing Pending
+        </div>
+
+      </div>
+
+      <!-- ✅ NEW: Info Button -->
+      <button 
+        class="info-btn"
+        (click)="openTableDetails(table, $event)"
+        matTooltip="View Details"
+        type="button">
+        <mat-icon>info</mat-icon>
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- ================= TABLE DETAILS POP-UP ================= -->
+  <div class="popup-overlay" *ngIf="showTableDetailsPopup" (click)="closeTableDetails()">
+    <div class="popup-container" *ngIf="selectedTableForDetails" (click)="$event.stopPropagation()">
+      
+      <!-- Header -->
+      <div class="popup-header">
+        <div class="header-left">
+          <mat-icon class="table-icon">table_restaurant</mat-icon>
+          <div class="header-title">
+            <h2>{{ selectedTableForDetails.name }}</h2>
+            <span class="table-number-label">Table #{{ selectedTableForDetails.number }}</span>
+          </div>
+        </div>
+        <button class="close-btn" (click)="closeTableDetails()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Status Badge -->
+      <div class="status-section">
+        <div 
+          class="status-badge-large"
+          [style.background-color]="getStatusColor(selectedTableForDetails.status)"
+          [style.color]="'white'">
+          <mat-icon>{{ getStatusIcon(selectedTableForDetails.status) }}</mat-icon>
+          <span>{{ selectedTableForDetails.status | titlecase }}</span>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Table Details -->
+      <div class="popup-body">
+        
+        <!-- Basic Info -->
+        <div class="info-section">
+          <h3 class="section-title">Basic Information</h3>
+          
+          <div class="info-grid">
+            <div class="info-item">
+              <mat-icon class="info-icon">event_seat</mat-icon>
+              <div class="info-content">
+                <span class="info-label">Capacity</span>
+                <span class="info-value">{{ selectedTableForDetails.capacity }} seats</span>
+              </div>
+            </div>
+
+            <div class="info-item" *ngIf="selectedTableForDetails.section">
+              <mat-icon class="info-icon">location_on</mat-icon>
+              <div class="info-content">
+                <span class="info-label">Section</span>
+                <span class="info-value">{{ selectedTableForDetails.section }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Occupied Table Details -->
+        <div class="info-section" *ngIf="selectedTableForDetails.status === 'occupied'">
+          <h3 class="section-title">Current Order</h3>
+          
+          <div class="info-grid">
+            <div class="info-item" *ngIf="selectedTableForDetails.currentOrder">
+              <mat-icon class="info-icon">receipt</mat-icon>
+              <div class="info-content">
+                <span class="info-label">Order Number</span>
+                <span class="info-value">{{ selectedTableForDetails.currentOrder }}</span>
+              </div>
+            </div>
+
+            <div class="info-item" *ngIf="selectedTableForDetails.waiter">
+              <mat-icon class="info-icon">person</mat-icon>
+              <div class="info-content">
+                <span class="info-label">Waiter</span>
+                <span class="info-value">{{ selectedTableForDetails.waiter }}</span>
+              </div>
+            </div>
+
+            <div class="info-item" *ngIf="selectedTableForDetails.timeOccupied">
+              <mat-icon class="info-icon">schedule</mat-icon>
+              <div class="info-content">
+                <span class="info-label">Time Occupied</span>
+                <span class="info-value">{{ getElapsedTime(selectedTableForDetails) }}</span>
+              </div>
+            </div>
+
+            <div class="info-item" *ngIf="selectedTableForDetails.timeOccupied">
+              <mat-icon class="info-icon">access_time</mat-icon>
+              <div class="info-content">
+                <span class="info-label">Started At</span>
+                <span class="info-value">{{ getFormattedTime(selectedTableForDetails.timeOccupied) }}</span>
+              </div>
+            </div>
+
+            <div class="info-item" *ngIf="selectedTableForDetails.itemCount !== undefined">
+              <mat-icon class="info-icon">restaurant_menu</mat-icon>
+              <div class="info-content">
+                <span class="info-label">Items Ordered</span>
+                <span class="info-value">{{ selectedTableForDetails.itemCount }} items</span>
+              </div>
+            </div>
+
+            <div class="info-item" *ngIf="selectedTableForDetails.totalAmount !== undefined">
+              <mat-icon class="info-icon">payments</mat-icon>
+              <div class="info-content">
+                <span class="info-label">Total Amount</span>
+                <span class="info-value amount">₹{{ selectedTableForDetails.totalAmount | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reserved Table Details -->
+        <div class="info-section" *ngIf="selectedTableForDetails.status === 'reserved'">
+          <h3 class="section-title">Reservation</h3>
+          
+          <div class="info-message">
+            <mat-icon>info</mat-icon>
+            <span>This table is reserved. Contact manager to override.</span>
+          </div>
+        </div>
+
+        <!-- Cleaning Status -->
+        <div class="info-section" *ngIf="selectedTableForDetails.status === 'cleaning'">
+          <h3 class="section-title">Status</h3>
+          
+          <div class="info-message warning">
+            <mat-icon>cleaning_services</mat-icon>
+            <span>This table is currently being cleaned.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Action Buttons -->
+      <div class="popup-actions">
+        
+        <!-- Available Table Actions -->
+        <ng-container *ngIf="selectedTableForDetails.status === 'available'">
+          <button 
+            class="action-btn primary"
+            (click)="onSelectTableFromPopup(selectedTableForDetails)">
+            <mat-icon>check_circle</mat-icon>
+            <span>Select Table</span>
+          </button>
+        </ng-container>
+
+        <!-- Occupied Table Actions -->
+        <ng-container *ngIf="selectedTableForDetails.status === 'occupied'">
+          <button 
+            class="action-btn secondary"
+            (click)="onSelectTableFromPopup(selectedTableForDetails)">
+            <mat-icon>visibility</mat-icon>
+            <span>View Order</span>
+          </button>
+          
+          <button 
+            class="action-btn secondary"
+            (click)="onTransferTable(selectedTableForDetails.id)">
+            <mat-icon>swap_horiz</mat-icon>
+            <span>Transfer</span>
+          </button>
+          
+          <button 
+            class="action-btn danger"
+            (click)="onCloseTable(selectedTableForDetails.id)">
+            <mat-icon>close</mat-icon>
+            <span>Close Table</span>
+          </button>
+        </ng-container>
+
+        <!-- Reserved Table Actions -->
+        <ng-container *ngIf="selectedTableForDetails.status === 'reserved'">
+          <button 
+            class="action-btn secondary"
+            (click)="onSelectTableFromPopup(selectedTableForDetails)">
+            <mat-icon>event</mat-icon>
+            <span>View Reservation</span>
+          </button>
+        </ng-container>
+
+        <!-- Cancel Button -->
+        <button 
+          class="action-btn cancel"
+          (click)="closeTableDetails()">
+          <span>Cancel</span>
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>

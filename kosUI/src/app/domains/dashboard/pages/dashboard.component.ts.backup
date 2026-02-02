@@ -1,0 +1,305 @@
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+
+import { FormsModule } from '@angular/forms';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
+import { DashboardAnalyticsService } from '../services/dashboard-analytics.service';
+
+import {
+  DashboardKPI,
+  CategoryStat,
+  Alert,
+  TopSellingItem,
+  RecentOrder
+} from '../models/dashboard-analytics.model';
+import { Subject } from 'rxjs';
+
+@Component({
+  selector: 'app-inventory-dashboard',
+  standalone: true,
+
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatListModule,
+    MatIconModule,
+    MatProgressBarModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatTooltipModule
+  ],
+
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DashboardComponent implements OnInit, OnDestroy {
+  
+  loading = false;
+  lastUpdated: Date = new Date();
+  autoRefresh = false;
+
+  private refreshInterval: any = null;
+  private destroy$ = new Subject<void>();
+
+  filter = {
+    dateRange: 'today',
+    category: 'all'
+  };
+
+  dateRanges = [
+    { label: 'Today', value: 'today' },
+    { label: 'Yesterday', value: 'yesterday' },
+    { label: 'This Week', value: 'week' },
+    { label: 'This Month', value: 'month' },
+    { label: 'Last Month', value: 'last-month' }
+  ];
+
+  categoriesList = [
+    { label: 'All Categories', value: 'all' },
+    { label: 'Breakfast', value: 'Breakfast' },
+    { label: 'Lunch', value: 'Lunch' },
+    { label: 'Snacks', value: 'Snacks' },
+    { label: 'Dinner', value: 'Dinner' },
+    { label: 'Beverages', value: 'Beverages' }
+  ];
+
+  stats: DashboardKPI[] = [];
+  categories: CategoryStat[] = [];
+  alerts: Alert[] = [];
+  topSelling: TopSellingItem[] = [];
+  recentOrders: RecentOrder[] = [];
+  recentActivity: { text: string; time: string; type?: string }[] = [];
+
+  // Summary metrics
+  summary = {
+    totalRevenue: 0,
+    avgOrderValue: 0,
+    totalOrders: 0,
+    completedOrders: 0,
+    pendingOrders: 0
+  };
+
+  constructor(
+    private analytics: DashboardAnalyticsService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.loadDashboardData();
+    this.addActivity('Dashboard initialized', 'info');
+  }
+
+  ngOnDestroy(): void {
+    this.clearAutoRefresh();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadDashboardData(): void {
+    this.stats = this.analytics.generateKPIs();
+    this.categories = this.analytics.categoryStats();
+    this.alerts = this.analytics.generateAlerts();
+    this.topSelling = this.analytics.getTopSellingItems();
+    this.recentOrders = this.analytics.getRecentOrders();
+
+    this.calculateSummary();
+    this.lastUpdated = new Date();
+    this.cdr.markForCheck();
+  }
+
+  refresh(): void {
+    this.loading = true;
+
+    setTimeout(() => {
+      this.loadDashboardData();
+      this.loading = false;
+      this.addActivity('Dashboard refreshed', 'success');
+      this.cdr.markForCheck();
+    }, 600);
+  }
+
+  filteredTopSelling(): TopSellingItem[] {
+    if (this.filter.category === 'all') {
+      return this.topSelling;
+    }
+
+    return this.topSelling.filter(
+      i => i.category === this.filter.category
+    );
+  }
+
+  get filteredCategories(): CategoryStat[] {
+    if (this.filter.category === 'all') {
+      return this.categories;
+    }
+
+    return this.categories.filter(
+      c => c.name === this.filter.category
+    );
+  }
+
+  toggleAutoRefresh(): void {
+    this.autoRefresh = !this.autoRefresh;
+
+    if (this.autoRefresh) {
+      this.startAutoRefresh();
+      this.addActivity('Auto refresh enabled (10s)', 'info');
+    } else {
+      this.clearAutoRefresh();
+      this.addActivity('Auto refresh disabled', 'info');
+    }
+  }
+
+  private startAutoRefresh(): void {
+    this.clearAutoRefresh();
+
+    this.refreshInterval = setInterval(() => {
+      if (this.autoRefresh) {
+        this.loadDashboardData();
+        this.addActivity('Auto refreshed', 'info');
+      }
+    }, 10000);
+  }
+
+  private clearAutoRefresh(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+    }
+  }
+
+  exportToCSV(): void {
+    const headers = 'Name,Category,Sold,Revenue\n';
+
+    const rows = this.filteredTopSelling()
+      .map(i => `${i.name},${i.category},${i.sold},${i.revenue}`)
+      .join('\n');
+
+    const csv = headers + rows;
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dashboard-report-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+
+    this.addActivity('CSV report exported successfully', 'success');
+  }
+
+  exportOrdersToCSV(): void {
+    const headers = 'Order ID,Time,Items,Amount,Status\n';
+
+    const rows = this.recentOrders
+      .map(o => `${o.id},${o.time},${o.items},${o.amount},${o.status}`)
+      .join('\n');
+
+    const csv = headers + rows;
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+
+    this.addActivity('Orders exported to CSV', 'success');
+  }
+
+  private calculateSummary(): void {
+    this.summary.totalOrders = this.recentOrders.length;
+    this.summary.completedOrders = this.recentOrders.filter(o => o.status === 'Completed').length;
+    this.summary.pendingOrders = this.recentOrders.filter(o => o.status === 'Pending').length;
+    
+    this.summary.totalRevenue = this.recentOrders
+      .filter(o => o.status === 'Completed')
+      .reduce((sum, o) => sum + o.amount, 0);
+    
+    this.summary.avgOrderValue = this.summary.completedOrders > 0
+      ? Math.round(this.summary.totalRevenue / this.summary.completedOrders)
+      : 0;
+  }
+
+  private addActivity(text: string, type: string = 'info'): void {
+    this.recentActivity.unshift({
+      text,
+      time: new Date().toLocaleTimeString(),
+      type
+    });
+
+    if (this.recentActivity.length > 15) {
+      this.recentActivity.pop();
+    }
+  }
+
+  clearActivity(): void {
+    this.recentActivity = [];
+    this.addActivity('Activity log cleared', 'info');
+  }
+
+  getAlertIcon(type: string): string {
+    switch (type) {
+      case 'error': return 'error';
+      case 'warning': return 'warning';
+      case 'info': return 'info';
+      default: return 'notifications';
+    }
+  }
+
+  getActivityIcon(type: string | undefined): string {
+    switch (type) {
+      case 'success': return 'check_circle';
+      case 'error': return 'cancel';
+      case 'warning': return 'warning';
+      default: return 'info';
+    }
+  }
+
+  dismissAlert(index: number): void {
+    this.alerts.splice(index, 1);
+    this.addActivity(`Alert dismissed`, 'info');
+    this.cdr.markForCheck();
+  }
+
+  viewOrderDetails(order: RecentOrder): void {
+    console.log('View order details:', order);
+    this.addActivity(`Viewed order #${order.id}`, 'info');
+    // TODO: Navigate to order details page or open modal
+  }
+
+  trackByOrderId(index: number, order: RecentOrder): number {
+    return order.id;
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  // Helper to get item count (if CategoryStat doesn't have count property)
+  getCategoryItemCount(category: CategoryStat): number {
+    // If your CategoryStat has a count property, use it directly
+    // Otherwise, calculate from topSelling items
+    return this.topSelling.filter(item => item.category === category.name).length;
+  }
+}

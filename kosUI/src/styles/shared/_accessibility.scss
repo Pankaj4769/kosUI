@@ -1,0 +1,76 @@
+/**
+ * Accessibility Utilities
+ * Improves keyboard navigation and screen reader support
+ * Safe to add - won't break existing design
+ */
+
+// Global focus indicator for all interactive elements
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+// Remove default outline (focus-visible handles it better)
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+// Skip to main content link (for keyboard users)
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: var(--color-btn-primary-text);
+  padding: var(--space-8) var(--space-16);
+  text-decoration: none;
+  border-radius: var(--radius-base);
+  font-weight: var(--font-weight-semibold);
+  z-index: 10000;
+  transition: top var(--duration-fast) var(--ease-standard);
+  
+  &:focus {
+    top: var(--space-8);
+  }
+}
+
+// Screen reader only content (visually hidden)
+.sr-only,
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// Focus trap for modals (prevents tabbing outside)
+.focus-trap {
+  &:focus {
+    outline: none;
+  }
+}
+
+// High contrast mode improvements
+@media (prefers-contrast: high) {
+  *:focus-visible {
+    outline-width: 3px;
+    outline-offset: 3px;
+  }
+}
+
+// Reduced motion for users with motion sensitivity
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

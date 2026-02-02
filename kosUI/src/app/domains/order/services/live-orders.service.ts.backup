@@ -1,0 +1,98 @@
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { Order, OrderStatus, OrderPriority, OrderType } from '../models/order.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class OrderService {
+  private ordersSubject = new BehaviorSubject<Order[]>([]);
+  public orders$: Observable<Order[]> = this.ordersSubject.asObservable();
+
+  constructor() {
+    this.loadMockOrders();
+  }
+
+  private loadMockOrders(): void {
+    const mockOrders: Order[] = [
+      {
+        id: 1,
+        orderNumber: 'ORD-001',
+        tableId: 7,
+        tableName: 'Table 7',
+        status: OrderStatus.PREPARING,
+        priority: OrderPriority.HIGH,
+        type: OrderType.DINE_IN,
+        items: [
+          { id: 1, name: 'Paneer Tikka', quantity: 2, price: 180, category: 'Starter' },
+          { id: 2, name: 'Dal Makhani', quantity: 1, price: 220, category: 'Main Course' }
+        ],
+        totalAmount: 580,
+        customerName: 'Rohan Sharma',
+        waiterName: 'Neha',
+        orderTime: new Date(Date.now() - 15 * 60000),
+        prepTime: 15,
+        estimatedTime: 20
+      },
+      {
+        id: 2,
+        orderNumber: 'ORD-002',
+        tableId: 8,
+        tableName: 'Table 8',
+        status: OrderStatus.PENDING,
+        priority: OrderPriority.URGENT,
+        type: OrderType.DINE_IN,
+        items: [
+          { id: 3, name: 'Butter Chicken', quantity: 2, price: 320, category: 'Main Course' },
+          { id: 4, name: 'Garlic Naan', quantity: 4, price: 40, category: 'Bread' }
+        ],
+        totalAmount: 800,
+        customerName: 'Priya Patel',
+        waiterName: 'Priya',
+        orderTime: new Date(Date.now() - 5 * 60000),
+        prepTime: 5,
+        estimatedTime: 25
+      },
+      {
+        id: 3,
+        orderNumber: 'ORD-003',
+        status: OrderStatus.READY,
+        priority: OrderPriority.MEDIUM,
+        type: OrderType.TAKEAWAY,
+        items: [
+          { id: 5, name: 'Biryani', quantity: 2, price: 280, category: 'Main Course' }
+        ],
+        totalAmount: 560,
+        customerName: 'Amit Kumar',
+        orderTime: new Date(Date.now() - 25 * 60000),
+        prepTime: 25,
+        estimatedTime: 30
+      }
+    ];
+
+    this.ordersSubject.next(mockOrders);
+  }
+
+  getOrders(): Order[] {
+    return this.ordersSubject.value;
+  }
+
+  updateOrderStatus(orderId: number, status: OrderStatus): void {
+    const orders = this.ordersSubject.value.map(order =>
+      order.id === orderId ? { ...order, status } : order
+    );
+    this.ordersSubject.next(orders);
+  }
+
+  updateOrderPriority(orderId: number, priority: OrderPriority): void {
+    const orders = this.ordersSubject.value.map(order =>
+      order.id === orderId ? { ...order, priority } : order
+    );
+    this.ordersSubject.next(orders);
+  }
+
+  deleteOrder(orderId: number): void {
+    const orders = this.ordersSubject.value.filter(order => order.id !== orderId);
+    this.ordersSubject.next(orders);
+  }
+}

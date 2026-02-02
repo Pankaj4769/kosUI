@@ -1,0 +1,56 @@
+<div class="overlay" *ngIf="item">
+  <div class="popup">
+
+    <h3>{{ item.name }}</h3>
+
+    <!-- PORTION -->
+   <div class="section" *ngIf="item.portions as portionsMap">
+  <label>Portion</label>
+
+  <button
+    *ngFor="let p of portions"
+    [class.active]="selectedPortion === p"
+    (click)="selectedPortion = p">
+
+    {{ p }} – ₹{{ portionsMap[p] }}
+
+  </button>
+</div>
+
+
+    <!-- ADDONS -->
+    <div class="section" *ngIf="item.addons?.length">
+      <label>Add-ons</label>
+
+      <div
+        *ngFor="let a of item.addons; trackBy: trackByName">
+
+        <input
+          type="checkbox"
+          [checked]="isAddonSelected(a)"
+          (change)="toggleAddon(a)" />
+
+        {{ a.name }} (+₹{{ a.price }})
+
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <span>Total: ₹{{ totalPrice }}</span>
+
+      <button
+        class="cancel"
+        (click)="closePopup()">
+        Cancel
+      </button>
+
+      <button
+        class="confirm"
+        (click)="addToCart()">
+        Add
+      </button>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,36 @@
+/* COLOR PALETTE */
+$primary-color: #2f3542;
+$secondary-color: #1e272e;
+$accent-color: #3742fa;
+
+$success-color: #2ed573;
+$danger-color: #ff4757;
+$warning-color: #ffa502;
+
+$light-bg: #f1f2f6;
+$panel-bg: #f7f9fc;
+$text-color: #2f3542;
+$border-color: #dfe4ea;
+
+/* FONTS */
+$font-main: 'Arial', sans-serif;
+
+/* SIZES */
+$radius: 6px;
+$padding: 10px;
+$transition: all 0.2s ease;
+
+:root {
+  --sidebar-bg: #0b132b;
+  --header-bg: #1c2541;
+  --content-bg: #f4f6f8;
+  --card-bg: #ffffff;
+  --border-color: #e0e0e0;
+
+  --primary-text: #1f2937;
+  --secondary-text: #6b7280;
+
+  --accent-green: #22c55e;
+  --accent-orange: #f59e0b;
+  
+}

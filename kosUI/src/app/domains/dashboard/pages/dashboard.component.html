@@ -1,0 +1,695 @@
+<div class="dashboard-container">
+  
+  <!-- ============================================================ -->
+  <!-- HEADER SECTION -->
+  <!-- ============================================================ -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="header-title-block">
+          <h1 class="dashboard-title">
+            <mat-icon class="title-icon">dashboard</mat-icon>
+            Inventory Dashboard
+          </h1>
+          <p class="dashboard-subtitle">Real-time kitchen & orders overview</p>
+        </div>
+        
+        <div class="header-meta">
+          <div class="meta-item">
+            <mat-icon class="meta-icon">access_time</mat-icon>
+            <span class="meta-text">{{ currentTime | date:'short' }}</span>
+          </div>
+          <div class="meta-divider"></div>
+          <div class="meta-item">
+            <mat-icon class="meta-icon">sync</mat-icon>
+            <span class="meta-text">Updated {{ lastUpdated | date:'shortTime' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Date Range Filter -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Time Period</mat-label>
+          <mat-select [(ngModel)]="selectedDateRange" (selectionChange)="onDateRangeChange()">
+            <mat-option *ngFor="let option of dateRangeOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Category Filter -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Category</mat-label>
+          <mat-select [(ngModel)]="selectedCategory" (selectionChange)="onCategoryChange()">
+            <mat-option *ngFor="let option of categoryOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Notifications Bell -->
+        <button mat-icon-button [matMenuTriggerFor]="notifMenu" class="notif-btn">
+          <mat-icon [matBadge]="unreadNotifications" matBadgeColor="warn" [matBadgeHidden]="unreadNotifications === 0">
+            notifications
+          </mat-icon>
+        </button>
+
+        <mat-menu #notifMenu="matMenu" class="notif-menu">
+          <div class="notif-header">
+            <h3>Notifications</h3>
+            <button mat-button (click)="markAllAsRead()" *ngIf="unreadNotifications > 0">
+              Mark all read
+            </button>
+          </div>
+          <mat-divider></mat-divider>
+          <button mat-menu-item 
+                  *ngFor="let notif of notifications" 
+                  (click)="markAsRead(notif.id)"
+                  [class.unread]="!notif.read">
+            <div class="notif-content">
+              <div class="notif-text">{{ notif.text }}</div>
+              <div class="notif-time">{{ notif.time }}</div>
+            </div>
+          </button>
+        </mat-menu>
+
+        <!-- Action Menu -->
+        <button mat-icon-button [matMenuTriggerFor]="menu" class="action-menu-btn">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="refreshDashboard()">
+            <mat-icon>refresh</mat-icon>
+            <span>Refresh Data</span>
+          </button>
+          <button mat-menu-item (click)="exportData()">
+            <mat-icon>download</mat-icon>
+            <span>Export Report</span>
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item>
+            <mat-icon>settings</mat-icon>
+            <span>Dashboard Settings</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- METRICS GRID -->
+  <!-- ============================================================ -->
+  <section class="metrics-section">
+    <div class="metrics-grid">
+      <div class="metric-card" *ngFor="let metric of metrics; trackBy: trackById">
+        <div class="metric-icon-wrapper" [style.background]="metric.bgColor">
+          <mat-icon class="metric-icon" [style.color]="metric.color">{{ metric.icon }}</mat-icon>
+        </div>
+        <div class="metric-content">
+          <div class="metric-label">{{ metric.label }}</div>
+          <div class="metric-value">{{ metric.displayValue }}</div>
+          <div class="metric-subtitle" *ngIf="metric.subtitle">{{ metric.subtitle }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- ALERTS BANNER -->
+  <!-- ============================================================ -->
+  <section class="alerts-section" *ngIf="alerts.length > 0">
+    <div class="alerts-container">
+      <div class="alert-card" 
+           *ngFor="let alert of alerts.slice(0, 3); trackBy: trackById"
+           [ngClass]="'alert-' + alert.type">
+        <mat-icon class="alert-icon">{{ alert.icon }}</mat-icon>
+        <div class="alert-content">
+          <div class="alert-title">{{ alert.title }}</div>
+          <div class="alert-message">{{ alert.message }}</div>
+        </div>
+        <button mat-icon-button class="alert-close" (click)="dismissAlert(alert.id)">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      
+      <div class="alerts-more" *ngIf="alerts.length > 3">
+        <button mat-button color="primary">
+          View {{ alerts.length - 3 }} more alerts
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- ✅ KITCHEN PIPELINE & DAILY GOAL -->
+  <!-- ============================================================ -->
+  <div class="pipeline-goal-row">
+    
+    <!-- Kitchen Pipeline -->
+    <mat-card class="pipeline-card">
+      <mat-card-header class="card-header-compact">
+        <mat-card-title class="card-title-small">
+          <mat-icon class="title-icon-small">restaurant</mat-icon>
+          Kitchen Pipeline
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="card-content-compact">
+        <div class="pipeline-flow">
+          <div class="pipeline-stage pending">
+            <mat-icon class="stage-icon">schedule</mat-icon>
+            <div class="stage-count">{{ ordersByStatus.pending }}</div>
+            <div class="stage-label">Pending</div>
+          </div>
+          <mat-icon class="flow-arrow">arrow_forward</mat-icon>
+          <div class="pipeline-stage preparing">
+            <mat-icon class="stage-icon">restaurant</mat-icon>
+            <div class="stage-count">{{ ordersByStatus.preparing }}</div>
+            <div class="stage-label">Preparing</div>
+          </div>
+          <mat-icon class="flow-arrow">arrow_forward</mat-icon>
+          <div class="pipeline-stage ready">
+            <mat-icon class="stage-icon">check_circle</mat-icon>
+            <div class="stage-count">{{ ordersByStatus.ready }}</div>
+            <div class="stage-label">Ready</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Daily Goal Progress -->
+    <mat-card class="daily-goal-card">
+      <mat-card-header class="card-header-compact">
+        <mat-card-title class="card-title-small">
+          <mat-icon class="title-icon-small">flag</mat-icon>
+          Today's Revenue Goal
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="card-content-compact">
+        <div class="goal-progress">
+          <div class="goal-amounts">
+            <div class="goal-current">{{ formatCurrency(dailyGoal.current) }}</div>
+            <div class="goal-target">Target: {{ formatCurrency(dailyGoal.target) }}</div>
+          </div>
+          <mat-progress-bar 
+            mode="determinate" 
+            [value]="dailyGoal.percent"
+            [color]="dailyGoal.percent >= 100 ? 'primary' : 'accent'"
+            class="goal-bar">
+          </mat-progress-bar>
+          <div class="goal-status">
+            <span *ngIf="dailyGoal.percent < 100" class="goal-remaining">
+              {{ formatCurrency(dailyGoal.remaining) }} remaining
+            </span>
+            <span *ngIf="dailyGoal.percent >= 100" class="goal-achieved">
+              🎉 Goal Achieved!
+            </span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Wait Time Widget -->
+    <div class="wait-time-widget" [ngClass]="avgWaitTime.status">
+      <mat-icon class="wait-icon">schedule</mat-icon>
+      <div class="wait-info">
+        <div class="wait-value">{{ avgWaitTime.minutes }} min</div>
+        <div class="wait-label">Avg Wait Time</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MAIN CONTENT GRID -->
+  <!-- ============================================================ -->
+  <div class="content-grid">
+
+    <!-- LEFT COLUMN: TOP SELLING & REVENUE CHART -->
+    <div class="content-left">
+
+      <!-- TOP SELLING ITEMS -->
+      <mat-card class="data-card top-selling-card">
+        <mat-card-header class="card-header">
+          <div class="card-header-content">
+            <div class="card-title-block">
+              <mat-icon class="card-icon">trending_up</mat-icon>
+              <div>
+                <mat-card-title class="card-title">Top Selling Items</mat-card-title>
+                <mat-card-subtitle class="card-subtitle">
+                  Best performers by revenue
+                </mat-card-subtitle>
+              </div>
+            </div>
+            <mat-chip-set>
+              <mat-chip class="chip-count">{{ filteredTopSelling.length }} items</mat-chip>
+            </mat-chip-set>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content class="card-content">
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="filteredTopSelling.length === 0">
+            <mat-icon class="empty-icon">store</mat-icon>
+            <div class="empty-title">No Sales Data</div>
+            <div class="empty-text">Complete some orders to see top selling items</div>
+          </div>
+
+          <!-- Top Selling List -->
+          <div class="top-selling-list" *ngIf="filteredTopSelling.length > 0">
+            <div class="top-selling-item" 
+                 *ngFor="let item of filteredTopSelling; let i = index; trackBy: trackById"
+                 [class.rank-1]="i === 0"
+                 [class.rank-2]="i === 1"
+                 [class.rank-3]="i === 2">
+              
+              <div class="item-rank">
+                <span class="rank-number">{{ i + 1 }}</span>
+                <mat-icon class="rank-trophy" *ngIf="i < 3">emoji_events</mat-icon>
+              </div>
+
+              <div class="item-image-wrapper">
+                <img class="item-image" 
+                     [src]="item.image" 
+                     [alt]="item.name"
+                     (error)="$any($event.target).src='assets/images/default-food.jpg'">
+              </div>
+
+              <div class="item-info">
+                <div class="item-name">{{ item.name }}</div>
+                <div class="item-category">
+                  <mat-icon class="category-icon">category</mat-icon>
+                  <span>{{ item.category }}</span>
+                </div>
+              </div>
+
+              <div class="item-stats">
+                <div class="stat">
+                  <div class="stat-label">Quantity</div>
+                  <div class="stat-value quantity-value">{{ item.quantity }}</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-label">Revenue</div>
+                  <div class="stat-value revenue-value">{{ formatCurrency(item.revenue) }}</div>
+                </div>
+              </div>
+
+              <mat-progress-bar 
+                class="item-progress"
+                mode="determinate" 
+                [value]="(item.revenue / filteredTopSelling[0].revenue) * 100"
+                color="primary">
+              </mat-progress-bar>
+            </div>
+          </div>
+
+          <!-- Summary Footer -->
+          <div class="top-selling-footer" *ngIf="filteredTopSelling.length > 0">
+            <div class="footer-stat">
+              <span class="footer-label">Total Quantity</span>
+              <span class="footer-value">{{ getTotalQuantitySold() }}</span>
+            </div>
+            <div class="footer-divider"></div>
+            <div class="footer-stat">
+              <span class="footer-label">Total Revenue</span>
+              <span class="footer-value revenue-highlight">
+                {{ formatCurrency(getTotalRevenueSold()) }}
+              </span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- ✅ REVENUE BY HOUR CHART -->
+      <mat-card class="data-card revenue-chart-card">
+        <mat-card-header class="card-header">
+          <div class="card-header-content">
+            <div class="card-title-block">
+              <mat-icon class="card-icon">bar_chart</mat-icon>
+              <div>
+                <mat-card-title class="card-title">Revenue by Hour</mat-card-title>
+                <mat-card-subtitle class="card-subtitle">
+                  Hourly revenue breakdown
+                </mat-card-subtitle>
+              </div>
+            </div>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content class="card-content">
+          <div class="empty-state" *ngIf="revenueByHour.length === 0">
+            <mat-icon class="empty-icon">show_chart</mat-icon>
+            <div class="empty-title">No Revenue Data</div>
+          </div>
+
+          <div class="revenue-chart" *ngIf="revenueByHour.length > 0">
+            <div class="revenue-bar" *ngFor="let item of revenueByHour">
+              <div class="bar" 
+                   [style.height.%]="getRevenueBarHeight(item.amount)"
+                   [matTooltip]="formatCurrency(item.amount)">
+              </div>
+              <div class="bar-label">{{ item.hour }}</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- RECENT ORDERS -->
+      <mat-card class="data-card recent-orders-card">
+        <mat-card-header class="card-header">
+          <div class="card-header-content">
+            <div class="card-title-block">
+              <mat-icon class="card-icon">receipt_long</mat-icon>
+              <div>
+                <mat-card-title class="card-title">Recent Orders</mat-card-title>
+                <mat-card-subtitle class="card-subtitle">
+                  Latest completed orders
+                </mat-card-subtitle>
+              </div>
+            </div>
+            <button mat-button color="primary" class="view-all-btn">
+              View All
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content class="card-content">
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="recentOrders.length === 0">
+            <mat-icon class="empty-icon">receipt</mat-icon>
+            <div class="empty-title">No Recent Orders</div>
+            <div class="empty-text">Orders will appear here once completed</div>
+          </div>
+
+          <!-- Orders List -->
+          <div class="orders-list" *ngIf="recentOrders.length > 0">
+            <div class="order-row" 
+                 *ngFor="let order of recentOrders; trackBy: trackById"
+                 (click)="viewOrderDetails(order)">
+              
+              <div class="order-left">
+                <div class="order-number">{{ order.orderNumber }}</div>
+                <div class="order-meta">
+                  <mat-icon class="meta-icon-small">access_time</mat-icon>
+                  <span>{{ order.time }}</span>
+                  <span class="meta-separator">•</span>
+                  <span>{{ order.items }} items</span>
+                </div>
+              </div>
+
+              <div class="order-customer">
+                <mat-icon class="customer-icon">person</mat-icon>
+                <span>{{ order.customerName }}</span>
+              </div>
+
+              <div class="order-amount">{{ formatCurrency(order.total) }}</div>
+
+              <div class="order-status">
+                <mat-chip class="status-chip" [style.background]="order.statusColor">
+                  {{ order.statusLabel }}
+                </mat-chip>
+              </div>
+
+              <button mat-icon-button class="order-action">
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+
+    <!-- RIGHT COLUMN: STATS & INSIGHTS -->
+    <div class="content-right">
+
+      <!-- ✅ PEAK HOURS & TABLE STATUS -->
+      <mat-card class="data-card insights-card">
+        <mat-card-header class="card-header">
+          <mat-card-title class="card-title">
+            <mat-icon class="card-icon">insights</mat-icon>
+            Quick Insights
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="card-content">
+          
+          <!-- Peak Hours -->
+          <div class="insight-section">
+            <div class="insight-header">Peak Hours</div>
+            <div class="peak-hours-grid">
+              <div class="peak-item">
+                <mat-icon class="peak-icon busy">local_fire_department</mat-icon>
+                <div class="peak-info">
+                  <div class="peak-label">Busiest</div>
+                  <div class="peak-value">{{ peakHours.busiest }}</div>
+                </div>
+              </div>
+              <div class="peak-item">
+                <mat-icon class="peak-icon quiet">nightlight</mat-icon>
+                <div class="peak-info">
+                  <div class="peak-label">Quietest</div>
+                  <div class="peak-value">{{ peakHours.quietest }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="current-status" [ngClass]="peakHours.currentStatus">
+              <mat-icon>info</mat-icon>
+              <span>Currently: {{ peakHours.currentStatus | titlecase }}</span>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <!-- Table Status -->
+          <div class="insight-section">
+            <div class="insight-header">Table Status</div>
+            <div class="table-stats">
+              <div class="table-stat occupied">
+                <div class="stat-icon-large">🪑</div>
+                <div class="stat-number-large">{{ tableStatus.occupied }}</div>
+                <div class="stat-label-small">Occupied</div>
+              </div>
+              <div class="table-stat available">
+                <div class="stat-icon-large">✓</div>
+                <div class="stat-number-large">{{ tableStatus.available }}</div>
+                <div class="stat-label-small">Available</div>
+              </div>
+            </div>
+            <div class="occupancy-bar">
+              <div class="occupancy-fill" [style.width.%]="tableOccupancyPercent"></div>
+            </div>
+            <div class="occupancy-text">{{ tableOccupancyPercent.toFixed(0) }}% Occupancy</div>
+          </div>
+
+        </mat-card-content>
+      </mat-card>
+
+      <!-- ✅ ORDER TYPE DISTRIBUTION -->
+      <mat-card class="data-card order-type-card">
+        <mat-card-header class="card-header">
+          <mat-card-title class="card-title">
+            <mat-icon class="card-icon">donut_small</mat-icon>
+            Order Types
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="card-content">
+          <div class="order-type-list">
+            <div class="order-type-item">
+              <mat-icon class="type-icon dine-in">restaurant</mat-icon>
+              <div class="type-info">
+                <div class="type-label">Dine In</div>
+                <div class="type-count">{{ orderTypeStats.dineIn.count }} orders</div>
+              </div>
+              <div class="type-percent">{{ orderTypeStats.dineIn.percent.toFixed(0) }}%</div>
+            </div>
+            
+            <div class="order-type-item">
+              <mat-icon class="type-icon takeaway">shopping_bag</mat-icon>
+              <div class="type-info">
+                <div class="type-label">Takeaway</div>
+                <div class="type-count">{{ orderTypeStats.takeaway.count }} orders</div>
+              </div>
+              <div class="type-percent">{{ orderTypeStats.takeaway.percent.toFixed(0) }}%</div>
+            </div>
+            
+            <div class="order-type-item">
+              <mat-icon class="type-icon delivery">local_shipping</mat-icon>
+              <div class="type-info">
+                <div class="type-label">Delivery</div>
+                <div class="type-count">{{ orderTypeStats.delivery.count }} orders</div>
+              </div>
+              <div class="type-percent">{{ orderTypeStats.delivery.percent.toFixed(0) }}%</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- CATEGORY DISTRIBUTION -->
+      <mat-card class="data-card category-card">
+        <mat-card-header class="card-header">
+          <div class="card-header-content">
+            <div class="card-title-block">
+              <mat-icon class="card-icon">pie_chart</mat-icon>
+              <div>
+                <mat-card-title class="card-title">Category Distribution</mat-card-title>
+                <mat-card-subtitle class="card-subtitle">
+                  Items across categories
+                </mat-card-subtitle>
+              </div>
+            </div>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content class="card-content">
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="filteredCategoryStats.length === 0">
+            <mat-icon class="empty-icon">category</mat-icon>
+            <div class="empty-title">No Categories</div>
+          </div>
+
+          <!-- Category List -->
+          <div class="category-list" *ngIf="filteredCategoryStats.length > 0">
+            <div class="category-row" 
+                 *ngFor="let cat of filteredCategoryStats; trackBy: trackById">
+              
+              <div class="category-header">
+                <div class="category-label">
+                  <span class="category-dot" [style.background]="cat.color"></span>
+                  <span class="category-name">{{ cat.name }}</span>
+                </div>
+                <div class="category-stats">
+                  <span class="category-count">{{ cat.count }} items</span>
+                  <span class="category-percent">{{ cat.percentage }}%</span>
+                </div>
+              </div>
+
+              <mat-progress-bar 
+                class="category-progress"
+                mode="determinate" 
+                [value]="cat.percentage"
+                [color]="'primary'">
+              </mat-progress-bar>
+
+              <div class="category-value">
+                Value: {{ formatCurrency(cat.value) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Summary -->
+          <div class="category-summary" *ngIf="filteredCategoryStats.length > 0">
+            <div class="summary-item">
+              <span class="summary-label">Total Categories</span>
+              <span class="summary-value">{{ categoryStats.length }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Total Items</span>
+              <span class="summary-value">{{ inventoryItems.length }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- ✅ WAITER PERFORMANCE -->
+      <mat-card class="data-card waiter-performance-card">
+        <mat-card-header class="card-header">
+          <mat-card-title class="card-title">
+            <mat-icon class="card-icon">people</mat-icon>
+            Top Waiters Today
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="card-content">
+          <div class="empty-state" *ngIf="waiterStats.length === 0">
+            <mat-icon class="empty-icon">people_outline</mat-icon>
+            <div class="empty-title">No Waiter Data</div>
+          </div>
+
+          <div class="waiter-list" *ngIf="waiterStats.length > 0">
+            <div class="waiter-row" *ngFor="let waiter of waiterStats; let i = index">
+              <div class="waiter-rank">{{ i + 1 }}</div>
+              <div class="waiter-info">
+                <div class="waiter-name">{{ waiter.name }}</div>
+                <div class="waiter-orders">{{ waiter.orders }} orders</div>
+              </div>
+              <div class="waiter-revenue">{{ formatCurrency(waiter.revenue) }}</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- CRITICAL ALERTS -->
+      <mat-card class="data-card alerts-detail-card">
+        <mat-card-header class="card-header">
+          <div class="card-header-content">
+            <div class="card-title-block">
+              <mat-icon class="card-icon" [matBadge]="alerts.length" matBadgeColor="warn" [matBadgeHidden]="alerts.length === 0">
+                notifications_active
+              </mat-icon>
+              <div>
+                <mat-card-title class="card-title">Critical Alerts</mat-card-title>
+                <mat-card-subtitle class="card-subtitle">
+                  {{ alerts.length }} active alerts
+                </mat-card-subtitle>
+              </div>
+            </div>
+            <button mat-button class="clear-all-btn" (click)="clearAllAlerts()" *ngIf="alerts.length > 0">
+              Clear All
+            </button>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content class="card-content">
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="alerts.length === 0">
+            <mat-icon class="empty-icon">notifications_off</mat-icon>
+            <div class="empty-title">All Clear!</div>
+            <div class="empty-text">No active alerts at this time</div>
+          </div>
+
+          <!-- Alerts List -->
+          <div class="alerts-detail-list" *ngIf="alerts.length > 0">
+            <div class="alert-detail-item" 
+                 *ngFor="let alert of alerts; trackBy: trackById"
+                 [ngClass]="'alert-detail-' + alert.type">
+              
+              <div class="alert-detail-icon-wrapper">
+                <mat-icon class="alert-detail-icon">{{ alert.icon }}</mat-icon>
+              </div>
+
+              <div class="alert-detail-content">
+                <div class="alert-detail-title">{{ alert.title }}</div>
+                <div class="alert-detail-message">{{ alert.message }}</div>
+                <div class="alert-detail-time">
+                  <mat-icon class="time-icon">schedule</mat-icon>
+                  <span>{{ alert.timestamp | date:'short' }}</span>
+                </div>
+              </div>
+
+              <button mat-icon-button 
+                      class="alert-detail-dismiss" 
+                      (click)="dismissAlert(alert.id)"
+                      matTooltip="Dismiss">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- LOADING OVERLAY -->
+  <!-- ============================================================ -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="loading-spinner">
+      <mat-icon class="spinner-icon">refresh</mat-icon>
+      <div class="loading-text">Loading dashboard data...</div>
+    </div>
+  </div>
+
+</div>

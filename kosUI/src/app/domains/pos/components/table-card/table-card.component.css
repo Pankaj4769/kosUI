@@ -1,0 +1,543 @@
+/* =====================================================
+   TABLE CARD - INDIVIDUAL TABLE COMPONENT
+===================================================== */
+
+/* ================= ROOT CARD ================= */
+
+.table-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 2px solid #e5e7eb;
+  border-left: 5px solid transparent;
+  position: relative;
+  user-select: none;
+  min-height: 140px;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  transition: all 0.2s ease;
+}
+
+/* ================= HOVER (POS STYLE) ================= */
+
+.table-card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  background: #fafafa;
+  transform: translateY(-2px);
+}
+
+/* Active click feedback */
+.table-card:active {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(0) scale(0.98);
+}
+
+/* Focus state for keyboard navigation */
+.table-card:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* ================= HEADER ================= */
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-name {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0;
+  color: #111827;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* ================= STATUS BADGE ================= */
+
+.status-badge {
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: #f3f4f6;
+  color: #374151;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.overdue-icon {
+  font-size: 12px;
+  animation: bounce 1.5s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* ================= STATUS COLORS (POS STANDARD) ================= */
+
+/* FREE/AVAILABLE - Green */
+.status-free,
+.status-available {
+  border-left-color: #22c55e;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+/* OPEN/OCCUPIED - Red */
+.status-open,
+.status-occupied {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+}
+
+/* HOLD/RESERVED - Orange */
+.status-hold,
+.status-reserved {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+}
+
+/* PAID - Blue */
+.status-paid {
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+  opacity: 0.9;
+}
+
+/* CLEANING - Gray */
+.status-cleaning {
+  border-left-color: #9ca3af;
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  opacity: 0.85;
+}
+
+/* ================= BADGE COLORS ================= */
+
+.status-free .status-badge,
+.status-available .status-badge {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.status-open .status-badge,
+.status-occupied .status-badge {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.status-hold .status-badge,
+.status-reserved .status-badge {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.status-paid .status-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.status-cleaning .status-badge {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+/* ================= BODY ================= */
+
+.table-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.waiter {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.amount {
+  margin: 0;
+  font-weight: 800;
+  color: #16a34a;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.timer {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ================= PRIORITY (SMART POS ALERT) ================= */
+
+.priority {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: #fee2e2;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  margin-top: 4px;
+}
+
+.priority span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.priority strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: #b91c1c;
+}
+
+/* ================= PROGRESS BAR (OCCUPANCY TIME) ================= */
+
+.progress-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 8px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.5s ease;
+  background: linear-gradient(90deg, #22c55e 0%, #facc15 50%, #ef4444 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer effect for live feel */
+.progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -50%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* ================= WORKLOAD BAR ================= */
+
+.workload {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.workload .label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.workload-bar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.workload-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+  transition: width 0.3s ease;
+  border-radius: 6px;
+}
+
+/* ================= FOOTER ================= */
+
+.table-footer {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #6b7280;
+  gap: 8px;
+}
+
+.footer-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  padding: 2px 6px;
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+/* ================= SPECIAL STATES ================= */
+
+/* 🔴 OPEN TABLE - Blinking Indicator */
+.status-open::before,
+.status-occupied::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: blinkOpen 1.5s infinite;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+  z-index: 10;
+}
+
+@keyframes blinkOpen {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.9);
+  }
+}
+
+/* 🟢 FREE TABLE - Pulse Glow */
+.status-free,
+.status-available {
+  animation: freePulse 3s infinite;
+}
+
+@keyframes freePulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15);
+  }
+}
+
+/* ⚠️ OVERDUE TABLE - Urgent State */
+.table-card.overdue {
+  border: 3px solid #dc2626;
+  animation: urgentPulse 2s infinite;
+}
+
+@keyframes urgentPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+  }
+}
+
+/* Long Wait Indicator */
+.table-card.long-wait::after {
+  content: "⏱️";
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-size: 16px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ================= DISABLED STATE ================= */
+
+.table-card[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ================= RESPONSIVE POS ================= */
+
+@media (max-width: 1024px) {
+  .table-card {
+    padding: 12px 14px;
+    min-height: 130px;
+    gap: 8px;
+  }
+
+  .table-name {
+    font-size: 15px;
+  }
+
+  .amount {
+    font-size: 15px;
+  }
+
+  .status-badge {
+    font-size: 9px;
+    padding: 3px 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-card {
+    padding: 10px 12px;
+    min-height: 120px;
+    gap: 6px;
+  }
+
+  .table-name {
+    font-size: 14px;
+  }
+
+  .waiter {
+    font-size: 12px;
+  }
+
+  .amount {
+    font-size: 14px;
+  }
+
+  .progress-bar {
+    height: 6px;
+  }
+
+  .workload-bar {
+    height: 5px;
+  }
+
+  .footer-item {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-card {
+    padding: 8px 10px;
+    min-height: 100px;
+    gap: 4px;
+  }
+
+  .table-name {
+    font-size: 13px;
+  }
+
+  .status-badge {
+    font-size: 8px;
+    padding: 2px 6px;
+  }
+
+  .waiter {
+    font-size: 11px;
+  }
+
+  .amount {
+    font-size: 13px;
+  }
+
+  .progress-bar,
+  .workload-bar {
+    height: 4px;
+  }
+
+  .footer-item {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+}
+
+/* ================= PRINT STYLES ================= */
+
+@media print {
+  .table-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+  }
+
+  .table-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .progress-bar::after {
+    display: none;
+  }
+}
+
+/* ================= ACCESSIBILITY ================= */
+
+.table-card[aria-selected="true"] {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .table-card,
+  .progress-fill,
+  .workload-fill,
+  .status-open::before,
+  .status-free {
+    animation: none !important;
+    transition: none !important;
+  }
+}

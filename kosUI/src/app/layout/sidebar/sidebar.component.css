@@ -1,0 +1,150 @@
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background: linear-gradient(180deg, #020617, #0f172a);
+  color: #e5e7eb;
+  transition: width 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.collapsed {
+  width: 72px;
+}
+
+/* Toggle */
+.toggle {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  padding: 12px;
+  cursor: pointer;
+  margin-left: 8px;
+  display: flex;
+}
+
+/* Logo */
+.logo {
+  text-align: left;
+  font-size: 22px;
+  font-weight: 700;
+  padding: 6px 21px 16px;
+  letter-spacing: 2px;
+}
+
+/* Menu Item */
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  margin: 3px 10px;
+  border-radius: 10px;
+  color: #c7d2fe;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.menu-item:hover {
+  background: rgba(37, 99, 235, 0.12);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+/* Active Route */
+.menu-item.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+/* Group Header */
+.group-header {
+  background: transparent;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* Active Group */
+.active-group {
+  background: rgba(37, 99, 235, 0.18);
+}
+
+/* Submenu (CLICK BASED, NOT HOVER) */
+.submenu {
+  margin-left: 30px;
+  padding-left: 12px;
+  border-left: 2px solid rgba(255, 255, 255, 0.08);
+
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 0.25s ease;
+}
+
+/* ✅ Show submenu when expanded */
+.menu-group.expanded .submenu {
+  max-height: 500px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Submenu Items */
+.submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.submenu-item:hover {
+  background: rgba(37, 99, 235, 0.15);
+  color: #fff;
+  transform: translateX(3px);
+}
+
+.submenu-item.active {
+  background: rgba(37, 99, 235, 0.3);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Icons */
+.icon {
+  font-size: 20px;
+  min-width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Arrow */
+.arrow {
+  font-size: 16px;
+  opacity: 0.6;
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+/* Rotate arrow when expanded */
+.menu-group.expanded .arrow {
+  transform: rotate(180deg);
+}
+
+/* Collapse Mode */
+.sidebar.collapsed .text,
+.sidebar.collapsed .arrow,
+.sidebar.collapsed .submenu {
+  display: none;
+}

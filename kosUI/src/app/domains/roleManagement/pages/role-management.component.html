@@ -1,0 +1,116 @@
+<!-- Single namespace wrapper -->
+<div class="staff-role-mgmt">
+    <div class="container">
+        <div class="header">
+            <h1>Staff Role Management</h1>
+            <button class="btn btn-primary" (click)="openModal()">
+                <span>+</span> Create New Role
+            </button>
+        </div>
+
+        <div class="roles-grid">
+            <!-- Role Cards -->
+            <div class="role-card" *ngFor="let role of roles">
+                <div class="role-header">
+                    <div style="flex: 1; min-width: 0;">
+                        <div class="role-title">{{ role.name }}</div>
+                        <div class="role-description">{{ role.description || 'No description provided' }}</div>
+                    </div>
+                    <div class="role-actions">
+                        <button class="icon-btn" (click)="openModal(role.id)" title="Edit">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                        <button class="icon-btn" (click)="deleteRole(role.id)" title="Delete">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="permissions-list">
+                    <span class="permission-tag" *ngFor="let perm of getVisiblePermissions(role.permissions)">
+                        {{ formatPermission(perm) }}
+                    </span>
+                    <span class="permission-tag" 
+                          *ngIf="getRemainingCount(role.permissions) > 0"
+                          style="background: var(--color-secondary); color: var(--color-text);">
+                        +{{ getRemainingCount(role.permissions) }} more
+                    </span>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" *ngIf="roles.length === 0" style="grid-column: 1/-1;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <h3>No roles created yet</h3>
+                <p>Create your first staff role to get started</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" [class.active]="isModalOpen" (click)="onModalBackdropClick($event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>{{ getModalTitle() }}</h2>
+                <button class="close-btn" (click)="closeModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <form (submit)="saveRole(); $event.preventDefault()">
+                    <div class="form-group">
+                        <label class="form-label" for="roleName">Role Name *</label>
+                        <input type="text" 
+                               id="roleName" 
+                               class="form-input" 
+                               [(ngModel)]="roleName"
+                               name="roleName"
+                               placeholder="e.g., Manager, Chef, Waiter" 
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="roleDescription">Description</label>
+                        <textarea id="roleDescription" 
+                                  class="form-input" 
+                                  [(ngModel)]="roleDescription"
+                                  name="roleDescription"
+                                  placeholder="Brief description of this role's responsibilities"></textarea>
+                    </div>
+
+                    <div class="permissions-section">
+                        <h3 class="form-label">Permissions</h3>
+
+                        <div class="permission-category" *ngFor="let category of permissionCategories">
+                            <div class="category-title">{{ category.title }}</div>
+                            <div class="permission-checkboxes">
+                                <div class="checkbox-wrapper" *ngFor="let perm of category.permissions">
+                                    <input type="checkbox" 
+                                           [id]="'perm-' + perm.id" 
+                                           [value]="perm.id"
+                                           [checked]="isPermissionSelected(perm.id)"
+                                           (change)="togglePermission(perm.id)">
+                                    <label [for]="'perm-' + perm.id">{{ perm.label }}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Role</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

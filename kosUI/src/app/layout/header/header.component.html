@@ -1,0 +1,54 @@
+<header class="header">
+
+  <!-- LEFT SECTION -->
+  <div class="left">
+
+    <!-- <button class="menu-btn" (click)="toggleSidebar()">
+      <span class="material-icons">menu</span>
+    </button> -->
+
+    <div class="page-title">
+      Kitchen Order System
+    </div>
+
+  </div>
+
+  <!-- CENTER SECTION (SEARCH) -->
+  <div class="center">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input type="text" placeholder="Search menu, orders, inventory..." />
+    </div>
+  </div>
+
+  <!-- RIGHT SECTION -->
+  <div class="right">
+
+    <!-- Notifications -->
+    <button class="icon-btn">
+      <span class="material-icons">notifications</span>
+      <span class="badge">3</span>
+    </button>
+
+    <!-- Theme Toggle (future) -->
+    <button class="icon-btn">
+      <span class="material-icons">dark_mode</span>
+    </button>
+
+    <!-- User Profile -->
+    <div class="user" (click)="toggleUserMenu()">
+      <div class="avatar">A</div>
+      <span class="username">{{ userName }}</span>
+      <span class="material-icons arrow">expand_more</span>
+
+      <!-- Dropdown -->
+      <div class="user-menu" *ngIf="showUserMenu">
+        <div class="menu-item">Profile</div>
+        <div class="menu-item">Settings</div>
+        <div class="menu-item logout" (click)="logout()">Logout</div>
+      </div>
+    </div>
+
+  </div>
+
+</header>

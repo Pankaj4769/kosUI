@@ -1,0 +1,52 @@
+<div class="discount-box">
+
+  <h4>Discounts</h4>
+
+  <!-- ITEM LEVEL DISCOUNT -->
+  <div>
+    <label>Item Discount:</label>
+
+    <select [(ngModel)]="itemType">
+      <option value="PERCENT">Percent</option>
+      <option value="FLAT">Flat</option>
+    </select>
+
+    <input type="number" [(ngModel)]="itemValue" />
+
+    <button (click)="applyItem()">
+      Apply to Items
+    </button>
+  </div>
+
+  <hr>
+
+  <!-- BILL LEVEL DISCOUNT -->
+  <div>
+    <label>Bill Discount:</label>
+
+    <select [(ngModel)]="billType">
+      <option value="PERCENT">Percent</option>
+      <option value="FLAT">Flat</option>
+    </select>
+
+    <input type="number" [(ngModel)]="billValue" />
+
+    <button (click)="applyBill()">
+      Apply on Bill
+    </button>
+  </div>
+
+  <hr>
+
+  <!-- COUPON -->
+  <div>
+    <label>Coupon Code:</label>
+
+    <input [(ngModel)]="couponCode" />
+
+    <button (click)="applyCoupon()">
+      Apply Coupon
+    </button>
+  </div>
+
+</div>
