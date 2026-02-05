@@ -180,9 +180,6 @@ export class ManageInventoryComponent {
   }
 
   saveItem() {
-
-    console.log(this.selectedCategories.length)
-
     if (!this.validateForm()) {
       return;
     }
@@ -278,7 +275,7 @@ export class ManageInventoryComponent {
       item.enabled = false;
     }
 
-    this.inventoryService.updateItem(item);
+    this.inventoryService.restockItem(item);
   }
 
   formatTime(time: string): string {
