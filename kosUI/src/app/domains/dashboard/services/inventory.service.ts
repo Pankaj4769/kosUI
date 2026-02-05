@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Item } from '../models/item.model';
 import { HttpClient } from '@angular/common/http';
+import { MessageResponse } from '../models/messageResponse.model';
 
 @Injectable({
   providedIn: 'root'
@@ -43,24 +44,23 @@ export class InventoryService {
   }
 
   updateItem(updated: Item) {
+    this.httpclient.patch<Item>(this.baseUrl+'/updateItem',updated).subscribe(res=>{
 
-    this.httpclient.patch<Item>(this.baseUrl+'/restockItem',updated).subscribe(res=>{
-
-      let itm = res;
-      const index = this.items.findIndex(i => i.id === updated.id);
-
-      if (index !== -1) {
-        this.items[index] = updated;
+      let newItem= res;
+      if(newItem.id != null && newItem.id > 0){
+        this.getItemlist();
       }
     });
+    
   }
 
   deleteItem(id: number | null) {
-this.httpclient.delete<String>(this.baseUrl+'/deleteItemById/'+id).subscribe(res=>{
-  if(res == 'Success'){
-    this.items = this.items.filter(i => i.id !== id);
-  }
-});
+    this.httpclient.delete<MessageResponse>(this.baseUrl+'/deleteItemById/'+id).subscribe(res=>{
+      let message = res;
+      if(message.status){
+        this.getItemlist();
+      }
+    });
   }
 
   toggleItemStatus(id: number|null, status:boolean) {
@@ -74,12 +74,16 @@ this.httpclient.delete<String>(this.baseUrl+'/deleteItemById/'+id).subscribe(res
     });
   }
 
-  restockItem(id: number, qty: number) {
-    const item = this.items.find(i => i.id === id);
+  restockItem(updated: Item) {
+    this.httpclient.patch<Item>(this.baseUrl+'/restockItem',updated).subscribe(res=>{
 
-    if (item && qty > 0) {
-      item.qty += qty;
-    }
+      let itm = res;
+      const index = this.items.findIndex(i => i.id === updated.id);
+
+      if (index !== -1) {
+        this.items[index] = updated;
+      }
+    });
   }
 
   getInventoryValue(): number {
