@@ -4,7 +4,8 @@ import {
   EventEmitter, 
   OnInit,
   ChangeDetectionStrategy,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  Input
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +21,9 @@ import { MatBadgeModule } from '@angular/material/badge';
 
 // Models
 import { CartItem } from '../../models/cart-item.model';
+import { Item } from '../../../dashboard/models/item.model';
+import { InventoryService } from '../../../dashboard/services/inventory.service';
+import { CartService } from '../../services/cart.service';
 
 /* ================= TYPES ================= */
 
@@ -75,13 +79,17 @@ export class MenuAreaComponent implements OnInit {
 
   /* ================= OUTPUTS ================= */
 
+  @Input() cart: CartItem[] = [];
+
   @Output() itemAdd = new EventEmitter<Omit<CartItem, 'qty'>>();
+  @Output() itemRemove = new EventEmitter<number>();
+  @Output() cartUpdate = new EventEmitter<CartItem[]>();
 
   /* ================= STATE ================= */
 
-  menuItems: MenuItem[] = [];
+  menuItems: Item[] = [];
   categories: MenuCategory[] = [];
-  filteredItems: MenuItem[] = [];
+  filteredItems: Item[] = [];
   
   selectedCategory = 'all';
   searchQuery = '';
@@ -94,15 +102,23 @@ export class MenuAreaComponent implements OnInit {
   sortBy: 'name' | 'price' | 'popular' = 'name';
 
   // Available tags
-  availableTags = ['Vegetarian', 'Spicy', 'Popular', 'New'];
+  availableTags = ['Veg', 'Non-Veg'];
+
+  cartItemStatus: boolean = false;
+  cartItemQty: number = 0;
 
   /* ================= CONSTRUCTOR ================= */
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private inventoryservice: InventoryService,
+    private cartService: CartService
+  ) {}
 
   /* ================= LIFECYCLE ================= */
 
   ngOnInit(): void {
+    this.inventoryservice.getItemlist();
     this.loadMenuData();
   }
 
@@ -115,6 +131,9 @@ export class MenuAreaComponent implements OnInit {
     try {
       // Mock data - Replace with actual API call
       this.menuItems = this.getMockMenuItems();
+      this.menuItems.forEach (item =>{
+        item.qty = 0;
+      });
       this.categories = this.generateCategories();
       this.applyFilters();
     } catch (err) {
@@ -126,217 +145,16 @@ export class MenuAreaComponent implements OnInit {
     }
   }
 
-  private getMockMenuItems(): MenuItem[] {
-    return [
-      // Starters
-      {
-        id: 1,
-        name: 'Paneer Tikka',
-        category: 'Starters',
-        price: 249,
-        description: 'Grilled cottage cheese marinated in spices',
-        available: true,
-        portions: ['Half', 'Full'],
-        addons: [
-          { name: 'Extra Cheese', price: 30 },
-          { name: 'Mint Chutney', price: 20 }
-        ],
-        tags: ['Vegetarian', 'Popular'],
-        popular: true,
-        vegetarian: true
-      },
-      {
-        id: 2,
-        name: 'Chicken 65',
-        category: 'Starters',
-        price: 299,
-        description: 'Spicy fried chicken with curry leaves',
-        available: true,
-        portions: ['Half', 'Full'],
-        tags: ['Spicy', 'Popular'],
-        popular: true,
-        spicy: true
-      },
-      {
-        id: 3,
-        name: 'French Fries',
-        category: 'Starters',
-        price: 129,
-        description: 'Crispy golden fries',
-        available: true,
-        addons: [
-          { name: 'Cheese Dip', price: 40 },
-          { name: 'Peri Peri Seasoning', price: 20 }
-        ],
-        tags: ['Vegetarian'],
-        vegetarian: true
-      },
-
-      // Main Course
-      {
-        id: 4,
-        name: 'Butter Chicken',
-        category: 'Main Course',
-        price: 349,
-        description: 'Creamy tomato-based curry with tender chicken',
-        available: true,
-        portions: ['Half', 'Full'],
-        addons: [
-          { name: 'Extra Gravy', price: 50 },
-          { name: 'Butter Naan', price: 40 }
-        ],
-        tags: ['Popular'],
-        popular: true
-      },
-      {
-        id: 5,
-        name: 'Paneer Butter Masala',
-        category: 'Main Course',
-        price: 299,
-        description: 'Rich and creamy cottage cheese curry',
-        available: true,
-        portions: ['Half', 'Full'],
-        tags: ['Vegetarian', 'Popular'],
-        popular: true,
-        vegetarian: true
-      },
-      {
-        id: 6,
-        name: 'Dal Makhani',
-        category: 'Main Course',
-        price: 199,
-        description: 'Slow-cooked black lentils in creamy gravy',
-        available: true,
-        tags: ['Vegetarian'],
-        vegetarian: true
-      },
-
-      // Rice & Breads
-      {
-        id: 7,
-        name: 'Veg Biryani',
-        category: 'Rice',
-        price: 249,
-        description: 'Fragrant basmati rice with mixed vegetables',
-        available: true,
-        addons: [
-          { name: 'Raita', price: 30 },
-          { name: 'Extra Gravy', price: 40 }
-        ],
-        tags: ['Vegetarian', 'Popular'],
-        popular: true,
-        vegetarian: true
-      },
-      {
-        id: 8,
-        name: 'Chicken Biryani',
-        category: 'Rice',
-        price: 299,
-        description: 'Aromatic rice layered with spiced chicken',
-        available: true,
-        addons: [
-          { name: 'Raita', price: 30 },
-          { name: 'Extra Chicken', price: 80 }
-        ],
-        tags: ['Popular'],
-        popular: true
-      },
-      {
-        id: 9,
-        name: 'Garlic Naan',
-        category: 'Breads',
-        price: 49,
-        description: 'Soft flatbread topped with garlic',
-        available: true,
-        tags: ['Vegetarian'],
-        vegetarian: true
-      },
-      {
-        id: 10,
-        name: 'Butter Naan',
-        category: 'Breads',
-        price: 39,
-        description: 'Classic butter-brushed naan',
-        available: true,
-        tags: ['Vegetarian'],
-        vegetarian: true
-      },
-
-      // Beverages
-      {
-        id: 11,
-        name: 'Mango Lassi',
-        category: 'Beverages',
-        price: 89,
-        description: 'Sweet yogurt drink with mango',
-        available: true,
-        tags: ['Vegetarian', 'Popular'],
-        popular: true,
-        vegetarian: true
-      },
-      {
-        id: 12,
-        name: 'Masala Chai',
-        category: 'Beverages',
-        price: 39,
-        description: 'Traditional Indian spiced tea',
-        available: true,
-        tags: ['Vegetarian'],
-        vegetarian: true
-      },
-      {
-        id: 13,
-        name: 'Cold Coffee',
-        category: 'Beverages',
-        price: 99,
-        description: 'Chilled coffee with ice cream',
-        available: true,
-        tags: ['Vegetarian'],
-        vegetarian: true
-      },
-
-      // Desserts
-      {
-        id: 14,
-        name: 'Gulab Jamun',
-        category: 'Desserts',
-        price: 79,
-        description: 'Deep-fried milk dumplings in sugar syrup',
-        available: true,
-        tags: ['Vegetarian', 'Popular'],
-        popular: true,
-        vegetarian: true
-      },
-      {
-        id: 15,
-        name: 'Rasmalai',
-        category: 'Desserts',
-        price: 99,
-        description: 'Soft cottage cheese patties in sweet milk',
-        available: true,
-        tags: ['Vegetarian'],
-        vegetarian: true
-      },
-      {
-        id: 16,
-        name: 'Ice Cream',
-        category: 'Desserts',
-        price: 69,
-        description: 'Assorted flavors',
-        available: true,
-        tags: ['Vegetarian'],
-        vegetarian: true
-      }
-    ];
+  private getMockMenuItems(): Item[] {
+    return this.inventoryservice.getAllItems();
   }
 
   private generateCategories(): MenuCategory[] {
     const categoryCounts = new Map<string, number>();
-    
-    this.menuItems.forEach(item => {
-      const count = categoryCounts.get(item.category) || 0;
-      categoryCounts.set(item.category, count + 1);
-    });
+    categoryCounts.set('Breakfast', 3);
+    categoryCounts.set('Lunch', 3);
+    categoryCounts.set('Snacks', 3);
+    categoryCounts.set('Dinner', 3);
 
     const categoryIcons: { [key: string]: string } = {
       'Starters': 'restaurant_menu',
@@ -379,7 +197,7 @@ export class MenuAreaComponent implements OnInit {
         .find(c => c.id === this.selectedCategory)?.name;
       
       if (categoryName) {
-        filtered = filtered.filter(item => item.category === categoryName);
+        filtered = filtered.filter(item => item.category[0] === categoryName);
       }
     }
 
@@ -388,23 +206,21 @@ export class MenuAreaComponent implements OnInit {
       const query = this.searchQuery.toLowerCase();
       filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(query) ||
-        item.description?.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query)
+        item.category[0].toLowerCase().includes(query)
       );
     }
 
     // Tag filters
-    if (this.selectedTags.length > 0) {
+    if (this.selectedTags.length == 1) {
       filtered = filtered.filter(item => {
-        if (this.selectedTags.includes('Vegetarian') && !item.vegetarian) return false;
-        if (this.selectedTags.includes('Spicy') && !item.spicy) return false;
-        if (this.selectedTags.includes('Popular') && !item.popular) return false;
+        if (this.selectedTags.includes('Veg') && !(item.group=='Veg')) return false;
+        if (this.selectedTags.includes('Non-Veg') && !(item.group=='Non-Veg')) return false;
         return true;
       });
     }
 
     // Availability filter
-    filtered = filtered.filter(item => item.available);
+    filtered = filtered.filter(item => item.enabled);
 
     // Sorting
     this.applySorting(filtered);
@@ -413,16 +229,13 @@ export class MenuAreaComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  private applySorting(items: MenuItem[]): void {
+  private applySorting(items: Item[]): void {
     switch (this.sortBy) {
       case 'name':
         items.sort((a, b) => a.name.localeCompare(b.name));
         break;
       case 'price':
         items.sort((a, b) => a.price - b.price);
-        break;
-      case 'popular':
-        items.sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0));
         break;
     }
   }
@@ -485,46 +298,70 @@ export class MenuAreaComponent implements OnInit {
 
   /* ================= ADD TO CART ================= */
 
-  quickAddItem(item: MenuItem, portion?: 'Half' | 'Full'): void {
+  quickAddItem(item: Item, portion?: 'Half' | 'Full'): void {
+    if(item.id != null){
     const cartItem: Omit<CartItem, 'qty'> = {
-      id: Date.now(), // Temporary ID
+      id: item.id,
       name: item.name,
       price: item.price,
-      portion: portion,
-      category: item.category,
-      image: item.image
+      category: item.category[0],
+      image: item.image,
+      addedToCartStatus: true,
     };
-
+    item.addedToCartStatus = true;
+    item.qty += 1;
     this.itemAdd.emit(cartItem);
   }
+  }
 
-  addItemWithOptions(item: MenuItem): void {
-    // Open customization dialog if item has portions or addons
-    if (item.portions?.length || item.addons?.length) {
-      // TODO: Open customization modal
-      console.log('Open customization for:', item);
-      // For now, just add with default
+  addItemWithOptions(item: Item): void {
+
       this.quickAddItem(item);
-    } else {
-      this.quickAddItem(item);
+  }
+
+  incrementQuantity(item: Item): void {
+    this.quickAddItem(item);
+  }
+
+  decrementQuantity(item: Item): void {
+
+    if(item.qty == 1){
+      item.addedToCartStatus = false;
+    }
+
+    if(item.id != null && item.qty >= 0){
+      item.qty -= 1;
+      this.cartService.decrementItem(item.id);
+    }
+ 
+    //this.cartUpdate.emit(updatedCart);
+  }
+
+  /* ================= ITEM MANAGEMENT ================= */
+
+  removeItem(itemId: number | null): void {
+    if(itemId != null){
+    this.itemRemove.emit(itemId);
     }
   }
 
+
+
+
   /* ================= HELPERS ================= */
 
-  getItemBadges(item: MenuItem): string[] {
+  getItemBadges(item: Item): string[] {
     const badges: string[] = [];
-    if (item.popular) badges.push('Popular');
-    if (item.vegetarian) badges.push('Veg');
-    if (item.spicy) badges.push('Spicy');
+    if (item.group == 'Veg') badges.push('Veg');
+    if (item.group == 'Non-Veg') badges.push('Non-Veg');
     return badges;
   }
 
   getBadgeIcon(badge: string): string {
     switch (badge) {
-      case 'Popular': return 'star';
+      //case 'Popular': return 'star';
       case 'Veg': return 'eco';
-      case 'Spicy': return 'local_fire_department';
+      case 'Non-Veg': return 'local_fire_department';
       default: return 'label';
     }
   }

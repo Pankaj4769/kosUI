@@ -373,7 +373,7 @@ export class CashierComponent implements OnInit, OnDestroy {
     this.cartService.addItem({
       ...item,
       qty: 1,
-      id: 0
+      id: item.id
     } as CartItem);
 
     this.syncTableOrder();

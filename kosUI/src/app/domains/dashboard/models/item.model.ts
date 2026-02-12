@@ -22,6 +22,7 @@ export interface Item {
   image?: string;
 
   enabled: boolean;
+  addedToCartStatus?: boolean;
 }
 
 
