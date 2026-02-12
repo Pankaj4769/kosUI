@@ -312,7 +312,7 @@ kbd {
 
 .menu-area,
 .center-panel {
-  overflow: hidden;
+  overflow: auto;
   background: var(--bg-primary);
 }
 

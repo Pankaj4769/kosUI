@@ -8,4 +8,5 @@ export interface CartItem {
   notes?: string;
   image?: string;
   category?: string;
+  addedToCartStatus?: boolean;
 }
