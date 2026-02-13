@@ -1,50 +1,9 @@
 /* =====================================================
-   IMPORTS & VARIABLES
+   IMPORTS
 ===================================================== */
 
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
-:root {
-  /* Brand Colors */
-  --primary-color: #2e7d32;
-  --primary-dark: #1b5e20;
-  --primary-light: #4caf50;
-  
-  --danger-color: #c62828;
-  --danger-light: #ef5350;
-  
-  --warning-color: #f57c00;
-  --warning-light: #ff9800;
-  
-  --info-color: #1565c0;
-  --info-light: #2196f3;
-  
-  --secondary-color: #546e7a;
-  
-  /* Neutrals */
-  --bg-primary: #f8fafc;
-  --bg-secondary: #ffffff;
-  --border-color: #e5e7eb;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-  
-  /* Shadows */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.12);
-  
-  /* Transitions */
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s ease;
-  
-  /* Spacing */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 12px;
-  --space-lg: 16px;
-  --space-xl: 24px;
-}
 
 /* =====================================================
    MAIN CONTAINER - ALIGNED WITH .cashier-page
@@ -66,6 +25,7 @@
   opacity: 0.7;
 }
 
+
 /* =====================================================
    ENHANCED HEADER - ALIGNED WITH .cashier-header
 ===================================================== */
@@ -77,7 +37,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); /* shadow-lg */
   z-index: 100;
   position: relative;
   min-height: 64px;
@@ -226,7 +186,7 @@
   gap: 6px;
   padding: 10px 16px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: 0.15s ease; /* transition-fast */
   color: white;
   font-size: 14px;
   font-weight: 600;
@@ -244,6 +204,7 @@
   height: 20px;
 }
 
+
 /* =====================================================
    KEYBOARD SHORTCUTS BAR
 ===================================================== */
@@ -254,7 +215,7 @@
   gap: 16px;
   padding: 8px 20px;
   background: #ffffff;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #e5e7eb; /* border-color */
   overflow-x: auto;
 }
 
@@ -263,7 +224,7 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: #6b7280; /* text-secondary */
   white-space: nowrap;
 }
 
@@ -277,6 +238,7 @@ kbd {
   font-family: 'Courier New', monospace;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
+
 
 /* =====================================================
    MAIN AREA - ALIGNED WITH .cashier-content
@@ -294,9 +256,9 @@ kbd {
 }
 
 .panel {
-  background: var(--bg-secondary);
+  background: #ffffff; /* bg-secondary */
   border-radius: 12px;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* shadow-md */
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -306,14 +268,14 @@ kbd {
 .order-sidebar,
 .left-panel {
   overflow-y: auto;
-  background: var(--bg-secondary);
-  border-right: 1px solid var(--border-color);
+  background: #ffffff; /* bg-secondary */
+  border-right: 1px solid #e5e7eb; /* border-color */
 }
 
 .menu-area,
 .center-panel {
   overflow: auto;
-  background: var(--bg-primary);
+  background: #f8fafc; /* bg-primary */
 }
 
 .cart-area,
@@ -322,9 +284,10 @@ kbd {
   top: 0;
   height: calc(100vh - 200px);
   overflow-y: auto;
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border-color);
+  background: #ffffff; /* bg-secondary */
+  border-left: 1px solid #e5e7eb; /* border-color */
 }
+
 
 /* =====================================================
    BOTTOM ACTION BAR
@@ -333,7 +296,7 @@ kbd {
 .bottom-bar {
   height: 80px;
   background: #ffffff;
-  border-top: 2px solid var(--border-color);
+  border-top: 2px solid #e5e7eb; /* border-color */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -373,25 +336,24 @@ kbd {
 }
 
 .summary-label {
-  color: var(--text-secondary);
+  color: #6b7280; /* text-secondary */
   font-weight: 600;
 }
 
 .summary-value {
-  color: var(--text-primary);
+  color: #111827; /* text-primary */
   font-weight: 800;
 }
 
 .summary-divider {
-  color: var(--border-color);
+  color: #e5e7eb; /* border-color */
 }
 
 .empty-state-text {
-  color: var(--text-muted);
+  color: #9ca3af; /* text-muted */
   font-size: 13px;
   font-style: italic;
 }
-
 /* =====================================================
    ACTION BUTTONS
 ===================================================== */
@@ -406,14 +368,14 @@ kbd {
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: var(--transition-normal);
-  box-shadow: var(--shadow-sm);
+  transition: 0.25s ease; /* transition-normal */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06); /* shadow-sm */
   white-space: nowrap;
 }
 
 .action-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* shadow-md */
 }
 
 .action-btn:active:not(:disabled) {
@@ -434,17 +396,17 @@ kbd {
 
 /* Button Variants */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--primary-dark), #145214);
+  background: linear-gradient(135deg, #1b5e20, #145214);
 }
 
 .btn-secondary {
   background: #eceff1;
-  color: var(--text-primary);
+  color: #111827; /* text-primary */
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -452,7 +414,7 @@ kbd {
 }
 
 .btn-warning {
-  background: linear-gradient(135deg, var(--warning-color), #ef6c00);
+  background: linear-gradient(135deg, #f57c00, #ef6c00);
   color: white;
 }
 
@@ -461,7 +423,7 @@ kbd {
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, var(--danger-color), #b71c1c);
+  background: linear-gradient(135deg, #c62828, #b71c1c);
   color: white;
 }
 
@@ -470,7 +432,7 @@ kbd {
 }
 
 .btn-info {
-  background: linear-gradient(135deg, var(--info-color), #0d47a1);
+  background: linear-gradient(135deg, #1565c0, #0d47a1);
   color: white;
 }
 
@@ -491,12 +453,13 @@ kbd {
 
 .pay-btn .arrow {
   margin-left: 4px;
-  transition: transform var(--transition-fast);
+  transition: transform 0.15s ease; /* transition-fast */
 }
 
 .pay-btn:hover:not(:disabled) .arrow {
   transform: translateX(4px);
 }
+
 
 /* =====================================================
    NOTIFICATIONS PANEL (DROPDOWN)
@@ -510,7 +473,7 @@ kbd {
   max-height: 400px;
   background: white;
   border-radius: 12px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); /* shadow-lg */
   z-index: 1000;
   overflow: hidden;
   animation: slideDown 0.3s ease;
@@ -532,7 +495,7 @@ kbd {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #e5e7eb; /* border-color */
 }
 
 .notifications-header h3 {
@@ -553,11 +516,11 @@ kbd {
   gap: 12px;
   padding: 16px;
   margin-bottom: 12px;
-  background: var(--bg-secondary);
+  background: #ffffff; /* bg-secondary */
   border-radius: 8px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06); /* shadow-sm */
   border-bottom: 1px solid #f3f4f6;
-  transition: var(--transition-fast);
+  transition: 0.15s ease; /* transition-fast */
   animation: slideIn 0.3s ease;
 }
 
@@ -579,17 +542,17 @@ kbd {
 
 .notification.success,
 .notification-success {
-  border-left: 4px solid var(--primary-color);
+  border-left: 4px solid #2e7d32; /* primary-color */
 }
 
 .notification.error,
 .notification-error {
-  border-left: 4px solid var(--danger-color);
+  border-left: 4px solid #c62828; /* danger-color */
 }
 
 .notification.info,
 .notification-info {
-  border-left: 4px solid var(--info-color);
+  border-left: 4px solid #1565c0; /* info-color */
 }
 
 .notif-icon,
@@ -598,34 +561,34 @@ kbd {
   font-size: 20px;
   width: 20px;
   height: 20px;
-  color: var(--text-secondary);
+  color: #6b7280; /* text-secondary */
 }
 
 .notification-success .notif-icon,
 .notification.success mat-icon {
-  color: var(--primary-color);
+  color: #2e7d32; /* primary-color */
 }
 
 .notification-error .notif-icon,
 .notification.error mat-icon {
-  color: var(--danger-color);
+  color: #c62828; /* danger-color */
 }
 
 .notification-info .notif-icon,
 .notification.info mat-icon {
-  color: var(--info-color);
+  color: #1565c0; /* info-color */
 }
 
 .notification-content,
 .notif-message {
   flex: 1;
   font-size: 13px;
-  color: var(--text-primary);
+  color: #111827; /* text-primary */
 }
 
 .notification-message {
   font-size: 14px;
-  color: var(--text-primary);
+  color: #111827; /* text-primary */
   margin: 0;
 }
 
@@ -635,17 +598,18 @@ kbd {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-muted);
+  color: #9ca3af; /* text-muted */
   padding: 4px;
   border-radius: 4px;
-  transition: var(--transition-fast);
+  transition: 0.15s ease; /* transition-fast */
 }
 
 .notification-close:hover,
 .notif-close:hover {
   background: #f3f4f6;
-  color: var(--text-primary);
+  color: #111827; /* text-primary */
 }
+
 
 /* =====================================================
    TOAST NOTIFICATIONS (FLOATING)
@@ -669,7 +633,7 @@ kbd {
   padding: 12px 16px;
   border-radius: 10px;
   background: white;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); /* shadow-lg */
   min-width: 300px;
   max-width: 400px;
   pointer-events: all;
@@ -698,7 +662,7 @@ kbd {
   flex: 1;
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #111827; /* text-primary */
 }
 
 .toast-close {
@@ -708,7 +672,7 @@ kbd {
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
-  transition: var(--transition-fast);
+  transition: 0.15s ease; /* transition-fast */
 }
 
 .toast-close mat-icon {
@@ -719,28 +683,29 @@ kbd {
 
 /* Toast Types */
 .toast-success {
-  border-left: 4px solid var(--primary-color);
+  border-left: 4px solid #2e7d32; /* primary-color */
 }
 
 .toast-success .toast-icon {
-  color: var(--primary-color);
+  color: #2e7d32; /* primary-color */
 }
 
 .toast-error {
-  border-left: 4px solid var(--danger-color);
+  border-left: 4px solid #c62828; /* danger-color */
 }
 
 .toast-error .toast-icon {
-  color: var(--danger-color);
+  color: #c62828; /* danger-color */
 }
 
 .toast-info {
-  border-left: 4px solid var(--info-color);
+  border-left: 4px solid #1565c0; /* info-color */
 }
 
 .toast-info .toast-icon {
-  color: var(--info-color);
+  color: #1565c0; /* info-color */
 }
+
 
 /* =====================================================
    CUSTOMER INFO MODAL
@@ -792,7 +757,7 @@ kbd {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #e5e7eb; /* border-color */
 }
 
 .modal-header h3 {
@@ -807,7 +772,7 @@ kbd {
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
-  transition: var(--transition-fast);
+  transition: 0.15s ease; /* transition-fast */
 }
 
 .close-btn:hover {
@@ -827,26 +792,26 @@ kbd {
   margin-bottom: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #111827; /* text-primary */
 }
 
 .form-control {
   width: 100%;
   padding: 10px 12px;
-  border: 1.5px solid var(--border-color);
+  border: 1.5px solid #e5e7eb; /* border-color */
   border-radius: 8px;
   font-size: 14px;
-  transition: var(--transition-fast);
+  transition: 0.15s ease; /* transition-fast */
 }
 
 .form-control:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: #2e7d32; /* primary-color */
   box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
 }
 
 .form-control::placeholder {
-  color: var(--text-muted);
+  color: #9ca3af; /* text-muted */
 }
 
 textarea.form-control {
@@ -868,13 +833,14 @@ textarea.form-control {
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: 0.15s ease; /* transition-fast */
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 
 /* =====================================================
    LOADING OVERLAY
@@ -903,8 +869,9 @@ textarea.form-control {
 .loading-spinner p {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #6b7280; /* text-secondary */
 }
+
 
 /* =====================================================
    ERROR BANNER
@@ -920,11 +887,11 @@ textarea.form-control {
   gap: 12px;
   padding: 12px 20px;
   background: #fee2e2;
-  color: var(--danger-color);
-  border: 2px solid var(--danger-color);
-  border-left: 4px solid var(--danger-color);
+  color: #c62828; /* danger-color */
+  border: 2px solid #c62828; /* danger-color */
+  border-left: 4px solid #c62828; /* danger-color */
   border-radius: 10px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); /* shadow-lg */
   z-index: 1000;
   animation: slideDown 0.3s ease;
 }
@@ -941,13 +908,12 @@ textarea.form-control {
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
-  transition: var(--transition-fast);
+  transition: 0.15s ease; /* transition-fast */
 }
 
 .error-banner button:hover {
   background: rgba(0, 0, 0, 0.1);
 }
-
 /* =====================================================
    SCROLLBAR STYLING
 ===================================================== */
@@ -967,7 +933,7 @@ textarea.form-control {
 .right-panel::-webkit-scrollbar-track,
 .notifications-panel::-webkit-scrollbar-track,
 .notifications-list::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: #f8fafc; /* bg-primary */
 }
 
 .order-sidebar::-webkit-scrollbar-thumb,
@@ -976,7 +942,7 @@ textarea.form-control {
 .right-panel::-webkit-scrollbar-thumb,
 .notifications-panel::-webkit-scrollbar-thumb,
 .notifications-list::-webkit-scrollbar-thumb {
-  background: var(--border-color);
+  background: #e5e7eb; /* border-color */
   border-radius: 3px;
 }
 
@@ -986,8 +952,9 @@ textarea.form-control {
 .right-panel::-webkit-scrollbar-thumb:hover,
 .notifications-panel::-webkit-scrollbar-thumb:hover,
 .notifications-list::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: #9ca3af; /* text-muted */
 }
+
 
 /* =====================================================
    RESPONSIVE
@@ -1091,6 +1058,7 @@ textarea.form-control {
     padding: 8px;
   }
 }
+
 
 /* =====================================================
    PRINT STYLES
