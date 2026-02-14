@@ -22,7 +22,8 @@ import { MatDividerModule } from '@angular/material/divider';
 
 // Models
 import { CartItem } from '../../models/cart-item.model';
-
+import { ConfirmDialogComponent } from '../../../common-popup/pages/confirm-dialog.component'; // Import your confirm dialog
+import { MatDialog } from '@angular/material/dialog';
 /* ================= TYPES ================= */
 
 export type OrderType = 'Dine-In' | 'Takeaway' | 'Delivery';
@@ -135,7 +136,10 @@ export class PaymentPopupComponent implements OnInit {
 
   /* ================= CONSTRUCTOR ================= */
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private dialog: MatDialog // Injected MatDialog service
+  ) {}
 
   /* ================= LIFECYCLE ================= */
 
@@ -424,10 +428,28 @@ export class PaymentPopupComponent implements OnInit {
 
   onClose(): void {
     if (this.processing) return;
+
+    // UPDATED: Using ConfirmDialog instead of window.confirm
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Cancel Payment?',
+        message: 'Are you sure you want to cancel the payment process and go back? All entered data will be lost.',
+        confirmText: 'Yes, Cancel',
+        cancelText: 'No, Stay',
+        confirmColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) {
+        this.close.emit();
+      }
+    });
     
-    if (confirm('Cancel payment and go back?')) {
-      this.close.emit();
-    }
+    // if (confirm('Cancel payment and go back?')) {
+    //   this.close.emit();
+    // }
   }
 
   /* ================= HELPERS ================= */

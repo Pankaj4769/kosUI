@@ -1,47 +1,53 @@
 /* =====================================================
-   TABLE CARD - INDIVIDUAL TABLE COMPONENT
+   TABLE CARD - NEW MODERN POS STYLE
 ===================================================== */
 
 /* ================= ROOT CARD ================= */
 
 .table-card {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 14px 16px;
+  background: radial-gradient(circle at top left, #f4f4ff 0%, #f9fafb 40%, #ffffff 100%);
+  border-radius: 14px;
+  padding: 16px 18px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border: 2px solid #e5e7eb;
-  border-left: 5px solid transparent;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid transparent;
   position: relative;
   user-select: none;
   min-height: 140px;
-
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-  transition: all 0.2s ease;
+  box-shadow:
+    0 18px 45px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(148, 163, 184, 0.1);
+  transition:
+    border-color 0.22s ease,
+    background-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease,
+    opacity 0.22s ease;
 }
 
-/* ================= HOVER (POS STYLE) ================= */
-
+/* Hover state: subtle lift and glow */
 .table-card:hover {
-  border-color: #d1d5db;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  background: #fafafa;
-  transform: translateY(-2px);
+  border-color: #cbd5f5;
+  background: radial-gradient(circle at top left, #eef2ff 0%, #f9fafb 40%, #ffffff 100%);
+  box-shadow:
+    0 20px 50px rgba(15, 23, 42, 0.18),
+    0 0 0 1px rgba(129, 140, 248, 0.25);
+  transform: translateY(-3px);
 }
 
 /* Active click feedback */
 .table-card:active {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(0) scale(0.98);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.14);
+  transform: translateY(0) scale(0.985);
 }
 
 /* Focus state for keyboard navigation */
 .table-card:focus-visible {
-  outline: 3px solid #2563eb;
-  outline-offset: 2px;
+  outline: 3px solid #4f46e5;
+  outline-offset: 3px;
 }
 
 /* ================= HEADER ================= */
@@ -50,15 +56,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .table-name {
   font-size: 16px;
   font-weight: 800;
   margin: 0;
-  color: #111827;
-  letter-spacing: -0.02em;
+  color: #0f172a;
+  letter-spacing: -0.03em;
   line-height: 1.2;
 }
 
@@ -67,7 +73,7 @@
 .status-badge {
   font-size: 10px;
   padding: 4px 10px;
-  border-radius: 12px;
+  border-radius: 999px;
   font-weight: 700;
   line-height: 1.2;
   display: inline-flex;
@@ -75,15 +81,17 @@
   gap: 4px;
   white-space: nowrap;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  background: #f3f4f6;
-  color: #374151;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  letter-spacing: 0.08em;
+  background: rgba(148, 163, 184, 0.14);
+  color: #0f172a;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(148, 163, 184, 0.4);
 }
 
+/* Optional status icon next to text */
 .overdue-icon {
   font-size: 12px;
-  animation: bounce 1.5s infinite;
+  animation: bounce 1.6s infinite;
 }
 
 @keyframes bounce {
@@ -95,76 +103,83 @@
   }
 }
 
-/* ================= STATUS COLORS (POS STANDARD) ================= */
+/* ================= STATUS COLORS (NEW PALETTE) ================= */
+/* Palette:
+   Free/Available  → teal
+   Open/Occupied   → rose
+   Hold/Reserved   → amber
+   Paid            → indigo
+   Cleaning        → slate
+*/
 
-/* FREE/AVAILABLE - Green */
+/* FREE/AVAILABLE - Teal */
 .status-free,
 .status-available {
-  border-left-color: #22c55e;
-  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+  border-left-color: #0f766e;
+  background: linear-gradient(140deg, #ecfdf5 0%, #ffffff 55%, #f0f9ff 100%);
 }
 
-/* OPEN/OCCUPIED - Red */
+/* OPEN/OCCUPIED - Rose */
 .status-open,
 .status-occupied {
-  border-left-color: #ef4444;
-  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+  border-left-color: #e11d48;
+  background: linear-gradient(140deg, #fff1f2 0%, #ffffff 55%, #fef2f2 100%);
 }
 
-/* HOLD/RESERVED - Orange */
+/* HOLD/RESERVED - Amber */
 .status-hold,
 .status-reserved {
-  border-left-color: #f59e0b;
-  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+  border-left-color: #d97706;
+  background: linear-gradient(140deg, #fffbeb 0%, #ffffff 55%, #fef9c3 100%);
 }
 
-/* PAID - Blue */
+/* PAID - Indigo */
 .status-paid {
-  border-left-color: #3b82f6;
-  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
-  opacity: 0.9;
+  border-left-color: #4f46e5;
+  background: linear-gradient(140deg, #eef2ff 0%, #ffffff 55%, #e0f2fe 100%);
+  opacity: 0.96;
 }
 
-/* CLEANING - Gray */
+/* CLEANING - Slate */
 .status-cleaning {
-  border-left-color: #9ca3af;
-  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
-  opacity: 0.85;
+  border-left-color: #64748b;
+  background: linear-gradient(140deg, #f9fafb 0%, #ffffff 55%, #f1f5f9 100%);
+  opacity: 0.9;
 }
 
 /* ================= BADGE COLORS ================= */
 
 .status-free .status-badge,
 .status-available .status-badge {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background: rgba(34, 197, 94, 0.14);
+  color: #047857;
+  border-color: rgba(34, 197, 94, 0.5);
 }
 
 .status-open .status-badge,
 .status-occupied .status-badge {
-  background: #fee2e2;
+  background: rgba(248, 113, 113, 0.14);
   color: #b91c1c;
-  border: 1px solid #fecaca;
+  border-color: rgba(248, 113, 113, 0.6);
 }
 
 .status-hold .status-badge,
 .status-reserved .status-badge {
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fde68a;
+  background: rgba(245, 158, 11, 0.14);
+  color: #92400e;
+  border-color: rgba(245, 158, 11, 0.6);
 }
 
 .status-paid .status-badge {
-  background: #dbeafe;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: rgba(79, 70, 229, 0.14);
+  color: #3730a3;
+  border-color: rgba(79, 70, 229, 0.6);
 }
 
 .status-cleaning .status-badge {
-  background: #f3f4f6;
-  color: #6b7280;
-  border: 1px solid #e5e7eb;
+  background: rgba(148, 163, 184, 0.14);
+  color: #4b5563;
+  border-color: rgba(148, 163, 184, 0.6);
 }
 
 /* ================= BODY ================= */
@@ -180,20 +195,29 @@
   margin: 0;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: #1f2937;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
+.waiter span {
+  opacity: 0.85;
+}
+
 .amount {
   margin: 0;
   font-weight: 800;
-  color: #16a34a;
+  color: #0f766e; /* teal */
   font-size: 16px;
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.amount .currency {
+  font-size: 12px;
+  opacity: 0.8;
 }
 
 .timer {
@@ -202,15 +226,15 @@
   font-weight: 500;
 }
 
-/* ================= PRIORITY (SMART POS ALERT) ================= */
+/* ================= PRIORITY (ALERT STRIP) ================= */
 
 .priority {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 6px 10px;
-  background: #fee2e2;
-  border-radius: 6px;
+  background: linear-gradient(90deg, #fef2f2, #fff7ed);
+  border-radius: 7px;
   border: 1px solid #fecaca;
   margin-top: 4px;
 }
@@ -218,13 +242,15 @@
 .priority span {
   font-size: 11px;
   font-weight: 600;
-  color: #dc2626;
+  color: #b91c1c;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .priority strong {
   font-size: 13px;
   font-weight: 800;
-  color: #b91c1c;
+  color: #7f1d1d;
 }
 
 /* ================= PROGRESS BAR (OCCUPANCY TIME) ================= */
@@ -232,16 +258,16 @@
 .progress-bar {
   height: 8px;
   background: #e5e7eb;
-  border-radius: 8px;
+  border-radius: 999px;
   overflow: hidden;
   position: relative;
   margin-top: 8px;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.2);
 }
 
 .progress-fill {
   height: 100%;
-  border-radius: 8px;
+  border-radius: 999px;
   transition: width 0.5s ease;
   background: linear-gradient(90deg, #22c55e 0%, #facc15 50%, #ef4444 100%);
   position: relative;
@@ -253,13 +279,13 @@
   content: "";
   position: absolute;
   top: 0;
-  left: -50%;
-  width: 50%;
+  left: -40%;
+  width: 40%;
   height: 100%;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.4),
+    rgba(255, 255, 255, 0.55),
     transparent
   );
   animation: shimmer 2s infinite;
@@ -267,10 +293,10 @@
 
 @keyframes shimmer {
   0% {
-    left: -50%;
+    left: -40%;
   }
   100% {
-    left: 100%;
+    left: 120%;
   }
 }
 
@@ -292,16 +318,16 @@
 .workload-bar {
   height: 6px;
   background: #e5e7eb;
-  border-radius: 6px;
+  border-radius: 999px;
   overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.15);
 }
 
 .workload-fill {
   height: 100%;
-  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
   transition: width 0.3s ease;
-  border-radius: 6px;
+  border-radius: 999px;
 }
 
 /* ================= FOOTER ================= */
@@ -309,7 +335,7 @@
 .table-footer {
   margin-top: 6px;
   padding-top: 8px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px dashed #e5e7eb;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -323,9 +349,10 @@
   align-items: center;
   gap: 4px;
   font-weight: 600;
-  padding: 2px 6px;
-  background: #f9fafb;
-  border-radius: 4px;
+  padding: 3px 7px;
+  background: rgba(15, 23, 42, 0.02);
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
 }
 
 /* ================= SPECIAL STATES ================= */
@@ -339,28 +366,29 @@
   right: 12px;
   width: 10px;
   height: 10px;
-  border-radius: 50%;
+  border-radius: 999px;
   background: #ef4444;
-  animation: blinkOpen 1.5s infinite;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
-  z-index: 10;
+  animation: blinkOpen 1.6s infinite;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8);
 }
 
 @keyframes blinkOpen {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8);
   }
   50% {
-    opacity: 0.3;
+    opacity: 0.45;
     transform: scale(0.9);
+    box-shadow: 0 0 0 7px rgba(239, 68, 68, 0);
   }
 }
 
-/* 🟢 FREE TABLE - Pulse Glow */
+/* 🟢 FREE TABLE - Soft Pulse */
 .status-free,
 .status-available {
-  animation: freePulse 3s infinite;
+  animation: freePulse 3.2s infinite;
 }
 
 @keyframes freePulse {
@@ -368,32 +396,32 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
   50% {
-    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15);
+    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.22);
   }
 }
 
 /* ⚠️ OVERDUE TABLE - Urgent State */
 .table-card.overdue {
-  border: 3px solid #dc2626;
-  animation: urgentPulse 2s infinite;
+  border: 2px solid #dc2626;
+  animation: urgentPulse 2.2s infinite;
 }
 
 @keyframes urgentPulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5);
   }
   50% {
-    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+    box-shadow: 0 0 0 12px rgba(220, 38, 38, 0);
   }
 }
 
 /* Long Wait Indicator */
 .table-card.long-wait::after {
-  content: "⏱️";
+  content: "⏱";
   position: absolute;
   bottom: 12px;
   right: 12px;
-  font-size: 16px;
+  font-size: 15px;
   animation: pulse 2s infinite;
 }
 
@@ -402,14 +430,15 @@
     opacity: 1;
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.45;
   }
 }
 
 /* ================= DISABLED STATE ================= */
 
-.table-card[aria-disabled="true"] {
-  opacity: 0.5;
+.table-card[aria-disabled="true"],
+.table-card.is-disabled {
+  opacity: 0.45;
   cursor: not-allowed;
   pointer-events: none;
 }
@@ -472,7 +501,7 @@
 @media (max-width: 480px) {
   .table-card {
     padding: 8px 10px;
-    min-height: 100px;
+    min-height: 104px;
     gap: 4px;
   }
 
@@ -511,6 +540,7 @@
     break-inside: avoid;
     box-shadow: none;
     border: 1px solid #e5e7eb;
+    background: #ffffff;
   }
 
   .table-card:hover {
@@ -518,7 +548,7 @@
     box-shadow: none;
   }
 
-  .progress-bar::after {
+  .progress-fill::after {
     display: none;
   }
 }
@@ -526,8 +556,10 @@
 /* ================= ACCESSIBILITY ================= */
 
 .table-card[aria-selected="true"] {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  border-color: #4f46e5;
+  box-shadow:
+    0 0 0 1px rgba(79, 70, 229, 0.6),
+    0 0 0 4px rgba(129, 140, 248, 0.35);
 }
 
 /* Reduce motion for users who prefer it */
@@ -536,7 +568,11 @@
   .progress-fill,
   .workload-fill,
   .status-open::before,
-  .status-free {
+  .status-occupied::before,
+  .status-free,
+  .status-available,
+  .table-card.overdue,
+  .table-card.long-wait::after {
     animation: none !important;
     transition: none !important;
   }

@@ -5,7 +5,8 @@ import {
   OnInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
-  Input
+  Input,
+  OnDestroy  // NEW: Added for cleanup
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -24,6 +25,8 @@ import { CartItem } from '../../models/cart-item.model';
 import { Item } from '../../../dashboard/models/item.model';
 import { InventoryService } from '../../../dashboard/services/inventory.service';
 import { CartService } from '../../services/cart.service';
+import { Observable } from 'rxjs/internal/Observable';
+import { of, Subscription } from 'rxjs';
 
 /* ================= TYPES ================= */
 
@@ -75,7 +78,7 @@ export interface MenuCategory {
   styleUrls: ['./menu-area.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MenuAreaComponent implements OnInit {
+export class MenuAreaComponent implements OnInit, OnDestroy  {  // NEW: Added OnDestroy
 
   /* ================= OUTPUTS ================= */
 
@@ -88,6 +91,7 @@ export class MenuAreaComponent implements OnInit {
   /* ================= STATE ================= */
 
   menuItems: Item[] = [];
+  menuItems$?: Observable<Item[]> | null = null;  // NEW: For async pipe
   categories: MenuCategory[] = [];
   filteredItems: Item[] = [];
   
@@ -106,43 +110,63 @@ export class MenuAreaComponent implements OnInit {
 
   cartItemStatus: boolean = false;
   cartItemQty: number = 0;
+  private dataSubscription?: Subscription;  // NEW: Track subscription for cleanup
 
   /* ================= CONSTRUCTOR ================= */
 
-  constructor(
-    private cdr: ChangeDetectorRef,
-    private inventoryservice: InventoryService,
-    private cartService: CartService
-  ) {}
+constructor(
+  private cdr: ChangeDetectorRef,
+  private inventoryservice: InventoryService,
+  private cartService: CartService
+) {}
 
-  /* ================= LIFECYCLE ================= */
+/* ================= LIFECYCLE ================= */
 
-  ngOnInit(): void {
-    this.inventoryservice.getItemlist();
-    this.loadMenuData();
+ngOnInit(): void {
+  this.inventoryservice.getItemlist();
+  this.loadMenuData();
+}
+
+// NEW: Cleanup subscription on destroy
+ngOnDestroy(): void {
+  if (this.dataSubscription) {
+    this.dataSubscription.unsubscribe();
   }
-
+}
   /* ================= INITIALIZATION ================= */
 
   private loadMenuData(): void {
     this.loading = true;
     this.error = null;
 
-    try {
-      // Mock data - Replace with actual API call
-      this.menuItems = this.getMockMenuItems();
-      this.menuItems.forEach (item =>{
-        item.qty = 0;
-      });
-      this.categories = this.generateCategories();
-      this.applyFilters();
-    } catch (err) {
-      console.error('Failed to load menu:', err);
-      this.error = 'Failed to load menu items';
-    } finally {
-      this.loading = false;
-      this.cdr.markForCheck();
-    }
+    // NEW: Polling approach for async service data
+    const checkAndLoadData = () => {
+      const items = this.getMockMenuItems();
+      
+      if (items && items.length > 0) {
+        // Data is ready, process it
+        try {
+          // Mock data - Replace with actual API call
+          this.menuItems = this.getMockMenuItems();
+          this.menuItems.forEach(item => {
+            item.qty = 0;
+          });
+          this.menuItems$ = of(this.menuItems); // NEW: Wrap for async pipe
+          this.categories = this.generateCategories();
+          this.applyFilters();
+        } catch (err) {
+          console.error('Failed to load menu:', err);
+          this.error = 'Failed to load menu items';
+        } finally {
+          this.loading = false;
+          this.cdr.detectChanges(); // FIXED: Changed from markForCheck() to detectChanges()
+        }
+      } else {
+        // Data not ready yet, check again
+        setTimeout(() => checkAndLoadData(), 100);  // NEW: Retry every 100ms
+      }
+    };
+    checkAndLoadData();
   }
 
   private getMockMenuItems(): Item[] {
@@ -151,10 +175,31 @@ export class MenuAreaComponent implements OnInit {
 
   private generateCategories(): MenuCategory[] {
     const categoryCounts = new Map<string, number>();
-    categoryCounts.set('Breakfast', 3);
-    categoryCounts.set('Lunch', 3);
-    categoryCounts.set('Snacks', 3);
-    categoryCounts.set('Dinner', 3);
+    let brkfst = 0;
+    let lunch = 0;
+    let snacks = 0;
+    let dinner = 0;
+
+    this.menuItems.forEach(item =>{
+
+      if (item.category.includes('BreakFast')){
+        brkfst+=1;
+      }
+      if (item.category.includes('Lunch')){
+        lunch+=1;
+      }
+      if (item.category.includes('Snacks')){
+        snacks+=1;
+      }
+      if (item.category.includes('Dinner')){
+        dinner+=1;
+      }
+    });
+
+    categoryCounts.set('BreakFast', brkfst);
+    categoryCounts.set('Lunch', lunch);
+    categoryCounts.set('Snacks', snacks);
+    categoryCounts.set('Dinner', dinner);
 
     const categoryIcons: { [key: string]: string } = {
       'Starters': 'restaurant_menu',
@@ -168,7 +213,7 @@ export class MenuAreaComponent implements OnInit {
     const categories: MenuCategory[] = [
       {
         id: 'all',
-        name: 'All Items',
+        name: 'All',
         icon: 'grid_view',
         itemCount: this.menuItems.length
       }
@@ -192,12 +237,12 @@ export class MenuAreaComponent implements OnInit {
     let filtered = [...this.menuItems];
 
     // Category filter
-    if (this.selectedCategory !== 'all') {
+    if (this.selectedCategory !== 'All') {
       const categoryName = this.categories
-        .find(c => c.id === this.selectedCategory)?.name;
+        .find(c => c.name === this.selectedCategory)?.name;
       
       if (categoryName) {
-        filtered = filtered.filter(item => item.category[0] === categoryName);
+        filtered = filtered.filter(item => item.category.includes(categoryName));
       }
     }
 
@@ -206,7 +251,7 @@ export class MenuAreaComponent implements OnInit {
       const query = this.searchQuery.toLowerCase();
       filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(query) ||
-        item.category[0].toLowerCase().includes(query)
+        item.category.includes(query)
       );
     }
 
@@ -226,6 +271,7 @@ export class MenuAreaComponent implements OnInit {
     this.applySorting(filtered);
 
     this.filteredItems = filtered;
+    this.menuItems$ = of(this.filteredItems);  // NEW: Update observable for async pipe
     this.cdr.markForCheck();
   }
 
@@ -242,8 +288,8 @@ export class MenuAreaComponent implements OnInit {
 
   /* ================= CATEGORY SELECTION ================= */
 
-  selectCategory(categoryId: string): void {
-    this.selectedCategory = categoryId;
+  selectCategory(categoryName: string): void {
+    this.selectedCategory = categoryName;
     this.applyFilters();
   }
 
@@ -311,6 +357,7 @@ export class MenuAreaComponent implements OnInit {
     item.addedToCartStatus = true;
     item.qty += 1;
     this.itemAdd.emit(cartItem);
+    this.cdr.markForCheck();  // NEW: Added to update item UI immediately
   }
   }
 
@@ -333,6 +380,8 @@ export class MenuAreaComponent implements OnInit {
       item.qty -= 1;
       this.cartService.decrementItem(item.id);
     }
+
+    this.cdr.markForCheck();  // NEW: Added to update item UI immediately
  
     //this.cartUpdate.emit(updatedCart);
   }

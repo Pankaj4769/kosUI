@@ -1,0 +1,65 @@
+/* Container padding */
+.confirm-dialog-container {
+  padding: 10px;
+  min-width: 320px;
+  max-width: 500px;
+  font-family: 'Roboto', sans-serif; /* Or your app's font */
+}
+
+/* Title styling */
+.dialog-title {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: #1f2937; /* Dark gray text */
+  letter-spacing: -0.01em;
+}
+
+/* Content area */
+.dialog-content {
+  margin-bottom: 24px;
+}
+
+/* Message text styling */
+.dialog-message {
+  font-size: 15px;
+  color: #4b5563; /* Medium gray text */
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Action buttons container */
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 0;
+  padding: 0; /* Remove default padding from mat-actions if needed */
+}
+
+/* Button Base Styles */
+button {
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  padding: 0 16px;
+  min-width: 80px;
+  height: 36px;
+  border-radius: 4px; /* Slightly rounded corners */
+}
+
+/* Cancel Button specific styling (optional overrides) */
+.cancel-btn {
+  color: #6b7280;
+}
+
+.cancel-btn:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Confirm Button specific styling */
+.confirm-btn {
+  /* Using Angular Material theme colors by default */
+  /* Add custom styles here if you are not using a theme */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

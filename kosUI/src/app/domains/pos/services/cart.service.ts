@@ -9,7 +9,7 @@ export class CartService {
 
   /* ================= STATE ================= */
 
-  private STORAGE_KEY = 'temp_cart';
+  private readonly STORAGE_KEY = 'temp_cart';
 
   private cartSubject = new BehaviorSubject<CartItem[]>([]);
   public cart$ = this.cartSubject.asObservable();
@@ -18,11 +18,6 @@ export class CartService {
 
   constructor() {
     this.loadCartFromStorage();
-
-    // Automatically persist changes
-    this.cart$.subscribe(cart => {
-      this.saveCartToStorage(cart);
-    });
   }
 
   /* ================= LOCAL STORAGE ================= */
@@ -30,25 +25,35 @@ export class CartService {
   private loadCartFromStorage(): void {
     const stored = localStorage.getItem(this.STORAGE_KEY);
 
-    if (stored) {
-      try {
-        const parsed: CartItem[] = JSON.parse(stored);
-        this.cartSubject.next(parsed);
+    if (!stored) return;
 
-        // Restore nextId correctly
-        const maxId = parsed.reduce((max, item) => 
-          item.id && item.id > max ? item.id : max, 0);
-        this.nextId = maxId + 1;
+    try {
+      const parsed: CartItem[] = JSON.parse(stored);
 
-      } catch (err) {
-        console.error('Failed to load cart from storage', err);
-        this.cartSubject.next([]);
-      }
+      this.cartSubject.next(parsed);
+
+      // Restore nextId safely
+      const maxId = parsed.reduce((max, item) =>
+        item.id && item.id > max ? item.id : max, 0);
+
+      this.nextId = maxId + 1;
+
+    } catch (err) {
+      console.error('Failed to load cart from storage', err);
+      this.cartSubject.next([]);
     }
   }
 
   private saveCartToStorage(cart: CartItem[]): void {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(cart));
+  }
+
+  /**
+   * Centralized cart update method
+   */
+  private updateCart(cart: CartItem[]): void {
+    this.cartSubject.next(cart);
+    this.saveCartToStorage(cart);
   }
 
   /* ================= GETTERS ================= */
@@ -89,7 +94,7 @@ export class CartService {
       cart.push({ ...item, qty: item.qty || 1 });
     }
 
-    this.cartSubject.next(cart);
+    this.updateCart(cart);
   }
 
   updateItemQuantity(itemId: number, newQty: number): void {
@@ -104,12 +109,12 @@ export class CartService {
         : item
     );
 
-    this.cartSubject.next(cart);
+    this.updateCart(cart);
   }
 
   removeItem(itemId: number): void {
     const cart = this.currentCart.filter(item => item.id !== itemId);
-    this.cartSubject.next(cart);
+    this.updateCart(cart);
   }
 
   setCart(items: CartItem[]): void {
@@ -118,11 +123,11 @@ export class CartService {
       id: item.id || this.nextId++
     }));
 
-    this.cartSubject.next(cartWithIds);
+    this.updateCart(cartWithIds);
   }
 
   clearCart(): void {
-    this.cartSubject.next([]);
+    this.updateCart([]);
   }
 
   updateItem(itemId: number, updates: Partial<CartItem>): void {
@@ -132,7 +137,7 @@ export class CartService {
         : item
     );
 
-    this.cartSubject.next(cart);
+    this.updateCart(cart);
   }
 
   getItemById(itemId: number): CartItem | undefined {
@@ -190,7 +195,7 @@ export class CartService {
     const item = this.getItemById(itemId);
     if (item) {
       const duplicated = { ...item, id: this.nextId++ };
-      this.cartSubject.next([...this.currentCart, duplicated]);
+      this.updateCart([...this.currentCart, duplicated]);
     }
   }
 

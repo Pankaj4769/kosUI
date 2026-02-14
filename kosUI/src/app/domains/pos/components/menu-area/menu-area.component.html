@@ -105,7 +105,7 @@
       *ngFor="let category of categories; trackBy: trackByCategoryId"
       class="category-tab"
       [class.active]="selectedCategory === category.id"
-      (click)="selectCategory(category.id)">
+      (click)="selectCategory(category.name)">
       <mat-icon>{{ category.icon }}</mat-icon>
       <span class="category-name">{{ category.name }}</span>
       <span class="category-count">{{ category.itemCount }}</span>
@@ -127,7 +127,6 @@
         <!-- Item Image -->
         <div class="card-image">
           <img 
-            *ngIf="item.image"
             [src]="'assets/images/image.png'"
             [alt]="item.name">
           <div class="image-placeholder" *ngIf="!item.image">

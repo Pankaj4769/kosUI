@@ -1,45 +1,19 @@
 /* =====================================================
-   ROOT DESIGN TOKENS (POS ALIGNED)
-===================================================== */
-
-:root {
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-
-  --color-text: #111827;
-  --color-text-secondary: #6b7280;
-
-  --color-primary: #2e7d32;
-  --color-primary-hover: #1b5e20;
-
-  --color-border: #e5e7eb;
-  --color-chip-bg: rgba(46, 125, 50, 0.12);
-  --color-chip-border: rgba(46, 125, 50, 0.25);
-
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
-
-  --shadow-panel: 0 6px 16px rgba(0, 0, 0, 0.08);
-
-  --transition: 0.2s ease;
-}
-
-/* =====================================================
    PAGE WRAPPER (POS DENSITY)
 ===================================================== */
 
 .staff-role-mgmt {
   min-height: 100vh;
-  background: var(--color-bg);
+  background: #f8fafc; /* --color-bg */
   padding: 16px;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: var(--color-text);
+  color: #111827; /* --color-text */
 }
 
 .staff-role-mgmt * {
   box-sizing: border-box;
 }
+
 
 /* =====================================================
    HEADER
@@ -60,6 +34,7 @@
   letter-spacing: -0.01em;
 }
 
+
 /* =====================================================
    BUTTONS (POS STYLE)
 ===================================================== */
@@ -67,7 +42,7 @@
 .staff-role-mgmt .btn {
   height: 36px;
   padding: 0 14px;
-  border-radius: var(--radius-sm);
+  border-radius: 6px; /* --radius-sm */
   border: none;
   font-size: 13px;
   font-weight: 600;
@@ -75,11 +50,11 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: var(--transition);
+  transition: 0.2s ease; /* --transition */
 }
 
 .staff-role-mgmt .btn-primary {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  background: linear-gradient(135deg, #2e7d32, #1b5e20); /* primary → primary-hover */
   color: #fff;
 }
 
@@ -89,8 +64,9 @@
 
 .staff-role-mgmt .btn-secondary {
   background: #eef2f7;
-  color: var(--color-text);
+  color: #111827; /* --color-text */
 }
+
 
 /* =====================================================
    ROLES GRID (POS PANELS)
@@ -102,22 +78,24 @@
   gap: 16px;
 }
 
+
 /* =====================================================
    ROLE CARD (MATCHES POS PANELS)
 ===================================================== */
 
 .staff-role-mgmt .role-card {
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  background: #ffffff; /* --color-surface */
+  border: 1.5px solid #e5e7eb; /* --color-border */
+  border-radius: 12px; /* --radius-lg */
   padding: 18px;
-  transition: var(--transition);
+  transition: 0.2s ease; /* --transition */
 }
 
 .staff-role-mgmt .role-card:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-panel);
+  border-color: #2e7d32; /* --color-primary */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); /* --shadow-panel */
 }
+
 
 /* =====================================================
    ROLE HEADER
@@ -129,7 +107,7 @@
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px dashed var(--color-border);
+  border-bottom: 1px dashed #e5e7eb; /* --color-border */
   margin-bottom: 12px;
 }
 
@@ -140,10 +118,11 @@
 
 .staff-role-mgmt .role-description {
   font-size: 13px;
-  color: var(--color-text-secondary);
+  color: #6b7280; /* --color-text-secondary */
   line-height: 1.4;
   margin-top: 4px;
 }
+
 
 /* =====================================================
    ACTION ICONS (POS CONTROLS)
@@ -157,25 +136,26 @@
 .staff-role-mgmt .icon-btn {
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border-radius: 6px; /* --radius-sm */
+  border: 1px solid #e5e7eb; /* --color-border */
   background: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition);
+  transition: 0.2s ease; /* --transition */
 }
 
 .staff-role-mgmt .icon-btn:hover {
-  background: var(--color-chip-bg);
-  border-color: var(--color-primary);
+  background: rgba(46, 125, 50, 0.12); /* --color-chip-bg */
+  border-color: #2e7d32; /* --color-primary */
 }
 
 .staff-role-mgmt .icon-btn svg {
   width: 14px;
   height: 14px;
 }
+
 
 /* =====================================================
    PERMISSIONS (POS CHIPS)
@@ -192,11 +172,12 @@
   padding: 3px 10px;
   font-size: 11px;
   font-weight: 600;
-  border-radius: var(--radius-sm);
-  background: var(--color-chip-bg);
-  border: 1px solid var(--color-chip-border);
-  color: var(--color-primary);
+  border-radius: 6px; /* --radius-sm */
+  background: rgba(46, 125, 50, 0.12); /* --color-chip-bg */
+  border: 1px solid rgba(46, 125, 50, 0.25); /* --color-chip-border */
+  color: #2e7d32; /* --color-primary */
 }
+
 
 /* =====================================================
    EMPTY STATE
@@ -206,7 +187,7 @@
   grid-column: 1 / -1;
   text-align: center;
   padding: 40px 20px;
-  color: var(--color-text-secondary);
+  color: #6b7280; /* --color-text-secondary */
 }
 
 .staff-role-mgmt .empty-state svg {
@@ -220,6 +201,7 @@
   font-size: 16px;
   margin-bottom: 4px;
 }
+
 
 /* =====================================================
    MODAL (POS DIALOG STYLE)
@@ -243,8 +225,8 @@
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
+  background: #ffffff; /* --color-surface */
+  border-radius: 12px; /* --radius-lg */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -252,7 +234,7 @@
 
 .staff-role-mgmt .modal-header {
   padding: 16px 20px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid #e5e7eb; /* --color-border */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -268,13 +250,14 @@
   border: none;
   font-size: 22px;
   cursor: pointer;
-  color: var(--color-text-secondary);
+  color: #6b7280; /* --color-text-secondary */
 }
 
 .staff-role-mgmt .modal-body {
   padding: 16px 20px;
   overflow-y: auto;
 }
+
 
 /* =====================================================
    FORM CONTROLS (POS INPUTS)
@@ -294,15 +277,16 @@
 .staff-role-mgmt .form-input {
   width: 100%;
   padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--color-border);
+  border-radius: 6px; /* --radius-sm */
+  border: 1.5px solid #e5e7eb; /* --color-border */
   font-size: 13px;
 }
 
 .staff-role-mgmt .form-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: #2e7d32; /* --color-primary */
 }
+
 
 /* =====================================================
    PERMISSION GROUPS
@@ -313,8 +297,8 @@
 }
 
 .staff-role-mgmt .permission-category {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border: 1px solid #e5e7eb; /* --color-border */
+  border-radius: 10px; /* --radius-md */
   padding: 12px;
   margin-bottom: 12px;
   background: #f9fafb;
@@ -324,7 +308,7 @@
   font-size: 14px;
   font-weight: 700;
   margin-bottom: 8px;
-  color: var(--color-primary);
+  color: #2e7d32; /* --color-primary */
 }
 
 .staff-role-mgmt .permission-checkboxes {
@@ -341,8 +325,9 @@
 }
 
 .staff-role-mgmt input[type="checkbox"] {
-  accent-color: var(--color-primary);
+  accent-color: #2e7d32; /* --color-primary */
 }
+
 
 /* =====================================================
    MODAL FOOTER
@@ -350,11 +335,12 @@
 
 .staff-role-mgmt .modal-footer {
   padding: 12px 20px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid #e5e7eb; /* --color-border */
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
+
 
 /* =====================================================
    RESPONSIVE
