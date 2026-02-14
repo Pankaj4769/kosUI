@@ -1,0 +1,34 @@
+<div class="confirm-dialog-container">
+  
+  <!-- Header -->
+  <h2 mat-dialog-title class="dialog-title">
+    {{ data.title }}
+  </h2>
+
+  <!-- Body -->
+  <mat-dialog-content class="dialog-content">
+    <p class="dialog-message">
+      {{ data.message }}
+    </p>
+  </mat-dialog-content>
+
+  <!-- Actions (Buttons) -->
+  <mat-dialog-actions align="end" class="dialog-actions">
+    <!-- No / Cancel Button -->
+    <button mat-button 
+            class="cancel-btn" 
+            (click)="onDismiss()">
+      {{ data.cancelText || 'No' }}
+    </button>
+
+    <!-- Yes / Confirm Button -->
+    <button mat-raised-button 
+            [color]="data.confirmColor || 'primary'" 
+            class="confirm-btn" 
+            (click)="onConfirm()"
+            cdkFocusInitial>
+      {{ data.confirmText || 'Yes' }}
+    </button>
+  </mat-dialog-actions>
+
+</div>

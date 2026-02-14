@@ -19,6 +19,8 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from '../../../common-popup/pages/confirm-dialog.component'; 
 
 // Components
 import { OrderSidebarComponent } from '../../components/order-sidebar/order-sidebar.component';
@@ -118,7 +120,8 @@ export class CashierComponent implements OnInit, OnDestroy {
     private tableService: TableService,
     private holdService: HoldService,
     private cartService: CartService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private dialog: MatDialog
   ) {
     this.initializeSession();
     this.listenToRoute();
@@ -392,11 +395,24 @@ export class CashierComponent implements OnInit, OnDestroy {
   }
 
   clearCart(): void {
-    if (!confirm('Clear all items from cart?')) return;
-    
-    this.cartService.clearCart();
-    this.syncTableOrder();
-    this.showNotification('Cart cleared', 'info');
+    // REPLACED: window.confirm with MatDialog
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Clear Cart?',
+        message: 'Are you sure you want to clear all items from the cart?',
+        confirmText: 'Yes, Clear',
+        confirmColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) {
+        this.cartService.clearCart();
+        this.syncTableOrder();
+        this.showNotification('Cart cleared', 'info');
+      }
+    });
   }
 
   /* ================= PAYMENT ================= */
@@ -463,7 +479,6 @@ export class CashierComponent implements OnInit, OnDestroy {
   showHeldOrders(): void {
     this.showHoldOrders = true;
   }
-
   // ✅ FIXED: Accept both CartItem[] and HeldOrder object
   recallOrder(data: CartItem[] | any): void {
     // Handle both CartItem[] and HeldOrder object
@@ -567,15 +582,34 @@ export class CashierComponent implements OnInit, OnDestroy {
     if (!this.selectedTable) return;
 
     if (this.hasItems) {
-      if (!confirm('Close table with items in cart? Items will be lost.')) {
-        return;
-      }
-    }
+      // REPLACED: window.confirm with MatDialog
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '400px',
+        data: {
+          title: 'Close Table?',
+          message: 'Close table with items in cart? Items will be lost.',
+          confirmText: 'Yes, Close',
+          confirmColor: 'warn'
+        }
+      });
 
-    this.holdService.clearTableHold(this.selectedTable);
-    this.tableService.clearTable(this.selectedTable);
-    this.resetOrder();
-    this.showNotification('Table closed', 'info');
+      dialogRef.afterClosed().subscribe(result => {
+        if (result === true) {
+          this.performCloseTable();
+        }
+      });
+    } else {
+      this.performCloseTable();
+    }
+  }
+
+  private performCloseTable(): void {
+    if (this.selectedTable) {
+      this.holdService.clearTableHold(this.selectedTable);
+      this.tableService.clearTable(this.selectedTable);
+      this.resetOrder();
+      this.showNotification('Table closed', 'info');
+    }
   }
 
   /* ================= NOTIFICATIONS ================= */
