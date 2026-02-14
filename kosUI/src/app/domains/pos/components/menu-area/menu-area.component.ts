@@ -175,10 +175,31 @@ ngOnDestroy(): void {
 
   private generateCategories(): MenuCategory[] {
     const categoryCounts = new Map<string, number>();
-    categoryCounts.set('Breakfast', 3);
-    categoryCounts.set('Lunch', 3);
-    categoryCounts.set('Snacks', 3);
-    categoryCounts.set('Dinner', 3);
+    let brkfst = 0;
+    let lunch = 0;
+    let snacks = 0;
+    let dinner = 0;
+
+    this.menuItems.forEach(item =>{
+
+      if (item.category.includes('BreakFast')){
+        brkfst+=1;
+      }
+      if (item.category.includes('Lunch')){
+        lunch+=1;
+      }
+      if (item.category.includes('Snacks')){
+        snacks+=1;
+      }
+      if (item.category.includes('Dinner')){
+        dinner+=1;
+      }
+    });
+
+    categoryCounts.set('BreakFast', brkfst);
+    categoryCounts.set('Lunch', lunch);
+    categoryCounts.set('Snacks', snacks);
+    categoryCounts.set('Dinner', dinner);
 
     const categoryIcons: { [key: string]: string } = {
       'Starters': 'restaurant_menu',
@@ -192,7 +213,7 @@ ngOnDestroy(): void {
     const categories: MenuCategory[] = [
       {
         id: 'all',
-        name: 'All Items',
+        name: 'All',
         icon: 'grid_view',
         itemCount: this.menuItems.length
       }
@@ -216,12 +237,12 @@ ngOnDestroy(): void {
     let filtered = [...this.menuItems];
 
     // Category filter
-    if (this.selectedCategory !== 'all') {
+    if (this.selectedCategory !== 'All') {
       const categoryName = this.categories
-        .find(c => c.id === this.selectedCategory)?.name;
+        .find(c => c.name === this.selectedCategory)?.name;
       
       if (categoryName) {
-        filtered = filtered.filter(item => item.category[0] === categoryName);
+        filtered = filtered.filter(item => item.category.includes(categoryName));
       }
     }
 
@@ -230,7 +251,7 @@ ngOnDestroy(): void {
       const query = this.searchQuery.toLowerCase();
       filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(query) ||
-        item.category[0].toLowerCase().includes(query)
+        item.category.includes(query)
       );
     }
 
@@ -267,8 +288,8 @@ ngOnDestroy(): void {
 
   /* ================= CATEGORY SELECTION ================= */
 
-  selectCategory(categoryId: string): void {
-    this.selectedCategory = categoryId;
+  selectCategory(categoryName: string): void {
+    this.selectedCategory = categoryName;
     this.applyFilters();
   }
 
