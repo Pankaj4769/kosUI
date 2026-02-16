@@ -1,121 +1,353 @@
-<div class="dashboard">
+<div class="dashboard-wrapper">
 
-  <!-- ================= KPI SUMMARY ================= -->
-  <div class="summary">
+  <!-- ================= SIDEBAR (PRESERVED) ================= -->
+  <aside class="sidebar">
 
-    <div class="summary-card free" title="Free Tables">
-      <span class="label">🟢 Free</span>
-      <strong>{{ stats.free }}</strong>
+    <!-- Occupancy Overview -->
+    <div class="sidebar-section">
+      <div class="section-header">
+        <h3>Occupancy Overview</h3>
+      </div>
+
+      <div class="occupancy-stats">
+        <div class="stat-row">
+          <span class="stat-label"><span class="dot available"></span> Available</span>
+          <span class="stat-value">{{ stats.free }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label"><span class="dot occupied"></span> Occupied</span>
+          <span class="stat-value">{{ stats.open }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label"><span class="dot reserved"></span> Reserved</span>
+          <span class="stat-value">{{ stats.hold }}</span>
+        </div>
+        <div class="stat-row" *ngIf="dirtyCount > 0">
+          <span class="stat-label"><span class="dot dirty"></span> Dirty</span>
+          <span class="stat-value">{{ dirtyCount }}</span>
+        </div>
+      </div>
+
+      <div class="current-load">
+        <div class="load-header">
+          <span>Current Load</span>
+          <span>{{ occupancyPercentage }}%</span>
+        </div>
+        <div class="load-bar-container">
+          <div class="load-bar-fill" 
+               [style.width.%]="occupancyPercentage"
+               [style.background-color]="getOccupancyColor()">
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="summary-card open" title="Open Tables">
-      <span class="label">🔴 Open</span>
-      <strong>{{ stats.open }}</strong>
+    <!-- Upcoming Reservations -->
+    <div class="sidebar-section">
+      <div class="section-header">
+        <h3>Upcoming Reservations</h3>
+        <button class="add-res-btn-small" (click)="openAddReservationModal()">+</button>
+      </div>
+
+      <div class="reservations-list" *ngIf="upcomingReservations.length > 0">
+        <div *ngFor="let res of upcomingReservations; trackBy: trackReservationById" 
+             class="reservation-card"
+             (click)="markReservationArrived(res)">
+          <div class="res-header">
+            <span>Table {{ res.tableNumber }}</span>
+            <span>{{ res.guests }} Guests</span>
+          </div>
+          <div class="res-details">
+            <div>{{ res.time }} • {{ res.customerName }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="upcomingReservations.length === 0" class="empty-reservations">
+        <p style="font-size: 12px; color: #94a3b8; text-align: center;">No upcoming reservations</p>
+      </div>
     </div>
 
-    <div class="summary-card hold" title="Tables On Hold">
-      <span class="label">🟡 Hold</span>
-      <strong>{{ stats.hold }}</strong>
+  </aside>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <main class="dashboard-main">
+
+    <!-- ✨ ENHANCED HEADER -->
+    <header class="dashboard-header">
+
+      <!-- LEFT: Filter Bar -->
+      <div class="filter-bar">
+        <button class="filter-btn" [class.active]="filter === 'ALL'" (click)="setFilter('ALL')">
+          All Tables
+        </button>
+        <button class="filter-btn" [class.active]="filter === 'available'" (click)="setFilter('available')">
+          Available
+        </button>
+        <button class="filter-btn" [class.active]="filter === 'occupied'" (click)="setFilter('occupied')">
+          Occupied
+        </button>
+      </div>
+
+      <!-- CENTER: Area Tabs -->
+      <nav class="area-tabs">
+        <button *ngFor="let area of areas"
+                class="area-tab"
+                [class.active]="selectedArea === area.id"
+                (click)="selectArea(area.id)">
+          {{ area.label }}
+        </button>
+        <button class="area-tab btn-manage-areas" (click)="openManageAreasModal()">
+          <span>⚙️ Manage</span>
+        </button>
+      </nav>
+
+      <!-- RIGHT: Actions -->
+      <div class="header-actions">
+        <button class="btn-action" (click)="toggleEditMode()">
+          <span *ngIf="!isEditMode">✏️ Edit</span>
+          <span *ngIf="isEditMode">✅ Finish</span>
+        </button>
+        <button class="btn-action btn-primary" (click)="openAddTableModal()">
+          + Add
+        </button>
+      </div>
+
+    </header>
+
+    <!-- ✨ ENHANCED CONTENT AREA -->
+    <div class="dashboard-content">
+
+      <!-- Table Grid -->
+      <div class="table-grid">
+
+        <div *ngFor="let table of filteredTables; trackBy: trackById" 
+             class="table-card"
+             [ngClass]="'status-' + table.status"
+             [class.priority-card]="table['isPriority']">
+
+          <!-- ✅ NEW: Priority Ribbon (Visual Indicator) -->
+          <div *ngIf="table['isPriority']" class="priority-ribbon" title="High Priority">★ Priority</div>
+
+          <!-- Card Header -->
+          <div class="card-header">
+            <div class="table-num">{{ table.id }}</div>
+            
+            <div style="display: flex; gap: 5px; align-items: center;">
+               <div class="status-badge">{{ table.status }}</div>
+               
+               <!-- ✅ NEW: Priority Toggle Button -->
+               <button class="icon-btn priority-btn" 
+                       [class.active]="table['isPriority']" 
+                       (click)="togglePriority(table, $event)"
+                       title="Toggle Priority Status">
+                 🚩
+               </button>
+            </div>
+          </div>
+
+          <!-- Edit Mode Remove Button -->
+          <button *ngIf="isEditMode" 
+                  class="remove-btn-overlay" 
+                  (click)="removeTable(table.id, $event)">✕</button>
+
+          <!-- Card Body -->
+          <div class="card-body">
+
+            <!-- ========== AVAILABLE ========== -->
+            <div *ngIf="table.status === 'available'" class="status-content">
+              <div class="capacity">
+                <span class="icon">👥</span>
+                <span>{{ table.capacity }} Seats</span>
+              </div>
+
+              <button class="btn-card-primary visible-action" (click)="startOrder(table, $event)">
+                Start Order
+              </button>
+            </div>
+
+            <!-- ========== OCCUPIED ========== -->
+            <div *ngIf="table.status === 'occupied'" class="status-content">
+
+              <!-- Captain Info -->
+              <div class="captain-info" (click)="openAssignCaptainModal(table, $event)">
+                 <span class="icon">🛎️</span>
+                 <span class="name">{{ table.waiter || 'Staff' }}</span>
+              </div>
+
+              <!-- Time Elapsed (Highlight red if priority) -->
+              <div class="time-info" [class.text-danger]="table['isPriority']">
+                 <span class="icon">⏱️</span>
+                 <span>{{ getTimeElapsed(table.startTime) }}</span>
+              </div>
+
+              <!-- Bill Amount -->
+              <div class="amount-info">
+                 <span class="icon">💵</span>
+                 <span class="amount">{{ formatCurrency(table.amount || 0) }}</span>
+              </div>
+
+              <!-- Always Visible Actions -->
+              <div class="card-actions visible-actions">
+                <button class="btn-card-outline" (click)="editTable(table, $event)">Edit</button>
+                <button class="btn-card-primary" (click)="checkoutTable(table, $event)">Check out</button>
+              </div>
+            </div>
+
+            <!-- ========== RESERVED ========== -->
+            <div *ngIf="table.status === 'reserved'" class="status-content">
+              <div class="guest-name">
+                <span class="icon">👤</span>
+                <span>{{ table.reservationDetails?.customerName || 'Reserved' }}</span>
+              </div>
+              <div class="time">
+                <span class="icon">🕐</span>
+                <span>{{ table.reservationDetails?.time }}</span>
+              </div>
+
+              <button class="btn-card-primary visible-action" (click)="startOrder(table, $event)">
+                Arrived
+              </button>
+            </div>
+
+            <!-- ========== CLEANING ========== -->
+            <div *ngIf="table.status === 'cleaning'" class="status-content">
+              <div class="cleaning-text">
+                <span class="icon">🧹</span>
+                <span>Needs Cleaning</span>
+              </div>
+
+              <button class="btn-card-dark visible-action" (click)="markTableClean(table, $event)">
+                Mark Clean
+              </button>
+            </div>
+
+          </div> <!-- End Card Body -->
+
+        </div> <!-- End Table Card -->
+
+      </div> <!-- End Table Grid -->
+
+    </div> <!-- End Dashboard Content -->
+
+  </main>
+
+</div>
+
+<!-- ================= MODALS (ALL PRESERVED) ================= -->
+
+<!-- Add Table Modal -->
+<div class="modal-overlay" *ngIf="showAddTableModal" (click)="closeAddTableModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Add New Table</h2>
+      <button class="close-btn" (click)="closeAddTableModal()">✕</button>
     </div>
 
-    <div class="summary-card paid" title="Paid Tables">
-      <span class="label">🔵 Paid</span>
-      <strong>{{ stats.paid }}</strong>
+    <div class="form-group">
+      <label class="form-label">Capacity (Seats)</label>
+      <div class="capacity-options">
+        <button *ngFor="let cap of [2, 4, 6, 8]" 
+                class="cap-btn" 
+                [class.selected]="selectedCapacity === cap"
+                (click)="setCapacity(cap)">
+          {{ cap }}
+        </button>
+      </div>
     </div>
 
-    <div class="summary-card pending" title="Pending Orders">
-      <span class="label">⚠ Pending</span>
-      <strong>{{ stats.pending }}</strong>
+    <div class="modal-actions">
+      <button class="btn-action" (click)="closeAddTableModal()">Cancel</button>
+      <button class="btn-action btn-primary" (click)="confirmAddTable()">Confirm Add</button>
     </div>
-
-    <div class="summary-card revenue" title="Total Revenue">
-      <span class="label">💰 Revenue</span>
-      <strong>₹ {{ stats.revenue | number:'1.0-0' }}</strong>
-    </div>
-
   </div>
+</div>
 
-  <!-- ================= FILTER BAR ================= -->
-  <div class="filters" role="tablist" aria-label="Table status filters">
-
-    <button
-      role="tab"
-      type="button"
-      (click)="setFilter('ALL')"
-      [attr.aria-selected]="filter === 'ALL'"
-      [class.active]="filter === 'ALL'">
-      All
-      <span class="count">({{ stats.total }})</span>
-    </button>
-
-    <button
-      role="tab"
-      type="button"
-      (click)="setFilter('available')"
-      [attr.aria-selected]="filter === 'available'"
-      [class.active]="filter === 'available'">
-      Free
-      <span class="count">({{ stats.free }})</span>
-    </button>
-
-    <button
-      role="tab"
-      type="button"
-      (click)="setFilter('occupied')"
-      [attr.aria-selected]="filter === 'occupied'"
-      [class.active]="filter === 'occupied'">
-      Open
-      <span class="count">({{ stats.open }})</span>
-    </button>
-
-    <button
-      role="tab"
-      type="button"
-      (click)="setFilter('reserved')"
-      [attr.aria-selected]="filter === 'reserved'"
-      [class.active]="filter === 'reserved'">
-      Hold
-      <span class="count">({{ stats.hold }})</span>
-    </button>
-
-    <button
-      role="tab"
-      type="button"
-      (click)="setFilter('available')"
-      [attr.aria-selected]="filter === 'available'"
-      [class.active]="filter === 'available'">
-      Paid
-      <span class="count">({{ stats.paid }})</span>
-    </button>
-
-  </div>
-
-  <!-- ================= TABLE GRID ================= -->
-  <div class="table-grid">
-
-    <div *ngFor="let table of filteredTables; trackBy: trackById" class="table-wrapper">
-      <app-table-card
-        [table]="table"
-        (tableSelected)="openTable(table)">
-      </app-table-card>
-
-      <!-- ✅ Reset Button for Paid Tables -->
-      <button
-        *ngIf="table.status === 'available'"
-        class="reset-btn"
-        type="button"
-        (click)="resetTableToFree(table)"
-        title="Reset to Free">
-        ♻️ Free
-      </button>
+<!-- Manage Floors Modal -->
+<div class="modal-overlay" *ngIf="showManageAreasModal" (click)="closeManageAreasModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Manage Floors</h2>
+      <button class="close-btn" (click)="closeManageAreasModal()">✕</button>
     </div>
 
-    <!-- Empty State -->
-    <div class="empty-state" *ngIf="filteredTables.length === 0">
-      <span class="icon">🚫</span>
-      <span class="text">No tables found for selected filter</span>
+    <div class="form-group">
+      <label class="form-label">Add New Floor</label>
+      <div style="display: flex; gap: 8px;">
+        <input type="text" class="form-input" [(ngModel)]="newAreaName" placeholder="e.g. Patio">
+        <button class="btn-action btn-primary" (click)="addArea()">Add</button>
+      </div>
     </div>
 
+    <div class="form-group">
+      <label class="form-label">Existing Floors</label>
+      <div class="floor-list">
+        <div *ngFor="let area of areas" class="floor-item">
+          <span>{{ area.label }}</span>
+          <button *ngIf="area.id !== 'main-hall'" 
+                  class="btn-remove-floor" 
+                  (click)="removeArea(area.id)"
+                  title="Remove Floor">✕</button>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
 
+<!-- Assign Captain Modal -->
+<div class="modal-overlay" *ngIf="showAssignCaptainModal" (click)="closeAssignCaptainModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Select Captain</h2>
+      <button class="close-btn" (click)="closeAssignCaptainModal()">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Assign Waiter / Captain</label>
+      <div class="waiter-list">
+        <div *ngFor="let waiter of waitersList" 
+             class="waiter-option" 
+             [class.selected]="selectedCaptain === waiter"
+             (click)="selectedCaptain = waiter">
+          <span class="waiter-avatar">👤</span>
+          <span class="waiter-name">{{ waiter }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-action" (click)="closeAssignCaptainModal()">Cancel</button>
+      <button class="btn-action btn-primary" (click)="confirmAssignCaptain()">Assign</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Reservation Modal -->
+<div class="modal-overlay" *ngIf="showAddReservationModal" (click)="closeAddReservationModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">New Reservation</h2>
+      <button class="close-btn" (click)="closeAddReservationModal()">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Customer Name</label>
+      <input type="text" class="form-input" [(ngModel)]="newReservation.customerName" placeholder="Enter name">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Guests</label>
+      <input type="number" class="form-input" [(ngModel)]="newReservation.guests" placeholder="2">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Time</label>
+      <input type="time" class="form-input" [(ngModel)]="newReservation.time">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-action" (click)="closeAddReservationModal()">Cancel</button>
+      <button class="btn-action btn-primary" (click)="confirmAddReservation()">Save Reservation</button>
+    </div>
+  </div>
 </div>

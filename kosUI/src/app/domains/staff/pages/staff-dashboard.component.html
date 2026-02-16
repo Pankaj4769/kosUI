@@ -1,243 +1,1465 @@
-<div class="staff-dashboard compact">
+<div class="staff-dashboard-modern">
 
-  <!-- ================= COMPACT KPI ROW ================= -->
-  <div class="kpi-row">
-
-    <div class="kpi-card">
-      <span class="kpi-icon">👥</span>
-      <div class="kpi-content">
-        <span class="kpi-label">Total Staff</span>
-        <strong class="kpi-value">{{ kpi.totalStaff }}</strong>
-      </div>
+  <!-- ================= ENHANCED TAB NAVIGATION ================= -->
+  <div class="dashboard-header">
+    <div class="header-title">
+      <h1>Staff & Operations Management</h1>
+      <p>Complete employee lifecycle management system</p>
     </div>
-
-    <div class="kpi-card busy">
-      <span class="kpi-icon">🔥</span>
-      <div class="kpi-content">
-        <span class="kpi-label">Busy Staff</span>
-        <strong class="kpi-value">{{ kpi.busyStaff }}</strong>
-      </div>
-    </div>
-
-    <div class="kpi-card idle">
-      <span class="kpi-icon">💤</span>
-      <div class="kpi-content">
-        <span class="kpi-label">Idle Staff</span>
-        <strong class="kpi-value">{{ kpi.idleStaff }}</strong>
-      </div>
-    </div>
-
-    <div class="kpi-card efficiency">
-      <span class="kpi-icon">⚡</span>
-      <div class="kpi-content">
-        <span class="kpi-label">Avg Efficiency</span>
-        <strong class="kpi-value">{{ kpi.avgEfficiency }}%</strong>
-      </div>
-    </div>
-
-    <div class="kpi-card revenue">
-      <span class="kpi-icon">💰</span>
-      <div class="kpi-content">
-        <span class="kpi-label">Total Revenue</span>
-        <strong class="kpi-value">₹{{ kpi.totalRevenue | number:'1.0-0' }}</strong>
-      </div>
-    </div>
-
-    <div class="kpi-card avg-revenue">
-      <span class="kpi-icon">📊</span>
-      <div class="kpi-content">
-        <span class="kpi-label">Avg Revenue</span>
-        <strong class="kpi-value">₹{{ kpi.avgRevenue | number:'1.0-0' }}</strong>
-      </div>
-    </div>
-
-    <div class="kpi-card tables">
-      <span class="kpi-icon">🍽️</span>
-      <div class="kpi-content">
-        <span class="kpi-label">Active Tables</span>
-        <strong class="kpi-value">{{ kpi.totalActiveTables }}</strong>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ================= COMPACT CONTROLS ================= -->
-  <div class="controls-bar">
     
-    <div class="filters">
+    <div class="header-actions">
       <button 
-        class="filter-chip"
-        [class.active]="filterStatus === 'ALL'"
-        (click)="setFilter('ALL')">
-        All ({{ kpi.totalStaff }})
+        class="tab-btn"
+        [class.active]="activeTab === 'directory'"
+        (click)="setActiveTab('directory')">
+        👥 Staff
+      </button>
+      
+      <button 
+        class="tab-btn"
+        [class.active]="activeTab === 'attendance'"
+        (click)="setActiveTab('attendance')">
+        🕐 Attendance
       </button>
 
       <button 
-        class="filter-chip busy"
-        [class.active]="filterStatus === 'BUSY'"
-        (click)="setFilter('BUSY')">
-        Busy ({{ kpi.busyStaff }})
+        class="tab-btn"
+        [class.active]="activeTab === 'commission'"
+        (click)="setActiveTab('commission')">
+        💰 Commission
       </button>
 
       <button 
-        class="filter-chip normal"
-        [class.active]="filterStatus === 'NORMAL'"
-        (click)="setFilter('NORMAL')">
-        Normal ({{ getStaffCountByStatus('NORMAL') }})
+        class="tab-btn"
+        [class.active]="activeTab === 'leave'"
+        (click)="setActiveTab('leave')">
+        📅 Leave
       </button>
 
       <button 
-        class="filter-chip idle"
-        [class.active]="filterStatus === 'IDLE'"
-        (click)="setFilter('IDLE')">
-        Idle ({{ kpi.idleStaff }})
+        class="tab-btn"
+        [class.active]="activeTab === 'salary'"
+        (click)="setActiveTab('salary')">
+        💵 Salary
+      </button>
+
+      <button 
+        class="tab-btn"
+        [class.active]="activeTab === 'shift'"
+        (click)="setActiveTab('shift')">
+        ⏰ Shifts
+      </button>
+      
+      <button 
+        class="tab-btn"
+        [class.active]="activeTab === 'roster'"
+        (click)="setActiveTab('roster')">
+        📋 Roster
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= STAFF DIRECTORY TAB ================= -->
+  <div class="tab-content" *ngIf="activeTab === 'directory'">
+    
+    <!-- KPI Cards -->
+    <div class="kpi-row-modern">
+      <div class="kpi-card-modern">
+        <div class="kpi-icon-modern">👥</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Total Staff</span>
+          <strong class="kpi-value-modern">{{ kpi.totalStaff }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern on-duty">
+        <div class="kpi-icon-modern">✅</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">On Duty</span>
+          <strong class="kpi-value-modern">{{ kpi.onDuty }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern efficiency">
+        <div class="kpi-icon-modern">⚡</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Efficiency</span>
+          <strong class="kpi-value-modern">{{ kpi.avgEfficiency }}%</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern awards">
+        <div class="kpi-icon-modern">🏅</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Awards</span>
+          <strong class="kpi-value-modern">{{ kpi.awards }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar-modern">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          placeholder="Search staff members..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+        />
+      </div>
+
+      <div class="filter-group">
+        <button 
+          class="filter-btn"
+          [class.active]="'ALL' === filterStatus"
+          (click)="setFilter('ALL')">
+          All
+        </button>
+        <button 
+          class="filter-btn"
+          [class.active]="'BUSY' === filterStatus"
+          (click)="setFilter('BUSY')">
+          Busy
+        </button>
+        <button 
+          class="filter-btn"
+          [class.active]="'NORMAL' === filterStatus"
+          (click)="setFilter('NORMAL')">
+          Normal
+        </button>
+        <button 
+          class="filter-btn"
+          [class.active]="'IDLE' === filterStatus"
+          (click)="setFilter('IDLE')">
+          Idle
+        </button>
+      </div>
+
+      <div class="view-toggle">
+        <button 
+          class="view-btn"
+          [class.active]="viewMode === 'list'"
+          (click)="toggleViewMode('list')">
+          📋 List
+        </button>
+        <button 
+          class="view-btn"
+          [class.active]="viewMode === 'grid'"
+          (click)="toggleViewMode('grid')">
+          🎛️ Grid
+        </button>
+      </div>
+
+      <button class="add-staff-btn" (click)="openAddStaffModal()">
+        ➕ Add Staff
       </button>
     </div>
 
-    <div class="sort-group">
-      <label>Sort by:</label>
-      <select [(ngModel)]="sortBy" (change)="buildDashboard()">
-        <option value="rank">Overall Score</option>
-        <option value="revenue">Revenue</option>
-        <option value="efficiency">Efficiency</option>
-        <option value="load">Workload</option>
-      </select>
+    <!-- LIST VIEW -->
+    <div class="staff-table-container" *ngIf="viewMode === 'list'">
+      <table class="staff-table">
+        <thead>
+          <tr>
+            <th>STAFF MEMBER</th>
+            <th>ROLE</th>
+            <th>STATUS</th>
+            <th (click)="setSorting('lastActive')" class="sortable">LAST ACTIVE</th>
+            <th (click)="setSorting('performance')" class="sortable">PERFORMANCE</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr 
+            *ngFor="let staff of staffCards; trackBy: trackByStaffId"
+            class="staff-row"
+            (click)="viewStaffDetails(staff)">
+            
+            <td class="staff-member-cell">
+              <div class="staff-avatar">{{ staff.name.charAt(0) }}</div>
+              <div class="staff-info">
+                <strong>{{ staff.name }}</strong>
+                <span class="staff-id">{{ staff.id }}</span>
+              </div>
+            </td>
+
+            <td>{{ staff.role }}</td>
+
+            <td>
+              <span 
+                class="status-badge-modern"
+                [class.on-duty]="staff.onDutyStatus === 'ON DUTY'"
+                [class.off-duty]="staff.onDutyStatus === 'OFF DUTY'">
+                {{ staff.onDutyStatus }}
+              </span>
+            </td>
+
+            <td>
+              <span class="last-active">
+                ⏰ {{ formatTime(staff.lastActive) }}
+              </span>
+            </td>
+
+            <td>
+              <div class="performance-cell">
+                <span class="stars">
+                  <ng-container *ngFor="let star of getPerformanceStars(staff.performance)">
+                    {{ star }}
+                  </ng-container>
+                </span>
+                <span class="rating-value">{{ staff.performance }}</span>
+              </div>
+            </td>
+
+            <td>
+              <button 
+                class="action-btn-icon"
+                (click)="viewStaffDetails(staff); $event.stopPropagation()"
+                title="View Details">
+                👁️
+              </button>
+              <button 
+                class="action-btn-icon"
+                (click)="openEditStaffModal(staff); $event.stopPropagation()"
+                title="Edit Staff">
+                ✏️
+              </button>
+              <button 
+                class="action-btn-icon delete-btn"
+                (click)="deleteStaffMember(staff.id); $event.stopPropagation()"
+                title="Remove Staff">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="empty-state" *ngIf="staffCards.length === 0">
+        <span class="empty-icon">👥</span>
+        <p>No staff members found</p>
+        <button class="btn-empty-state" (click)="openAddStaffModal()">
+          ➕ Add Your First Staff Member
+        </button>
+      </div>
+    </div>
+
+    <!-- GRID VIEW (ADDED CONTENT) -->
+    <div class="staff-grid-compact" *ngIf="viewMode === 'grid'">
+      <div
+        class="staff-card-modern"
+        *ngFor="let staff of staffCards; trackBy: trackByStaffId"
+        (click)="viewStaffDetails(staff)"
+      >
+        <div class="card-header-modern">
+          <div class="staff-avatar-large">
+            {{ staff.name.charAt(0) }}
+          </div>
+          <div class="card-info-modern">
+            <h3>{{ staff.name }}</h3>
+            <span class="role-badge">{{ staff.role }}</span>
+            <span class="staff-id">{{ staff.id }}</span>
+          </div>
+          <span
+            class="status-dot"
+            [class.online]="staff.onDutyStatus === 'ON DUTY'"
+            [class.offline]="staff.onDutyStatus === 'OFF DUTY'"
+            [title]="staff.onDutyStatus"
+          ></span>
+        </div>
+
+        <div class="card-body-modern">
+          <div class="stat-row">
+            <span>Efficiency</span>
+            <span [style.color]="getScoreColor(staff.efficiency)">
+              {{ staff.efficiency }}%
+            </span>
+          </div>
+          <div class="stat-row">
+            <span>Revenue</span>
+            <span>₹{{ staff.revenue | number:'1.0-0' }}</span>
+          </div>
+          <div class="stat-row">
+            <span>Active Tables</span>
+            <span>{{ staff.activeTables }}</span>
+          </div>
+          <div class="stat-row">
+            <span>Status</span>
+            <span class="status-text" [ngClass]="staff.status.toLowerCase()">
+              {{ staff.status }}
+            </span>
+          </div>
+        </div>
+
+        <div class="card-footer-modern">
+          <button
+            class="btn-outline-sm"
+            (click)="viewStaffDetails(staff); $event.stopPropagation()"
+          >
+            View
+          </button>
+          <button
+            class="btn-outline-sm"
+            (click)="openEditStaffModal(staff); $event.stopPropagation()"
+          >
+            Edit
+          </button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="staffCards.length === 0">
+        <span class="empty-icon">👥</span>
+        <p>No staff members found</p>
+      </div>
+    </div>
+
+  </div>
+  <!-- ================= ATTENDANCE TAB ================= -->
+  <div class="tab-content" *ngIf="activeTab === 'attendance'">
+    
+    <!-- Attendance KPI Cards -->
+    <div class="kpi-row-modern">
+      <div class="kpi-card-modern on-duty">
+        <div class="kpi-icon-modern">✅</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Present</span>
+          <strong class="kpi-value-modern">{{ attendanceKpi.present }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern" style="border-color: #ef4444;">
+        <div class="kpi-icon-modern" style="background: #fee;">❌</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Absent</span>
+          <strong class="kpi-value-modern">{{ attendanceKpi.absent }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern" style="border-color: #fbbf24;">
+        <div class="kpi-icon-modern" style="background: #fef3c7;">⚠️</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Late</span>
+          <strong class="kpi-value-modern">{{ attendanceKpi.late }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern efficiency">
+        <div class="kpi-icon-modern">📅</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">On Leave</span>
+          <strong class="kpi-value-modern">{{ attendanceKpi.onLeave }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Date Selector -->
+    <div class="date-selector-bar">
+      <h3>Attendance for {{ selectedAttendanceDate | date:'fullDate' }}</h3>
+      <input 
+        type="date" 
+        class="form-input date-input"
+        [(ngModel)]="selectedAttendanceDate"
+        (change)="loadAttendanceData()"
+      />
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="attendance-table-container">
+      <table class="staff-table">
+        <thead>
+          <tr>
+            <th>STAFF MEMBER</th>
+            <th>CLOCK IN</th>
+            <th>CLOCK OUT</th>
+            <th>TOTAL HOURS</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let record of attendanceRecords">
+            <td class="staff-member-cell">
+              <div class="staff-avatar">{{ record.staffName.charAt(0) }}</div>
+              <div class="staff-info">
+                <strong>{{ record.staffName }}</strong>
+                <span class="staff-id">{{ record.staffId }}</span>
+              </div>
+            </td>
+
+            <td>
+              <span class="time-badge">
+                {{ record.clockIn || '--:--' }}
+              </span>
+            </td>
+
+            <td>
+              <span class="time-badge">
+                {{ record.clockOut || '--:--' }}
+              </span>
+            </td>
+
+            <td>
+              <strong>{{ record.totalHours }}h</strong>
+            </td>
+
+            <td>
+              <span 
+                class="attendance-status-badge"
+                [style.background]="getAttendanceStatusColor(record.status)"
+                [style.color]="'white'">
+                {{ record.status }}
+              </span>
+            </td>
+
+            <td>
+              <button 
+                class="action-btn-icon"
+                (click)="viewAttendanceDetails(record)"
+                title="View Details">
+                👁️
+              </button>
+              <button 
+                class="action-btn-icon"
+                *ngIf="record.status === 'ABSENT'"
+                (click)="markAttendance(record.staffId, 'PRESENT')"
+                title="Mark Present">
+                ✓
+              </button>
+              <button 
+                class="action-btn-icon"
+                *ngIf="!record.clockOut && record.clockIn"
+                (click)="clockOut(record.staffId)"
+                title="Clock Out">
+                🕐
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Monthly Calendar View -->
+    <div class="calendar-section">
+      <h3>Monthly Attendance Overview</h3>
+      <div class="attendance-calendar">
+        <p class="calendar-placeholder">📅 Calendar view coming soon...</p>
+      </div>
     </div>
 
   </div>
 
-  <!-- ================= COMPACT STAFF GRID ================= -->
-  <div class="staff-grid-compact">
-
-    <div class="staff-card-compact"
-         *ngFor="let staff of staffCards; trackBy: trackByName"
-         [class.status-busy]="staff.status === 'BUSY'"
-         [class.status-idle]="staff.status === 'IDLE'"
-         [class.heat-high]="staff.heatLevel === 'HIGH'"
-         [class.heat-medium]="staff.heatLevel === 'MEDIUM'">
-
-      <!-- Card Header -->
-      <div class="card-header">
-        <div class="header-left">
-          <span class="rank-badge" [class.top3]="staff.rank <= 3">#{{ staff.rank }}</span>
-          <span class="staff-name">{{ staff.name }}</span>
-        </div>
-        <div class="header-right">
-          <span class="status-chip" [class]="'status-' + staff.status.toLowerCase()">
-            {{ staff.status }}
-          </span>
-          <span class="heat-chip" [class]="'heat-' + (staff.heatLevel || 'LOW').toLowerCase()">
-            {{ staff.heatLevel }}
-          </span>
+  <!-- ================= COMMISSION TAB ================= -->
+  <div class="tab-content" *ngIf="activeTab === 'commission'">
+    
+    <!-- Commission KPI Cards -->
+    <div class="kpi-row-modern">
+      <div class="kpi-card-modern">
+        <div class="kpi-icon-modern">💼</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Total Sales</span>
+          <strong class="kpi-value-modern">
+            ₹{{ commissionKpi.totalSales | number:'1.0-0' }}
+          </strong>
         </div>
       </div>
 
-      <!-- Score Bar -->
-      <div class="score-compact">
-        <div class="score-bar-mini">
-          <div class="score-fill-mini" 
-               [style.width.%]="staff.score || 0"
-               [style.background]="getScoreColor(staff.score || 0)">
-          </div>
-        </div>
-        <span class="score-text">Score: {{ staff.score }}%</span>
-      </div>
-
-      <!-- Metrics Row -->
-      <div class="metrics-compact">
-        <div class="metric-mini">
-          <span class="metric-label-mini">Load</span>
-          <div class="metric-bar-mini">
-            <div class="metric-fill-mini load" [style.width.%]="staff.load"></div>
-          </div>
-          <span class="metric-value-mini">{{ staff.load }}%</span>
-        </div>
-
-        <div class="metric-mini">
-          <span class="metric-label-mini">Efficiency</span>
-          <div class="metric-bar-mini">
-            <div class="metric-fill-mini efficiency" [style.width.%]="staff.efficiency"></div>
-          </div>
-          <span class="metric-value-mini">{{ staff.efficiency }}%</span>
+      <div class="kpi-card-modern on-duty">
+        <div class="kpi-icon-modern">💰</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Total Commission</span>
+          <strong class="kpi-value-modern">
+            ₹{{ commissionKpi.totalCommission | number:'1.0-0' }}
+          </strong>
         </div>
       </div>
 
-      <!-- Intelligence Compact Grid -->
-      <div class="intel-compact">
-        <div class="intel-mini">
-          <span>Workload</span>
-          <strong>{{ staff.workloadIndex }}%</strong>
-        </div>
-        <div class="intel-mini">
-          <span>Productivity</span>
-          <strong>{{ staff.productivityIndex }}%</strong>
-        </div>
-        <div class="intel-mini">
-          <span>Consistency</span>
-          <strong>{{ staff.consistencyScore }}%</strong>
-        </div>
-        <div class="intel-mini" [class.high-fatigue]="(staff.fatigueScore || 0) > 70">
-          <span>Fatigue</span>
-          <strong>{{ staff.fatigueScore }}%</strong>
+      <div class="kpi-card-modern" style="border-color: #fbbf24;">
+        <div class="kpi-icon-modern" style="background: #fef3c7;">⏳</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Pending</span>
+          <strong class="kpi-value-modern">
+            ₹{{ commissionKpi.pending | number:'1.0-0' }}
+          </strong>
         </div>
       </div>
 
-      <!-- Stats Compact Row -->
-      <div class="stats-compact">
-        <div class="stat-mini">
-          <span class="stat-icon-mini">🍽️</span>
-          <div>
-            <span class="stat-label-mini">Active Tables</span>
-            <strong class="stat-value-mini">{{ staff.activeTables }}</strong>
-          </div>
-        </div>
-
-        <div class="stat-mini revenue">
-          <span class="stat-icon-mini">💰</span>
-          <div>
-            <span class="stat-label-mini">Revenue</span>
-            <strong class="stat-value-mini">₹{{ staff.revenue | number:'1.0-0' }}</strong>
-          </div>
+      <div class="kpi-card-modern efficiency">
+        <div class="kpi-icon-modern">✅</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Paid</span>
+          <strong class="kpi-value-modern">
+            ₹{{ commissionKpi.paid | number:'1.0-0' }}
+          </strong>
         </div>
       </div>
-
-      <!-- Footer Info -->
-      <div class="footer-compact">
-        <span class="footer-item">📦 {{ staff.completedOrders }} orders</span>
-        <span class="footer-item">⏱️ {{ staff.avgServiceTime }}m</span>
-        <span class="footer-item" 
-              [class.trend-up]="staff.trend === 'UP'"
-              [class.trend-down]="staff.trend === 'DOWN'">
-          📈 {{ staff.trend }}
-        </span>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="actions-compact">
-        <button class="action-btn-mini primary" (click)="viewStaffDetails(staff)">
-          👁️ View
-        </button>
-        <button class="action-btn-mini secondary" (click)="assignTable(staff)">
-          🍽️ Assign
-        </button>
-      </div>
-
-      <!-- Alert Indicator -->
-      <div class="alert-indicator critical" *ngIf="staff.alertLevel === 'CRITICAL'">
-        🚨
-      </div>
-      <div class="alert-indicator warning" *ngIf="staff.alertLevel === 'WARNING'">
-        ⚠️
-      </div>
-
     </div>
 
-    <!-- Empty State -->
-    <div class="empty-compact" *ngIf="staffCards.length === 0">
-      <span class="empty-icon">👥</span>
-      <p>No staff members found</p>
+    <!-- Commission Calculator -->
+    <div class="commission-calculator">
+      <h3>Commission Calculator</h3>
+      <div class="calculator-form">
+        <div class="form-group-inline">
+          <label>Sales Amount:</label>
+          <input 
+            type="number" 
+            class="form-input"
+            [(ngModel)]="commissionCalculator.salesAmount"
+            placeholder="Enter sales amount"
+          />
+        </div>
+
+        <div class="form-group-inline">
+          <label>Rate (%):</label>
+          <input 
+            type="number" 
+            class="form-input"
+            [(ngModel)]="commissionCalculator.rate"
+            placeholder="Enter rate"
+            min="0"
+            max="100"
+          />
+        </div>
+
+        <div class="form-group-inline">
+          <label>Commission:</label>
+          <strong class="commission-result">
+            ₹{{ commissionCalculator.commission | number:'1.0-0' }}
+          </strong>
+        </div>
+
+        <div class="calculator-actions">
+          <button class="btn-calculate" (click)="calculateCommission()">
+            🧮 Calculate
+          </button>
+          <button class="btn-add-record" (click)="addCommissionRecord()">
+            ➕ Add Record
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commission History Table -->
+    <div class="commission-table-container">
+      <h3>Commission History</h3>
+      <table class="staff-table">
+        <thead>
+          <tr>
+            <th>STAFF MEMBER</th>
+            <th>SALES AMOUNT</th>
+            <th>RATE</th>
+            <th>COMMISSION</th>
+            <th>MONTH</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let record of commissionRecords">
+            <td><strong>{{ record.staffName }}</strong></td>
+            <td>₹{{ record.salesAmount | number:'1.0-0' }}</td>
+            <td>{{ record.commissionRate }}%</td>
+            <td>
+              <strong class="commission-amount">
+                ₹{{ record.commissionAmount | number:'1.0-0' }}
+              </strong>
+            </td>
+            <td>{{ record.month }}</td>
+            <td>
+              <span 
+                class="status-badge-modern"
+                [class.on-duty]="record.status === 'PAID'"
+                [class.off-duty]="record.status === 'PENDING'">
+                {{ record.status }}
+              </span>
+            </td>
+            <td>
+              <button 
+                class="action-btn-icon"
+                *ngIf="record.status === 'PENDING'"
+                (click)="payCommission(record.id)"
+                title="Mark as Paid">
+                💰
+              </button>
+              <button 
+                class="action-btn-icon"
+                title="View Details">
+                📄
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+  <!-- ================= LEAVE MANAGEMENT TAB ================= -->
+  <div class="tab-content" *ngIf="activeTab === 'leave'">
+    
+    <!-- Leave KPI Cards -->
+    <div class="kpi-row-modern">
+      <div class="kpi-card-modern" style="border-color: #fbbf24;">
+        <div class="kpi-icon-modern" style="background: #fef3c7;">⏳</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Pending</span>
+          <strong class="kpi-value-modern">{{ leaveKpi.pending }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern on-duty">
+        <div class="kpi-icon-modern">✅</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Approved</span>
+          <strong class="kpi-value-modern">{{ leaveKpi.approved }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern" style="border-color: #ef4444;">
+        <div class="kpi-icon-modern" style="background: #fee;">❌</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Rejected</span>
+          <strong class="kpi-value-modern">{{ leaveKpi.rejected }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern efficiency">
+        <div class="kpi-icon-modern">📅</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Total Days</span>
+          <strong class="kpi-value-modern">{{ leaveKpi.totalDays }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leave Filters -->
+    <div class="leave-filters-bar">
+      <div class="filter-group">
+        <button 
+          class="filter-btn"
+          [class.active]="leaveFilter === 'ALL'"
+          (click)="leaveFilter = 'ALL'">
+          All
+        </button>
+        <button 
+          class="filter-btn"
+          [class.active]="leaveFilter === 'PENDING'"
+          (click)="leaveFilter = 'PENDING'">
+          Pending
+        </button>
+        <button 
+          class="filter-btn"
+          [class.active]="leaveFilter === 'APPROVED'"
+          (click)="leaveFilter = 'APPROVED'">
+          Approved
+        </button>
+        <button 
+          class="filter-btn"
+          [class.active]="leaveFilter === 'REJECTED'"
+          (click)="leaveFilter = 'REJECTED'">
+          Rejected
+        </button>
+      </div>
+
+      <button class="add-staff-btn" (click)="openLeaveRequestModal()">
+        ➕ Request Leave
+      </button>
+    </div>
+
+    <!-- Leave Requests Cards -->
+    <div class="leave-requests-grid">
+      <div class="leave-card" *ngFor="let leave of filteredLeaveRequests">
+        <div class="leave-card-header">
+          <div class="leave-staff-info">
+            <div class="staff-avatar-small">
+              {{ leave.staffName.charAt(0) }}
+            </div>
+            <div>
+              <strong>{{ leave.staffName }}</strong>
+              <span class="leave-type-badge">
+                {{ getLeaveTypeLabel(leave.leaveType) }}
+              </span>
+            </div>
+          </div>
+          <span 
+            class="leave-status-badge"
+            [class.pending]="leave.status === 'PENDING'"
+            [class.approved]="leave.status === 'APPROVED'"
+            [class.rejected]="leave.status === 'REJECTED'">
+            {{ leave.status }}
+          </span>
+        </div>
+
+        <div class="leave-card-body">
+          <div class="leave-dates">
+            <span class="leave-icon">📅</span>
+            <strong>
+              {{ leave.startDate | date:'MMM dd' }} - 
+              {{ leave.endDate   | date:'MMM dd, yyyy' }}
+            </strong>
+            <span class="leave-days">
+              ({{ leave.days }} days)
+            </span>
+          </div>
+
+          <div class="leave-reason">
+            <span class="leave-label">Reason:</span>
+            <p>{{ leave.reason }}</p>
+          </div>
+
+          <div class="leave-meta">
+            <span>Applied: {{ leave.appliedDate | date:'MMM dd, yyyy' }}</span>
+            <span *ngIf="leave.approvedBy && leave.approvedDate">
+              Approved by {{ leave.approvedBy }} 
+              on {{ leave.approvedDate | date:'MMM dd, yyyy' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="leave-card-footer" *ngIf="leave.status === 'PENDING'">
+          <button class="btn-approve" (click)="approveLeave(leave.id)">
+            ✓ Approve
+          </button>
+          <button class="btn-reject" (click)="rejectLeave(leave.id)">
+            ✗ Reject
+          </button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="filteredLeaveRequests.length === 0">
+        <span class="empty-icon">📅</span>
+        <p>No leave requests found</p>
+      </div>
     </div>
 
   </div>
 
+  <!-- ================= SALARY SLIPS TAB ================= -->
+  <div class="tab-content" *ngIf="activeTab === 'salary'">
+    
+    <!-- Salary KPI Cards -->
+    <div class="kpi-row-modern">
+      <div class="kpi-card-modern">
+        <div class="kpi-icon-modern">💼</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Total Payroll</span>
+          <strong class="kpi-value-modern">
+            ₹{{ salaryKpi.totalPayroll | number:'1.0-0' }}
+          </strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern on-duty">
+        <div class="kpi-icon-modern">💰</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">This Month</span>
+          <strong class="kpi-value-modern">
+            ₹{{ salaryKpi.thisMonth | number:'1.0-0' }}
+          </strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern efficiency">
+        <div class="kpi-icon-modern">✅</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Processed</span>
+          <strong class="kpi-value-modern">
+            {{ salaryKpi.processed }}
+          </strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern" style="border-color: #fbbf24;">
+        <div class="kpi-icon-modern" style="background: #fef3c7;">⏳</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Pending</span>
+          <strong class="kpi-value-modern">
+            {{ salaryKpi.pending }}
+          </strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Salary Slip Generator -->
+    <div class="salary-generator">
+      <h3>Generate Salary Slip</h3>
+      <div class="generator-form">
+        <div class="form-group-inline">
+          <label>Employee:</label>
+          <select 
+            class="form-input"
+            [(ngModel)]="selectedStaffForSalary">
+            <option value="">Select Employee</option>
+            <option *ngFor="let staff of staffMembers" [value]="staff.id">
+              {{ staff.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group-inline">
+          <label>Month:</label>
+          <input 
+            type="month"
+            class="form-input"
+            [(ngModel)]="selectedSalaryMonth"
+          />
+        </div>
+
+        <div class="generator-actions">
+          <button class="btn-generate" (click)="generateSalarySlip()">
+            📄 Generate
+          </button>
+          <button class="btn-download-all">
+            📥 Download All
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Salary Slips Table -->
+    <div class="salary-table-container">
+      <h3>Recent Salary Slips</h3>
+      <table class="staff-table">
+        <thead>
+          <tr>
+            <th>STAFF MEMBER</th>
+            <th>MONTH</th>
+            <th>BASIC SALARY</th>
+            <th>GROSS</th>
+            <th>DEDUCTIONS</th>
+            <th>NET SALARY</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let slip of salarySlips">
+            <td><strong>{{ slip.staffName }}</strong></td>
+            <td>{{ slip.month }}</td>
+            <td>₹{{ slip.basicSalary | number:'1.0-0' }}</td>
+            <td>₹{{ slip.grossSalary | number:'1.0-0' }}</td>
+            <td class="deduction-amount">₹{{ slip.deductions | number:'1.0-0' }}</td>
+            <td>
+              <strong class="net-salary">
+                ₹{{ slip.netSalary | number:'1.0-0' }}
+              </strong>
+            </td>
+            <td>
+              <span 
+                class="status-badge-modern"
+                [class.on-duty]="slip.status === 'SENT'"
+                [class.off-duty]="slip.status === 'PENDING'">
+                {{ slip.status }}
+              </span>
+            </td>
+            <td>
+              <button 
+                class="action-btn-icon"
+                (click)="viewSalarySlip(slip)"
+                title="View Slip">
+                👁️
+              </button>
+              <button 
+                class="action-btn-icon"
+                (click)="downloadSalarySlip(slip.id)"
+                title="Download">
+                📥
+              </button>
+              <button 
+                class="action-btn-icon"
+                *ngIf="slip.status !== 'SENT'"
+                (click)="emailSalarySlip(slip.id)"
+                title="Email">
+                📧
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ================= SHIFT MANAGEMENT TAB ================= -->
+  <div class="tab-content" *ngIf="activeTab === 'shift'">
+    
+    <!-- Shift KPI Cards -->
+    <div class="kpi-row-modern">
+      <div class="kpi-card-modern">
+        <div class="kpi-icon-modern">⏰</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Active Shifts</span>
+          <strong class="kpi-value-modern">{{ shiftKpi.activeShifts }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern on-duty">
+        <div class="kpi-icon-modern">✅</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">On Duty</span>
+          <strong class="kpi-value-modern">{{ shiftKpi.onDuty }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern">
+        <div class="kpi-icon-modern" style="background: #f3f4f6;">💤</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Off Duty</span>
+          <strong class="kpi-value-modern">{{ shiftKpi.offDuty }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card-modern efficiency">
+        <div class="kpi-icon-modern">🕐</div>
+        <div class="kpi-content-modern">
+          <span class="kpi-label-modern">Current Shift</span>
+          <strong class="shift-name">{{ shiftKpi.currentShift }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shift Templates -->
+    <div class="shift-templates-section">
+      <div class="section-header">
+        <h3>Shift Templates</h3>
+        <button class="add-staff-btn" (click)="openShiftTemplateModal()">
+          ➕ Add Shift
+        </button>
+      </div>
+
+      <div class="shift-templates-grid">
+        <div class="shift-template-card" *ngFor="let shift of shiftTemplates">
+          <div class="shift-template-header">
+            <h4>{{ shift.name }}</h4>
+            <span 
+              class="shift-active-badge"
+              [class.active]="shift.isActive">
+              {{ shift.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+
+          <div class="shift-template-body">
+            <div class="shift-time-info">
+              <span class="shift-icon">🕐</span>
+              <strong>{{ shift.startTime }} - {{ shift.endTime }}</strong>
+            </div>
+            <div class="shift-duration">
+              Duration: {{ shift.duration }} hours
+            </div>
+          </div>
+
+          <div class="shift-template-footer">
+            <button 
+              class="btn-edit-shift"
+              (click)="openShiftTemplateModal(shift)">
+              ✏️ Edit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Shift Assignments -->
+    <div class="shift-assignments-section">
+      <h3>Today's Shift Assignments - {{ selectedShiftDate | date:'fullDate' }}</h3>
+
+      <div class="shift-assignment-groups">
+        <div class="shift-group" *ngFor="let template of shiftTemplates">
+          <div class="shift-group-header">
+            <h4>{{ template.name }}</h4>
+            <span class="shift-time">
+              {{ template.startTime }} - {{ template.endTime }}
+            </span>
+          </div>
+
+          <div class="shift-staff-list">
+            <div 
+              class="shift-staff-badge"
+              *ngFor="let assignment of getShiftAssignmentsByShift(template.id)">
+              {{ assignment.staffName }}
+            </div>
+            
+            <div 
+              class="empty-shift-message" 
+              *ngIf="getShiftAssignmentsByShift(template.id).length === 0">
+              No staff assigned
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly Timeline -->
+    <div class="shift-timeline-section">
+      <h3>Weekly Shift Timeline</h3>
+      <div class="timeline-placeholder">
+        <p>📊 Visual timeline coming soon...</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= DUTY ROSTER TAB ================= -->
+  <div class="tab-content" *ngIf="activeTab === 'roster'">
+    <div class="roster-header">
+      <h2>Weekly Roster</h2>
+      <button class="auto-generate-btn" (click)="autoGenerateRoster()">
+        🤖 Auto-Generate Roster (AI)
+      </button>
+    </div>
+
+    <div class="roster-placeholder">
+      <div class="roster-icon">🗓️</div>
+      <h3>Duty Roster Coming Soon</h3>
+      <p>Weekly schedule management will be available here</p>
+      <p class="roster-hint">
+        You'll be able to assign shifts, manage schedules, and track attendance
+      </p>
+    </div>
+  </div>
+
+</div> <!-- end .staff-dashboard-modern -->
+<!-- ================= STAFF DETAILS MODAL ================= -->
+<div class="modal-overlay" *ngIf="showStaffModal && selectedStaff" (click)="closeStaffModal()">
+  <div class="modal-content modal-medium" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-icon staff-avatar-large">
+          {{ selectedStaff.name.charAt(0) }}
+        </div>
+        <div>
+          <h2>{{ selectedStaff.name }}</h2>
+          <p>{{ selectedStaff.role }} • {{ selectedStaff.id }}</p>
+        </div>
+      </div>
+      <button class="modal-close" (click)="closeStaffModal()">✕</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedStaff">
+      <div class="attendance-detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">On Duty</span>
+          <strong>{{ selectedStaff.onDutyStatus }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Efficiency</span>
+          <strong [style.color]="getScoreColor(selectedStaff.efficiency)">
+            {{ selectedStaff.efficiency }}%
+          </strong>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Revenue</span>
+          <strong>₹{{ selectedStaff.revenue | number:'1.0-0' }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Active Tables</span>
+          <strong>{{ selectedStaff.activeTables }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Performance</span>
+          <span class="stars">
+            <ng-container *ngFor="let star of getPerformanceStars(selectedStaff.performance)">
+              {{ star }}
+            </ng-container>
+          </span>
+          <strong>{{ selectedStaff.performance }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Status</span>
+          <span class="attendance-status-badge">
+            {{ selectedStaff.status }}
+          </span>
+        </div>
+
+        <div class="detail-item full-width">
+          <span class="detail-label">Contact</span>
+          <p>
+            Email: {{ selectedStaff.email || 'N/A' }}<br />
+            Phone: {{ selectedStaff.phone || 'N/A' }}
+          </p>
+        </div>
+
+        <div class="detail-item full-width">
+          <span class="detail-label">Joined</span>
+          <p>{{ selectedStaff.joinDate | date:'mediumDate' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="modal-btn secondary" (click)="closeStaffModal()">
+        Close
+      </button>
+      <button
+        class="modal-btn primary"
+        (click)="openEditStaffModal(selectedStaff); closeStaffModal()"
+      >
+        Edit Staff
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ADD / EDIT STAFF MODAL ================= -->
+<div class="modal-overlay" *ngIf="showAddStaffModal" (click)="closeAddStaffModal()">
+  <div class="modal-content modal-medium" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-icon">👤</div>
+        <div>
+          <h2>{{ getAddStaffModalTitle() }}</h2>
+          <p *ngIf="isEditingStaff">Update staff details</p>
+          <p *ngIf="!isEditingStaff">Create a new staff member</p>
+        </div>
+      </div>
+      <button class="modal-close" (click)="closeAddStaffModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <form (submit)="saveStaff(); $event.preventDefault()">
+        <div class="form-group">
+          <label class="form-label">
+            Full Name <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="newStaff.name"
+            name="name"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            Email <span class="required">*</span>
+          </label>
+          <input
+            type="email"
+            class="form-input"
+            [(ngModel)]="newStaff.email"
+            name="email"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="newStaff.phone"
+            name="phone"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            Role <span class="required">*</span>
+          </label>
+          <select
+            class="form-input"
+            [(ngModel)]="newStaff.roleId"
+            name="roleId"
+            required
+          >
+            <option [ngValue]="0" disabled>Select role</option>
+            <option *ngFor="let role of roles" [ngValue]="role.id">
+              {{ role.name }}
+            </option>
+          </select>
+          <p class="role-description" *ngIf="getSelectedRoleDescription()">
+            {{ getSelectedRoleDescription() }}
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select
+            class="form-input"
+            [(ngModel)]="newStaff.status"
+            name="status"
+          >
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="modal-btn secondary"
+            (click)="closeAddStaffModal()"
+          >
+            Cancel
+          </button>
+          <button type="submit" class="modal-btn primary">
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ATTENDANCE DETAILS MODAL ================= -->
+<div class="modal-overlay" *ngIf="showAttendanceModal" (click)="closeAttendanceModal()">
+  <div class="modal-content modal-medium" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-icon">🕐</div>
+        <div>
+          <h2>Attendance Details</h2>
+          <p>{{ selectedAttendance?.staffName }}</p>
+        </div>
+      </div>
+      <button class="modal-close" (click)="closeAttendanceModal()">✕</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedAttendance">
+      <div class="attendance-detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">Date</span>
+          <strong>{{ selectedAttendance.date | date:'fullDate' }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Clock In</span>
+          <strong>{{ selectedAttendance.clockIn || 'Not clocked in' }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Clock Out</span>
+          <strong>{{ selectedAttendance.clockOut || 'Not clocked out' }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Total Hours</span>
+          <strong>{{ selectedAttendance.totalHours }} hours</strong>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Status</span>
+          <span 
+            class="attendance-status-badge"
+            [style.background]="getAttendanceStatusColor(selectedAttendance.status)"
+            [style.color]="'white'">
+            {{ selectedAttendance.status }}
+          </span>
+        </div>
+
+        <div class="detail-item full-width" *ngIf="selectedAttendance.notes">
+          <span class="detail-label">Notes</span>
+          <p>{{ selectedAttendance.notes }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="modal-btn secondary" (click)="closeAttendanceModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SALARY SLIP MODAL ================= -->
+<div class="modal-overlay" *ngIf="showSalarySlipModal" (click)="closeSalarySlipModal()">
+  <div class="modal-content modal-medium" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-icon">💵</div>
+        <div>
+          <h2>Salary Slip</h2>
+          <p>{{ selectedSalarySlip?.staffName }} - {{ selectedSalarySlip?.month }}</p>
+        </div>
+      </div>
+      <button class="modal-close" (click)="closeSalarySlipModal()">✕</button>
+    </div>
+
+    <div class="modal-body salary-slip-view" *ngIf="selectedSalarySlip">
+      <div class="salary-slip-header">
+        <h3>SALARY SLIP</h3>
+        <p>{{ selectedSalarySlip.month }}</p>
+      </div>
+
+      <div class="salary-section">
+        <h4>Earnings</h4>
+        <div class="salary-row">
+          <span>Basic Salary</span>
+          <strong>₹{{ selectedSalarySlip.basicSalary | number:'1.0-0' }}</strong>
+        </div>
+        <div class="salary-row">
+          <span>HRA</span>
+          <strong>₹{{ selectedSalarySlip.hra | number:'1.0-0' }}</strong>
+        </div>
+        <div class="salary-row">
+          <span>Commission</span>
+          <strong>₹{{ selectedSalarySlip.commission | number:'1.0-0' }}</strong>
+        </div>
+        <div class="salary-row">
+          <span>Bonus</span>
+          <strong>₹{{ selectedSalarySlip.bonus | number:'1.0-0' }}</strong>
+        </div>
+        <div class="salary-row total">
+          <span>Gross Salary</span>
+          <strong>₹{{ selectedSalarySlip.grossSalary | number:'1.0-0' }}</strong>
+        </div>
+      </div>
+
+      <div class="salary-section">
+        <h4>Deductions</h4>
+        <div class="salary-row">
+          <span>PF</span>
+          <strong>₹{{ selectedSalarySlip.pf | number:'1.0-0' }}</strong>
+        </div>
+        <div class="salary-row">
+          <span>Tax</span>
+          <strong>₹{{ selectedSalarySlip.tax | number:'1.0-0' }}</strong>
+        </div>
+        <div class="salary-row total">
+          <span>Total Deductions</span>
+          <strong>₹{{ selectedSalarySlip.deductions | number:'1.0-0' }}</strong>
+        </div>
+      </div>
+
+      <div class="salary-section net-salary-section">
+        <div class="salary-row net">
+          <span>Net Salary</span>
+          <strong>₹{{ selectedSalarySlip.netSalary | number:'1.0-0' }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="modal-btn secondary" (click)="closeSalarySlipModal()">Close</button>
+      <button class="modal-btn primary" (click)="downloadSalarySlip(selectedSalarySlip!.id)">
+        📥 Download PDF
+      </button>
+      <button class="modal-btn primary" (click)="emailSalarySlip(selectedSalarySlip!.id)">
+        📧 Email to Employee
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= LEAVE REQUEST MODAL ================= -->
+<div class="modal-overlay" *ngIf="showLeaveRequestModal" (click)="closeLeaveRequestModal()">
+  <div class="modal-content modal-medium" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-icon">📅</div>
+        <div>
+          <h2>Request Leave</h2>
+          <p>Submit a new leave request</p>
+        </div>
+      </div>
+      <button class="modal-close" (click)="closeLeaveRequestModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <form (submit)="submitLeaveRequest(); $event.preventDefault()">
+        <div class="form-group">
+          <label class="form-label">
+            Leave Type <span class="required">*</span>
+          </label>
+          <select class="form-input" [(ngModel)]="newLeaveRequest.leaveType" name="leaveType" required>
+            <option value="">Select leave type</option>
+            <option value="SICK">Sick Leave</option>
+            <option value="CASUAL">Casual Leave</option>
+            <option value="EARNED">Earned Leave</option>
+            <option value="UNPAID">Unpaid Leave</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            Start Date <span class="required">*</span>
+          </label>
+          <input type="date" class="form-input" [(ngModel)]="newLeaveRequest.startDate" name="startDate" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            End Date <span class="required">*</span>
+          </label>
+          <input type="date" class="form-input" [(ngModel)]="newLeaveRequest.endDate" name="endDate" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            Reason <span class="required">*</span>
+          </label>
+          <textarea class="form-input" [(ngModel)]="newLeaveRequest.reason" name="reason" rows="4" required></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="modal-btn secondary" (click)="closeLeaveRequestModal()">
+            Cancel
+          </button>
+          <button type="submit" class="modal-btn primary">
+            Submit Request
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SHIFT TEMPLATE MODAL ================= -->
+<div class="modal-overlay" *ngIf="showShiftTemplateModal" (click)="closeShiftTemplateModal()">
+  <div class="modal-content modal-medium" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-icon">⏰</div>
+        <div>
+          <h2>{{ selectedShift ? 'Edit Shift' : 'Add New Shift' }}</h2>
+          <p>Configure shift timings</p>
+        </div>
+      </div>
+      <button class="modal-close" (click)="closeShiftTemplateModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <form (submit)="saveShiftTemplate(); $event.preventDefault()">
+        <div class="form-group">
+          <label class="form-label">
+            Shift Name <span class="required">*</span>
+          </label>
+          <input type="text" class="form-input" [(ngModel)]="newShiftTemplate.name" name="shiftName" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            Start Time <span class="required">*</span>
+          </label>
+          <input type="time" class="form-input" [(ngModel)]="newShiftTemplate.startTime" name="startTime" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            End Time <span class="required">*</span>
+          </label>
+          <input type="time" class="form-input" [(ngModel)]="newShiftTemplate.endTime" name="endTime" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            Duration (hours) <span class="required">*</span>
+          </label>
+          <input type="number" class="form-input" [(ngModel)]="newShiftTemplate.duration" name="duration" required />
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="modal-btn secondary" (click)="closeShiftTemplateModal()">
+            Cancel
+          </button>
+          <button type="submit" class="modal-btn primary">
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

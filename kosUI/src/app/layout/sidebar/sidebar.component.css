@@ -3,13 +3,25 @@
   height: 100vh;
   background: linear-gradient(180deg, #020617, #0f172a);
   color: #e5e7eb;
-  transition: width 0.3s ease;
+  /* ✅ Smooth width transition */
+  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   flex-direction: column;
+  overflow-x: hidden; /* Prevent horizontal scroll during anim */
+  white-space: nowrap; /* Prevent text wrap */
+  z-index: 1000; /* Ensure it sits on top if we used absolute */
 }
 
+/* ✅ COLLAPSED STATE */
 .sidebar.collapsed {
   width: 72px;
+}
+
+/* ✅ HOVER STATE (Slide Open) */
+/* When collapsed class exists BUT user is hovering */
+.sidebar.collapsed:hover {
+  width: 250px;
+  box-shadow: 5px 0 15px rgba(0,0,0,0.3); /* Optional shadow for depth */
 }
 
 /* Toggle */
@@ -22,6 +34,7 @@
   cursor: pointer;
   margin-left: 8px;
   display: flex;
+  min-width: 40px; /* Ensure click area doesn't shrink */
 }
 
 /* Logo */
@@ -31,6 +44,7 @@
   font-weight: 700;
   padding: 6px 21px 16px;
   letter-spacing: 2px;
+  height: 50px; /* Fixed height to prevent jump */
 }
 
 /* Menu Item */
@@ -47,6 +61,7 @@
   transition: all 0.2s ease;
   font-size: 14px;
   font-weight: 500;
+  overflow: hidden; /* clean edges */
 }
 
 .menu-item:hover {
@@ -55,12 +70,27 @@
   transform: translateX(2px);
 }
 
-/* Active Route */
 .menu-item.active {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #fff;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+/* ✅ TEXT & ARROW VISIBILITY CONTROL */
+.text, .arrow {
+  opacity: 1;
+  transition: opacity 0.2s ease-in-out;
+  transition-delay: 0.1s; /* Slight delay so width animates first */
+}
+
+/* Hide text when collapsed AND NOT hovered */
+.sidebar.collapsed:not(:hover) .text,
+.sidebar.collapsed:not(:hover) .arrow {
+  opacity: 0;
+  pointer-events: none;
+  width: 0; /* Helps removing space */
+  display: none; /* Using display none here is okay for end-state, but opacity handles the fade */
 }
 
 /* Group Header */
@@ -70,17 +100,15 @@
   font-weight: 600;
 }
 
-/* Active Group */
 .active-group {
   background: rgba(37, 99, 235, 0.18);
 }
 
-/* Submenu (CLICK BASED, NOT HOVER) */
+/* Submenu */
 .submenu {
   margin-left: 30px;
   padding-left: 12px;
   border-left: 2px solid rgba(255, 255, 255, 0.08);
-
   max-height: 0;
   overflow: hidden;
   opacity: 0;
@@ -88,11 +116,16 @@
   transition: all 0.25s ease;
 }
 
-/* ✅ Show submenu when expanded */
 .menu-group.expanded .submenu {
   max-height: 500px;
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ✅ Fix Submenu in Collapsed Mode */
+/* If sidebar is collapsed and NOT hovered, forcefully hide submenu even if expanded */
+.sidebar.collapsed:not(:hover) .submenu {
+  display: none; 
 }
 
 /* Submenu Items */
@@ -120,16 +153,14 @@
   font-weight: 600;
 }
 
-/* Icons */
 .icon {
   font-size: 20px;
-  min-width: 22px;
+  min-width: 22px; /* Fixed width for icon so it doesn't squash */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Arrow */
 .arrow {
   font-size: 16px;
   opacity: 0.6;
@@ -137,14 +168,6 @@
   transition: transform 0.2s ease;
 }
 
-/* Rotate arrow when expanded */
 .menu-group.expanded .arrow {
   transform: rotate(180deg);
-}
-
-/* Collapse Mode */
-.sidebar.collapsed .text,
-.sidebar.collapsed .arrow,
-.sidebar.collapsed .submenu {
-  display: none;
 }

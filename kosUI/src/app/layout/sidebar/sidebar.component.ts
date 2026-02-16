@@ -6,7 +6,7 @@ import { LayoutService } from '../../core/services/layout.service';
 
 interface SidebarMenu {
   label: string;
-  icon: string;       // material icon name
+  icon: string;
   route?: string;
   children?: SidebarMenu[];
   expanded?: boolean;
@@ -20,19 +20,15 @@ interface SidebarMenu {
   styleUrls: ['./sidebar.component.css']
 })
 export class SidebarComponent implements OnInit {
+  isHovered = false; // ✅ Track hover state
 
   constructor(
     public layout: LayoutService,
     private router: Router
   ) {}
 
-  // ✅ ENTERPRISE MENU CONFIG (ROUTES FIXED)
   menuItems: SidebarMenu[] = [
-    {
-      label: 'Dashboard',
-      icon: 'dashboard',
-      route: '/dashboard'
-    },
+    { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
     {
       label: 'Inventory',
       icon: 'inventory_2',
@@ -62,6 +58,18 @@ export class SidebarComponent implements OnInit {
         { label: 'Order History', icon: 'history', route: '/orders/history' },
       ]
     },
+     {
+      label: 'EmployeeManagement',
+      icon: 'people',
+      expanded: false,
+      children: [
+        { label: 'Staff Directory', icon: 'people_outline', route: '/staff/directory' },
+        { label: 'Attendance', icon: 'access_time', route: '/staff/attendance' },
+        { label: 'Leave Management', icon: 'calendar_today', route: '/staff/leave' },
+        { label: 'Salary Management', icon: 'account_balance_wallet', route: '/staff/salary' },
+        { label: 'Shift Management', icon: 'schedule', route: '/staff/shifts' },
+      ]
+    },
     {
       label: 'System',
       icon: 'settings',
@@ -76,16 +84,14 @@ export class SidebarComponent implements OnInit {
   ngOnInit() {
     this.autoExpandActiveGroup();
 
-    // ✅ Recalculate active group on every route change (important)
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe(() => this.autoExpandActiveGroup());
   }
 
-  // ✅ Auto expand group based on active route (ENTERPRISE LOGIC)
+  // ✅ Auto expand group based on active route
   private autoExpandActiveGroup() {
     const currentUrl = this.router.url;
-
     this.menuItems.forEach(item => {
       if (item.children) {
         item.expanded = item.children.some(child =>
@@ -100,12 +106,20 @@ export class SidebarComponent implements OnInit {
     item.expanded = !item.expanded;
   }
 
-  // ✅ Tooltip when sidebar collapsed
+  // ✅ Tooltip: Only show when collapsed AND NOT hovered
   getTooltip(label: string): string {
-    return this.layout.isCollapsed() ? label : '';
+    return (this.layout.isCollapsed() && !this.isHovered) ? label : '';
   }
 
-  // ✅ Performance optimization
+  // ✅ Handle Mouse Hover
+  onMouseEnter() {
+    this.isHovered = true;
+  }
+
+  onMouseLeave() {
+    this.isHovered = false;
+  }
+
   trackByLabel(index: number, item: SidebarMenu): string {
     return item.label;
   }

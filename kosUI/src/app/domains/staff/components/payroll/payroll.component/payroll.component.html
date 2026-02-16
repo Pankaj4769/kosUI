@@ -1,0 +1,269 @@
+<!-- Salary KPI Cards -->
+<div class="kpi-row-modern" *ngIf="salaryKpi">
+  <div class="kpi-card-modern">
+    <div class="kpi-icon-modern">💼</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">Total Payroll</span>
+      <strong class="kpi-value-modern">
+        ₹{{ salaryKpi.totalPayroll | number:'1.0-0' }}
+      </strong>
+    </div>
+  </div>
+
+  <div class="kpi-card-modern on-duty">
+    <div class="kpi-icon-modern">💰</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">This Month</span>
+      <strong class="kpi-value-modern">
+        ₹{{ salaryKpi.thisMonth | number:'1.0-0' }}
+      </strong>
+    </div>
+  </div>
+
+  <div class="kpi-card-modern efficiency">
+    <div class="kpi-icon-modern">✅</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">Processed</span>
+      <strong class="kpi-value-modern">
+        {{ salaryKpi.processed }}
+      </strong>
+    </div>
+  </div>
+
+  <div class="kpi-card-modern" style="border-color: #fbbf24;">
+    <div class="kpi-icon-modern" style="background: #fef3c7;">⏳</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">Pending</span>
+      <strong class="kpi-value-modern">
+        {{ salaryKpi.pending }}
+      </strong>
+    </div>
+  </div>
+</div>
+
+<!-- Salary Slip Generator -->
+<div class="salary-generator">
+  <h3>Generate Salary Slip</h3>
+  <div class="generator-form">
+    <div class="form-group-inline">
+      <label>Employee:</label>
+      <select
+        class="form-input"
+        [ngModel]="selectedStaffId"
+        (ngModelChange)="onStaffChange($event)">
+        <option value="">Select Employee</option>
+        <option *ngFor="let staff of staffOptions" [value]="staff.id">
+          {{ staff.name }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group-inline">
+      <label>Month:</label>
+      <input
+        type="month"
+        class="form-input"
+        [ngModel]="selectedMonth"
+        (ngModelChange)="onMonthChange($event)"
+      />
+    </div>
+
+    <div class="generator-actions">
+      <button class="btn-generate" (click)="onGenerateSlip()">
+        📄 Generate
+      </button>
+      <button class="btn-download-all">
+        📥 Download All
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Commission KPI Cards -->
+<div class="kpi-row-modern" *ngIf="commissionKpi">
+  <div class="kpi-card-modern">
+    <div class="kpi-icon-modern">💼</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">Total Sales</span>
+      <strong class="kpi-value-modern">
+        ₹{{ commissionKpi.totalSales | number:'1.0-0' }}
+      </strong>
+    </div>
+  </div>
+
+  <div class="kpi-card-modern on-duty">
+    <div class="kpi-icon-modern">💰</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">Total Commission</span>
+      <strong class="kpi-value-modern">
+        ₹{{ commissionKpi.totalCommission | number:'1.0-0' }}
+      </strong>
+    </div>
+  </div>
+
+  <div class="kpi-card-modern" style="border-color: #fbbf24;">
+    <div class="kpi-icon-modern" style="background: #fef3c7;">⏳</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">Pending</span>
+      <strong class="kpi-value-modern">
+        ₹{{ commissionKpi.pending | number:'1.0-0' }}
+      </strong>
+    </div>
+  </div>
+
+  <div class="kpi-card-modern efficiency">
+    <div class="kpi-icon-modern">✅</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">Paid</span>
+      <strong class="kpi-value-modern">
+        ₹{{ commissionKpi.paid | number:'1.0-0' }}
+      </strong>
+    </div>
+  </div>
+</div>
+
+<!-- Commission Calculator -->
+<div class="commission-calculator">
+  <h3>Commission Calculator</h3>
+  <div class="calculator-form">
+    <div class="form-group-inline">
+      <label>Sales Amount:</label>
+      <input
+        type="number"
+        class="form-input"
+        [(ngModel)]="calculator.salesAmount"
+        (ngModelChange)="onCalculatorChange()"
+        placeholder="Enter sales amount"
+      />
+    </div>
+
+    <div class="form-group-inline">
+      <label>Rate (%):</label>
+      <input
+        type="number"
+        class="form-input"
+        [(ngModel)]="calculator.rate"
+        (ngModelChange)="onCalculatorChange()"
+        placeholder="Enter rate"
+        min="0"
+        max="100"
+      />
+    </div>
+
+    <div class="form-group-inline">
+      <label>Commission:</label>
+      <strong class="commission-result">
+        ₹{{ calculator.commission | number:'1.0-0' }}
+      </strong>
+    </div>
+  </div>
+</div>
+
+<!-- Commission History Table -->
+<div class="commission-table-container">
+  <h3>Commission History</h3>
+  <table class="staff-table">
+    <thead>
+      <tr>
+        <th>STAFF MEMBER</th>
+        <th>SALES AMOUNT</th>
+        <th>RATE</th>
+        <th>COMMISSION</th>
+        <th>MONTH</th>
+        <th>STATUS</th>
+        <th>ACTIONS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let record of commissionRecords">
+        <td><strong>{{ record.staffName }}</strong></td>
+        <td>₹{{ record.salesAmount | number:'1.0-0' }}</td>
+        <td>{{ record.commissionRate }}%</td>
+        <td>
+          <strong class="commission-amount">
+            ₹{{ record.commissionAmount | number:'1.0-0' }}
+          </strong>
+        </td>
+        <td>{{ record.month }}</td>
+        <td>
+          <span
+            class="status-badge-modern"
+            [class.on-duty]="record.status === 'PAID'"
+            [class.off-duty]="record.status === 'PENDING'">
+            {{ record.status }}
+          </span>
+        </td>
+        <td>
+          <button
+            class="action-btn-icon"
+            *ngIf="record.status === 'PENDING'"
+            (click)="onPayCommission(record.id)"
+            title="Mark as Paid">
+            💰
+          </button>
+          <button
+            class="action-btn-icon"
+            title="View Details">
+            📄
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Salary Slips Table -->
+<div class="salary-table-container">
+  <h3>Recent Salary Slips</h3>
+  <table class="staff-table">
+    <thead>
+      <tr>
+        <th>STAFF MEMBER</th>
+        <th>MONTH</th>
+        <th>BASIC SALARY</th>
+        <th>GROSS</th>
+        <th>DEDUCTIONS</th>
+        <th>NET SALARY</th>
+        <th>STATUS</th>
+        <th>ACTIONS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let slip of salarySlips">
+        <td><strong>{{ slip.staffName }}</strong></td>
+        <td>{{ slip.month }}</td>
+        <td>₹{{ slip.basicSalary | number:'1.0-0' }}</td>
+        <td>₹{{ slip.grossSalary | number:'1.0-0' }}</td>
+        <td class="deduction-amount">₹{{ slip.deductions | number:'1.0-0' }}</td>
+        <td>
+          <strong class="net-salary">
+            ₹{{ slip.netSalary | number:'1.0-0' }}
+          </strong>
+        </td>
+        <td>
+          <span
+            class="status-badge-modern"
+            [class.on-duty]="slip.status === 'SENT'"
+            [class.off-duty]="slip.status === 'PENDING'">
+            {{ slip.status }}
+          </span>
+        </td>
+        <td>
+          <button
+            class="action-btn-icon"
+            (click)="onDownloadSlip(slip.id)"
+            title="Download">
+            📥
+          </button>
+          <button
+            class="action-btn-icon"
+            (click)="onEmailSlip(slip.id)"
+            *ngIf="slip.status !== 'SENT'"
+            title="Email">
+            📧
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

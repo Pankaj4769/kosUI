@@ -617,7 +617,7 @@ kbd {
 
 .toast-container {
   position: fixed;
-  bottom: 100px;
+  top: 22%;
   right: 20px;
   display: flex;
   flex-direction: column;
@@ -638,6 +638,7 @@ kbd {
   max-width: 400px;
   pointer-events: all;
   animation: slideInRight 0.3s ease;
+  
 }
 
 @keyframes slideInRight {

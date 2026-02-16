@@ -1,0 +1,280 @@
+<!-- EMPLOYEE MANAGEMENT OVERVIEW DASHBOARD -->
+<div class="overview-card" *ngIf="overview">
+  <div class="overview-header">
+    <h2>{{ overview.title }}</h2>
+    <p>{{ overview.intro }}</p>
+  </div>
+
+  <div class="overview-columns">
+    <div class="overview-column">
+      <h3>{{ overview.keyFeaturesTitle }}</h3>
+      <ul>
+        <li *ngFor="let feature of overview.keyFeatures">
+          <strong>{{ feature.title }}:</strong>
+          <span> {{ feature.description }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="overview-column">
+      <h3>{{ overview.benefitsTitle }}</h3>
+      <ul>
+        <li *ngFor="let benefit of overview.benefits">
+          <strong>{{ benefit.title }}:</strong>
+          <span> {{ benefit.description }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="overview-summary">
+    {{ overview.summary }}
+  </p>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-row-modern" *ngIf="kpi">
+  <div class="kpi-card-modern">
+    <div class="kpi-icon-modern">👥</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">Total Staff</span>
+      <strong class="kpi-value-modern">{{ kpi.totalStaff }}</strong>
+    </div>
+  </div>
+
+  <div class="kpi-card-modern on-duty">
+    <div class="kpi-icon-modern">✅</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">On Duty</span>
+      <strong class="kpi-value-modern">{{ kpi.onDuty }}</strong>
+    </div>
+  </div>
+
+  <div class="kpi-card-modern efficiency">
+    <div class="kpi-icon-modern">⚡</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">Efficiency</span>
+      <strong class="kpi-value-modern">{{ kpi.avgEfficiency }}%</strong>
+    </div>
+  </div>
+
+  <div class="kpi-card-modern awards">
+    <div class="kpi-icon-modern">🏅</div>
+    <div class="kpi-content-modern">
+      <span class="kpi-label-modern">Awards</span>
+      <strong class="kpi-value-modern">{{ kpi.awards }}</strong>
+    </div>
+  </div>
+</div>
+
+<!-- Controls Bar -->
+<div class="controls-bar-modern">
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input
+      type="text"
+      placeholder="Search staff members..."
+      [ngModel]="searchTerm"
+      (ngModelChange)="onSearchInput($event)"
+    />
+  </div>
+
+  <div class="filter-group">
+    <button
+      class="filter-btn"
+      [class.active]="filterStatus === 'ALL'"
+      (click)="onFilterChange('ALL')">
+      All
+    </button>
+    <button
+      class="filter-btn"
+      [class.active]="filterStatus === 'BUSY'"
+      (click)="onFilterChange('BUSY')">
+      Busy
+    </button>
+    <button
+      class="filter-btn"
+      [class.active]="filterStatus === 'NORMAL'"
+      (click)="onFilterChange('NORMAL')">
+      Normal
+    </button>
+    <button
+      class="filter-btn"
+      [class.active]="filterStatus === 'IDLE'"
+      (click)="onFilterChange('IDLE')">
+      Idle
+    </button>
+  </div>
+
+  <div class="view-toggle">
+    <button
+      class="view-btn"
+      [class.active]="viewMode === 'list'"
+      (click)="onViewModeChange('list')">
+      📋 List
+    </button>
+    <button
+      class="view-btn"
+      [class.active]="viewMode === 'grid'"
+      (click)="onViewModeChange('grid')">
+      🎛️ Grid
+    </button>
+  </div>
+
+  <button class="add-staff-btn" (click)="onAddStaffClicked()">
+    ➕ Add Staff
+  </button>
+</div>
+
+<!-- LIST VIEW -->
+<div class="staff-table-container" *ngIf="viewMode === 'list'">
+  <table class="staff-table">
+    <thead>
+      <tr>
+        <th>STAFF MEMBER</th>
+        <th>ROLE</th>
+        <th>STATUS</th>
+        <th class="sortable">LAST ACTIVE</th>
+        <th class="sortable">PERFORMANCE</th>
+        <th>ACTIONS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="let staff of staffCards; trackBy: trackByStaffId"
+        class="staff-row"
+        (click)="onRowClick(staff)">
+        <td class="staff-member-cell">
+          <div class="staff-avatar">{{ staff.name.charAt(0) }}</div>
+          <div class="staff-info">
+            <strong>{{ staff.name }}</strong>
+            <span class="staff-id">{{ staff.id }}</span>
+          </div>
+        </td>
+
+        <td>{{ staff.role }}</td>
+
+        <td>
+          <span
+            class="status-badge-modern"
+            [class.on-duty]="staff.onDutyStatus === 'ON DUTY'"
+            [class.off-duty]="staff.onDutyStatus === 'OFF DUTY'">
+            {{ staff.onDutyStatus }}
+          </span>
+        </td>
+
+        <td>
+          <span class="last-active">
+            ⏰ {{ formatTime(staff.lastActive) }}
+          </span>
+        </td>
+
+        <td>
+          <div class="performance-cell">
+            <span class="stars">
+              <ng-container *ngFor="let star of getPerformanceStars(staff.performance)">
+                {{ star }}
+              </ng-container>
+            </span>
+            <span class="rating-value">{{ staff.performance }}</span>
+          </div>
+        </td>
+
+        <td>
+          <button
+            class="action-btn-icon"
+            (click)="onViewStaffClicked(staff, $event)"
+            title="View Details">
+            👁️
+          </button>
+          <button
+            class="action-btn-icon"
+            (click)="onEditStaffClicked(staff, $event)"
+            title="Edit Staff">
+            ✏️
+          </button>
+          <button
+            class="action-btn-icon delete-btn"
+            (click)="onDeleteStaffClicked(staff.id, $event)"
+            title="Remove Staff">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="empty-state" *ngIf="staffCards.length === 0">
+    <span class="empty-icon">👥</span>
+    <p>No staff members found</p>
+    <button class="btn-empty-state" (click)="onAddStaffClicked()">
+      ➕ Add Your First Staff Member
+    </button>
+  </div>
+</div>
+
+<!-- GRID VIEW -->
+<div class="staff-grid-compact" *ngIf="viewMode === 'grid'">
+  <div
+    class="staff-card-modern"
+    *ngFor="let staff of staffCards; trackBy: trackByStaffId"
+    (click)="onRowClick(staff)">
+    <div class="card-header-modern">
+      <div class="staff-avatar-large">
+        {{ staff.name.charAt(0) }}
+      </div>
+      <div class="card-info-modern">
+        <h3>{{ staff.name }}</h3>
+        <span class="role-badge">{{ staff.role }}</span>
+        <span class="staff-id">{{ staff.id }}</span>
+      </div>
+      <span
+        class="status-dot"
+        [class.online]="staff.onDutyStatus === 'ON DUTY'"
+        [class.offline]="staff.onDutyStatus === 'OFF DUTY'"
+        [title]="staff.onDutyStatus">
+      </span>
+    </div>
+
+    <div class="card-body-modern">
+      <div class="stat-row">
+        <span>Efficiency</span>
+        <span [style.color]="getScoreColor(staff.efficiency)">
+          {{ staff.efficiency }}%
+        </span>
+      </div>
+      <div class="stat-row">
+        <span>Revenue</span>
+        <span>₹{{ staff.revenue | number:'1.0-0' }}</span>
+      </div>
+      <div class="stat-row">
+        <span>Active Tables</span>
+        <span>{{ staff.activeTables }}</span>
+      </div>
+      <div class="stat-row">
+        <span>Status</span>
+        <span class="status-text" [ngClass]="staff.status.toLowerCase()">
+          {{ staff.status }}
+        </span>
+      </div>
+    </div>
+
+    <div class="card-footer-modern">
+      <button
+        class="btn-outline-sm"
+        (click)="onViewStaffClicked(staff, $event)">
+        View
+      </button>
+      <button
+        class="btn-outline-sm"
+        (click)="onEditStaffClicked(staff, $event)">
+        Edit
+      </button>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="staffCards.length === 0">
+    <span class="empty-icon">👥</span>
+    <p>No staff members found</p>
+  </div>
+</div>
