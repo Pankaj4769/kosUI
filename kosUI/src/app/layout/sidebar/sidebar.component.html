@@ -1,4 +1,8 @@
-<div class="sidebar" [class.collapsed]="layout.isCollapsed()">
+<!-- ✅ Added mouse events to main container -->
+<div class="sidebar" 
+     [class.collapsed]="layout.isCollapsed()"
+     (mouseenter)="onMouseEnter()"
+     (mouseleave)="onMouseLeave()">
 
   <!-- Toggle -->
   <button class="toggle" (click)="layout.toggle()">
@@ -7,23 +11,25 @@
 
   <!-- Logo -->
   <div class="logo">
-    {{ layout.isCollapsed() ? 'K' : 'KOS' }}
+    <!-- Use CSS to hide/show full logo instead of *ngIf for smoother effect if needed, 
+         but *ngIf is okay here since it changes content, not just width -->
+    <span *ngIf="layout.isCollapsed() && !isHovered">K</span>
+    <span *ngIf="!layout.isCollapsed() || isHovered">KOS</span>
   </div>
 
   <nav>
-
     <ng-container *ngFor="let item of menuItems; trackBy: trackByLabel">
 
       <!-- SINGLE MENU ITEM -->
-      <a
-        *ngIf="!item.children"
-        [routerLink]="item.route"
-        routerLinkActive="active"
-        class="menu-item"
-        [title]="getTooltip(item.label)">
+      <a *ngIf="!item.children"
+         [routerLink]="item.route"
+         routerLinkActive="active"
+         class="menu-item"
+         [title]="getTooltip(item.label)">
         
         <span class="material-icons icon">{{ item.icon }}</span>
-        <span class="text" *ngIf="!layout.isCollapsed()">{{ item.label }}</span>
+        <!-- ✅ Removed *ngIf, controlled by CSS opacity -->
+        <span class="text">{{ item.label }}</span>
       </a>
 
       <!-- GROUP MENU -->
@@ -37,29 +43,27 @@
              [title]="getTooltip(item.label)">
           
           <span class="material-icons icon">{{ item.icon }}</span>
-          <span class="text" *ngIf="!layout.isCollapsed()">{{ item.label }}</span>
-          <span class="material-icons arrow" *ngIf="!layout.isCollapsed()">
+          <!-- ✅ Removed *ngIf -->
+          <span class="text">{{ item.label }}</span>
+          <!-- ✅ Removed *ngIf -->
+          <span class="material-icons arrow">
             {{ item.expanded ? 'expand_less' : 'expand_more' }}
           </span>
         </div>
 
-        <!-- ✅ Always in DOM (no hover bug) -->
+        <!-- SUBMENU -->
         <div class="submenu">
-          <a
-            *ngFor="let child of item.children"
-            [routerLink]="child.route"
-            routerLinkActive="active"
-            class="submenu-item">
+          <a *ngFor="let child of item.children"
+             [routerLink]="child.route"
+             routerLinkActive="active"
+             class="submenu-item">
             
             <span class="material-icons icon">{{ child.icon }}</span>
-            <span>{{ child.label }}</span>
+            <span class="text">{{ child.label }}</span>
           </a>
         </div>
-
       </div>
 
     </ng-container>
-
   </nav>
-
 </div>

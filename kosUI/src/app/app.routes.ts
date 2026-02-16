@@ -6,6 +6,7 @@ import { LiveOrdersComponent } from './domains/order/pages/live-orders.component
 import { AppLayoutComponent } from './layout/app-layout/app-layout.component';
 import { OrderHistoryComponent } from './domains/order/pages/order-history.component';
 import { RoleManagementComponent } from './domains/roleManagement/pages/role-management.component';
+import { StaffDirectoryComponent } from './domains/staff/components/staff-directory/staff-directory/staff-directory.component';
 
 export const routes: Routes = [
 
@@ -33,7 +34,7 @@ export const routes: Routes = [
         path: 'orders',
         children: [
           { path: 'live', component: LiveOrdersComponent },
-          { path: 'history', component: OrderHistoryComponent }, // future
+          { path: 'history', component: OrderHistoryComponent }, 
           { path: '', redirectTo: 'live', pathMatch: 'full' }
         ]
       },
@@ -44,6 +45,16 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./domains/pos/pos.module').then(m => m.PosModule)
       },
+
+      // ✅ STAFF MODULE
+      {
+        path: 'staff',
+        children: [
+          { path: 'directory', component: StaffDirectoryComponent },
+          { path: '', redirectTo: 'directory', pathMatch: 'full' }
+        ]
+      },
+
 
       // ✅ SYSTEM MODULE (future)
       { path: 'settings', component: RoleManagementComponent },
