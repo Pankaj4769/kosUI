@@ -10,6 +10,7 @@ interface SidebarMenu {
   route?: string;
   children?: SidebarMenu[];
   expanded?: boolean;
+  allowedRoles?: string[];
 }
 
 @Component({
@@ -28,6 +29,7 @@ export class SidebarComponent implements OnInit {
   ) {}
 
   menuItems: SidebarMenu[] = [
+    { label: 'login', icon: 'dashboard', route: '/login' },
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
     {
       label: 'Inventory',
@@ -46,7 +48,6 @@ export class SidebarComponent implements OnInit {
         { label: 'Tables', icon: 'table_chart', route: '/pos/tables' },
         { label: 'Cashier', icon: 'payments', route: '/pos' },
         { label: 'Menu', icon: 'restaurant_menu', route: '/pos/menu' },
-        { label: 'Staff', icon: 'people', route: '/pos/staff' },
       ]
     },
     {
@@ -63,11 +64,13 @@ export class SidebarComponent implements OnInit {
       icon: 'people',
       expanded: false,
       children: [
+        { label: 'Staff', icon: 'people', route: '/pos/staff' },
         { label: 'Staff Directory', icon: 'people_outline', route: '/staff/directory' },
         { label: 'Attendance', icon: 'access_time', route: '/staff/attendance' },
         { label: 'Leave Management', icon: 'calendar_today', route: '/staff/leave' },
         { label: 'Salary Management', icon: 'account_balance_wallet', route: '/staff/salary' },
         { label: 'Shift Management', icon: 'schedule', route: '/staff/shifts' },
+        { label: 'Role Management', icon: 'admin_panel_settings', route: '/staff/roles' },
       ]
     },
     {
@@ -77,6 +80,21 @@ export class SidebarComponent implements OnInit {
       children: [
         { label: 'QR Codes', icon: 'qr_code', route: '/qr' },
         { label: 'Settings', icon: 'settings_applications', route: '/settings' },
+      ]
+    },
+    {
+      label: 'All Reports',
+      icon: 'bar_chart',
+      expanded: false,
+      children: [
+        { label: 'Sales Report', icon: 'analytics', route: '/reports/sales' },
+        { label: 'Inventory Report', icon: 'inventory_2', route: '/reports/inventory' },
+        { label: 'Customer Report', icon: 'people', route: '/reports/customer' },
+        { label: 'Staff Report', icon: 'people', route: '/reports/staff' },
+        { label: 'Financial Report', icon: 'account_balance', route: '/reports/financial' },
+        { label: 'Kitchen & Order Report', icon: 'restaurant', route: '/reports/kitchen' },
+        { label: 'Online & Delivery Report', icon: 'local_shipping', route: '/reports/delivery' },
+        { label: 'Multiple Branch Report', icon: 'apartment', route: '/reports/branches' },
       ]
     }
   ];

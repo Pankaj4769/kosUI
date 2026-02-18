@@ -1,0 +1,26 @@
+<div class="pending-wrapper">
+  <div class="pending-card">
+    <div class="pending-icon">
+      <span class="material-icons pulse">hourglass_top</span>
+    </div>
+    <h2>Pending Approval</h2>
+    <p class="pending-msg">
+      Thank you <strong>{{ user?.name }}</strong>! Your subscription request has been submitted.
+      Our Super Admin team will review and activate your account shortly.
+    </p>
+    <div class="info-row">
+      <span class="material-icons">email</span>
+      You'll receive a confirmation email once approved.
+    </div>
+    <div class="info-row">
+      <span class="material-icons">schedule</span>
+      Typical approval time: <strong>1–2 business hours</strong>
+    </div>
+    <div class="status-chip">
+      <span class="dot"></span> Awaiting Super Admin Review
+    </div>
+    <button class="btn-logout" (click)="logout()">
+      <span class="material-icons">logout</span> Sign Out
+    </button>
+  </div>
+</div>

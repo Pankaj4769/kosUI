@@ -2,8 +2,13 @@ import {
   Component,
   OnInit,
   OnDestroy,
+  OnChanges, // Added
+  SimpleChanges, // Added
   ChangeDetectionStrategy,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  Input, // Added
+  Output, // Added
+  EventEmitter // Added
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -11,22 +16,22 @@ import { Subject, takeUntil, interval } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 
 // Services
-import { TableService } from '../../pos/services/table.service';
-import { StaffAnalyticsService } from '../services/staff-analytics.service';
-import { ConfirmDialogComponent } from '../../common-popup/pages/confirm-dialog.component';
+import { TableService } from '../../../pos/services/table.service';
+import { StaffAnalyticsService } from '../../services/staff-analytics.service';
+import { ConfirmDialogComponent } from '../../../common-popup/pages/confirm-dialog.component';
 
 // Models
-import { Table } from '../../pos/models/table.model';
+import { Table } from '../../../pos/models/table.model';
 
 // --- Interfaces ---
 
 export interface StaffCard {
   id: string;
   name: string;
-  email?: string; // Added for Add/Edit
-  phone?: string; // Added for Add/Edit
+  email?: string;
+  phone?: string;
   role: string;
-  roleId?: number; // Added for Add/Edit
+  roleId?: number;
   load: number;
   efficiency: number;
   revenue: number;
@@ -93,18 +98,28 @@ type ViewMode = 'list' | 'grid';
 type ActiveTab = 'directory' | 'roster';
 
 @Component({
-  selector: 'app-staff-dashboard',
+  selector: 'app-staff-directory', // CHANGED: Must match usage in Shift HTML
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './staff-dashboard.component.html',
-  styleUrls: ['./staff-dashboard.component.css'],
+  templateUrl: './staff-directory.component.html',
+  styleUrls: ['./staff-directory.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StaffDashboardComponent implements OnInit, OnDestroy {
+export class StaffDirectoryComponent implements OnInit, OnDestroy, OnChanges {
 
+  // ============= INPUTS (For Reusability) =============
+  // If provided by parent (Shift Component), we use these instead of fetching
+  @Input() staffCards: StaffCard[] = []; 
+  @Input() viewMode: ViewMode = 'list';
+  @Input() filterStatus: 'ALL' | 'BUSY' | 'NORMAL' | 'IDLE' = 'ALL';
+  @Input() loading: boolean = false;
+  
+  // Flag to know if we are in "child mode" (Shift Screen) or "page mode" (Dashboard)
+  @Input() useExternalData: boolean = false;
+
+  // ============= LOCAL STATE =============
   tables: Table[] = [];
-  staffCards: StaffCard[] = [];
-  allStaffCards: StaffCard[] = [];
+  allStaffCards: StaffCard[] = []; // Source of truth for filtering
 
   kpi = {
     totalStaff: 0,
@@ -118,23 +133,17 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
     awards: 0
   };
 
-  // Filter and view state
-  filterStatus: 'ALL' | 'BUSY' | 'NORMAL' | 'IDLE' = 'ALL';
   sortBy: 'rank' | 'revenue' | 'efficiency' | 'load' | 'performance' | 'lastActive' = 'rank';
-  viewMode: ViewMode = 'list';
   activeTab: ActiveTab = 'directory';
   searchTerm: string = '';
 
-  // Modal State: View Details
+  // Modal State
   selectedStaff: StaffCard | null = null;
   showStaffModal: boolean = false;
-
-  // Modal State: Add/Edit
   showAddStaffModal: boolean = false;
   isEditingStaff: boolean = false;
   newStaff: StaffFormModel = this.getEmptyStaffForm();
 
-  // Roles for dropdown
   roles: StaffRole[] = [
     { id: 1, name: 'Manager', description: 'Store operations oversight' },
     { id: 2, name: 'Chef', description: 'Kitchen lead' },
@@ -153,7 +162,42 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Subscribe to real-time table updates
+    // Only subscribe to data if we are NOT using external data (e.g. Dashboard view)
+    if (!this.useExternalData) {
+      this.subscribeToData();
+    } else {
+      // If external data is used, initialize view with input
+      this.allStaffCards = [...this.staffCards];
+      this.applyFilter();
+    }
+  }
+
+  // Detect changes when parent passes new data
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['staffCards'] && this.useExternalData) {
+       this.allStaffCards = [...(this.staffCards || [])];
+       this.applyFilter();
+       this.buildKpi();
+       this.cdr.markForCheck();
+    }
+    
+    if (changes['filterStatus']) {
+      this.applyFilter();
+    }
+    
+    if (changes['viewMode']) {
+      this.cdr.markForCheck();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /* ================= DATA LOGIC ================= */
+
+  subscribeToData() {
     this.tableService.tables$
       .pipe(takeUntil(this.destroy$))
       .subscribe(tables => {
@@ -163,7 +207,6 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       });
 
-    // Auto-refresh metrics every 10s
     interval(10000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
@@ -172,30 +215,18 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  /* ================= BUILD DASHBOARD ================= */
-
   buildDashboard() {
-    // Derive staff list from active tables or use fallback for demo
     let staffNames = Array.from(new Set(this.tables.map(t => t.waiter).filter(Boolean))) as string[];
     
-    if (staffNames.length === 0) {
-       // Demo data if system is empty
+    if (staffNames.length === 0 && !this.useExternalData) {
        staffNames = ['Alice', 'Bob', 'Charlie', 'David']; 
     }
 
     const cards: StaffCard[] = staffNames.map((name, index) => {
       const stats = this.staffService.calculate(name, this.tables, this.cachedOrders);
-      
-      const activeTables = this.tables.filter(
-        t => t.waiter === name && t.status === 'occupied'
-      ).length;
+      const activeTables = this.tables.filter(t => t.waiter === name && t.status === 'occupied').length;
 
-      // Metric calculations
+      // Metric calculations (Same logic as before)
       const score = Math.round(stats.loadScore * 0.35 + stats.efficiencyScore * 0.45 + Math.min(stats.revenue / 100, 100) * 0.20);
       const workloadIndex = Math.min(Math.round((stats.loadScore + activeTables * 10) / 2), 100);
       const heatLevel: 'LOW' | 'MEDIUM' | 'HIGH' = workloadIndex > 75 ? 'HIGH' : workloadIndex > 40 ? 'MEDIUM' : 'LOW';
@@ -231,10 +262,14 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
 
     this.sortCards(cards);
     cards.forEach((c, i) => c.rank = i + 1);
+    
+    // Update local state AND view
     this.allStaffCards = cards;
     this.applyFilter();
     this.buildKpi();
   }
+
+  /* ================= UI ACTIONS ================= */
 
   private sortCards(cards: StaffCard[]) {
     switch (this.sortBy) {
@@ -262,11 +297,10 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
        );
     }
     
+    // Update the view variable
     this.staffCards = filtered;
-    this.cdr.markForCheck(); // Ensure UI updates manually since OnPush
+    this.cdr.markForCheck();
   }
-
-  /* ================= UI ACTIONS ================= */
 
   setFilter(status: 'ALL' | 'BUSY' | 'NORMAL' | 'IDLE') {
     this.filterStatus = status;
@@ -285,16 +319,21 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
 
   setSorting(field: any) {
     this.sortBy = field;
-    this.buildDashboard();
+    if (!this.useExternalData) {
+      this.buildDashboard();
+    } else {
+      this.sortCards(this.allStaffCards);
+      this.applyFilter();
+    }
   }
 
   onSearchChange() {
     this.applyFilter();
   }
 
-  /* ================= STAFF ACTIONS ================= */
-
-  // 1. View Details
+  /* ================= STAFF ACTIONS & HELPERS ================= */
+  // ... (Keep existing methods: viewStaffDetails, openAddStaffModal, saveStaff, deleteStaffMember, etc.) ...
+  
   viewStaffDetails(staff: StaffCard) {
     this.selectedStaff = staff;
     this.showStaffModal = true;
@@ -311,7 +350,6 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
     return !!this.selectedStaff;
   }
 
-  // 2. Add / Edit Staff
   openAddStaffModal() {
     this.isEditingStaff = false;
     this.newStaff = this.getEmptyStaffForm();
@@ -320,7 +358,7 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
   }
 
   openEditStaffModal(staff: StaffCard) {
-    this.closeStaffModal(); // Close details if open
+    this.closeStaffModal();
     this.isEditingStaff = true;
     this.newStaff = {
       id: staff.id,
@@ -350,20 +388,16 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
 
   saveStaff() {
     if(!this.newStaff.name) return;
-    
-    // TODO: Call your actual backend service here
     console.log('Saving staff:', this.newStaff);
-    
     this.closeAddStaffModal();
   }
   
-  // 3. Delete Staff
   deleteStaffMember(id: string) {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
       data: {
         title: 'Delete Staff Member',
-        message: 'Are you sure you want to remove this staff member? This action cannot be undone.',
+        message: 'Are you sure?',
         confirmText: 'Remove',
         confirmColor: 'warn',
         type: 'delete'
@@ -373,7 +407,6 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(res => {
       if(res) {
          console.log('Deleting staff:', id);
-         // TODO: Call delete API
          this.cdr.markForCheck();
       }
     });
@@ -382,9 +415,7 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
   autoGenerateRoster() {
     console.log('Auto-generating roster...');
   }
-  
-  /* ================= HELPERS ================= */
-  
+
   getScoreColor(score: number): string {
     if (score >= 80) return '#22c55e';
     if (score >= 60) return '#3b82f6';
@@ -431,7 +462,7 @@ export class StaffDashboardComponent implements OnInit, OnDestroy {
   }
   
   private buildOrders() {
-    return []; // Placeholder for order history logic
+    return []; 
   }
   
   private assignRole(name: string, index: number) {
