@@ -1,0 +1,175 @@
+/* ── Wrapper ── */
+.pending-wrapper {
+  min-height: 100vh;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+/* ── Card ── */
+.pending-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 48px 40px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.09);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ── Icon ── */
+.pending-icon {
+  width: 80px;
+  height: 80px;
+  background: #fffbeb;
+  border: 2px solid #fde68a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pending-icon .material-icons {
+  font-size: 40px;
+  color: #f59e0b;
+}
+
+/* ── Pulse Animation ── */
+.pulse {
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%   { transform: scale(1);    opacity: 1; }
+  50%  { transform: scale(1.15); opacity: 0.75; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+/* ── Title ── */
+.pending-card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* ── Message ── */
+.pending-msg {
+  font-size: 0.93rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.pending-msg strong {
+  color: #1e293b;
+}
+
+/* ── Info Rows ── */
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 0.88rem;
+  color: #475569;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.info-row .material-icons {
+  font-size: 20px;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.info-row strong {
+  color: #1e293b;
+}
+
+/* ── Status Chip ── */
+.status-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  color: #92400e;
+  border-radius: 20px;
+  padding: 7px 18px;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #f59e0b;
+  border-radius: 50%;
+  animation: blink 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+/* ── Logout Button ── */
+.btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  border-radius: 9px;
+  padding: 10px 22px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  margin-top: 4px;
+}
+
+.btn-logout:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.btn-logout .material-icons {
+  font-size: 18px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .pending-card {
+    padding: 32px 20px;
+  }
+
+  .pending-card h2 {
+    font-size: 1.3rem;
+  }
+
+  .pending-icon {
+    width: 68px;
+    height: 68px;
+  }
+
+  .pending-icon .material-icons {
+    font-size: 32px;
+  }
+}

@@ -1,0 +1,580 @@
+<section class="shift-management-layout" aria-label="Shift management dashboard">
+
+  <!-- ================= WIZARD STEP 1: POLICY MODAL (Starts Open) ================= -->
+  <div class="modal-overlay" *ngIf="currentStep === 'policy'">
+    <div class="modal-content info-modal">
+      <div class="modal-header">
+        <h3>ℹ️ Shift Scheduling Policy</h3>
+      </div>
+      <div class="modal-body policy-text">
+        <p>Shift Scheduling is enabled for:</p>
+        <ul>
+          <li><strong>30 calendar days</strong> retrospectively (past)</li>
+          <li>Up to <strong>90 calendar days</strong> in the future</li>
+        </ul>
+        <p class="hint">Please ensure all assignments comply with labor laws.</p>
+      </div>
+      <div class="modal-footer center-footer">
+        <button class="btn-primary large-btn" (click)="acceptPolicy()">OK, I Understand</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= WIZARD STEP 2: DATE SELECTION ================= -->
+  <div class="wizard-step-container" *ngIf="currentStep === 'date-selection'">
+    <div class="step-card">
+      <h2>📅 Select Schedule Range</h2>
+      <p>Choose the dates for which you want to mark or edit the schedule.</p>
+      
+      <div class="date-range-picker">
+        <div class="form-group">
+          <label>From Date</label>
+          <input type="date" [(ngModel)]="selectedRange.start" class="form-input date-large">
+        </div>
+        <div class="form-group">
+          <label>To Date</label>
+          <input type="date" [(ngModel)]="selectedRange.end" class="form-input date-large">
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button class="btn-primary large-btn" (click)="confirmDateRange()">
+          Next: View Staff List ➡️
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= WIZARD STEP 3: STAFF LIST & ACTIONS ================= -->
+  <div class="wizard-step-container full-width" *ngIf="currentStep === 'staff-list'">
+    
+    <!-- HEADER ACTIONS -->
+    <div class="action-bar">
+      <div class="range-info">
+        <h3>Managing Schedule</h3>
+        <span class="range-pill">{{ selectedRange.start | date }} ➔ {{ selectedRange.end | date }}</span>
+        <button class="btn-text small" (click)="currentStep = 'date-selection'">(Change Dates)</button>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn-secondary" (click)="onDownloadTemplate()">
+          📥 Download Template
+        </button>
+        
+        <label class="btn-secondary upload-btn">
+          📤 Upload Template
+          <input type="file" (change)="onUploadTemplate($event)" hidden accept=".xlsx,.csv">
+        </label>
+        
+        <button class="btn-secondary" (click)="openBulkAssignModal()">
+          📅 Bulk Assign
+        </button>
+        
+        <button class="btn-primary" (click)="onViewReport()">
+          📊 View Report
+        </button>
+
+        <!-- SWITCH TO DASHBOARD VIEW -->
+        <button class="btn-primary outline" (click)="currentStep = 'dashboard'">
+          View Dashboard ➡️
+        </button>
+      </div>
+    </div>
+
+
+    <!-- STAFF LIST TABLE -->
+    <div class="staff-list-container">
+      <table class="staff-table">
+        <thead>
+          <tr>
+            <th>Name / Emp ID</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let staff of availableStaff">
+            
+            <!-- Main Row -->
+            <tr class="staff-row" [class.expanded]="expandedStaffId === staff.id" (click)="toggleStaffExpand(staff.id)">
+              <td>
+                <div class="staff-info-cell">
+                  <div class="avatar">{{ staff.name ? staff.name.charAt(0) : '?' }}</div>
+                  <div>
+                    <strong>{{ staff.name }}</strong>
+                    <div class="emp-id">{{ staff.id }}</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="role-badge">{{ staff.role }}</span></td>
+              <td>
+                <span class="status-dot"></span> Active
+              </td>
+              <td>
+                <button class="btn-expand">
+                  {{ expandedStaffId === staff.id ? 'Collapse ▲' : 'View Schedule ▼' }}
+                </button>
+              </td>
+            </tr>
+
+            <!-- Expanded Detail Row (Weekly View) -->
+            <tr *ngIf="expandedStaffId === staff.id" class="detail-row">
+              <td colspan="4">
+                <div class="expanded-schedule-view">
+                  <h4>Schedule for {{ staff.name }}</h4>
+                  
+                  <div class="week-grid">
+                    <!-- Preview first 7 days of range -->
+                    <div class="day-column" *ngFor="let day of weekDaysForRange">
+                      <div class="day-header">
+                        <span class="day-name">{{ day | date:'EEE' }}</span>
+                        <span class="day-date">{{ day | date:'dd' }}</span>
+                      </div>
+                      
+                      <div class="day-body" (click)="openBulkAssignModal(staff.id)">
+                        <ng-container *ngIf="getAssignmentForDay(staff.id, day) as assign; else noAssign">
+                          <div class="shift-pill">{{ assign.shiftName }}</div>
+                          <div class="time-text">{{ assign.startTime }} - {{ assign.endTime }}</div>
+                        </ng-container>
+                        <ng-template #noAssign>
+                          <div class="add-slot">+</div>
+                        </ng-template>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="detail-actions">
+                     <button class="btn-text" (click)="openBulkAssignModal(staff.id)">Edit Full Range</button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ================= DASHBOARD VIEW (Original Layout) ================= -->
+  <div class="dashboard-wrapper" *ngIf="currentStep === 'dashboard'">
+    
+    <div class="shift-header">
+      <div class="header-left">
+        <div class="header-title">
+          <h2>Shift & Roster Management</h2>
+          <button class="btn-text small" (click)="currentStep = 'staff-list'">⬅ Back to Wizard</button>
+        </div>
+        
+        <!-- View Switcher -->
+        <div class="view-switcher">
+          <button [class.active]="currentView === 'day'" (click)="setView('day')">Daily</button>
+          <button [class.active]="currentView === 'week'" (click)="setView('week')">Weekly</button>
+          <button [class.active]="currentView === 'month'" (click)="setView('month')">Monthly</button>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Date Nav -->
+        <div class="date-selector">
+          <button class="icon-btn" (click)="previousDay()">◀</button>
+          <span class="current-date">
+             <ng-container *ngIf="currentView === 'day'">{{ selectedDate | date:'EEEE, MMM d' }}</ng-container>
+             <ng-container *ngIf="currentView === 'week'">Week of {{ weekDays[0] | date:'MMM d' }}</ng-container>
+             <ng-container *ngIf="currentView === 'month'">{{ selectedDate | date:'MMMM y' }}</ng-container>
+          </span>
+          <button class="icon-btn" (click)="nextDay()">▶</button>
+        </div>
+        
+        <!-- Toggle Staff Button -->
+        <button class="btn-secondary" [class.active]="showDirectory" (click)="toggleDirectory()">
+          {{ showDirectory ? 'Hide' : 'Show' }} Staff
+        </button>
+
+        <button class="btn-secondary" (click)="openBulkAssignModal()">📅 Bulk Assign</button>
+        <button class="btn-secondary" (click)="onAutoGenerate()">🤖 Auto-Roster</button>
+        <button class="btn-primary" (click)="onOpenShiftSelector()">+ Select Shift</button>
+      </div>
+    </div>
+
+
+    <!-- KPI Cards -->
+    <div class="kpi-row" *ngIf="kpi">
+      <div class="kpi-card active-shifts">
+        <div class="kpi-icon">⏰</div>
+        <div class="kpi-content"><span>Active Shifts</span><strong>{{ kpi.activeShifts }}</strong></div>
+      </div>
+      <div class="kpi-card on-duty">
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-content"><span>On Duty</span><strong>{{ kpi.onDuty }}</strong></div>
+      </div>
+      <div class="kpi-card off-duty">
+        <div class="kpi-icon">💤</div>
+        <div class="kpi-content"><span>Off Duty</span><strong>{{ kpi.offDuty }}</strong></div>
+      </div>
+      <div class="kpi-card current-shift">
+        <div class="kpi-icon">📢</div>
+        <div class="kpi-content"><span>Current Shift</span><strong class="shift-name-text">{{ kpi.currentShift || 'None' }}</strong></div>
+      </div>
+    </div>
+
+
+    <!-- REPLACED: Simple Staff Availability List (No external component) -->
+    <div class="staff-availability-panel" *ngIf="showDirectory">
+      <div class="panel-header">
+        <h3>Available Staff</h3>
+        <button class="close-btn" (click)="toggleDirectory()">✕</button>
+      </div>
+      
+      <!-- New Simple List -->
+      <div class="simple-staff-list">
+        <div class="staff-card-simple" *ngFor="let staff of availableStaff">
+           <div class="staff-card-avatar">{{ staff.name ? staff.name.charAt(0) : '?' }}</div>
+           <div class="staff-card-info">
+             <strong>{{ staff.name }}</strong>
+             <span>{{ staff.role }}</span>
+           </div>
+           <div class="staff-status-badge active">Idle</div>
+        </div>
+        <div *ngIf="availableStaff.length === 0" class="empty-state">No staff available</div>
+      </div>
+    </div>
+
+
+    <!-- ================= VIEWS CONTAINER ================= -->
+    <div class="shift-dashboard-grid">
+      
+      <!-- Templates Column (Hide in Monthly view) -->
+      <div class="dashboard-column templates-column" *ngIf="currentView !== 'month'">
+        <div class="column-header">
+          <h3>Shift Templates</h3>
+          <span class="badge-count">{{ templates.length }}</span>
+        </div>
+
+        <div class="templates-list">
+          <div 
+            class="template-card" 
+            *ngFor="let shift of templates"
+            [class.active-template]="shift.isActive"
+            (click)="onEditShift(shift)">
+            
+            <div class="template-status-bar" [class.active]="shift.isActive"></div>
+            
+            <div class="template-content">
+              <div class="template-top">
+                <h4>{{ shift.name }}</h4>
+                <span class="duration-badge">{{ shift.duration }}h</span>
+              </div>
+              <div class="template-time">
+                <span class="time-icon">🕒</span>
+                {{ shift.startTime }} - {{ shift.endTime }}
+              </div>
+              <div class="template-footer">
+                <span class="status-text" [class.text-active]="shift.isActive">
+                  {{ shift.isActive ? 'Active' : 'Inactive' }}
+                </span>
+                <button class="btn-icon-small" title="Select Template">✏️</button>
+              </div>
+            </div>
+          </div>
+
+          <button class="add-template-placeholder" (click)="onOpenShiftSelector()">
+            <span class="plus-icon">➕</span>
+            <span>Select Shift Template</span>
+          </button>
+        </div>
+      </div>
+
+
+      <!-- RIGHT COL: DYNAMIC ROSTER VIEW -->
+      <div class="dashboard-column roster-column" [class.full-width]="currentView === 'month'">
+        
+        <!-- 1. DAILY VIEW -->
+        <div *ngIf="currentView === 'day'">
+          <div class="column-header">
+            <h3>Daily Roster</h3>
+            <div class="roster-actions">
+              <button class="btn-text" (click)="onFilterRoster()">Filter</button>
+              <button class="btn-text" (click)="onPrintRoster()">Print</button>
+            </div>
+          </div>
+
+          <div class="timeline-visual">
+            <div class="timeline-hours">
+              <span>6am</span><span>9am</span><span>12pm</span><span>3pm</span><span>6pm</span><span>9pm</span><span>12am</span>
+            </div>
+            <div class="timeline-tracks">
+              <div class="timeline-track" *ngFor="let shift of templates">
+                 <div class="track-label">{{ shift.name }}</div>
+                 <div class="track-bar-container">
+                   <div 
+                     class="track-bar" 
+                     [style.left]="getShiftOffset(shift.startTime)" 
+                     [style.width]="getShiftWidth(shift.duration)">
+                     <span class="track-info">{{ getAssignmentsByShift(shift.id).length }} Staff</span>
+                   </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="assignments-list-container">
+            <div class="shift-group" *ngFor="let shift of templates">
+              <div class="shift-group-header">
+                <div class="shift-info">
+                  <h4>{{ shift.name }}</h4>
+                  <span class="shift-time-pill">{{ shift.startTime }} - {{ shift.endTime }}</span>
+                </div>
+                <button class="btn-assign" (click)="onAssignStaff(shift.id)">+ Assign Staff</button>
+              </div>
+
+              <div class="staff-grid">
+                <div 
+                  class="staff-assignment-card" 
+                  *ngFor="let assign of getAssignmentsByShift(shift.id)"
+                  [class.status-active]="assign.status === 'ACTIVE'"
+                  [class.status-completed]="assign.status === 'COMPLETED'">
+                  <div class="staff-avatar">{{ assign.staffName.charAt(0) }}</div>
+                  <div class="staff-details">
+                    <span class="staff-name">{{ assign.staffName }}</span>
+                    <span class="assignment-status" [class]="assign.status.toLowerCase()">
+                      {{ assign.status }}
+                    </span>
+                  </div>
+                  <button class="btn-more" (click)="onAssignmentAction(assign)">⋮</button>
+                </div>
+                <div class="empty-assignment" *ngIf="getAssignmentsByShift(shift.id).length === 0">
+                  <span>No staff assigned yet</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 2. WEEKLY VIEW -->
+        <div class="weekly-roster-view" *ngIf="currentView === 'week'">
+          <table class="roster-table">
+            <thead>
+              <tr>
+                <th class="sticky-col">Staff Member</th>
+                <th *ngFor="let day of weekDays" [class.today]="isToday(day)">
+                  <div class="th-date">{{ day | date:'d' }}</div>
+                  <div class="th-day">{{ day | date:'EEE' }}</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let staff of availableStaff">
+                <td class="staff-cell sticky-col">
+                  <div class="staff-info">
+                    <strong>{{ staff.name }}</strong>
+                    <span class="role-badge">{{ staff.role }}</span>
+                  </div>
+                </td>
+                <td *ngFor="let day of weekDays" class="shift-cell" (click)="openBulkAssignModal(staff.id)">
+                  <ng-container *ngIf="getAssignmentForDay(staff.id, day) as assignment; else noShift">
+                    <div class="shift-block" [class.active]="assignment.status === 'ACTIVE'">
+                      <span class="shift-name">{{ assignment.shiftName }}</span>
+                      <span class="shift-time">{{ assignment.startTime }} - {{ assignment.endTime }}</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #noShift>
+                    <div class="empty-slot">+</div>
+                  </ng-template>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+
+        <!-- 3. MONTHLY VIEW -->
+        <div class="monthly-roster-view" *ngIf="currentView === 'month'">
+          <div class="calendar-grid">
+            <div class="calendar-header" *ngFor="let day of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">
+              {{ day }}
+            </div>
+            
+            <ng-container *ngFor="let week of monthWeeks">
+              <div class="calendar-day" *ngFor="let day of week" 
+                   [class.other-month]="day.getMonth() !== selectedDate.getMonth()" 
+                   [class.today]="isToday(day)"
+                   (click)="selectedDate = day; setView('day')">
+                
+                <div class="day-number">{{ day | date:'d' }}</div>
+                
+                <div class="day-shifts">
+                  <div class="shift-dot" *ngFor="let assign of getAssignmentsForDate(day) | slice:0:3"></div>
+                  <div class="more-shifts" *ngIf="getAssignmentsForDate(day).length > 3">
+                    +{{ getAssignmentsForDate(day).length - 3 }}
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ================= VIEW REPORT MODAL (NEW) ================= -->
+<div class="modal-overlay" *ngIf="showReportModal" (click)="closeReportModal()">
+  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>📊 Assigned Shifts Report</h3>
+      <button class="close-btn" (click)="closeReportModal()">✕</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="report-filters">
+        <p><strong>Range:</strong> {{ selectedRange.start | date }} to {{ selectedRange.end | date }}</p>
+      </div>
+
+      <div class="report-table-container">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Staff Name</th>
+              <th>Emp ID</th>
+              <th>Role</th>
+              <th>Date</th>
+              <th>Shift Assigned</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of reportData">
+              <td>{{ row.staffName }}</td>
+              <td>{{ row.empId }}</td>
+              <td>{{ row.role }}</td>
+              <td>{{ row.date }}</td>
+              <td>{{ row.shift }}</td>
+              <td>
+                <span class="status-badge" [class]="row.status.toLowerCase()">{{ row.status }}</span>
+              </td>
+            </tr>
+            <tr *ngIf="reportData.length === 0">
+              <td colspan="6" class="text-center">No assignments found for this date range.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" (click)="closeReportModal()">Close</button>
+      <button type="button" class="btn-primary" (click)="onDownloadReport()">📥 Download Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SHIFT SELECTOR MODAL (NEW) ================= -->
+<div class="modal-overlay" *ngIf="showShiftSelector" (click)="closeShiftSelector()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Select Shift Template</h3>
+      <button class="close-btn" (click)="closeShiftSelector()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form (submit)="confirmShiftSelection(); $event.preventDefault()">
+        
+        <div class="form-group">
+          <label>Choose Existing Template</label>
+          <select [(ngModel)]="selectedShiftId" name="selectedShiftId" class="form-input" required>
+            <option value="" disabled>-- Select a Shift --</option>
+            <option *ngFor="let t of templates" [value]="t.id">
+              {{ t.name }} ({{ t.startTime }} - {{ t.endTime }})
+            </option>
+          </select>
+        </div>
+
+        <div class="template-preview" *ngIf="selectedShiftId">
+          <div class="preview-card" *ngFor="let t of templates">
+             <ng-container *ngIf="t.id === selectedShiftId">
+               <div class="preview-row"><strong>Duration:</strong> {{ t.duration }} hrs</div>
+               <div class="preview-row"><strong>Status:</strong> {{ t.isActive ? 'Active' : 'Inactive' }}</div>
+             </ng-container>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeShiftSelector()">Cancel</button>
+          <button type="submit" class="btn-primary">Confirm Selection</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ================= BULK ASSIGN MODAL (Remains same) ================= -->
+<div class="modal-overlay" *ngIf="showBulkModal" (click)="closeBulkModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>📅 Bulk Shift Assignment</h3>
+      <button class="close-btn" (click)="closeBulkModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <form (submit)="saveBulkAssignment(); $event.preventDefault()">
+        
+        <div class="form-group">
+          <label>Select Staff</label>
+          <select [(ngModel)]="bulkForm.staffId" name="staffId" class="form-input" required>
+            <option value="" disabled>Choose a staff member...</option>
+            <option *ngFor="let s of availableStaff" [value]="s.id">{{ s.name }} ({{ s.role }})</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Select Shift</label>
+          <select [(ngModel)]="bulkForm.shiftId" name="shiftId" class="form-input" required>
+            <option value="" disabled>Choose a shift...</option>
+            <option *ngFor="let t of templates" [value]="t.id">
+              {{ t.name }} ({{ t.startTime }} - {{ t.endTime }})
+            </option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>From</label>
+            <input type="date" [(ngModel)]="bulkForm.startDate" name="startDate" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label>To</label>
+            <input type="date" [(ngModel)]="bulkForm.endDate" name="endDate" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Repeat On</label>
+          <div class="week-selector">
+            <div 
+              *ngFor="let day of daysOfWeek" 
+              class="day-chip" 
+              [class.selected]="isDaySelected(day.id)"
+              (click)="toggleDaySelection(day.id)">
+              {{ day.label }}
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeBulkModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Apply Schedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

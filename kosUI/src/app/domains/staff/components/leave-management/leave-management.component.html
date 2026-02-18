@@ -1,0 +1,624 @@
+<div class="leave-management-wrapper">
+
+  <!-- ================= PAGE HEADER ================= -->
+  <div class="page-header">
+    <div class="page-title-group">
+      <h2 class="page-title">
+        {{ viewMode === 'employee' ? '🙋 My Leave' : '🗂 Leave Management' }}
+      </h2>
+      <span class="view-pill" [class.manager-pill]="viewMode === 'manager'">
+        {{ viewMode === 'employee' ? 'Employee View' : 'Manager View' }}
+      </span>
+    </div>
+
+    <div class="header-actions" *ngIf="hasManagerAccess">
+      <button
+        class="btn-view-toggle"
+        [class.active-manager]="viewMode === 'manager'"
+        (click)="viewMode === 'employee' ? switchToManager() : switchToEmployee()">
+        <span class="toggle-icon">{{ viewMode === 'employee' ? '🔑' : '👤' }}</span>
+        {{ viewMode === 'employee' ? 'Manager View' : 'Back to My Leave' }}
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       EMPLOYEE VIEW
+  ============================================================ -->
+  <ng-container *ngIf="viewMode === 'employee'">
+
+    <!-- Employee KPI Strip -->
+    <div class="emp-kpi-strip">
+      <div class="emp-kpi-card">
+        <span class="emp-kpi-icon">📋</span>
+        <div>
+          <div class="emp-kpi-value">{{ myPendingCount }}</div>
+          <div class="emp-kpi-label">Pending</div>
+        </div>
+      </div>
+      <div class="emp-kpi-card">
+        <span class="emp-kpi-icon">✅</span>
+        <div>
+          <div class="emp-kpi-value">{{ myApprovedCount }}</div>
+          <div class="emp-kpi-label">Approved</div>
+        </div>
+      </div>
+      <div class="emp-kpi-card">
+        <span class="emp-kpi-icon">📅</span>
+        <div>
+          <div class="emp-kpi-value">{{ myTotalDaysUsed }}</div>
+          <div class="emp-kpi-label">Days Used</div>
+        </div>
+      </div>
+      <div class="emp-kpi-card highlight">
+        <span class="emp-kpi-icon">🏖</span>
+        <div>
+          <div class="emp-kpi-value">{{ (myBalance?.totalAllotted ?? 35) - myTotalDaysUsed }}</div>
+          <div class="emp-kpi-label">Days Remaining</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employee Tab Switcher + Apply Button -->
+    <div class="top-action-bar">
+      <div class="tab-switcher">
+        <button [class.active]="empTab === 'overview'"  (click)="empTab = 'overview'">📊 My Balance</button>
+        <button [class.active]="empTab === 'history'"   (click)="empTab = 'history'">📋 My Requests</button>
+        <button [class.active]="empTab === 'calendar'"  (click)="empTab = 'calendar'">🗓 Calendar</button>
+      </div>
+      <button class="btn-new-request" (click)="openNewRequestModal()">+ Apply for Leave</button>
+    </div>
+
+
+    <!-- ===== EMPLOYEE TAB: MY BALANCE ===== -->
+    <ng-container *ngIf="empTab === 'overview'">
+      <div class="emp-balance-wrapper">
+
+        <!-- Balance Tiles -->
+        <div class="emp-balance-cards">
+          <div class="emp-balance-tile sick">
+            <div class="tile-header"><span class="tile-icon">🤒</span><span class="tile-title">Sick Leave</span></div>
+            <div class="tile-numbers">
+              <span class="tile-remaining">{{ getMyBalanceForType('SICK') }}</span>
+              <span class="tile-total">/ {{ ALLOTMENT['SICK'] }}</span>
+            </div>
+            <div class="tile-sub">{{ getMyUsedForType('SICK') }} days used</div>
+            <div class="tile-bar"><div class="tile-bar-fill sick" [style.width.%]="getUsedPercent('SICK')"></div></div>
+          </div>
+
+          <div class="emp-balance-tile casual">
+            <div class="tile-header"><span class="tile-icon">🌴</span><span class="tile-title">Casual Leave</span></div>
+            <div class="tile-numbers">
+              <span class="tile-remaining">{{ getMyBalanceForType('CASUAL') }}</span>
+              <span class="tile-total">/ {{ ALLOTMENT['CASUAL'] }}</span>
+            </div>
+            <div class="tile-sub">{{ getMyUsedForType('CASUAL') }} days used</div>
+            <div class="tile-bar"><div class="tile-bar-fill casual" [style.width.%]="getUsedPercent('CASUAL')"></div></div>
+          </div>
+
+          <div class="emp-balance-tile earned">
+            <div class="tile-header"><span class="tile-icon">⭐</span><span class="tile-title">Earned Leave</span></div>
+            <div class="tile-numbers">
+              <span class="tile-remaining">{{ getMyBalanceForType('EARNED') }}</span>
+              <span class="tile-total">/ {{ ALLOTMENT['EARNED'] }}</span>
+            </div>
+            <div class="tile-sub">{{ getMyUsedForType('EARNED') }} days used</div>
+            <div class="tile-bar"><div class="tile-bar-fill earned" [style.width.%]="getUsedPercent('EARNED')"></div></div>
+          </div>
+
+          <div class="emp-balance-tile unpaid">
+            <div class="tile-header"><span class="tile-icon">🔒</span><span class="tile-title">Unpaid Leave</span></div>
+            <div class="tile-numbers">
+              <span class="tile-remaining tile-red">{{ getMyUsedForType('UNPAID') }}</span>
+              <span class="tile-total">days taken</span>
+            </div>
+            <div class="tile-sub">No fixed limit</div>
+            <div class="tile-bar">
+              <div class="tile-bar-fill unpaid"
+                [style.width.%]="getMyUsedForType('UNPAID') > 0 ? 100 : 0">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Requests Panel -->
+        <div class="emp-recent-panel">
+          <h4>Recent Requests</h4>
+          <div class="emp-recent-list">
+            <ng-container *ngIf="myRequests.length > 0; else noRecent">
+              <div
+                class="emp-recent-item"
+                *ngFor="let r of myRequests | slice:0:5"
+                (click)="openDetail(r)">
+                <div class="recent-left">
+                  <span class="leave-type-badge" [ngClass]="getLeaveTypeClass(r.leaveType)">
+                    {{ getLeaveTypeLabel(r.leaveType) }}
+                  </span>
+                  <span class="recent-dates">
+                    {{ r.startDate | date:'dd MMM' }}
+                    <ng-container *ngIf="!r.isHalfDay"> — {{ r.endDate | date:'dd MMM' }}</ng-container>
+                    <em *ngIf="r.isHalfDay"> (Half Day)</em>
+                  </span>
+                </div>
+                <span class="status-badge" [ngClass]="r.status.toLowerCase()">{{ r.status }}</span>
+              </div>
+            </ng-container>
+            <ng-template #noRecent>
+              <div class="no-recent">No leave requests yet.</div>
+            </ng-template>
+          </div>
+        </div>
+
+      </div>
+    </ng-container>
+
+
+    <!-- ===== EMPLOYEE TAB: MY HISTORY ===== -->
+    <ng-container *ngIf="empTab === 'history'">
+
+      <!-- FIX 1 & 2: filterOptions typed array + getCountByEmpStatus() method -->
+      <div class="filter-bar">
+        <button
+          *ngFor="let f of filterOptions"
+          class="filter-btn"
+          [class.active]="empHistoryFilter === f"
+          (click)="empHistoryFilter = f">
+          {{ f }}
+          <span class="filter-count" *ngIf="f !== 'ALL'">
+            {{ getCountByEmpStatus(f) }}
+          </span>
+        </button>
+      </div>
+
+      <div class="requests-list">
+        <div
+          class="request-card"
+          *ngFor="let req of myFilteredHistory"
+          [class.pending]="req.status === 'PENDING'"
+          [class.approved]="req.status === 'APPROVED'"
+          [class.rejected]="req.status === 'REJECTED'"
+          (click)="openDetail(req)">
+
+          <div class="card-left">
+            <div class="staff-avatar self-avatar">{{ currentStaffName.charAt(0) }}</div>
+            <div class="staff-info">
+              <span class="leave-type-badge" [ngClass]="getLeaveTypeClass(req.leaveType)">
+                {{ getLeaveTypeLabel(req.leaveType) }}
+                <em *ngIf="req.isHalfDay"> — Half Day</em>
+              </span>
+              <span class="role-text">Applied: {{ req.appliedDate | date:'dd MMM yyyy' }}</span>
+            </div>
+          </div>
+
+          <div class="card-center">
+            <div class="leave-dates">
+              📅 {{ req.startDate | date:'dd MMM' }}
+              <ng-container *ngIf="!req.isHalfDay"> — {{ req.endDate | date:'dd MMM yyyy' }}</ng-container>
+              <span class="days-chip">{{ req.days }} day{{ req.days !== 1 ? 's' : '' }}</span>
+            </div>
+            <p class="leave-reason">{{ req.reason }}</p>
+          </div>
+
+          <div class="card-right" (click)="$event.stopPropagation()">
+            <span class="status-badge" [ngClass]="req.status.toLowerCase()">{{ req.status }}</span>
+            <div class="rejection-note" *ngIf="req.status === 'REJECTED' && req.rejectionReason">
+              <small>⚠️ {{ req.rejectionReason }}</small>
+            </div>
+            <div class="approval-note" *ngIf="req.status === 'APPROVED'">
+              <small>✔ By {{ req.approvedBy }} on {{ req.approvedDate | date:'dd MMM' }}</small>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="empty-state" *ngIf="myFilteredHistory.length === 0">
+          <span>📭</span>
+          <p>No {{ empHistoryFilter !== 'ALL' ? empHistoryFilter.toLowerCase() : '' }} requests found.</p>
+        </div>
+      </div>
+
+    </ng-container>
+
+
+    <!-- ===== EMPLOYEE TAB: CALENDAR ===== -->
+    <ng-container *ngIf="empTab === 'calendar'">
+
+      <div class="calendar-nav">
+        <button class="icon-btn" (click)="prevMonth()">◀</button>
+        <h3>{{ calendarDate | date:'MMMM yyyy' }}</h3>
+        <button class="icon-btn" (click)="nextMonth()">▶</button>
+      </div>
+
+      <div class="calendar-grid">
+        <div class="cal-header" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">{{ d }}</div>
+        <ng-container *ngFor="let week of calendarWeeks">
+          <div
+            *ngFor="let day of week"
+            class="cal-day"
+            [class.today]="isToday(day)"
+            [class.other-month]="isOtherMonth(day)"
+            [class.my-leave-day]="getMyLeavesForDay(day).length > 0">
+            <div class="cal-date">{{ day | date:'d' }}</div>
+            <div class="cal-leaves">
+              <div
+                *ngFor="let lv of getMyLeavesForDay(day) | slice:0:2"
+                class="cal-leave-dot emp-leave-dot"
+                [style.background]="getLeaveColor(lv.leaveType)"
+                [title]="getLeaveTypeLabel(lv.leaveType) + ' — ' + lv.status">
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- FIX 3 & 4: leaveTypeOptions typed array + getLeaveColor() method -->
+      <div class="cal-legend">
+        <div class="legend-item" *ngFor="let type of leaveTypeOptions">
+          <span class="legend-dot" [style.background]="getLeaveColor(type)"></span>
+          {{ getLeaveTypeLabel(type) }}
+        </div>
+      </div>
+
+    </ng-container>
+
+  </ng-container>
+  <!-- END EMPLOYEE VIEW -->
+
+
+  <!-- ============================================================
+       MANAGER VIEW
+  ============================================================ -->
+  <ng-container *ngIf="viewMode === 'manager'">
+
+    <!-- Manager KPI Cards -->
+    <div class="kpi-row" *ngIf="kpi">
+      <div class="kpi-card blue">
+        <div class="kpi-icon">⏳</div>
+        <div class="kpi-body"><span>Pending</span><strong>{{ kpi.pending }}</strong></div>
+      </div>
+      <div class="kpi-card green clickable" (click)="onFilterChange('APPROVED')">
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-body"><span>Approved</span><strong>{{ kpi.approved }}</strong></div>
+      </div>
+      <div class="kpi-card red clickable" (click)="onFilterChange('REJECTED')">
+        <div class="kpi-icon">❌</div>
+        <div class="kpi-body"><span>Rejected</span><strong>{{ kpi.rejected }}</strong></div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-icon">📅</div>
+        <div class="kpi-body"><span>Total Days</span><strong>{{ kpi.totalDays }}</strong></div>
+      </div>
+      <div class="kpi-card orange">
+        <div class="kpi-icon">🏠</div>
+        <div class="kpi-body"><span>On Leave Today</span><strong>{{ kpi.onLeaveToday ?? 0 }}</strong></div>
+      </div>
+    </div>
+
+    <!-- Manager Tab Bar -->
+    <div class="top-action-bar">
+      <div class="tab-switcher">
+        <button [class.active]="activeTab === 'requests'" (click)="activeTab = 'requests'">📋 Requests</button>
+        <button [class.active]="activeTab === 'balances'" (click)="activeTab = 'balances'">📊 Balances</button>
+        <button [class.active]="activeTab === 'calendar'" (click)="activeTab = 'calendar'">🗓 Calendar</button>
+      </div>
+      <button class="btn-new-request" (click)="openNewRequestModal()">+ New Leave Request</button>
+    </div>
+
+    <!-- Manager Tab: Requests -->
+    <ng-container *ngIf="activeTab === 'requests'">
+      <div class="filter-bar">
+        <button
+          *ngFor="let f of filterOptions"
+          class="filter-btn"
+          [class.active]="filter === f"
+          (click)="onFilterChange(f)">
+          {{ f }}
+          <span class="filter-count" *ngIf="f !== 'ALL'">{{ getCountByStatus(f) }}</span>
+        </button>
+      </div>
+
+      <div class="requests-list">
+        <div
+          class="request-card"
+          *ngFor="let req of filteredRequests"
+          [class.pending]="req.status === 'PENDING'"
+          [class.approved]="req.status === 'APPROVED'"
+          [class.rejected]="req.status === 'REJECTED'"
+          (click)="openDetail(req)">
+
+          <div class="card-left">
+            <div class="staff-avatar">{{ req.staffName.charAt(0) }}</div>
+            <div class="staff-info">
+              <strong>{{ req.staffName }}</strong>
+              <span class="role-text">{{ req.role }}</span>
+            </div>
+          </div>
+
+          <div class="card-center">
+            <span class="leave-type-badge" [ngClass]="getLeaveTypeClass(req.leaveType)">
+              {{ getLeaveTypeLabel(req.leaveType) }}
+              <em *ngIf="req.isHalfDay"> — Half Day</em>
+            </span>
+            <div class="leave-dates">
+              📅 {{ req.startDate | date:'dd MMM' }}
+              <ng-container *ngIf="!req.isHalfDay"> — {{ req.endDate | date:'dd MMM yyyy' }}</ng-container>
+              <span class="days-chip">{{ req.days }} day{{ req.days !== 1 ? 's' : '' }}</span>
+            </div>
+            <p class="leave-reason">{{ req.reason }}</p>
+          </div>
+
+          <div class="card-right" (click)="$event.stopPropagation()">
+            <span class="status-badge" [ngClass]="req.status.toLowerCase()">{{ req.status }}</span>
+            <div class="card-actions" *ngIf="req.status === 'PENDING'">
+              <button class="btn-approve" (click)="onApprove(req.id)">✅ Approve</button>
+              <button class="btn-reject"  (click)="openRejectModal(req.id)">❌ Reject</button>
+            </div>
+            <div class="rejection-note" *ngIf="req.status === 'REJECTED' && req.rejectionReason">
+              <small>⚠️ {{ req.rejectionReason }}</small>
+            </div>
+            <div class="approval-note" *ngIf="req.status === 'APPROVED'">
+              <small>✔ By {{ req.approvedBy }} on {{ req.approvedDate | date:'dd MMM' }}</small>
+            </div>
+            <div class="applied-date">
+              <small>Applied: {{ req.appliedDate | date:'dd MMM yyyy' }}</small>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="empty-state" *ngIf="filteredRequests.length === 0">
+          <span>📭</span>
+          <p>No {{ filter !== 'ALL' ? filter.toLowerCase() : '' }} leave requests found.</p>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Manager Tab: Balances -->
+    <ng-container *ngIf="activeTab === 'balances'">
+      <div class="balances-grid">
+        <div class="balance-card" *ngFor="let b of leaveBalances">
+          <div class="balance-header">
+            <div class="balance-avatar">{{ b.staffName.charAt(0) }}</div>
+            <div>
+              <strong>{{ b.staffName }}</strong>
+              <div class="balance-sub">{{ b.totalUsed }} of {{ b.totalAllotted }} days used</div>
+            </div>
+          </div>
+          <div class="balance-progress-bar">
+            <div class="progress-fill" [style.width.%]="getBalancePercent(b.totalUsed, b.totalAllotted)"></div>
+          </div>
+          <div class="balance-types">
+            <div class="balance-type-row sick">
+              <span>🤒 Sick</span>
+              <div class="mini-bar"><div [style.width.%]="getBalancePercent(12 - b.sick, 12)"></div></div>
+              <strong>{{ b.sick }} left</strong>
+            </div>
+            <div class="balance-type-row casual">
+              <span>🌴 Casual</span>
+              <div class="mini-bar"><div [style.width.%]="getBalancePercent(8 - b.casual, 8)"></div></div>
+              <strong>{{ b.casual }} left</strong>
+            </div>
+            <div class="balance-type-row earned">
+              <span>⭐ Earned</span>
+              <div class="mini-bar"><div [style.width.%]="getBalancePercent(15 - b.earned, 15)"></div></div>
+              <strong>{{ b.earned }} left</strong>
+            </div>
+            <div class="balance-type-row unpaid" *ngIf="b.unpaid > 0">
+              <span>🔒 Unpaid</span>
+              <div class="mini-bar"><div [style.width.%]="100"></div></div>
+              <strong class="text-red">{{ b.unpaid }} days</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Manager Tab: Calendar -->
+    <ng-container *ngIf="activeTab === 'calendar'">
+      <div class="calendar-nav">
+        <button class="icon-btn" (click)="prevMonth()">◀</button>
+        <h3>{{ calendarDate | date:'MMMM yyyy' }}</h3>
+        <button class="icon-btn" (click)="nextMonth()">▶</button>
+      </div>
+      <div class="calendar-grid">
+        <div class="cal-header" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">{{ d }}</div>
+        <ng-container *ngFor="let week of calendarWeeks">
+          <div
+            *ngFor="let day of week"
+            class="cal-day"
+            [class.today]="isToday(day)"
+            [class.other-month]="isOtherMonth(day)">
+            <div class="cal-date">{{ day | date:'d' }}</div>
+            <div class="cal-leaves">
+              <ng-container *ngFor="let lv of getLeavesForDay(day) | slice:0:3">
+                <div
+                  class="cal-leave-dot"
+                  [style.background]="getLeaveColor(lv.leaveType)"
+                  [title]="lv.staffName + ' — ' + getLeaveTypeLabel(lv.leaveType)">
+                  {{ lv.staffName.charAt(0) }}
+                </div>
+              </ng-container>
+              <div class="cal-more" *ngIf="getLeavesForDay(day).length > 3">
+                +{{ getLeavesForDay(day).length - 3 }}
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </ng-container>
+
+  </ng-container>
+  <!-- END MANAGER VIEW -->
+
+</div>
+
+
+<!-- ================= NEW REQUEST MODAL ================= -->
+<div class="modal-overlay" *ngIf="showNewRequestModal" (click)="showNewRequestModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3>📝 {{ viewMode === 'employee' ? 'Apply for Leave' : 'New Leave Request' }}</h3>
+      <button class="close-btn" (click)="showNewRequestModal = false">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <form (ngSubmit)="submitNewRequest()">
+
+        <!-- Manager only: staff selector -->
+        <div class="form-group" *ngIf="viewMode === 'manager'">
+          <label>Staff Member</label>
+          <select class="form-input" [(ngModel)]="newLeaveForm.staffId" name="staffId" required>
+            <option value="">— Select Staff —</option>
+            <option *ngFor="let s of staffOptions" [value]="s.id">
+              {{ s.name }} ({{ s.role }})
+            </option>
+          </select>
+        </div>
+
+        <!-- Employee: read-only self info -->
+        <div class="emp-self-info" *ngIf="viewMode === 'employee'">
+          <div class="self-avatar-sm">{{ currentStaffName.charAt(0) }}</div>
+          <div>
+            <strong>{{ currentStaffName }}</strong>
+            <span class="role-text">{{ currentStaffRole }}</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Leave Type</label>
+          <select class="form-input" [(ngModel)]="newLeaveForm.leaveType" name="leaveType">
+            <option value="SICK">🤒 Sick Leave</option>
+            <option value="CASUAL">🌴 Casual Leave</option>
+            <option value="EARNED">⭐ Earned Leave</option>
+            <option value="UNPAID">🔒 Unpaid Leave</option>
+          </select>
+        </div>
+
+        <!-- Balance hint for employee -->
+        <div class="balance-hint" *ngIf="viewMode === 'employee' && newLeaveForm.leaveType !== 'UNPAID'">
+          Available: <strong>{{ getMyBalanceForType(newLeaveForm.leaveType) }}</strong> days remaining
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>From Date</label>
+            <input type="date" class="form-input"
+              [(ngModel)]="newLeaveForm.startDate" name="startDate" required>
+          </div>
+          <div class="form-group" *ngIf="!newLeaveForm.isHalfDay">
+            <label>To Date</label>
+            <input type="date" class="form-input"
+              [(ngModel)]="newLeaveForm.endDate" name="endDate">
+          </div>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="newLeaveForm.isHalfDay" name="isHalfDay">
+            Half Day Leave
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>Reason <span class="required">*</span></label>
+          <textarea class="form-input"
+            [(ngModel)]="newLeaveForm.reason"
+            name="reason" rows="3"
+            placeholder="Enter reason for leave..."
+            required>
+          </textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="showNewRequestModal = false">Cancel</button>
+          <button type="submit" class="btn-primary">
+            {{ viewMode === 'employee' ? 'Submit Request' : 'Add Request' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- ================= REJECT MODAL ================= -->
+<div class="modal-overlay" *ngIf="showRejectModal" (click)="showRejectModal = false">
+  <div class="modal-content small-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>❌ Reject Leave Request</h3>
+      <button class="close-btn" (click)="showRejectModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Reason for Rejection <span class="required">*</span></label>
+        <textarea class="form-input"
+          [(ngModel)]="rejectReason"
+          name="rejectReason"
+          rows="4"
+          placeholder="Provide a reason...">
+        </textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="showRejectModal = false">Cancel</button>
+      <button class="btn-danger" (click)="confirmReject()" [disabled]="!rejectReason.trim()">
+        Confirm Rejection
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ================= DETAIL MODAL ================= -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="showDetailModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>📋 Leave Request Detail</h3>
+      <button class="close-btn" (click)="showDetailModal = false">✕</button>
+    </div>
+    <div class="modal-body" *ngIf="selectedRequest">
+      <div class="detail-grid">
+        <div class="detail-row"><span>Staff Name</span><strong>{{ selectedRequest.staffName }}</strong></div>
+        <div class="detail-row"><span>Role</span><strong>{{ selectedRequest.role || '—' }}</strong></div>
+        <div class="detail-row">
+          <span>Leave Type</span>
+          <span class="leave-type-badge" [ngClass]="getLeaveTypeClass(selectedRequest.leaveType)">
+            {{ getLeaveTypeLabel(selectedRequest.leaveType) }}
+          </span>
+        </div>
+        <div class="detail-row"><span>From</span><strong>{{ selectedRequest.startDate | date:'dd MMM yyyy' }}</strong></div>
+        <div class="detail-row"><span>To</span><strong>{{ selectedRequest.endDate | date:'dd MMM yyyy' }}</strong></div>
+        <div class="detail-row">
+          <span>Duration</span>
+          <strong>
+            {{ selectedRequest.days }} day{{ selectedRequest.days !== 1 ? 's' : '' }}
+            {{ selectedRequest.isHalfDay ? '(Half Day)' : '' }}
+          </strong>
+        </div>
+        <div class="detail-row"><span>Reason</span><strong>{{ selectedRequest.reason }}</strong></div>
+        <div class="detail-row"><span>Applied On</span><strong>{{ selectedRequest.appliedDate | date:'dd MMM yyyy' }}</strong></div>
+        <div class="detail-row" *ngIf="selectedRequest.approvedBy">
+          <span>Approved By</span><strong>{{ selectedRequest.approvedBy }}</strong>
+        </div>
+        <div class="detail-row" *ngIf="selectedRequest.rejectionReason">
+          <span>Rejection Reason</span><strong class="text-red">{{ selectedRequest.rejectionReason }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Status</span>
+          <span class="status-badge" [ngClass]="selectedRequest.status.toLowerCase()">
+            {{ selectedRequest.status }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Only manager can approve/reject from detail -->
+      <div class="detail-actions" *ngIf="viewMode === 'manager' && selectedRequest.status === 'PENDING'">
+        <button class="btn-approve" (click)="onApprove(selectedRequest.id); showDetailModal = false">✅ Approve</button>
+        <button class="btn-reject"  (click)="openRejectModal(selectedRequest.id); showDetailModal = false">❌ Reject</button>
+      </div>
+    </div>
+  </div>
+</div>

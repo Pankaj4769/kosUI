@@ -1,0 +1,95 @@
+<div class="setup-wrapper">
+
+  <div class="setup-header">
+    <span class="material-icons">restaurant</span>
+    <h1>KOS Setup</h1>
+    <div class="step-indicator">
+      <div class="step" [class.active]="step === 'restaurant'" [class.done]="step === 'staff'">
+        <span>1</span> Restaurant
+      </div>
+      <div class="step-line"></div>
+      <div class="step" [class.active]="step === 'staff'">
+        <span>2</span> Staff
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Step 1: Restaurant Info ── -->
+  <div class="setup-card" *ngIf="step === 'restaurant'">
+    <h2>Restaurant Details</h2>
+
+    <form (ngSubmit)="proceedToStaff()" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Restaurant Name *</label>
+          <input type="text" [(ngModel)]="restaurant.restaurantName"
+                 name="restaurantName" placeholder="e.g. Spice Garden" required />
+        </div>
+        <div class="form-group">
+          <label>Phone *</label>
+          <input type="tel" [(ngModel)]="restaurant.phone"
+                 name="phone" placeholder="Contact number" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="restaurant.email"
+                 name="email" placeholder="restaurant&#64;email.com" />
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" [(ngModel)]="restaurant.address"
+                 name="address" placeholder="Full address" />
+        </div>
+      </div>
+      <button type="submit" class="btn-next"
+              [disabled]="!restaurant.restaurantName || !restaurant.phone">
+        Next: Add Staff <span class="material-icons">arrow_forward</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- ── Step 2: Staff Setup ── -->
+  <div class="setup-card" *ngIf="step === 'staff'">
+    <div class="staff-header">
+      <h2>Add Staff</h2>
+      <span class="limit-badge">
+        {{ restaurant.staff.length }} / {{ staffLimit === 999 ? '∞' : staffLimit }} staff
+      </span>
+    </div>
+
+    <div class="staff-row" *ngFor="let staff of restaurant.staff; let i = index; trackBy: trackByIndex">
+      <div class="staff-num">{{ i + 1 }}</div>
+      <input type="text" [(ngModel)]="staff.name" [name]="'sname'+i"
+             placeholder="Full Name" />
+      <input type="tel" [(ngModel)]="staff.mobile" [name]="'smob'+i"
+             placeholder="Mobile" maxlength="10" />
+      <input type="email" [(ngModel)]="staff.email" [name]="'semail'+i"
+             placeholder="Email (optional)" />
+      <select [(ngModel)]="staff.role" [name]="'srole'+i">
+        <option *ngFor="let role of availableRoles" [value]="role">{{ role }}</option>
+      </select>
+      <button class="btn-remove" (click)="removeStaff(i)" type="button">
+        <span class="material-icons">delete</span>
+      </button>
+    </div>
+
+    <button class="btn-add-staff" (click)="addStaffRow()" [disabled]="!canAddStaff" type="button">
+      <span class="material-icons">person_add</span>
+      Add Staff {{ !canAddStaff ? '(Limit reached)' : '' }}
+    </button>
+
+    <div class="setup-actions">
+      <button class="btn-back" (click)="step = 'restaurant'" type="button">
+        <span class="material-icons">arrow_back</span> Back
+      </button>
+      <button class="btn-complete" (click)="completeSetup()" [disabled]="isLoading">
+        <span class="material-icons spin" *ngIf="isLoading">autorenew</span>
+        <span>{{ isLoading ? 'Saving...' : 'Complete Setup' }}</span>
+        <span class="material-icons" *ngIf="!isLoading">check_circle</span>
+      </button>
+    </div>
+  </div>
+
+</div>

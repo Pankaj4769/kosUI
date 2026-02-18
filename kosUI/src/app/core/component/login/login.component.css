@@ -1,0 +1,432 @@
+/* ── Wrapper ── */
+.login-wrapper {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ══════════════════════════════════════
+   LEFT BRAND PANEL
+══════════════════════════════════════ */
+.login-brand {
+  flex: 1;
+  background: linear-gradient(145deg, #1e3a5f, #2563eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.brand-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-logo {
+  width: 84px;
+  height: 84px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-logo .material-icons {
+  font-size: 42px;
+  color: #fff;
+}
+
+.brand-title {
+  font-size: 3.2rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 6px;
+  margin: 0;
+  line-height: 1;
+}
+
+.brand-subtitle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.70);
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* ── Role Badges ── */
+.brand-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.role-badge {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.30);
+  color: #fff;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.80rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  user-select: none;
+}
+
+.role-badge:hover {
+  background: rgba(255, 255, 255, 0.30);
+  transform: translateY(-1px);
+}
+
+.brand-hint {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0;
+}
+
+/* ══════════════════════════════════════
+   RIGHT FORM PANEL
+══════════════════════════════════════ */
+.login-form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.login-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Login Header ── */
+.login-header {
+  text-align: center;
+}
+
+.login-header h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 6px;
+}
+
+.login-header p {
+  color: #64748b;
+  font-size: 0.90rem;
+  margin: 0;
+}
+
+/* ── Error Banner ── */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  border-radius: 9px;
+  padding: 10px 14px;
+  font-size: 0.87rem;
+}
+
+.error-banner .material-icons {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ── Tab Switcher ── */
+.tab-switcher {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.tab-switcher button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.tab-switcher button .material-icons {
+  font-size: 17px;
+}
+
+.tab-switcher button.active {
+  background: #fff;
+  color: #2563eb;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Form Group ── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* ── Input Wrapper ── */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 18px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 11px 44px 11px 42px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  font-size: 0.93rem;
+  color: #1e293b;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+.input-wrapper input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+  background: #fff;
+}
+
+/* ── Toggle Eye ── */
+.toggle-eye {
+  position: absolute;
+  right: 12px;
+  font-size: 18px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.toggle-eye:hover {
+  color: #2563eb;
+}
+
+/* ── OTP Button (inside input) ── */
+.btn-otp {
+  position: absolute;
+  right: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.btn-otp:hover:not(:disabled) {
+  background: #dbeafe;
+}
+
+.btn-otp:disabled {
+  color: #94a3b8;
+  border-color: #e2e8f0;
+  background: #f1f5f9;
+  cursor: not-allowed;
+}
+
+/* ── Login Button ── */
+.btn-login {
+  width: 100%;
+  padding: 13px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 4px;
+}
+
+.btn-login:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.btn-login:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Divider ── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+/* ── Social Buttons ── */
+.social-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-size: 0.90rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #1e293b;
+}
+
+.btn-social img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.btn-social:hover:not(:disabled) {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.10);
+  transform: translateY(-1px);
+}
+
+.btn-social:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-google:hover:not(:disabled) {
+  border-color: #ea4335;
+  color: #ea4335;
+  background: #fff5f5;
+}
+
+.btn-zoho:hover:not(:disabled) {
+  border-color: #e2231a;
+  color: #e2231a;
+  background: #fff5f5;
+}
+
+/* ── Hint ── */
+.login-hint {
+  text-align: center;
+  font-size: 0.80rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.login-hint strong {
+  color: #475569;
+}
+
+/* ── Spinner ── */
+.spin {
+  animation: spin 0.9s linear infinite;
+  font-size: 18px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 768px) {
+  .login-brand {
+    display: none;
+  }
+
+  .login-form-panel {
+    background: #fff;
+    padding: 16px;
+  }
+
+  .login-card {
+    box-shadow: none;
+    padding: 28px 16px;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 400px) {
+  .social-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .login-card {
+    padding: 24px 12px;
+  }
+}
