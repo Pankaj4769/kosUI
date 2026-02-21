@@ -1,0 +1,533 @@
+<div class="notif-wrapper">
+
+  <!-- ══ HEADER ══ -->
+  <header class="dash-header">
+    <div class="header-inner">
+
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="url(#lgN)"/>
+          <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="lgN" x1="0" y1="0" x2="40" y2="40">
+              <stop offset="0%"   stop-color="#2563EB"/>
+              <stop offset="100%" stop-color="#1D4ED8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1 class="logo-title">Control Panel</h1>
+          <p class="logo-subtitle">Notifications</p>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a routerLink="/admin/dashboard" class="nav-link">Dashboard</a>
+        <a routerLink="/admin/users"     class="nav-link">Users</a>
+        <a routerLink="/admin/subscriptions" class="nav-link">Subscriptions</a>
+        <a routerLink="/admin/security"  class="nav-link">Security</a>
+        <a routerLink="/admin/notifications" class="nav-link nav-active">Notifications</a>
+        <a routerLink="/admin/rbac"       class="nav-link">RBAC</a>
+        <a routerLink="/admin/products"   class="nav-link">Products</a>
+        <a routerLink="/admin/configuration" class="nav-link">Configuration</a>
+        <a routerLink="/admin/ai-control"        class="nav-link">AI Control</a>
+      </nav>
+
+      <div class="user-area">
+        <div class="live-badge">
+          <span class="pulse-dot dot-success"></span>Live
+        </div>
+        <div class="profile-group">
+          <div class="avatar">SA</div>
+          <div>
+            <p class="profile-name">Super Admin</p>
+            <p class="profile-role">Administrator</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ══ MAIN ══ -->
+  <main class="dash-main">
+
+    <!-- Welcome -->
+    <div class="welcome-row">
+      <div>
+        <h2 class="welcome-title">Notifications</h2>
+        <p class="welcome-sub">
+          Broadcast · Email Campaigns · Push · Maintenance Alerts — {{ today }}
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Stats ── -->
+    <div class="stats-grid">
+      <div *ngFor="let s of notifStats" class="stat-card">
+        <div class="sc-left">
+          <p class="sc-label">{{ s.label }}</p>
+          <h3 class="sc-value">{{ s.value }}</h3>
+          <p class="sc-sub">{{ s.sub }}</p>
+        </div>
+        <div class="sc-icon" [style.background]="s.iconBg" [style.color]="s.iconColor">
+          <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002
+                     6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388
+                     6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3
+                     3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab Nav ── -->
+    <div class="tab-nav card-elevated">
+      <button *ngFor="let t of tabs"
+              class="tab-btn"
+              [class.tab-active]="activeTab === t.key"
+              (click)="setTab(t.key)">
+        {{ t.label }}
+      </button>
+    </div>
+
+    <!-- ════════════════════════════════
+         TAB: COMPOSE
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'compose'" class="tab-content">
+      <div class="compose-layout">
+
+        <!-- Left: Compose Form -->
+        <div class="card-elevated compose-card">
+          <h4 class="section-title">Compose Notification</h4>
+
+          <!-- Channel Selector -->
+          <div class="channel-row">
+            <button *ngFor="let t of notifTypes"
+                    class="channel-btn"
+                    [class.channel-active]="composeForm.type === t.key"
+                    (click)="composeForm.type = t.key">
+              <span class="ch-emoji">{{ t.icon }}</span>
+              <span class="ch-label">{{ t.label }}</span>
+            </button>
+          </div>
+
+          <!-- Title -->
+          <div class="form-group">
+            <label class="form-label">Title / Subject</label>
+            <input type="text" class="form-input"
+                   [(ngModel)]="composeForm.title"
+                   placeholder="Enter notification title…"/>
+          </div>
+
+          <!-- Message -->
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea class="form-textarea" rows="4"
+                      [(ngModel)]="composeForm.message"
+                      placeholder="Write your message here…"></textarea>
+          </div>
+
+          <!-- Audience + Urgency -->
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Audience</label>
+              <select class="form-select" [(ngModel)]="composeForm.audience">
+                <option *ngFor="let a of audienceOptions"
+                        [value]="a.value">{{ a.label }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Urgency</label>
+              <select class="form-select" [(ngModel)]="composeForm.urgency">
+                <option value="low">🟢 Low</option>
+                <option value="normal">🔵 Normal</option>
+                <option value="high">🟠 High</option>
+                <option value="critical">🔴 Critical</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Schedule -->
+          <div class="form-group">
+            <label class="form-label">
+              Schedule Send
+              <span class="label-hint">(leave blank to send immediately)</span>
+            </label>
+            <input type="datetime-local" class="form-input"
+                   [(ngModel)]="composeForm.scheduledAt"/>
+          </div>
+
+          <!-- Live Preview -->
+          <div class="preview-box" *ngIf="composeForm.title || composeForm.message">
+            <p class="preview-label">Live Preview</p>
+            <div class="preview-notif">
+              <span class="preview-emoji">{{ getTypeIcon(composeForm.type) }}</span>
+              <div>
+                <p class="preview-title">
+                  {{ composeForm.title || '(No title)' }}
+                </p>
+                <p class="preview-msg">
+                  {{ composeForm.message || '(No message)' }}
+                </p>
+              </div>
+              <span class="preview-urgency"
+                    [class.urg-low]="composeForm.urgency==='low'"
+                    [class.urg-normal]="composeForm.urgency==='normal'"
+                    [class.urg-high]="composeForm.urgency==='high'"
+                    [class.urg-critical]="composeForm.urgency==='critical'">
+                {{ composeForm.urgency | titlecase }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button class="btn-ghost">Save as Draft</button>
+            <button class="btn-primary"
+                    [disabled]="!composeForm.title || !composeForm.message"
+                    (click)="sendNotification()">
+              {{ composeForm.scheduledAt ? '🕐  Schedule' : '📤  Send Now' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Recent Sent -->
+        <div class="compose-side">
+          <div class="card-elevated">
+            <h5 class="side-title">Recent Activity</h5>
+            <div class="recent-list">
+              <div *ngFor="let n of recentSent" class="recent-item">
+                <span class="ri-emoji">{{ getTypeIcon(n.type) }}</span>
+                <div class="ri-body">
+                  <p class="ri-title">{{ n.title }}</p>
+                  <p class="ri-meta">{{ n.audience }}</p>
+                  <p class="ri-time">{{ n.sentAt }}</p>
+                </div>
+                <span class="notif-status-pill"
+                      [ngClass]="getStatusClass(n.status)">
+                  {{ n.status | titlecase }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         TAB: HISTORY
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'history'" class="tab-content">
+      <div class="card-elevated table-card">
+        <div class="table-top-row">
+          <h4 class="section-title">Notification History</h4>
+          <div class="history-filters">
+            <span class="hist-count">{{ history.length }} records</span>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Channel</th>
+                <th>Title</th>
+                <th>Audience</th>
+                <th>Sent / Scheduled</th>
+                <th>Open %</th>
+                <th>Click %</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let n of history">
+                <td>
+                  <span class="type-chip" [ngClass]="getTypeClass(n.type)">
+                    {{ getTypeIcon(n.type) }} {{ n.type | titlecase }}
+                  </span>
+                </td>
+                <td class="td-title"><strong>{{ n.title }}</strong></td>
+                <td class="td-audience">{{ n.audience }}</td>
+                <td class="td-mono">{{ n.sentAt }}</td>
+                <td>
+                  <span *ngIf="n.openRate > 0" class="rate-pill rate-open">
+                    {{ n.openRate }}%
+                  </span>
+                  <span *ngIf="n.openRate === 0" class="td-na">—</span>
+                </td>
+                <td>
+                  <span *ngIf="n.clickRate > 0" class="rate-pill rate-click">
+                    {{ n.clickRate }}%
+                  </span>
+                  <span *ngIf="n.clickRate === 0" class="td-na">—</span>
+                </td>
+                <td>
+                  <span class="notif-status-pill"
+                        [ngClass]="getStatusClass(n.status)">
+                    {{ n.status | titlecase }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         TAB: ANALYTICS
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'analytics'" class="tab-content">
+      <div class="analytics-grid">
+
+        <!-- Delivery Rates -->
+        <div class="card-elevated">
+          <h4 class="section-title mb-16">Channel Delivery Rates</h4>
+          <div class="delivery-list">
+            <div *ngFor="let d of deliveryStats" class="delivery-row">
+              <span class="dr-label">{{ d.label }}</span>
+              <div class="dr-bar-bg">
+                <div class="dr-bar-fill"
+                     [style.width.%]="d.pct"
+                     [style.background]="d.color">
+                </div>
+              </div>
+              <span class="dr-val">{{ d.val }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Performers -->
+        <div class="card-elevated">
+          <h4 class="section-title mb-16">Top Performing Campaigns</h4>
+          <div class="top-list">
+            <div *ngFor="let n of topPerformers; let i = index"
+                 class="top-row">
+              <span class="top-rank">{{ i + 1 }}</span>
+              <div class="top-info">
+                <p class="top-title">{{ n.title }}</p>
+                <p class="top-meta">{{ n.audience }}</p>
+              </div>
+              <div class="top-rates">
+                <span class="rate-pill rate-open">{{ n.openRate }}% open</span>
+                <span class="rate-pill rate-click">{{ n.clickRate }}% click</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Volume Chart (static visual) -->
+        <div class="card-elevated anl-volume">
+          <h4 class="section-title mb-16">Send Volume — Last 7 Days</h4>
+          <div class="volume-bars">
+            <div *ngFor="let d of [
+              {day:'Mon', val:180}, {day:'Tue', val:240},
+              {day:'Wed', val:310}, {day:'Thu', val:190},
+              {day:'Fri', val:420}, {day:'Sat', val:95},
+              {day:'Sun', val:50}]"
+              class="vol-col">
+              <div class="vol-bar"
+                   [style.height.%]="(d.val / 420) * 100">
+                <span class="vol-tip">{{ d.val }}</span>
+              </div>
+              <span class="vol-day">{{ d.day }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Breakdown -->
+        <div class="card-elevated">
+          <h4 class="section-title mb-16">Status Breakdown</h4>
+          <div class="status-breakdown">
+            <div *ngFor="let s of [
+              {label:'Sent',      count: 3, color:'#16A34A', bg:'#DCFCE7'},
+              {label:'Scheduled', count: 1, color:'#2563EB', bg:'#DBEAFE'},
+              {label:'Draft',     count: 1, color:'#64748B', bg:'#F1F5F9'},
+              {label:'Failed',    count: 1, color:'#DC2626', bg:'#FEE2E2'}]"
+              class="sb-row">
+              <div class="sb-dot" [style.background]="s.color"></div>
+              <span class="sb-label">{{ s.label }}</span>
+              <span class="sb-count" [style.background]="s.bg"
+                    [style.color]="s.color">{{ s.count }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         TAB: MAINTENANCE ALERT
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'maintenance'" class="tab-content">
+      <div class="maintenance-layout">
+
+        <!-- Alert Form -->
+        <div class="card-elevated maintenance-form-card">
+
+          <!-- Header -->
+          <div class="maint-hdr">
+            <div class="maint-icon">
+              <svg class="icon-lg" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24" style="color:#D97706">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724
+                         1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724
+                         1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724
+                         1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724
+                         1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724
+                         1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724
+                         1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724
+                         1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608
+                         2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <div>
+              <h4 class="maint-title">Emergency Maintenance Alert</h4>
+              <p class="maint-sub">
+                Sends an urgent notice to <strong>all 1,147 tenants</strong> immediately
+              </p>
+            </div>
+          </div>
+
+          <!-- Form Fields -->
+          <div class="maint-fields">
+
+            <div class="form-group">
+              <label class="form-label">Alert Title</label>
+              <input type="text" class="form-input"
+                     [(ngModel)]="maintenanceForm.title"/>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea class="form-textarea" rows="3"
+                        [(ngModel)]="maintenanceForm.message"></textarea>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Start Time</label>
+                <input type="datetime-local" class="form-input"
+                       [(ngModel)]="maintenanceForm.startTime"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Estimated End Time</label>
+                <input type="datetime-local" class="form-input"
+                       [(ngModel)]="maintenanceForm.endTime"/>
+              </div>
+            </div>
+
+            <!-- Severity -->
+            <div class="form-group">
+              <label class="form-label">Severity</label>
+              <div class="sev-row">
+                <button *ngFor="let s of ['low','medium','high','critical']"
+                        class="sev-btn"
+                        [class.sev-btn-active]="maintenanceForm.severity === s"
+                        [ngClass]="maintenanceForm.severity === s ? getSeverityClass(s) : ''"
+                        (click)="maintenanceForm.severity = s">
+                  {{ s | titlecase }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Affected Services -->
+            <div class="form-group">
+              <label class="form-label">Affected Services</label>
+              <div class="service-grid">
+                <button *ngFor="let s of allServices"
+                        class="service-chip"
+                        [class.service-chip-on]="isServiceSelected(s)"
+                        (click)="toggleService(s)">
+                  {{ s }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Warning -->
+            <div class="warn-banner">
+              <svg class="icon-sm" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24" style="color:#D97706;flex-shrink:0">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+                         1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464
+                         0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <span>
+                This will immediately notify <strong>all active tenants</strong>
+                across Email, Push, and In-App channels.
+              </span>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+              <button class="btn-ghost">Save as Draft</button>
+              <button class="btn-danger"
+                      (click)="sendMaintenanceAlert()">
+                🔧&nbsp; Send Alert Now
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Alert Preview -->
+        <div class="maint-preview-card card-elevated">
+          <h5 class="side-title">Alert Preview</h5>
+          <div class="maint-preview">
+            <div class="mp-banner"
+                 [class.mpb-low]="maintenanceForm.severity==='low'"
+                 [class.mpb-med]="maintenanceForm.severity==='medium'"
+                 [class.mpb-high]="maintenanceForm.severity==='high'"
+                 [class.mpb-crit]="maintenanceForm.severity==='critical'">
+              <span class="mp-sev-icon">
+                {{ maintenanceForm.severity === 'critical' ? '🔴'
+                 : maintenanceForm.severity === 'high'     ? '🟠'
+                 : maintenanceForm.severity === 'medium'   ? '🟡'
+                 : '🟢' }}
+              </span>
+              <span class="mp-sev-label">{{ maintenanceForm.severity | titlecase }} Severity</span>
+            </div>
+            <div class="mp-body">
+              <p class="mp-title">
+                {{ maintenanceForm.title || 'Maintenance Alert' }}
+              </p>
+              <p class="mp-msg">
+                {{ maintenanceForm.message || 'No message entered yet.' }}
+              </p>
+            </div>
+            <div *ngIf="maintenanceForm.startTime || maintenanceForm.endTime"
+                 class="mp-times">
+              <div class="mp-time-row" *ngIf="maintenanceForm.startTime">
+                <span class="mpt-label">Starts</span>
+                <span class="mpt-val">{{ maintenanceForm.startTime }}</span>
+              </div>
+              <div class="mp-time-row" *ngIf="maintenanceForm.endTime">
+                <span class="mpt-label">Ends</span>
+                <span class="mpt-val">{{ maintenanceForm.endTime }}</span>
+              </div>
+            </div>
+            <div *ngIf="maintenanceForm.affectedServices.length > 0"
+                 class="mp-services">
+              <p class="mps-label">Affected Services</p>
+              <div class="mps-chips">
+                <span *ngFor="let s of maintenanceForm.affectedServices"
+                      class="mps-chip">{{ s }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>

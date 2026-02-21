@@ -1,0 +1,794 @@
+<div class="cfg-wrapper">
+
+  <!-- ══ HEADER ══ -->
+  <header class="dash-header">
+    <div class="header-inner">
+
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="url(#lgCFG)"/>
+          <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="lgCFG" x1="0" y1="0" x2="40" y2="40">
+              <stop offset="0%"   stop-color="#2563EB"/>
+              <stop offset="100%" stop-color="#1D4ED8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1 class="logo-title">Control Panel</h1>
+          <p class="logo-subtitle">Configuration Management</p>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a routerLink="/admin" class="nav-link">Dashboard</a>
+        <a routerLink="/admin/users"     class="nav-link">Users</a>
+        <a routerLink="/admin/subscriptions" class="nav-link">Subscriptions</a>
+        <a routerLink="/admin/security"  class="nav-link">Security</a>
+        <a routerLink="/admin/notifications" class="nav-link">Notifications</a>
+        <a routerLink="/admin/rbac"       class="nav-link">RBAC</a>
+        <a routerLink="/admin/products"   class="nav-link">Products</a>
+        <a routerLink="/admin/configuration" class="nav-link nav-active">Configuration</a>
+        <a routerLink="/admin/ai-control"        class="nav-link">AI Control</a>
+      </nav>
+
+      <div class="user-area">
+        <div class="live-badge">
+          <span class="pulse-dot dot-success"></span>Live
+        </div>
+        <div class="profile-group">
+          <div class="avatar">SA</div>
+          <div>
+            <p class="profile-name">Super Admin</p>
+            <p class="profile-role">Administrator</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ══ MAIN ══ -->
+  <main class="dash-main">
+
+    <!-- Welcome Row -->
+    <div class="welcome-row">
+      <div>
+        <h2 class="welcome-title">Configuration Management</h2>
+        <p class="welcome-sub">
+          Global · Currency · Tax · Branding · Timezone · Storage — {{ today }}
+        </p>
+      </div>
+      <!-- Save Banner -->
+      <div class="save-success" *ngIf="saveSuccess">
+        ✅ Settings saved successfully
+      </div>
+    </div>
+
+    <!-- ── Tab Nav ── -->
+    <div class="tab-nav card-elevated">
+      <button *ngFor="let t of tabs"
+              class="tab-btn"
+              [class.tab-active]="activeTab === t.key"
+              (click)="setTab(t.key)">
+        {{ t.label }}
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════
+         TAB: GLOBAL SETTINGS
+    ══════════════════════════════════ -->
+    <div *ngIf="activeTab === 'global'" class="tab-content">
+      <div class="settings-layout">
+
+        <!-- Platform -->
+        <div class="card-elevated settings-section">
+          <div class="ss-hdr">
+            <div class="ss-icon bg-blue">
+              <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724
+                         0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724
+                         0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724
+                         0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724
+                         0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724
+                         0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724
+                         0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724
+                         0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608
+                         2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <div>
+              <h4 class="ss-title">Platform Settings</h4>
+              <p class="ss-sub">Core platform configuration</p>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Platform Name</label>
+              <input type="text" class="form-input"
+                     [(ngModel)]="globalSettings.platformName"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Support Email</label>
+              <input type="email" class="form-input"
+                     [(ngModel)]="globalSettings.supportEmail"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Default Language</label>
+              <select class="form-select"
+                      [(ngModel)]="globalSettings.defaultLanguage">
+                <option *ngFor="let l of languageOptions"
+                        [value]="l.code">{{ l.label }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Trial Duration (days)</label>
+              <input type="number" class="form-input"
+                     [(ngModel)]="globalSettings.trialDays" min="0" max="90"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Max Users per Tenant</label>
+              <input type="number" class="form-input"
+                     [(ngModel)]="globalSettings.maxUsersPerTenant" min="1"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">API Rate Limit (req/min)</label>
+              <input type="number" class="form-input"
+                     [(ngModel)]="globalSettings.apiRateLimitPerMin" min="100"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Toggles -->
+        <div class="card-elevated settings-section">
+          <div class="ss-hdr">
+            <div class="ss-icon bg-purple">
+              <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2
+                         2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div>
+              <h4 class="ss-title">Feature Toggles</h4>
+              <p class="ss-sub">Platform-wide feature flags</p>
+            </div>
+          </div>
+
+          <div class="toggle-list">
+            <div class="toggle-row">
+              <div class="tr-info">
+                <p class="tr-label">Maintenance Mode</p>
+                <p class="tr-sub">Block all tenant access with maintenance page</p>
+              </div>
+              <div class="toggle-wrap"
+                   (click)="globalSettings.maintenanceMode = !globalSettings.maintenanceMode">
+                <div class="toggle-track"
+                     [class.toggle-on]="globalSettings.maintenanceMode"
+                     [class.toggle-danger]="globalSettings.maintenanceMode">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="toggle-lbl"
+                      [class.lbl-danger]="globalSettings.maintenanceMode">
+                  {{ globalSettings.maintenanceMode ? 'ON' : 'OFF' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="tr-info">
+                <p class="tr-label">Allow New Signups</p>
+                <p class="tr-sub">Enable public registration for new tenants</p>
+              </div>
+              <div class="toggle-wrap"
+                   (click)="globalSettings.allowSignup = !globalSettings.allowSignup">
+                <div class="toggle-track" [class.toggle-on]="globalSettings.allowSignup">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="toggle-lbl">{{ globalSettings.allowSignup ? 'ON' : 'OFF' }}</span>
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="tr-info">
+                <p class="tr-label">Webhooks</p>
+                <p class="tr-sub">Allow tenants to configure outbound webhooks</p>
+              </div>
+              <div class="toggle-wrap"
+                   (click)="globalSettings.webhooksEnabled = !globalSettings.webhooksEnabled">
+                <div class="toggle-track" [class.toggle-on]="globalSettings.webhooksEnabled">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="toggle-lbl">{{ globalSettings.webhooksEnabled ? 'ON' : 'OFF' }}</span>
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="tr-info">
+                <p class="tr-label">Analytics Tracking</p>
+                <p class="tr-sub">Collect usage analytics across all tenants</p>
+              </div>
+              <div class="toggle-wrap"
+                   (click)="globalSettings.analyticsEnabled = !globalSettings.analyticsEnabled">
+                <div class="toggle-track" [class.toggle-on]="globalSettings.analyticsEnabled">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="toggle-lbl">{{ globalSettings.analyticsEnabled ? 'ON' : 'OFF' }}</span>
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="tr-info">
+                <p class="tr-label">Debug Mode</p>
+                <p class="tr-sub">Enable verbose logging — disable in production</p>
+              </div>
+              <div class="toggle-wrap"
+                   (click)="globalSettings.debugMode = !globalSettings.debugMode">
+                <div class="toggle-track"
+                     [class.toggle-on]="globalSettings.debugMode"
+                     [class.toggle-warning]="globalSettings.debugMode">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="toggle-lbl"
+                      [class.lbl-warning]="globalSettings.debugMode">
+                  {{ globalSettings.debugMode ? 'ON' : 'OFF' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="save-row">
+        <button class="btn-ghost">Reset to Defaults</button>
+        <button class="btn-primary" (click)="saveSettings()">💾 Save Global Settings</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         TAB: CURRENCY
+    ══════════════════════════════════ -->
+    <div *ngIf="activeTab === 'currency'" class="tab-content">
+      <div class="currency-layout">
+
+        <!-- Currency List -->
+        <div class="card-elevated">
+          <div class="section-hdr">
+            <h4 class="section-title">Supported Currencies</h4>
+            <span class="count-badge">{{ getCurrencyEnabledCount() }} enabled</span>
+          </div>
+          <div class="currency-list">
+            <div *ngFor="let c of currencies" class="currency-row"
+                 [class.currency-disabled]="!c.enabled">
+              <div class="cur-symbol-box">{{ c.symbol }}</div>
+              <div class="cur-info">
+                <span class="cur-code">{{ c.code }}</span>
+                <span class="cur-name">{{ c.name }}</span>
+              </div>
+              <span *ngIf="c.isDefault" class="default-badge">Default</span>
+              <div class="cur-actions">
+                <button *ngIf="!c.isDefault" class="cur-default-btn"
+                        (click)="setDefaultCurrency(c)">Set Default</button>
+                <div class="toggle-wrap"
+                     (click)="c.enabled = c.isDefault ? true : !c.enabled">
+                  <div class="toggle-track" [class.toggle-on]="c.enabled">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Currency Format Settings -->
+        <div class="card-elevated cur-format-card">
+          <h4 class="section-title mb-16">Display Format</h4>
+          <div class="format-preview">
+            <span class="fp-label">Preview</span>
+            <span class="fp-value">
+              {{ currencySettings.symbolPosition === 'before' ? '₹' : '' }}1{{ currencySettings.thousandSeparator }}234{{ currencySettings.decimalSeparator }}56{{ currencySettings.symbolPosition === 'after' ? ' ₹' : '' }}
+            </span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Decimal Places</label>
+            <select class="form-select" [(ngModel)]="currencySettings.decimalPlaces">
+              <option [value]="0">0 — No decimals</option>
+              <option [value]="2">2 — Standard</option>
+              <option [value]="3">3 — Extended</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Symbol Position</label>
+            <select class="form-select" [(ngModel)]="currencySettings.symbolPosition">
+              <option value="before">Before amount (₹100)</option>
+              <option value="after">After amount (100 ₹)</option>
+            </select>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Thousands Separator</label>
+              <select class="form-select" [(ngModel)]="currencySettings.thousandSeparator">
+                <option value=",">, (comma)</option>
+                <option value=".">. (period)</option>
+                <option value=" ">  (space)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Decimal Separator</label>
+              <select class="form-select" [(ngModel)]="currencySettings.decimalSeparator">
+                <option value=".">. (period)</option>
+                <option value=",">, (comma)</option>
+              </select>
+            </div>
+          </div>
+          <div class="save-row mt-16">
+            <button class="btn-primary btn-full" (click)="saveSettings()">
+              💾 Save Currency Config
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         TAB: TAX SETTINGS
+    ══════════════════════════════════ -->
+    <div *ngIf="activeTab === 'tax'" class="tab-content">
+      <div class="tax-layout">
+
+        <!-- Tax Rules Table -->
+        <div class="card-elevated table-card">
+          <div class="table-top-row">
+            <h4 class="section-title">Tax Rules</h4>
+            <button class="btn-primary btn-sm" (click)="showTaxModal = true">
+              + Add Tax Rule
+            </button>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Rule Name</th><th>Rate</th><th>Region</th>
+                  <th>Applies To</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of taxRules">
+                  <td><strong>{{ r.name }}</strong></td>
+                  <td><span class="rate-badge">{{ r.rate }}%</span></td>
+                  <td>{{ r.region }}</td>
+                  <td>{{ r.appliesTo }}</td>
+                  <td>
+                    <span class="status-pill"
+                          [class.pill-active]="r.active"
+                          [class.pill-inactive]="!r.active">
+                      {{ r.active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="tbl-actions">
+                      <div class="toggle-wrap" (click)="r.active = !r.active">
+                        <div class="toggle-track" [class.toggle-on]="r.active">
+                          <div class="toggle-thumb"></div>
+                        </div>
+                      </div>
+                      <button class="icon-btn del-btn"
+                              (click)="deleteTaxRule(r)">
+                        <svg class="icon-xs" fill="none" stroke="currentColor"
+                             viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2
+                                   2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1
+                                   1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tax Behaviour -->
+        <div class="card-elevated tax-config-card">
+          <h4 class="section-title mb-16">Tax Behaviour</h4>
+          <div class="toggle-list">
+            <div class="toggle-row">
+              <div class="tr-info">
+                <p class="tr-label">Tax-Inclusive Pricing</p>
+                <p class="tr-sub">Prices shown already include tax</p>
+              </div>
+              <div class="toggle-wrap" (click)="taxSettings.taxInclusive = !taxSettings.taxInclusive">
+                <div class="toggle-track" [class.toggle-on]="taxSettings.taxInclusive">
+                  <div class="toggle-thumb"></div>
+                </div>
+              </div>
+            </div>
+            <div class="toggle-row">
+              <div class="tr-info">
+                <p class="tr-label">Show Tax on Bill</p>
+                <p class="tr-sub">Display tax breakdown on customer receipts</p>
+              </div>
+              <div class="toggle-wrap" (click)="taxSettings.showTaxOnBill = !taxSettings.showTaxOnBill">
+                <div class="toggle-track" [class.toggle-on]="taxSettings.showTaxOnBill">
+                  <div class="toggle-thumb"></div>
+                </div>
+              </div>
+            </div>
+            <div class="toggle-row">
+              <div class="tr-info">
+                <p class="tr-label">Auto-Calculate Tax</p>
+                <p class="tr-sub">Automatically apply matching tax rules</p>
+              </div>
+              <div class="toggle-wrap" (click)="taxSettings.autoCalculate = !taxSettings.autoCalculate">
+                <div class="toggle-track" [class.toggle-on]="taxSettings.autoCalculate">
+                  <div class="toggle-thumb"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group mt-16">
+            <label class="form-label">Rounding Method</label>
+            <select class="form-select" [(ngModel)]="taxSettings.roundingMethod">
+              <option value="round">Round (standard)</option>
+              <option value="ceil">Ceiling (always round up)</option>
+              <option value="floor">Floor (always round down)</option>
+            </select>
+          </div>
+          <div class="save-row mt-16">
+            <button class="btn-primary btn-full" (click)="saveSettings()">
+              💾 Save Tax Settings
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         TAB: BRANDING
+    ══════════════════════════════════ -->
+    <div *ngIf="activeTab === 'branding'" class="tab-content">
+      <div class="branding-layout">
+
+        <!-- Branding Form -->
+        <div class="card-elevated branding-form">
+          <h4 class="section-title mb-16">Brand Identity</h4>
+
+          <!-- Logo Upload -->
+          <div class="logo-upload-area" (click)="triggerLogoUpload()">
+            <div *ngIf="!branding.logoUrl" class="logo-placeholder">
+              <svg class="icon-lg" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24" style="color:#94A3B8">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2
+                         2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2
+                         0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <p class="logo-placeholder-txt">Click to upload logo</p>
+              <p class="logo-placeholder-hint">PNG, SVG · Max 2MB · Recommended 200×60px</p>
+            </div>
+            <input id="logoInput" type="file" accept="image/*" style="display:none"/>
+          </div>
+
+          <div class="form-grid-2 mt-16">
+            <div class="form-group">
+              <label class="form-label">Company Name</label>
+              <input type="text" class="form-input" [(ngModel)]="branding.companyName"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tagline</label>
+              <input type="text" class="form-input" [(ngModel)]="branding.tagline"/>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Footer Text</label>
+            <input type="text" class="form-input" [(ngModel)]="branding.footerText"/>
+          </div>
+
+          <!-- Colours -->
+          <div class="color-section">
+            <p class="form-label">Brand Colours</p>
+            <div class="color-grid">
+              <div class="color-picker-group">
+                <label class="color-label">Primary</label>
+                <div class="color-input-wrap">
+                  <input type="color" class="color-swatch"
+                         [(ngModel)]="branding.primaryColor"/>
+                  <input type="text" class="form-input color-hex"
+                         [(ngModel)]="branding.primaryColor"/>
+                </div>
+              </div>
+              <div class="color-picker-group">
+                <label class="color-label">Secondary</label>
+                <div class="color-input-wrap">
+                  <input type="color" class="color-swatch"
+                         [(ngModel)]="branding.secondaryColor"/>
+                  <input type="text" class="form-input color-hex"
+                         [(ngModel)]="branding.secondaryColor"/>
+                </div>
+              </div>
+              <div class="color-picker-group">
+                <label class="color-label">Accent</label>
+                <div class="color-input-wrap">
+                  <input type="color" class="color-swatch"
+                         [(ngModel)]="branding.accentColor"/>
+                  <input type="text" class="form-input color-hex"
+                         [(ngModel)]="branding.accentColor"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Font Family</label>
+              <select class="form-select" [(ngModel)]="branding.fontFamily">
+                <option *ngFor="let f of fontOptions">{{ f }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Border Radius (px)</label>
+              <input type="range" class="range-input" min="0" max="24" step="2"
+                     [(ngModel)]="branding.borderRadius"/>
+              <span class="range-val">{{ branding.borderRadius }}px</span>
+            </div>
+          </div>
+
+          <div class="save-row mt-16">
+            <button class="btn-ghost">Reset Branding</button>
+            <button class="btn-primary" (click)="saveSettings()">💾 Save Branding</button>
+          </div>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="card-elevated branding-preview">
+          <h5 class="side-title">Live Preview</h5>
+          <div class="bp-card"
+               [style.font-family]="branding.fontFamily"
+               [style.border-radius.px]="branding.borderRadius">
+            <div class="bp-header" [style.background]="branding.primaryColor">
+              <span class="bp-logo">{{ branding.companyName }}</span>
+            </div>
+            <div class="bp-body">
+              <div class="bp-btn-row">
+                <button class="bp-btn"
+                        [style.background]="branding.primaryColor"
+                        [style.border-radius.px]="branding.borderRadius">
+                  Primary Action
+                </button>
+                <button class="bp-btn bp-btn-sec"
+                        [style.border-color]="branding.secondaryColor"
+                        [style.color]="branding.secondaryColor"
+                        [style.border-radius.px]="branding.borderRadius">
+                  Secondary
+                </button>
+              </div>
+              <div class="bp-accent-bar" [style.background]="branding.accentColor + '22'">
+                <span class="bp-accent-dot" [style.background]="branding.accentColor"></span>
+                <span style="font-size:12px;">Accent element preview</span>
+              </div>
+              <p class="bp-tagline">{{ branding.tagline }}</p>
+              <p class="bp-footer">{{ branding.footerText }}</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         TAB: TIMEZONE
+    ══════════════════════════════════ -->
+    <div *ngIf="activeTab === 'timezone'" class="tab-content">
+      <div class="tz-layout">
+
+        <div class="card-elevated">
+          <h4 class="section-title mb-16">Timezone & Date Format</h4>
+
+          <div class="form-group">
+            <label class="form-label">Default Timezone</label>
+            <select class="form-select" [(ngModel)]="timezoneSettings.defaultTimezone">
+              <option *ngFor="let tz of timezones"
+                      [value]="tz.value">{{ tz.label }}</option>
+            </select>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Date Format</label>
+              <select class="form-select" [(ngModel)]="timezoneSettings.dateFormat">
+                <option *ngFor="let f of dateFormats">{{ f }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Time Format</label>
+              <select class="form-select" [(ngModel)]="timezoneSettings.timeFormat">
+                <option value="12h">12-hour (3:45 PM)</option>
+                <option value="24h">24-hour (15:45)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">First Day of Week</label>
+              <select class="form-select" [(ngModel)]="timezoneSettings.firstDayOfWeek">
+                <option>Monday</option>
+                <option>Sunday</option>
+                <option>Saturday</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fiscal Year Starts</label>
+              <select class="form-select" [(ngModel)]="timezoneSettings.fiscalYearStart">
+                <option>January</option><option>April</option>
+                <option>July</option><option>October</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Preview -->
+          <div class="tz-preview">
+            <div class="tzp-row">
+              <span class="tzp-label">Date Preview</span>
+              <span class="tzp-val">20/02/2026</span>
+            </div>
+            <div class="tzp-row">
+              <span class="tzp-label">Time Preview</span>
+              <span class="tzp-val">
+                {{ timezoneSettings.timeFormat === '12h' ? '5:12 PM' : '17:12' }}
+              </span>
+            </div>
+            <div class="tzp-row">
+              <span class="tzp-label">Timezone</span>
+              <span class="tzp-val">{{ timezoneSettings.defaultTimezone }}</span>
+            </div>
+          </div>
+
+          <div class="save-row mt-16">
+            <button class="btn-primary" (click)="saveSettings()">💾 Save Timezone</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         TAB: STORAGE
+    ══════════════════════════════════ -->
+    <div *ngIf="activeTab === 'storage'" class="tab-content">
+      <div class="storage-layout">
+
+        <!-- Config Card -->
+        <div class="card-elevated">
+          <h4 class="section-title mb-16">Storage Configuration</h4>
+
+          <div class="form-group">
+            <label class="form-label">Storage Provider</label>
+            <select class="form-select" [(ngModel)]="storageConfig.provider">
+              <option *ngFor="let p of storageProviders">{{ p }}</option>
+            </select>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Bucket / Container Name</label>
+              <input type="text" class="form-input"
+                     [(ngModel)]="storageConfig.bucket"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Region</label>
+              <input type="text" class="form-input"
+                     [(ngModel)]="storageConfig.region"
+                     placeholder="e.g. ap-south-1"/>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Max Upload Size (MB)</label>
+            <input type="range" class="range-input" min="1" max="100" step="1"
+                   [(ngModel)]="storageConfig.maxFileSizeMB"/>
+            <span class="range-val">{{ storageConfig.maxFileSizeMB }} MB</span>
+          </div>
+
+          <div class="save-row mt-16">
+            <button class="btn-ghost">Test Connection</button>
+            <button class="btn-primary" (click)="saveSettings()">💾 Save Storage Config</button>
+          </div>
+        </div>
+
+        <!-- Usage Card -->
+        <div class="card-elevated">
+          <h4 class="section-title mb-16">Storage Usage</h4>
+
+          <!-- Overall bar -->
+          <div class="overall-usage">
+            <div class="ou-top">
+              <span class="ou-label">Total Used</span>
+              <span class="ou-val">
+                {{ storageConfig.usedGB }} GB / {{ storageConfig.totalGB }} GB
+              </span>
+            </div>
+            <div class="ou-bar-bg">
+              <div class="ou-bar-fill"
+                   [style.width.%]="storageUsedPct"
+                   [style.background]="getStorageBarColor()">
+              </div>
+            </div>
+            <div class="ou-pct">{{ storageUsedPct }}% used</div>
+          </div>
+
+          <!-- Category breakdown -->
+          <div class="storage-cats">
+            <div *ngFor="let c of storageCategories" class="sc-row">
+              <div class="scr-dot" [style.background]="c.color"></div>
+              <span class="scr-label">{{ c.label }}</span>
+              <div class="scr-bar-bg">
+                <div class="scr-bar-fill"
+                     [style.width.%]="(c.usedGB / storageConfig.totalGB) * 100"
+                     [style.background]="c.color">
+                </div>
+              </div>
+              <span class="scr-val">{{ c.usedGB }} GB</span>
+            </div>
+          </div>
+
+          <div class="storage-actions">
+            <button class="btn-ghost btn-sm">🗑️ Purge Temp Files</button>
+            <button class="btn-ghost btn-sm">📦 Download Backup</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══ TAX MODAL ══ -->
+  <div class="modal-overlay" *ngIf="showTaxModal"
+       (click)="showTaxModal = false"></div>
+  <div class="modal-box" *ngIf="showTaxModal">
+    <div class="modal-hdr">
+      <h3>Add Tax Rule</h3>
+      <button class="close-btn" (click)="showTaxModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Rule Name</label>
+          <input type="text" class="form-input" [(ngModel)]="newTaxRule.name"
+                 placeholder="e.g. GST 5%"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rate (%)</label>
+          <input type="number" class="form-input" [(ngModel)]="newTaxRule.rate"
+                 min="0" max="100"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Region</label>
+          <input type="text" class="form-input" [(ngModel)]="newTaxRule.region"
+                 placeholder="e.g. India"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Applies To</label>
+          <input type="text" class="form-input" [(ngModel)]="newTaxRule.appliesTo"
+                 placeholder="e.g. Food Items"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="showTaxModal = false">Cancel</button>
+      <button class="btn-primary" (click)="addTaxRule()">Add Rule</button>
+    </div>
+  </div>
+
+</div>

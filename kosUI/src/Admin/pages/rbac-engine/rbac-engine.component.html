@@ -1,0 +1,528 @@
+<div class="rbac-wrapper">
+
+  <!-- ══ HEADER ══ -->
+  <header class="dash-header">
+    <div class="header-inner">
+
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="url(#lgRBAC)"/>
+          <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="lgRBAC" x1="0" y1="0" x2="40" y2="40">
+              <stop offset="0%"   stop-color="#2563EB"/>
+              <stop offset="100%" stop-color="#7C3AED"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1 class="logo-title">Control Panel</h1>
+          <p class="logo-subtitle">RBAC Engine</p>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a routerLink="/admin" class="nav-link">Dashboard</a>
+        <a routerLink="/admin/users"     class="nav-link">Users</a>
+        <a routerLink="/admin/subscriptions" class="nav-link">Subscriptions</a>
+        <a routerLink="/admin/security"  class="nav-link">Security</a>
+        <a routerLink="/admin/notifications" class="nav-link">Notifications</a>
+        <a routerLink="/admin/rbac"       class="nav-link nav-active">RBAC</a>
+        <a routerLink="/admin/products"   class="nav-link">Products</a>
+        <a routerLink="/admin/configuration" class="nav-link">Configuration</a>
+        <a routerLink="/admin/ai-control"        class="nav-link">AI Control</a>
+      </nav>
+
+      <div class="user-area">
+        <div class="live-badge">
+          <span class="pulse-dot dot-success"></span>Live
+        </div>
+        <div class="profile-group">
+          <div class="avatar">SA</div>
+          <div>
+            <p class="profile-name">Super Admin</p>
+            <p class="profile-role">Administrator</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ══ MAIN ══ -->
+  <main class="dash-main">
+
+    <!-- Welcome -->
+    <div class="welcome-row">
+      <div>
+        <h2 class="welcome-title">RBAC Engine</h2>
+        <p class="welcome-sub">
+          Roles · Permissions · Granular Access · Audit Log — {{ today }}
+        </p>
+      </div>
+      <button class="btn-primary" (click)="openAddRole()">
+        + Create Role
+      </button>
+    </div>
+
+    <!-- ── Stats ── -->
+    <div class="stats-grid">
+      <div *ngFor="let s of stats" class="stat-card">
+        <div class="sc-left">
+          <p class="sc-label">{{ s.label }}</p>
+          <h3 class="sc-value">{{ s.value }}</h3>
+          <p class="sc-sub">{{ s.sub }}</p>
+        </div>
+        <div class="sc-icon"
+             [style.background]="s.iconBg"
+             [style.color]="s.iconColor">
+          <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2
+                     0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab Nav ── -->
+    <div class="tab-nav card-elevated">
+      <button *ngFor="let t of tabs"
+              class="tab-btn"
+              [class.tab-active]="activeTab === t.key"
+              (click)="setTab(t.key)">
+        {{ t.label }}
+        <span *ngIf="t.key === 'audit' && criticalAuditCount > 0"
+              class="tab-badge badge-red">
+          {{ criticalAuditCount }}
+        </span>
+      </button>
+    </div>
+
+    <!-- ════════════════════════════
+         TAB: ROLES
+    ════════════════════════════ -->
+    <div *ngIf="activeTab === 'roles'" class="tab-content">
+      <div class="roles-layout">
+
+        <!-- Role Cards -->
+        <div class="roles-list">
+          <div *ngFor="let r of roles"
+               class="role-card"
+               [class.role-selected]="selectedRoleForDetail?.id === r.id"
+               (click)="selectRoleForDetail(r)">
+
+            <div class="rc-header">
+              <div class="rc-dot" [style.background]="r.color"></div>
+              <div class="rc-info">
+                <h4 class="rc-name">{{ r.name }}</h4>
+                <p class="rc-desc">{{ r.description }}</p>
+              </div>
+              <span *ngIf="r.isSystem" class="system-badge">System</span>
+            </div>
+
+            <div class="rc-stats">
+              <div class="rc-stat">
+                <span class="rcs-val">{{ getRolePermCount(r) }}</span>
+                <span class="rcs-label">Permissions</span>
+              </div>
+              <div class="rc-stat">
+                <span class="rcs-val">{{ r.userCount }}</span>
+                <span class="rcs-label">Users</span>
+              </div>
+              <div class="rc-stat">
+                <span class="rcs-val">{{ r.createdAt }}</span>
+                <span class="rcs-label">Created</span>
+              </div>
+            </div>
+
+            <!-- Permission bar -->
+            <div class="rc-perm-bar-bg">
+              <div class="rc-perm-bar-fill"
+                   [style.width.%]="(getRolePermCount(r) / getTotalPermCount()) * 100"
+                   [style.background]="r.color">
+              </div>
+            </div>
+
+            <div class="rc-actions" (click)="$event.stopPropagation()">
+              <button class="icon-text-btn"
+                      [disabled]="r.isSystem"
+                      (click)="openEditRole(r)">
+                ✏️ Edit
+              </button>
+              <button class="icon-text-btn icon-text-btn-del"
+                      [disabled]="r.isSystem"
+                      (click)="deleteRole(r)">
+                🗑 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role Detail Panel -->
+        <div class="role-detail-panel card-elevated"
+             *ngIf="selectedRoleForDetail">
+          <div class="rdp-header">
+            <div class="rdp-dot"
+                 [style.background]="selectedRoleForDetail.color"></div>
+            <div>
+              <h3 class="rdp-name">{{ selectedRoleForDetail.name }}</h3>
+              <p class="rdp-desc">{{ selectedRoleForDetail.description }}</p>
+            </div>
+          </div>
+
+          <div class="rdp-meta">
+            <span>👥 {{ selectedRoleForDetail.userCount }} users assigned</span>
+            <span>🔒 {{ getRolePermCount(selectedRoleForDetail) }} of {{ getTotalPermCount() }} permissions</span>
+            <span>📅 Created {{ selectedRoleForDetail.createdAt }}</span>
+            <span>👤 By {{ selectedRoleForDetail.createdBy }}</span>
+          </div>
+
+          <!-- Permissions by category -->
+          <div *ngFor="let cat of permissionCategories" class="rdp-cat-section">
+            <ng-container *ngIf="getRolePermForCategory(selectedRoleForDetail, cat).length > 0">
+              <p class="rdp-cat-label">{{ cat }}</p>
+              <div class="rdp-perm-chips">
+                <span *ngFor="let p of getRolePermForCategory(selectedRoleForDetail, cat)"
+                      class="rdp-perm-chip">
+                  ✓ {{ p.label }}
+                </span>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════════════════
+         TAB: PERMISSION MATRIX
+    ════════════════════════════ -->
+    <div *ngIf="activeTab === 'permissions'" class="tab-content">
+      <div class="card-elevated table-card">
+        <div class="table-top-row">
+          <h4 class="section-title">Permission Matrix</h4>
+          <p class="table-sub">
+            ✓ = Granted &nbsp; ✕ = Not granted
+          </p>
+        </div>
+        <div class="table-scroll">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th class="th-perm-name">Permission</th>
+                <th class="th-cat">Category</th>
+                <th *ngFor="let r of roles" class="th-role">
+                  <div class="th-role-inner">
+                    <div class="th-role-dot" [style.background]="r.color"></div>
+                    <span class="th-role-name">{{ r.name }}</span>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let cat of permissionCategories">
+                <tr class="cat-header-row">
+                  <td [attr.colspan]="2 + roles.length" class="cat-header-cell">
+                    {{ cat }}
+                  </td>
+                </tr>
+                <tr *ngFor="let p of getPermsByCategory(cat)"
+                    class="perm-row">
+                  <td class="td-perm-name">
+                    <div>
+                      <strong>{{ p.label }}</strong>
+                      <p class="perm-key">{{ p.key }}</p>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="cat-chip">{{ p.category }}</span>
+                  </td>
+                  <td *ngFor="let r of roles" class="td-matrix-cell">
+                    <span class="matrix-cell"
+                          [class.mc-yes]="hasPermission(r, p.key)"
+                          [class.mc-no]="!hasPermission(r, p.key)">
+                      {{ hasPermission(r, p.key) ? '✓' : '✕' }}
+                    </span>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════
+         TAB: GRANULAR ACCESS
+    ════════════════════════════ -->
+    <div *ngIf="activeTab === 'access'" class="tab-content">
+      <div class="access-layout">
+
+        <!-- Role Selector -->
+        <div class="card-elevated access-role-list">
+          <h4 class="section-title mb-16">Select Role</h4>
+          <div class="access-role-items">
+            <div *ngFor="let r of roles"
+                 class="access-role-item"
+                 [class.ari-selected]="selectedRoleForAccess?.id === r.id"
+                 (click)="selectRoleForAccess(r)">
+              <div class="ari-dot" [style.background]="r.color"></div>
+              <div class="ari-info">
+                <p class="ari-name">{{ r.name }}</p>
+                <p class="ari-count">{{ getRolePermCount(r) }} permissions</p>
+              </div>
+              <span *ngIf="r.isSystem" class="system-badge-sm">System</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Permissions Panel -->
+        <div class="card-elevated access-perm-panel"
+             *ngIf="selectedRoleForAccess">
+
+          <div class="app-header">
+            <div class="app-title-row">
+              <div class="app-dot"
+                   [style.background]="selectedRoleForAccess.color"></div>
+              <h4 class="section-title">{{ selectedRoleForAccess.name }}</h4>
+              <span *ngIf="selectedRoleForAccess.isSystem"
+                    class="system-badge">System — Read Only</span>
+            </div>
+            <p class="app-sub">
+              {{ getRolePermCount(selectedRoleForAccess) }} / {{ getTotalPermCount() }} permissions granted
+            </p>
+          </div>
+
+          <!-- Category filter tabs -->
+          <div class="cat-filter-row">
+            <button *ngFor="let c of allPermCategories"
+                    class="cat-filter-btn"
+                    [class.cat-filter-active]="activePermCategory === c"
+                    (click)="activePermCategory = c">
+              {{ c }}
+            </button>
+          </div>
+
+          <!-- System role warning -->
+          <div *ngIf="selectedRoleForAccess.isSystem" class="system-warn">
+            <svg class="icon-xs" fill="none" stroke="currentColor"
+                 viewBox="0 0 24 24" style="color:#D97706;flex-shrink:0">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+                       1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34
+                       16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            System roles cannot be modified. Clone this role to create a custom version.
+          </div>
+
+          <!-- Permission grid -->
+          <div class="perm-access-grid">
+            <div *ngFor="let p of filteredModalPerms"
+                 class="perm-access-row"
+                 [class.par-granted]="hasPermission(selectedRoleForAccess, p.key)"
+                 [class.par-denied]="!hasPermission(selectedRoleForAccess, p.key)">
+
+              <div class="par-info">
+                <p class="par-label">{{ p.label }}</p>
+                <p class="par-key">{{ p.key }}</p>
+                <p class="par-desc">{{ p.description }}</p>
+              </div>
+
+              <div class="par-right">
+                <span class="par-cat-chip">{{ p.category }}</span>
+                <div class="toggle-wrap"
+                     [class.toggle-disabled]="selectedRoleForAccess.isSystem"
+                     (click)="toggleAccessPerm(selectedRoleForAccess, p.key)">
+                  <div class="toggle-track"
+                       [class.toggle-on]="hasPermission(selectedRoleForAccess, p.key)">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                  <span class="toggle-lbl">
+                    {{ hasPermission(selectedRoleForAccess, p.key) ? 'ON' : 'OFF' }}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════════════════
+         TAB: AUDIT LOG
+    ════════════════════════════ -->
+    <div *ngIf="activeTab === 'audit'" class="tab-content">
+
+      <!-- Filters -->
+      <div class="audit-filter-row card-elevated">
+        <button *ngFor="let f of auditFilterOptions"
+                class="filter-chip"
+                [class.filter-chip-active]="auditFilter === f.value"
+                [class.filter-crit]="f.value === 'critical' && auditFilter === f.value"
+                [class.filter-warn]="f.value === 'warning' && auditFilter === f.value"
+                (click)="auditFilter = f.value">
+          {{ f.label }}
+          <span *ngIf="f.value === 'critical'" class="chip-count-red">
+            {{ criticalAuditCount }}
+          </span>
+        </button>
+        <span class="audit-total">
+          {{ filteredAuditLogs.length }} records
+        </span>
+      </div>
+
+      <div class="card-elevated table-card">
+        <div class="table-top-row">
+          <h4 class="section-title">Audit Log — Who Changed What</h4>
+        </div>
+
+        <div class="audit-list">
+          <div *ngFor="let l of filteredAuditLogs"
+               class="audit-row"
+               [class.audit-critical]="l.severity === 'critical'"
+               [class.audit-warning]="l.severity === 'warning'">
+
+            <!-- Severity bar -->
+            <div class="audit-sev-bar"
+                 [class.asb-info]="l.severity === 'info'"
+                 [class.asb-warn]="l.severity === 'warning'"
+                 [class.asb-crit]="l.severity === 'critical'">
+            </div>
+
+            <!-- Actor -->
+            <div class="audit-actor">
+              <div class="aa-avatar"
+                   [style.background]="l.actor === 'System' ? '#E2E8F0' : '#EFF6FF'">
+                {{ l.actor[0] }}
+              </div>
+              <div>
+                <p class="aa-name">{{ l.actor }}</p>
+                <p class="aa-role">{{ l.actorRole }}</p>
+              </div>
+            </div>
+
+            <!-- Action -->
+            <div class="audit-action">
+              <span class="audit-action-code">{{ l.action }}</span>
+              <span class="audit-target-chip"
+                    [ngClass]="getAuditTargetClass(l.targetType)">
+                {{ l.target }}
+              </span>
+            </div>
+
+            <!-- Detail -->
+            <div class="audit-detail">
+              <p class="ad-text">{{ l.detail }}</p>
+              <div class="ad-meta">
+                <span>🕐 {{ l.timestamp }}</span>
+                <span>🌐 {{ l.ip }}</span>
+              </div>
+            </div>
+
+            <!-- Severity badge -->
+            <div class="audit-right">
+              <span class="audit-sev-pill"
+                    [ngClass]="getAuditSeverityClass(l.severity)">
+                {{ l.severity | titlecase }}
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══ ROLE MODAL ══ -->
+  <div class="modal-overlay" *ngIf="showRoleModal"
+       (click)="showRoleModal = false"></div>
+  <div class="modal-box" *ngIf="showRoleModal">
+    <div class="modal-hdr">
+      <h3>{{ editingRole ? 'Edit Role' : 'Create New Role' }}</h3>
+      <button class="close-btn" (click)="showRoleModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Role Name</label>
+          <input type="text" class="form-input"
+                 [(ngModel)]="roleForm.name"
+                 placeholder="e.g. Finance Manager"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role Colour</label>
+          <div class="color-input-row">
+            <input type="color" class="color-swatch"
+                   [(ngModel)]="roleForm.color"/>
+            <input type="text" class="form-input color-hex"
+                   [(ngModel)]="roleForm.color"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" rows="2"
+                  [(ngModel)]="roleForm.description"
+                  placeholder="Describe what this role can do…"></textarea>
+      </div>
+
+      <!-- Permission category filter in modal -->
+      <div class="form-group">
+        <label class="form-label">
+          Permissions
+          <span class="form-label-count">
+            {{ roleForm.permissions.length }} selected
+          </span>
+        </label>
+        <div class="modal-cat-filter">
+          <button *ngFor="let c of allPermCategories"
+                  class="cat-filter-btn cat-filter-btn-sm"
+                  [class.cat-filter-active]="activePermCategory === c"
+                  (click)="activePermCategory = c">
+            {{ c }}
+          </button>
+        </div>
+        <div class="modal-perm-grid">
+          <div *ngFor="let p of filteredModalPerms"
+               class="modal-perm-row"
+               [class.mpr-selected]="isModalPermSelected(p.key)"
+               (click)="toggleModalPerm(p.key)">
+            <div class="mpr-check"
+                 [class.mpr-checked]="isModalPermSelected(p.key)">
+              <svg *ngIf="isModalPermSelected(p.key)"
+                   class="icon-xs" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div class="mpr-info">
+              <p class="mpr-label">{{ p.label }}</p>
+              <p class="mpr-desc">{{ p.description }}</p>
+            </div>
+            <span class="cat-chip">{{ p.category }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="showRoleModal = false">Cancel</button>
+      <button class="btn-primary"
+              [disabled]="!roleForm.name"
+              (click)="saveRole()">
+        {{ editingRole ? 'Save Changes' : 'Create Role' }}
+      </button>
+    </div>
+  </div>
+
+</div>

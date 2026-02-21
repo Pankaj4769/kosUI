@@ -1,0 +1,598 @@
+<div class="sec-wrapper">
+
+  <!-- ══ HEADER ══════════════════════════════════════ -->
+  <header class="dash-header">
+    <div class="header-inner">
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="url(#lgSEC)"/>
+          <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <defs><linearGradient id="lgSEC" x1="0" y1="0" x2="40" y2="40">
+            <stop offset="0%" stop-color="#2563EB"/>
+            <stop offset="100%" stop-color="#1D4ED8"/>
+          </linearGradient></defs>
+        </svg>
+        <div>
+          <h1 class="logo-title">Control Panel</h1>
+          <p class="logo-subtitle">Security & Compliance</p>
+        </div>
+      </div>
+      <nav class="main-nav">
+        <a routerLink="/admin" class="nav-link">Dashboard</a>
+        <a routerLink="/admin/users"     class="nav-link">Users</a>
+        <a routerLink="/admin/subscriptions" class="nav-link">Subscriptions</a>
+        <a routerLink="/admin/security"  class="nav-link nav-active">Security</a>
+        <a routerLink="/admin/notifications" class="nav-link">Notifications</a>
+        <a routerLink="/admin/rbac"       class="nav-link">RBAC</a>
+        <a routerLink="/admin/products"   class="nav-link">Products</a>
+        <a routerLink="/admin/configuration" class="nav-link">Configuration</a>
+        <a routerLink="/admin/ai-control"        class="nav-link">AI Control</a>
+      </nav>
+      <div class="user-area">
+        <div class="live-badge"><span class="pulse-dot dot-success"></span>Live</div>
+        <div class="profile-group">
+          <div class="avatar">SA</div>
+          <div><p class="profile-name">Super Admin</p><p class="profile-role">Administrator</p></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ MAIN ════════════════════════════════════════ -->
+  <main class="dash-main">
+
+    <!-- Welcome -->
+    <div class="welcome-row">
+      <div>
+        <h2 class="welcome-title">Security & Compliance</h2>
+        <p class="welcome-sub">2FA · Audit Logs · IP Rules · Sessions · API Keys · GDPR · Encryption — {{ today }}</p>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid-6">
+      <div *ngFor="let s of securityStats" class="stat-card">
+        <div class="stat-top">
+          <div>
+            <p class="stat-label">{{ s.label }}</p>
+            <h3 class="stat-value">{{ s.value }}</h3>
+            <p class="stat-sub">{{ s.sub }}</p>
+          </div>
+          <div class="stat-icon" [style.background]="s.iconBg" [style.color]="s.iconColor">
+            <!-- failed / susp / block -->
+            <svg *ngIf="s.iconKey==='failed'||s.iconKey==='susp'"
+                 class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+                       1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34
+                       16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <!-- session -->
+            <svg *ngIf="s.iconKey==='session'"
+                 class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <!-- block -->
+            <svg *ngIf="s.iconKey==='block'"
+                 class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0
+                       015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+            <!-- 2fa -->
+            <svg *ngIf="s.iconKey==='twofa'"
+                 class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0
+                       00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+            <!-- key -->
+            <svg *ngIf="s.iconKey==='key'"
+                 class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1
+                       1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2FA Quick Bar -->
+    <div class="card-elevated twofa-bar">
+      <div class="twofa-left">
+        <div class="twofa-icon-wrap">
+          <svg class="icon-md color-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0
+                     00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <div>
+          <h4 class="twofa-title">Two-Factor Authentication (2FA)</h4>
+          <p class="twofa-sub">
+            {{ twoFactorEnabled
+              ? 'Currently enforced — all admin and tenant logins require 2FA'
+              : 'Currently optional — users can skip 2FA setup' }}
+          </p>
+        </div>
+      </div>
+      <div class="twofa-controls">
+        <div class="toggle-wrap" (click)="twoFactorEnabled = !twoFactorEnabled">
+          <div class="toggle-track" [class.toggle-on]="twoFactorEnabled">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="toggle-label">{{ twoFactorEnabled ? 'Enforced' : 'Optional' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suspicious Alert Banner -->
+    <div *ngIf="suspiciousSessions > 0" class="alert-banner">
+      <svg class="icon-sm color-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+                 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34
+                 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      <span><strong>{{ suspiciousSessions }} suspicious session(s)</strong> detected and still active</span>
+      <button class="btn-danger-sm" (click)="terminateAllSuspicious()">Terminate All</button>
+    </div>
+
+    <!-- Tab Nav -->
+    <div class="tab-nav card-elevated">
+      <button *ngFor="let t of tabs" class="tab-btn"
+              [class.tab-active]="activeTab === t.key"
+              (click)="setTab(t.key)">
+        {{ t.label }}
+        <span *ngIf="t.key==='gdpr' && pendingGDPR > 0" class="tab-badge">{{ pendingGDPR }}</span>
+      </button>
+    </div>
+
+    <!-- ══ OVERVIEW ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'overview'" class="tab-content">
+      <div class="card-elevated">
+        <h4 class="section-title mb-16">
+          <svg class="icon-sm color-error" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:6px">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          Suspicious Login Detection
+        </h4>
+        <div class="susp-list">
+          <div *ngFor="let e of suspiciousEvents" class="susp-row"
+               [class.susp-high]="e.risk==='High'" [class.susp-med]="e.risk==='Medium'">
+            <div class="susp-icon-wrap">
+              <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+                         1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34
+                         16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            </div>
+            <div class="susp-body">
+              <p class="susp-event">{{ e.event }}</p>
+              <p class="susp-meta">{{ e.ip }} &nbsp;·&nbsp; {{ e.time }}</p>
+            </div>
+            <span class="risk-badge" [ngClass]="getRiskClass(e.risk)">{{ e.risk }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ AUDIT LOGS ══════════════════════════════ -->
+    <div *ngIf="activeTab === 'audit'" class="tab-content">
+      <div class="card-elevated table-card">
+        <div class="table-header-row">
+          <h4 class="section-title">System Audit Logs</h4>
+          <button class="btn-export">
+            <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Export
+          </button>
+        </div>
+        <div class="table-scroll">
+          <table class="sr-table">
+            <thead>
+              <tr><th>User</th><th>Action</th><th>IP Address</th><th>Timestamp</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let log of auditLogs"
+                  [class.row-failed]="log.status==='failed'"
+                  [class.row-blocked]="log.status==='blocked'">
+                <td><strong>{{ log.user }}</strong></td>
+                <td>{{ log.action }}</td>
+                <td class="td-mono">{{ log.ip }}</td>
+                <td class="td-mono">{{ log.timestamp }}</td>
+                <td>
+                  <span class="log-status" [ngClass]="getLogStatusClass(log.status)">
+                    {{ log.status | titlecase }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ IP RULES ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'ip'" class="tab-content">
+      <div class="card-elevated">
+        <div class="section-hdr">
+          <h4 class="section-title">IP Whitelist / Blacklist Rules</h4>
+          <button class="btn-primary btn-sm" (click)="showIPModal = true">+ Add Rule</button>
+        </div>
+
+        <!-- Summary Chips -->
+        <div class="ip-summary">
+          <span class="ip-sum-chip chip-white">
+            ✓ {{ whitelistCount }} Whitelisted
+          </span>
+          <span class="ip-sum-chip chip-black">
+            ✗ {{ blacklistCount }} Blacklisted
+          </span>
+        </div>
+
+        <div class="ip-list">
+          <div *ngFor="let rule of ipRules" class="ip-row"
+               [class.ip-blacklist-row]="rule.type === 'blacklist'">
+            <div class="ip-indicator" [class.ind-white]="rule.type==='whitelist'"
+                 [class.ind-black]="rule.type==='blacklist'"></div>
+            <div class="ip-icon">
+              <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   [style.color]="rule.type==='whitelist' ? '#16A34A' : '#DC2626'">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945"/>
+              </svg>
+            </div>
+            <div class="ip-info">
+              <span class="ip-addr">{{ rule.ip }}</span>
+              <span class="ip-label-txt">{{ rule.label }}</span>
+            </div>
+            <span class="ip-type-badge"
+                  [class.ip-badge-white]="rule.type==='whitelist'"
+                  [class.ip-badge-black]="rule.type==='blacklist'">
+              {{ rule.type | titlecase }}
+            </span>
+            <span class="ip-date">{{ rule.addedDate }}</span>
+            <button class="icon-action-btn del-btn" (click)="removeIPRule(rule)">
+              <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0
+                         01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1
+                         1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SESSIONS ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'sessions'" class="tab-content">
+      <div class="card-elevated table-card">
+        <div class="table-header-row">
+          <h4 class="section-title">Session Management</h4>
+          <div class="sess-summary">
+            <span class="sess-chip chip-active">{{ activeSessions }} active</span>
+            <span class="sess-chip chip-susp" *ngIf="suspiciousSessions > 0">
+              {{ suspiciousSessions }} suspicious
+            </span>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="sr-table">
+            <thead>
+              <tr><th>Tenant</th><th>IP</th><th>Device</th><th>Login Time</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of sessions"
+                  [class.row-suspicious]="s.suspicious"
+                  [class.row-inactive]="!s.active">
+                <td>
+                  <div class="session-user">
+                    <span *ngIf="s.suspicious" class="susp-flag-icon">⚑</span>
+                    <strong>{{ s.tenantName }}</strong>
+                  </div>
+                </td>
+                <td class="td-mono">{{ s.ip }}</td>
+                <td>{{ s.device }}</td>
+                <td class="td-mono">{{ s.loginTime }}</td>
+                <td>
+                  <span class="sess-status"
+                        [class.sess-active-pill]="s.active"
+                        [class.sess-ended-pill]="!s.active">
+                    {{ s.active ? 'Active' : 'Ended' }}
+                  </span>
+                </td>
+                <td>
+                  <button *ngIf="s.active" class="tbl-action-btn btn-terminate"
+                          (click)="terminateSession(s)">Terminate</button>
+                  <span *ngIf="!s.active" class="td-resolved">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Session Timeout Config -->
+        <div class="session-config">
+          <div class="sc-label">
+            <svg class="icon-sm color-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>Auto Session Timeout</span>
+          </div>
+          <div class="sc-control">
+            <input type="range" class="sc-slider" min="5" max="120" step="5"
+                   [(ngModel)]="sessionTimeout"/>
+            <span class="sc-val">{{ sessionTimeout }} min</span>
+            <button class="btn-primary btn-sm">Apply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ API KEYS ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'apikeys'" class="tab-content">
+      <div class="card-elevated">
+        <div class="section-hdr">
+          <h4 class="section-title">API Key Management</h4>
+          <button class="btn-primary btn-sm" (click)="showKeyModal = true">+ Generate Key</button>
+        </div>
+        <div class="api-list">
+          <div *ngFor="let k of apiKeys" class="api-row" [class.api-inactive]="!k.active">
+            <div class="api-icon-wrap" [class.api-icon-dead]="!k.active">
+              <svg class="icon-md color-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1
+                         1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+              </svg>
+            </div>
+            <div class="api-info">
+              <div class="api-name-row">
+                <h5 class="api-name">{{ k.name }}</h5>
+                <span class="api-status" [class.api-on]="k.active" [class.api-off]="!k.active">
+                  {{ k.active ? 'Active' : 'Revoked' }}
+                </span>
+              </div>
+              <code class="api-key-val">{{ k.key }}</code>
+              <p class="api-dates-txt">Created {{ k.createdDate }} &nbsp;·&nbsp; Last used {{ k.lastUsed }}</p>
+            </div>
+            <div class="api-scopes">
+              <span *ngFor="let sc of k.scopes" class="scope-chip">{{ sc }}</span>
+            </div>
+            <button *ngIf="k.active" class="tbl-action-btn btn-revoke"
+                    (click)="revokeKey(k)">Revoke</button>
+            <span *ngIf="!k.active" class="td-resolved">Revoked</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GDPR ════════════════════════════════════ -->
+    <div *ngIf="activeTab === 'gdpr'" class="tab-content">
+      <div class="gdpr-layout">
+        <!-- Requests Table -->
+        <div class="card-elevated">
+          <div class="section-hdr">
+            <h4 class="section-title">GDPR Data Requests</h4>
+            <span *ngIf="pendingGDPR > 0" class="pending-badge">{{ pendingGDPR }} pending</span>
+          </div>
+          <div class="table-scroll">
+            <table class="sr-table">
+              <thead>
+                <tr><th>Tenant</th><th>Type</th><th>Requested</th><th>Status</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of gdprRequests">
+                  <td><strong>{{ r.tenantName }}</strong></td>
+                  <td>
+                    <span class="gdpr-type" [class.gdpr-export]="r.type==='export'"
+                          [class.gdpr-delete]="r.type==='delete'">
+                      {{ r.type === 'export' ? '📤 Export' : '🗑️ Delete' }}
+                    </span>
+                  </td>
+                  <td class="td-mono">{{ r.requestDate }}</td>
+                  <td>
+                    <span class="gdpr-status" [ngClass]="getGDPRStatusClass(r.status)">
+                      {{ r.status | titlecase }}
+                    </span>
+                  </td>
+                  <td>
+                    <button *ngIf="r.status==='pending'" class="tbl-action-btn btn-approve"
+                            (click)="openGDPRModal(r)">Review</button>
+                    <span *ngIf="r.status!=='pending'" class="td-resolved">Done</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- GDPR Config -->
+        <div class="card-elevated gdpr-config-card">
+          <h4 class="section-title mb-16">Compliance Settings</h4>
+          <div class="gdpr-setting">
+            <div class="gdpr-set-label">
+              <p class="gsl-title">Data Retention Period</p>
+              <p class="gsl-sub">Auto-purge inactive tenant data after</p>
+            </div>
+            <div class="gdpr-set-control">
+              <input type="number" class="form-input" [(ngModel)]="gdprRetentionDays" min="30" max="730" style="width:80px;text-align:center;"/>
+              <span class="gsc-unit">days</span>
+            </div>
+          </div>
+          <div class="gdpr-setting">
+            <div class="gdpr-set-label">
+              <p class="gsl-title">Right to Erasure</p>
+              <p class="gsl-sub">Allow tenants to request full data deletion</p>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle-track toggle-on"><div class="toggle-thumb"></div></div>
+              <span class="toggle-label">Enabled</span>
+            </div>
+          </div>
+          <div class="gdpr-setting">
+            <div class="gdpr-set-label">
+              <p class="gsl-title">Data Portability</p>
+              <p class="gsl-sub">Export all tenant data as JSON/CSV</p>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle-track toggle-on"><div class="toggle-thumb"></div></div>
+              <span class="toggle-label">Enabled</span>
+            </div>
+          </div>
+          <div class="gdpr-setting">
+            <div class="gdpr-set-label">
+              <p class="gsl-title">Consent Logging</p>
+              <p class="gsl-sub">Log all user consent events with timestamps</p>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle-track toggle-on"><div class="toggle-thumb"></div></div>
+              <span class="toggle-label">Enabled</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ENCRYPTION ══════════════════════════════ -->
+    <div *ngIf="activeTab === 'encryption'" class="tab-content">
+      <div class="card-elevated">
+        <h4 class="section-title mb-16">Encryption Settings</h4>
+        <div class="enc-list">
+          <div *ngFor="let e of encryptionSettings" class="enc-row"
+               [class.enc-row-off]="e.status==='disabled'">
+            <div class="enc-status-dot" [class.enc-dot-on]="e.status==='enabled'"
+                 [class.enc-dot-off]="e.status==='disabled'"></div>
+            <div class="enc-info">
+              <h5 class="enc-label">{{ e.label }}</h5>
+              <p class="enc-algo">{{ e.algorithm }}</p>
+            </div>
+            <div class="enc-meta">
+              <span class="enc-badge" [ngClass]="getEncClass(e.status)">
+                {{ e.status | titlecase }}
+              </span>
+              <p class="enc-rotated">Last rotated: {{ e.lastRotated }}</p>
+            </div>
+            <button class="tbl-action-btn btn-rotate">Rotate Key</button>
+          </div>
+        </div>
+
+        <!-- Encryption Level -->
+        <div class="enc-global">
+          <div class="enc-glob-label">
+            <h5>Global Encryption Standard</h5>
+            <p>Applied to all new data stored</p>
+          </div>
+          <select class="form-select" [(ngModel)]="encryptionLevel" style="width:200px;">
+            <option>AES-128-GCM</option>
+            <option>AES-256-GCM</option>
+            <option>ChaCha20-Poly1305</option>
+          </select>
+          <button class="btn-primary btn-sm">Apply</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══ MODALS ══════════════════════════════════════ -->
+  <div class="modal-overlay"
+       *ngIf="showIPModal || showKeyModal || showGDPRModal"
+       (click)="closeModals()">
+  </div>
+
+  <!-- Add IP Modal -->
+  <div class="modal-box" *ngIf="showIPModal">
+    <div class="modal-hdr">
+      <h3>Add IP Rule</h3>
+      <button class="close-btn" (click)="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">IP Address / CIDR</label>
+        <input type="text" class="form-input" [(ngModel)]="newIP.ip" placeholder="e.g. 192.168.1.0/24"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Label</label>
+        <input type="text" class="form-input" [(ngModel)]="newIP.label" placeholder="e.g. Office Network"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rule Type</label>
+        <select class="form-select" [(ngModel)]="newIP.type">
+          <option value="whitelist">Whitelist — Allow</option>
+          <option value="blacklist">Blacklist — Block</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeModals()">Cancel</button>
+      <button class="btn-primary" (click)="addIPRule()">Add Rule</button>
+    </div>
+  </div>
+
+  <!-- Generate API Key Modal -->
+  <div class="modal-box" *ngIf="showKeyModal">
+    <div class="modal-hdr">
+      <h3>Generate API Key</h3>
+      <button class="close-btn" (click)="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Key Name</label>
+        <input type="text" class="form-input" [(ngModel)]="newKey.name" placeholder="e.g. Mobile App Integration"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Scopes (comma separated)</label>
+        <input type="text" class="form-input" [(ngModel)]="newKey.scopes"
+               placeholder="orders.read, menu.read, reports.read"/>
+      </div>
+      <div class="warn-box">
+        The key will only be shown once. Store it securely immediately after generation.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeModals()">Cancel</button>
+      <button class="btn-primary" (click)="closeModals()">Generate</button>
+    </div>
+  </div>
+
+  <!-- GDPR Review Modal -->
+  <div class="modal-box" *ngIf="showGDPRModal && selectedGDPR">
+    <div class="modal-hdr">
+      <h3>GDPR Request Review</h3>
+      <button class="close-btn" (click)="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-rows">
+        <div class="info-row"><span>Tenant</span><strong>{{ selectedGDPR.tenantName }}</strong></div>
+        <div class="info-row"><span>Request Type</span>
+          <strong>{{ selectedGDPR.type === 'export' ? 'Data Export' : 'Data Deletion' }}</strong>
+        </div>
+        <div class="info-row"><span>Requested On</span><strong>{{ selectedGDPR.requestDate }}</strong></div>
+      </div>
+      <div class="warn-box" *ngIf="selectedGDPR.type==='delete'">
+        ⚠ This will permanently delete ALL data for this tenant. This cannot be undone.
+      </div>
+      <div class="info-box" *ngIf="selectedGDPR.type==='export'">
+        A complete data export (JSON + CSV) will be emailed to the tenant.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeModals()">Cancel</button>
+      <button class="btn-danger" (click)="rejectGDPR()">Reject</button>
+      <button class="btn-primary" (click)="approveGDPR()">
+        {{ selectedGDPR.type === 'export' ? 'Send Export' : 'Confirm Delete' }}
+      </button>
+    </div>
+  </div>
+
+</div>
