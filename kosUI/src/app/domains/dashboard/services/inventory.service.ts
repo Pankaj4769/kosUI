@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { Item } from '../models/item.model';
 import { HttpClient } from '@angular/common/http';
 import { MessageResponse } from '../models/message.model';
+import { BASE_URL } from "../../../apiUrls";
 
 @Injectable({
   providedIn: 'root'
 })
 export class InventoryService {
 
-  baseUrl='http://localhost:8080'
+  baseUrl= BASE_URL;
 
     private items: Item[] = [];
 

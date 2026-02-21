@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LayoutService } from '../../core/services/layout.service';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-header',
@@ -17,6 +18,7 @@ export class HeaderComponent {
 
   constructor(
     public layout: LayoutService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
@@ -29,8 +31,6 @@ export class HeaderComponent {
   }
 
   logout() {
-    console.log('Logout clicked');
-    // TODO: integrate auth logout
-    this.router.navigate(['/login']);
+    this.authService.logout();
   }
 }
