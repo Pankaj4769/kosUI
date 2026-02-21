@@ -101,16 +101,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(
-<<<<<<< HEAD
     public layout: LayoutService,
     private authService: AuthService,
-    private router: Router
-=======
+    private router: Router,
     public  layout: LayoutService,
     private router: Router,
     private cdr:    ChangeDetectorRef,
     private cashierCtx: CashierContextService
->>>>>>> ae922be (refactoredUI)
   ) {}
 
   /* ═══════════════════════════════════════════
@@ -240,15 +237,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.router.navigate([path]);
   }
 
-<<<<<<< HEAD
   logout() {
     this.authService.logout();
-=======
-  logout(): void {
-    this.showUserMenu = false;
-    localStorage.removeItem('token');
-    this.router.navigate(['/login']);
->>>>>>> ae922be (refactoredUI)
+
   }
 
   /* ═══════════════════════════════════════════
