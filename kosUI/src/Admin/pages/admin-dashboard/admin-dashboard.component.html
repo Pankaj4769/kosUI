@@ -1,0 +1,645 @@
+<div class="dashboard-wrapper">
+
+  <!-- ══ HEADER ══════════════════════════════════════ -->
+  <header class="dash-header">
+    <div class="header-inner">
+
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="url(#logoGrad)"/>
+          <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+              <stop offset="0%" stop-color="#2563EB"/>
+              <stop offset="100%" stop-color="#1D4ED8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1 class="logo-title">Control Panel</h1>
+          <p class="logo-subtitle">Super Admin Dashboard</p>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a *ngFor="let item of navItems"
+           [routerLink]="item.route"
+           [class.nav-active]="item.active"
+           class="nav-link">
+          {{ item.label }}
+        </a>
+      </nav>
+
+      <div class="user-area">
+        <!-- Live Logs Toggle -->
+        <button class="header-action-btn" (click)="toggleLogsViewer()"
+                [class.active-btn]="showLogsViewer" title="Live Logs">
+          <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1
+                     1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </button>
+        <!-- Region Toggle -->
+        <button class="header-action-btn" (click)="toggleRegionPanel()"
+                [class.active-btn]="showRegionPanel" title="Multi-Region">
+          <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945
+                     M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104
+                     0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+          </svg>
+        </button>
+        <!-- Scaling Toggle -->
+        <button class="header-action-btn" (click)="toggleScalingPanel()"
+                [class.active-btn]="showScalingPanel" title="Scaling">
+          <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0
+                     0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+          </svg>
+        </button>
+        <!-- Notification -->
+        <button class="notif-btn" title="Notifications">
+          <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6
+                     6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6
+                     0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <span class="notif-badge"></span>
+        </button>
+        <div class="profile-group">
+          <div class="avatar">SM</div>
+          <div class="profile-info">
+            <p class="profile-name">Sarah Mitchell</p>
+            <p class="profile-role">Super Admin</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ══ MAIN ════════════════════════════════════════ -->
+  <main class="dash-main">
+
+    <!-- Welcome -->
+    <div class="welcome-section">
+      <h2 class="welcome-title">Welcome back, Sarah</h2>
+      <p class="welcome-sub">Platform overview — {{ today }}</p>
+      <div class="live-badge">
+        <span class="pulse-dot dot-success"></span>
+        Live — updates every 3s
+      </div>
+    </div>
+
+    <!-- ── METRICS GRID (8 cards) ────────────────── -->
+    <div class="metrics-grid">
+      <div *ngFor="let m of metrics" class="metric-card">
+        <div class="metric-top">
+          <div>
+            <p class="metric-label">{{ m.label }}</p>
+            <h3 class="metric-value">{{ m.value }}</h3>
+          </div>
+          <div class="metric-icon" [style.background]="m.iconBg">
+
+            <!-- Users -->
+            <svg *ngIf="m.iconKey === 'users'" class="icon-md" [style.color]="m.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 20h5v-2a4 4 0 00-5-3.87M9 20H4v-2a4 4 0 015-3.87m6
+                       0a4 4 0 10-6 0m6 0H9"/>
+            </svg>
+            <!-- Uptime -->
+            <svg *ngIf="m.iconKey === 'uptime'" class="icon-md" [style.color]="m.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <!-- CPU -->
+            <svg *ngIf="m.iconKey === 'cpu'" class="icon-md" [style.color]="m.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="6" y="6" width="12" height="12" rx="1" stroke-width="2"
+                    stroke="currentColor" fill="none"/>
+              <path stroke-linecap="round" stroke-width="2" stroke="currentColor"
+                    d="M9 9h6v6H9zM3 9h3M3 15h3M18 9h3M18 15h3M9 3v3M15 3v3M9 18v3M15 18v3"/>
+            </svg>
+            <!-- Memory -->
+            <svg *ngIf="m.iconKey === 'memory'" class="icon-md" [style.color]="m.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0
+                       0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+            </svg>
+            <!-- DB -->
+            <svg *ngIf="m.iconKey === 'db'" class="icon-md" [style.color]="m.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <ellipse cx="12" cy="5" rx="9" ry="3" stroke="currentColor" stroke-width="2"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 12c0 1.657-4.03 3-9 3S3 13.657 3 12M21 19c0
+                       1.657-4.03 3-9 3S3 20.657 3 19V5"/>
+            </svg>
+            <!-- API -->
+            <svg *ngIf="m.iconKey === 'api'" class="icon-md" [style.color]="m.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <!-- Error -->
+            <svg *ngIf="m.iconKey === 'error'" class="icon-md" [style.color]="m.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <!-- Revenue -->
+            <svg *ngIf="m.iconKey === 'revenue'" class="icon-md" [style.color]="m.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3
+                       2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0
+                       1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Trend -->
+        <div class="metric-trend">
+          <span *ngIf="m.trend === 'up'" class="trend-up">
+            <svg class="icon-xs" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                    d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4
+                       4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2
+                       0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+            {{ m.trendValue }}
+          </span>
+          <span *ngIf="m.trend === 'down'" class="trend-down">
+            <svg class="icon-xs" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                    d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414
+                       0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012
+                       0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+            {{ m.trendValue }}
+          </span>
+          <span *ngIf="m.trend === 'neutral'" class="status-pill status-success">
+            <span class="pulse-dot dot-success"></span>
+            {{ m.trendValue }}
+          </span>
+          <span *ngIf="m.trendLabel" class="trend-label">{{ m.trendLabel }}</span>
+        </div>
+
+        <!-- Footer -->
+        <div class="metric-footer">
+          <ng-container *ngIf="m.extra">
+            <span class="metric-foot-text">{{ m.extra.left }}</span>
+            <span class="metric-foot-text">{{ m.extra.right }}</span>
+          </ng-container>
+          <ng-container *ngIf="m.progress !== null">
+            <div class="progress-bar-bg" style="width:100%">
+              <div class="progress-bar-fill"
+                   [style.width.%]="m.progress"
+                   [style.background]="m.progressColor || '#2563EB'">
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANELS ROW (Region / Scaling) ──────────── -->
+    <!-- Multi-Region Panel -->
+    <div *ngIf="showRegionPanel" class="panel-full card-elevated mb-6">
+      <div class="section-header">
+        <div class="section-header-left">
+          <div class="section-icon bg-primary-soft">
+            <svg class="icon-md color-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="section-title">Multi-Region Monitoring</h3>
+            <p class="section-sub">Real-time health across all regions</p>
+          </div>
+        </div>
+        <button class="close-panel-btn" (click)="toggleRegionPanel()">✕</button>
+      </div>
+      <div class="region-grid">
+        <div *ngFor="let r of regions" class="region-card"
+             [class.region-degraded]="r.status === 'degraded'"
+             [class.region-down]="r.status === 'down'">
+          <div class="region-header">
+            <span class="pulse-dot" [ngClass]="getRegionStatusClass(r.status)"></span>
+            <strong>{{ r.name }}</strong>
+            <span class="region-code">{{ r.code }}</span>
+          </div>
+          <div class="region-stats">
+            <div class="region-stat">
+              <span class="rstat-label">Latency</span>
+              <span class="rstat-value">{{ r.latency }}</span>
+            </div>
+            <div class="region-stat">
+              <span class="rstat-label">Load</span>
+              <span class="rstat-value"
+                    [class.color-warning]="r.load > 75"
+                    [class.color-error]="r.load > 90">
+                {{ r.load }}%
+              </span>
+            </div>
+          </div>
+          <div class="progress-bar-bg" style="margin-top:8px">
+            <div class="progress-bar-fill"
+                 [style.width.%]="r.load"
+                 [style.background]="r.load > 85 ? '#EF4444' : r.load > 70 ? '#D97706' : '#16A34A'">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto Scaling Panel -->
+    <div *ngIf="showScalingPanel" class="panel-full card-elevated mb-6">
+      <div class="section-header">
+        <div class="section-header-left">
+          <div class="section-icon bg-primary-soft">
+            <svg class="icon-md color-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0
+                       0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="section-title">Auto Scaling Control</h3>
+            <p class="section-sub">Manage instance counts and scaling policies</p>
+          </div>
+        </div>
+        <button class="close-panel-btn" (click)="toggleScalingPanel()">✕</button>
+      </div>
+      <div class="scaling-table">
+        <div class="scaling-header-row">
+          <span>Service</span>
+          <span>Instances</span>
+          <span>Range</span>
+          <span>CPU Trigger</span>
+          <span>Auto Scale</span>
+          <span>Manual Override</span>
+        </div>
+        <div *ngFor="let svc of scalingServices" class="scaling-row">
+          <span class="scaling-name">{{ svc.name }}</span>
+          <span class="scaling-count">
+            <strong>{{ svc.current }}</strong> running
+          </span>
+          <span class="scaling-range">{{ svc.min }} – {{ svc.max }}</span>
+          <span class="scaling-trigger">{{ svc.cpuTrigger }}%</span>
+          <span>
+            <button class="toggle-btn" (click)="toggleAutoScale(svc)"
+                    [class.toggle-on]="svc.autoScale">
+              {{ svc.autoScale ? 'ON' : 'OFF' }}
+            </button>
+          </span>
+          <span class="scale-actions">
+            <button class="scale-btn scale-down" (click)="scaleDown(svc)"
+                    [disabled]="svc.current <= svc.min">−</button>
+            <span class="scale-current">{{ svc.current }}</span>
+            <button class="scale-btn scale-up" (click)="scaleUp(svc)"
+                    [disabled]="svc.current >= svc.max">+</button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CONTENT GRID ───────────────────────────── -->
+    <div class="content-grid">
+
+      <!-- LEFT COLUMN -->
+      <div class="left-col">
+
+        <!-- Critical Alerts -->
+        <div class="card-elevated">
+          <div class="section-header">
+            <div class="section-header-left">
+              <div class="section-icon bg-error-soft">
+                <svg class="icon-md color-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+                           1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34
+                           16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="section-title">Critical Alerts</h3>
+                <p class="section-sub">{{ activeAlerts.length }} active alerts</p>
+              </div>
+            </div>
+            <button class="btn-ghost-sm">View All</button>
+          </div>
+
+          <div class="alerts-list">
+            <div *ngFor="let alert of activeAlerts"
+                 class="alert-item"
+                 [class.alert-critical]="alert.level === 'critical'"
+                 [class.alert-warning]="alert.level === 'warning'"
+                 [class.alert-info]="alert.level === 'info'">
+              <div class="alert-body">
+                <div class="alert-left">
+                  <span class="status-pill"
+                        [class.status-error]="alert.level === 'critical'"
+                        [class.status-warning]="alert.level === 'warning'"
+                        [class.status-info]="alert.level === 'info'">
+                    <span class="pulse-dot"
+                          [class.dot-error]="alert.level === 'critical'"
+                          [class.dot-warning]="alert.level === 'warning'"
+                          [class.dot-success]="alert.level === 'info'">
+                    </span>
+                    {{ alert.level === 'critical' ? 'Critical' : alert.level === 'warning' ? 'Warning' : 'Info' }}
+                  </span>
+                  <div>
+                    <h4 class="alert-title">{{ alert.title }}</h4>
+                    <p class="alert-msg">{{ alert.message }}</p>
+                  </div>
+                </div>
+                <button class="close-btn" (click)="dismissAlert(alert.id)">
+                  <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="alert-actions">
+                <span class="alert-time">{{ alert.timestamp }}</span>
+                <button class="btn-action"
+                        [class.btn-error]="alert.level === 'critical'"
+                        [class.btn-warning]="alert.level === 'warning'">
+                  {{ alert.action }}
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="activeAlerts.length === 0" class="no-alerts">
+              <svg class="icon-lg color-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <p>All clear — no active alerts</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- API Response Chart -->
+        <div class="card-elevated">
+          <div class="section-header">
+            <div>
+              <h3 class="section-title">API Response Time</h3>
+              <p class="section-sub">Real-time performance metrics</p>
+            </div>
+            <div class="time-filters">
+              <button *ngFor="let f of ['1H', '24H', '7D']"
+                      (click)="setTimeFilter(f)"
+                      [class.filter-active]="activeTimeFilter === f"
+                      class="filter-btn">{{ f }}</button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <div class="chart-y-labels">
+              <span>200ms</span><span>150ms</span><span>100ms</span><span>50ms</span>
+            </div>
+            <svg class="chart-svg" viewBox="0 0 800 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%"   stop-color="#2563EB" stop-opacity="0.35"/>
+                  <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <line x1="0" y1="50"  x2="800" y2="50"  stroke="#334155" stroke-opacity="0.2" stroke-width="1"/>
+              <line x1="0" y1="100" x2="800" y2="100" stroke="#334155" stroke-opacity="0.2" stroke-width="1"/>
+              <line x1="0" y1="150" x2="800" y2="150" stroke="#334155" stroke-opacity="0.2" stroke-width="1"/>
+              <path d="M0 180 L100 160 L200 140 L300 155 L400 130 L500 145 L600 125 L700 135 L800 120 L800 200 L0 200 Z"
+                    fill="url(#chartGrad)"/>
+              <path d="M0 180 L100 160 L200 140 L300 155 L400 130 L500 145 L600 125 L700 135 L800 120"
+                    fill="none" stroke="#2563EB" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+              <circle *ngFor="let pt of [
+                {cx:0,cy:180},{cx:100,cy:160},{cx:200,cy:140},{cx:300,cy:155},
+                {cx:400,cy:130},{cx:500,cy:145},{cx:600,cy:125},{cx:700,cy:135},{cx:800,cy:120}]"
+                [attr.cx]="pt.cx" [attr.cy]="pt.cy" r="4" fill="#2563EB"/>
+            </svg>
+          </div>
+          <div class="perf-stats">
+            <div *ngFor="let s of performanceStats" class="perf-stat">
+              <p class="perf-label">{{ s.label }}</p>
+              <p class="perf-value" [class.color-success]="s.success">{{ s.value }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Logs Viewer -->
+        <div *ngIf="showLogsViewer" class="card-elevated">
+          <div class="section-header">
+            <div class="section-header-left">
+              <div class="section-icon bg-primary-soft">
+                <svg class="icon-md color-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1
+                           1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="section-title">Live Logs</h3>
+                <p class="section-sub">Streaming — {{ filteredLogs.length }} entries</p>
+              </div>
+            </div>
+            <div class="log-header-actions">
+              <div class="log-filters">
+                <button *ngFor="let f of logFilters"
+                        (click)="setLogFilter(f)"
+                        [class.log-filter-active]="activeLogFilter === f"
+                        class="log-filter-btn"
+                        [class.log-filter-error]="f === 'ERROR'"
+                        [class.log-filter-warn]="f === 'WARN'">
+                  {{ f }}
+                </button>
+              </div>
+              <button class="btn-export" (click)="exportLogs()">
+                <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4
+                           4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Export
+              </button>
+            </div>
+          </div>
+          <div class="log-stream">
+            <div *ngFor="let log of filteredLogs" class="log-entry"
+                 [ngClass]="getLogLevelClass(log.level)">
+              <span class="log-time">{{ log.time }}</span>
+              <span class="log-badge" [ngClass]="'badge-' + log.level.toLowerCase()">
+                {{ log.level }}
+              </span>
+              <span class="log-service">{{ log.service }}</span>
+              <span class="log-msg">{{ log.message }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="right-col">
+
+        <!-- Emergency Controls -->
+        <div class="card-elevated">
+          <div class="section-header-inline">
+            <div class="section-icon bg-error-soft">
+              <svg class="icon-md color-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="section-title">Emergency Controls</h3>
+              <p class="section-sub-xs">Quick access to critical functions</p>
+            </div>
+          </div>
+          <div class="control-btns">
+            <button class="ctrl-btn ctrl-btn-error"     (click)="handleEmergency('kill-switch')">
+              <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+                         1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34
+                         16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              Kill Switch
+            </button>
+            <button class="ctrl-btn ctrl-btn-warning"   (click)="handleEmergency('restart')">
+              <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11
+                         11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Restart Services
+            </button>
+            <button class="ctrl-btn ctrl-btn-secondary" (click)="handleEmergency('maintenance')">
+              <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724
+                         0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724
+                         0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724
+                         0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724
+                         1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724
+                         1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724
+                         1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724
+                         1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608
+                         2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              Maintenance Mode
+            </button>
+            <button class="ctrl-btn ctrl-btn-ghost"     (click)="handleEmergency('clear-cache')">
+              <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0
+                         01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1
+                         1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              Clear Cache / CDN
+            </button>
+          </div>
+        </div>
+
+        <!-- Service Status -->
+        <div class="card-elevated">
+          <div class="section-header-inline">
+            <div class="section-icon bg-success-soft">
+              <svg class="icon-md color-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0
+                       0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="section-title">Microservice Status</h3>
+              <p class="section-sub-xs">{{ services.length }} services monitored</p>
+            </div>
+          </div>
+          <div class="services-list">
+            <div *ngFor="let svc of services" class="service-row">
+              <div class="service-left">
+                <span class="pulse-dot"
+                      [class.dot-success]="svc.status === 'success'"
+                      [class.dot-warning]="svc.status === 'warning'"
+                      [class.dot-error]="svc.status === 'error'">
+                </span>
+                <span class="service-name">{{ svc.name }}</span>
+              </div>
+              <div class="service-right">
+                <span class="service-latency">{{ svc.latency }}</span>
+                <span class="service-uptime"
+                      [class.color-success]="svc.status === 'success'"
+                      [class.color-warning]="svc.status === 'warning'"
+                      [class.color-error]="svc.status === 'error'">
+                  {{ svc.uptime }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <button class="btn-ghost-full">View Detailed Status</button>
+        </div>
+
+        <!-- Quick Access -->
+        <div class="card-elevated">
+          <h3 class="section-title mb-4">Quick Access</h3>
+          <div class="quick-grid">
+            <a *ngFor="let qa of quickAccess"
+               [routerLink]="qa.route"
+               class="quick-tile">
+              <svg *ngIf="qa.icon === 'monitor'" class="quick-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2
+                         2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+              <svg *ngIf="qa.icon === 'users'" class="quick-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112
+                         0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+              <svg *ngIf="qa.icon === 'shield'" class="quick-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112
+                         2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0
+                         003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03
+                         9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+              <svg *ngIf="qa.icon === 'chart-bar'" class="quick-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2
+                         2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2
+                         0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2
+                         2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              <p class="quick-label">{{ qa.label }}</p>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ══ FOOTER ──────────────────────────────────── -->
+  <footer class="dash-footer">
+    <div class="footer-inner">
+      <p class="footer-copy">© 2026 Control Panel. All Rights Reserved.</p>
+      <div class="footer-links">
+        <a routerLink="/docs"           class="footer-link">Documentation</a>
+        <a routerLink="/support"        class="footer-link">Support</a>
+        <a routerLink="/privacy-policy" class="footer-link">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+</div>

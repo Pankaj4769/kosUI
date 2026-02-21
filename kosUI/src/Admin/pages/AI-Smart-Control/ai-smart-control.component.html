@@ -1,0 +1,625 @@
+<div class="ai-wrapper">
+
+  <!-- ══ HEADER ══ -->
+  <header class="dash-header">
+    <div class="header-inner">
+
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="url(#lgAI)"/>
+          <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="lgAI" x1="0" y1="0" x2="40" y2="40">
+              <stop offset="0%"   stop-color="#7C3AED"/>
+              <stop offset="100%" stop-color="#2563EB"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1 class="logo-title">Control Panel</h1>
+          <p class="logo-subtitle">AI Smart Control</p>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a routerLink="/admin" class="nav-link">Dashboard</a>
+        <a routerLink="/admin/users"     class="nav-link">Users</a>
+        <a routerLink="/admin/subscriptions" class="nav-link">Subscriptions</a>
+        <a routerLink="/admin/security"  class="nav-link">Security</a>
+        <a routerLink="/admin/notifications" class="nav-link">Notifications</a>
+        <a routerLink="/admin/rbac"       class="nav-link">RBAC</a>
+        <a routerLink="/admin/products"   class="nav-link">Products</a>
+        <a routerLink="/admin/configuration" class="nav-link">Configuration</a>
+        <a routerLink="/admin/ai-control"        class="nav-link nav-active">AI Control</a>
+      </nav>
+
+      <div class="user-area">
+        <div class="live-badge">
+          <span class="pulse-dot dot-ai"></span>AI Live
+        </div>
+        <div class="profile-group">
+          <div class="avatar">SA</div>
+          <div>
+            <p class="profile-name">Super Admin</p>
+            <p class="profile-role">Administrator</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ══ MAIN ══ -->
+  <main class="dash-main">
+
+    <!-- Welcome -->
+    <div class="welcome-row">
+      <div>
+        <h2 class="welcome-title">AI Smart Control</h2>
+        <p class="welcome-sub">
+          Anomaly Detection · Churn Prediction · Revenue Forecast
+          · Auto-Scale · Risk Alerting — {{ today }}
+        </p>
+      </div>
+      <div class="ai-powered-badge">
+        <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+        Powered by KitchenOS AI
+      </div>
+    </div>
+
+    <!-- ── Stats Grid ── -->
+    <div class="ai-stats-grid">
+      <div *ngFor="let s of aiStats" class="ai-stat-card">
+        <div class="asc-left">
+          <p class="asc-label">{{ s.label }}</p>
+          <h3 class="asc-value">{{ s.value }}</h3>
+          <p class="asc-sub">{{ s.sub }}</p>
+        </div>
+        <div class="asc-icon" [style.background]="s.iconBg" [style.color]="s.iconColor">
+          <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1
+                     M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072
+                     0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4
+                     0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab Nav ── -->
+    <div class="tab-nav card-elevated">
+      <button *ngFor="let t of tabs"
+              class="tab-btn"
+              [class.tab-active]="activeTab === t.key"
+              (click)="setTab(t.key)">
+        {{ t.label }}
+        <span *ngIf="t.key === 'anomaly' && openAnomalies > 0"
+              class="tab-badge badge-red">{{ openAnomalies }}</span>
+        <span *ngIf="t.key === 'risk' && activeRisks > 0"
+              class="tab-badge badge-red">{{ activeRisks }}</span>
+        <span *ngIf="t.key === 'churn' && highChurnCount > 0"
+              class="tab-badge badge-orange">{{ highChurnCount }}</span>
+      </button>
+    </div>
+
+    <!-- ════════════════════════════════
+         TAB: AI OVERVIEW
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'overview'" class="tab-content">
+      <div class="overview-grid">
+
+        <!-- Model Health -->
+        <div class="card-elevated">
+          <h4 class="section-title mb-16">AI Model Health</h4>
+          <div class="model-list">
+            <div *ngFor="let m of modelHealth" class="model-row">
+              <div class="model-status-dot"
+                   [class.msd-healthy]="m.status === 'healthy'"
+                   [class.msd-warning]="m.status === 'warning'">
+              </div>
+              <div class="model-info">
+                <p class="model-name">{{ m.name }}</p>
+                <p class="model-meta">Last run: {{ m.lastRun }}</p>
+              </div>
+              <div class="model-acc-wrap">
+                <div class="acc-bar-bg">
+                  <div class="acc-bar-fill"
+                       [style.width.%]="m.accuracy"
+                       [style.background]="m.accuracy >= 90 ? '#16A34A' : '#D97706'">
+                  </div>
+                </div>
+                <span class="acc-val">{{ m.accuracy }}%</span>
+              </div>
+              <span class="model-status-badge"
+                    [ngClass]="getModelStatusClass(m.status)">
+                {{ m.status | titlecase }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Alerts -->
+        <div class="card-elevated">
+          <h4 class="section-title mb-16">Active Alerts Summary</h4>
+          <div class="quick-alerts">
+            <div *ngFor="let r of riskAlerts.slice(0,4)" class="qa-row"
+                 [class.qa-critical]="r.severity === 'critical'"
+                 [class.qa-high]="r.severity === 'high'"
+                 [class.qa-medium]="r.severity === 'medium'">
+              <div class="qa-sev-bar"
+                   [class.qsb-crit]="r.severity==='critical'"
+                   [class.qsb-high]="r.severity==='high'"
+                   [class.qsb-med]="r.severity==='medium'"
+                   [class.qsb-low]="r.severity==='low'">
+              </div>
+              <div class="qa-body">
+                <p class="qa-title">{{ r.title }}</p>
+                <p class="qa-meta">{{ r.category }} · {{ r.detectedAt }}</p>
+              </div>
+              <span class="sev-pill" [ngClass]="getSeverityClass(r.severity)">
+                {{ r.severity | titlecase }}
+              </span>
+            </div>
+          </div>
+          <button class="view-all-btn" (click)="setTab('risk')">
+            View all {{ riskAlerts.length }} alerts →
+          </button>
+        </div>
+
+        <!-- Churn snapshot -->
+        <div class="card-elevated">
+          <h4 class="section-title mb-16">Churn Risk Snapshot</h4>
+          <div class="churn-snapshot">
+            <div *ngFor="let c of churnPredictions.slice(0,4)" class="cs-row">
+              <div class="cs-avatar">
+                {{ c.tenantName[0] }}
+              </div>
+              <div class="cs-info">
+                <p class="cs-name">{{ c.tenantName }}</p>
+                <p class="cs-plan">{{ c.plan }}</p>
+              </div>
+              <div class="cs-bar-wrap">
+                <div class="cs-bar-bg">
+                  <div class="cs-bar-fill"
+                       [style.width.%]="c.churnProbability"
+                       [style.background]="getChurnBarColor(c.churnProbability)">
+                  </div>
+                </div>
+                <span class="cs-pct"
+                      [style.color]="getChurnBarColor(c.churnProbability)">
+                  {{ c.churnProbability }}%
+                </span>
+              </div>
+            </div>
+          </div>
+          <button class="view-all-btn" (click)="setTab('churn')">
+            View full churn report →
+          </button>
+        </div>
+
+        <!-- Revenue mini chart -->
+        <div class="card-elevated">
+          <h4 class="section-title mb-16">Revenue Trend</h4>
+          <div class="mini-forecast-bars">
+            <div *ngFor="let r of revenueForecast" class="mfb-col">
+              <div class="mfb-bar-wrap">
+                <div class="mfb-bar"
+                     [class.mfb-actual]="r.actual !== null"
+                     [class.mfb-predicted]="r.actual === null"
+                     [style.height.%]="getForecastBarH(r.actual ?? r.predicted)">
+                  <span class="mfb-tip" *ngIf="r.actual === null">Pred</span>
+                </div>
+              </div>
+              <span class="mfb-month">{{ r.month }}</span>
+            </div>
+          </div>
+          <div class="mini-forecast-legend">
+            <span class="mfl-item">
+              <span class="mfl-dot dot-actual"></span>Actual
+            </span>
+            <span class="mfl-item">
+              <span class="mfl-dot dot-pred"></span>Forecast
+            </span>
+          </div>
+          <button class="view-all-btn" (click)="setTab('revenue')">
+            Full revenue forecast →
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         TAB: ANOMALY DETECTION
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'anomaly'" class="tab-content">
+      <div class="card-elevated table-card">
+        <div class="table-top-row">
+          <h4 class="section-title">Auto Anomaly Detection</h4>
+          <div class="anom-summary">
+            <span class="anom-chip chip-open">
+              {{ openAnomalies }} open
+            </span>
+            <span class="anom-chip chip-resolved">
+              {{ resolvedAnomalyCount }} resolved
+            </span>
+          </div>
+        </div>
+
+        <div class="anomaly-list">
+          <div *ngFor="let a of anomalies"
+               class="anomaly-row"
+               [class.anom-critical]="a.severity === 'critical'"
+               [class.anom-high]="a.severity === 'high'"
+               [class.anom-resolved]="a.status === 'resolved'">
+
+            <!-- Severity bar -->
+            <div class="anom-sev-bar"
+                 [class.asb-crit]="a.severity === 'critical'"
+                 [class.asb-high]="a.severity === 'high'"
+                 [class.asb-med]="a.severity === 'medium'"
+                 [class.asb-low]="a.severity === 'low'">
+            </div>
+
+            <!-- Icon -->
+            <div class="anom-icon">
+              <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   [style.color]="a.severity === 'critical' ? '#DC2626'
+                                : a.severity === 'high'     ? '#EA580C'
+                                : a.severity === 'medium'   ? '#D97706'
+                                : '#64748B'">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+                         1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34
+                         16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            </div>
+
+            <!-- Body -->
+            <div class="anom-body">
+              <div class="anom-top">
+                <span class="anom-type">{{ a.type }}</span>
+                <span class="anom-tenant">{{ a.tenant }}</span>
+                <span class="anom-metric-badge">{{ a.metric }}</span>
+                <span class="anom-deviation"
+                      [class.dev-pos]="a.deviation.startsWith('+')"
+                      [class.dev-neg]="a.deviation.startsWith('-')">
+                  {{ a.deviation }}
+                </span>
+              </div>
+              <p class="anom-desc">{{ a.description }}</p>
+              <p class="anom-time">Detected {{ a.detectedAt }}</p>
+            </div>
+
+            <!-- Right -->
+            <div class="anom-right">
+              <span class="sev-pill" [ngClass]="getSeverityClass(a.severity)">
+                {{ a.severity | titlecase }}
+              </span>
+              <span class="anom-status-pill"
+                    [ngClass]="getAnomalyStatusClass(a.status)">
+                {{ a.status | titlecase }}
+              </span>
+              <button *ngIf="a.status !== 'resolved'"
+                      class="action-btn"
+                      (click)="acknowledgeAnomaly(a)">
+                {{ a.status === 'open' ? 'Acknowledge' : 'Resolve' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         TAB: CHURN PREDICTION
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'churn'" class="tab-content">
+      <div class="churn-layout">
+
+        <!-- Churn Cards -->
+        <div class="churn-cards">
+          <div *ngFor="let c of churnPredictions"
+               class="churn-card"
+               [class.cc-high]="c.riskLevel === 'high'"
+               [class.cc-med]="c.riskLevel === 'medium'"
+               [class.cc-low]="c.riskLevel === 'low'">
+
+            <div class="cc-header">
+              <div class="cc-avatar">{{ c.tenantName[0] }}</div>
+              <div class="cc-info">
+                <h4 class="cc-name">{{ c.tenantName }}</h4>
+                <span class="plan-badge" [ngClass]="getPlanClass(c.plan)">
+                  {{ c.plan }}
+                </span>
+              </div>
+              <span class="sev-pill" [ngClass]="getSeverityClass(c.riskLevel)">
+                {{ c.riskLevel | titlecase }} Risk
+              </span>
+            </div>
+
+            <!-- Churn probability bar -->
+            <div class="churn-prob-section">
+              <div class="cps-label-row">
+                <span class="cps-label">Churn Probability</span>
+                <span class="cps-val"
+                      [style.color]="getChurnBarColor(c.churnProbability)">
+                  {{ c.churnProbability }}%
+                </span>
+              </div>
+              <div class="churn-bar-bg">
+                <div class="churn-bar-fill"
+                     [style.width.%]="c.churnProbability"
+                     [style.background]="getChurnBarColor(c.churnProbability)">
+                </div>
+              </div>
+            </div>
+
+            <!-- Meta -->
+            <div class="cc-meta-row">
+              <span class="cc-meta-item">
+                <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Last active: {{ c.lastActive }}
+              </span>
+              <span class="cc-meta-item cc-meta-drop">
+                ↓ {{ c.usageDrop }}% usage drop
+              </span>
+            </div>
+
+            <!-- Trigger factors -->
+            <div class="cc-triggers">
+              <p class="cct-label">Trigger Factors</p>
+              <div class="cct-chips">
+                <span *ngFor="let f of c.triggerFactors"
+                      class="trigger-chip">{{ f }}</span>
+              </div>
+            </div>
+
+            <!-- Action -->
+            <div class="cc-actions">
+              <button class="action-btn action-btn-full">
+                📧 Send Re-engagement Email
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         TAB: REVENUE FORECAST
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'revenue'" class="tab-content">
+      <div class="revenue-layout">
+
+        <!-- Forecast Chart -->
+        <div class="card-elevated forecast-chart-card">
+          <div class="fc-header">
+            <h4 class="section-title">MRR Forecast — Sep 2025 to May 2026</h4>
+            <div class="fc-legend">
+              <span class="fcl-item">
+                <span class="fcl-dot dot-actual"></span>Actual
+              </span>
+              <span class="fcl-item">
+                <span class="fcl-dot dot-pred"></span>AI Forecast
+              </span>
+            </div>
+          </div>
+
+          <div class="forecast-bars">
+            <div *ngFor="let r of revenueForecast" class="fb-col">
+              <div class="fb-bar-wrap">
+                <div class="fb-val-tip">
+                  ₹{{ ((r.actual ?? r.predicted) / 100000).toFixed(1) }}L
+                </div>
+                <div class="fb-bar"
+                     [class.fb-actual]="r.actual !== null"
+                     [class.fb-predicted]="r.actual === null"
+                     [style.height.%]="getForecastBarH(r.actual ?? r.predicted)">
+                </div>
+              </div>
+              <span class="fb-month"
+                    [class.fb-month-pred]="r.actual === null">
+                {{ r.month }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Forecast Divider -->
+          <div class="forecast-divider">
+            <span class="fd-label">← Actual</span>
+            <span class="fd-marker">▲ Today</span>
+            <span class="fd-label">Forecast →</span>
+          </div>
+        </div>
+
+        <!-- Forecast Insights -->
+        <div class="forecast-insights">
+          <div *ngFor="let fi of forecastInsights" class="fi-card card-elevated">
+            <p class="fi-label">{{ fi.label }}</p>
+            <h3 class="fi-value" [style.color]="fi.color">{{ fi.value }}</h3>
+          </div>
+
+          <!-- AI Reasoning -->
+          <div class="card-elevated ai-reasoning">
+            <div class="air-hdr">
+              <svg class="icon-sm" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24" style="color:#7C3AED">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1
+                         M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072
+                         0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4
+                         0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+              <span class="air-title">AI Reasoning</span>
+            </div>
+            <ul class="air-list">
+              <li>Monthly growth rate of <strong>+3.8%</strong> maintained over 5 months</li>
+              <li><strong>Seasonal boost</strong> expected in March (Q1 restaurant openings)</li>
+              <li><strong>12 new Ultra plan</strong> upgrades projected by end of March</li>
+              <li>Churn-adjusted for <strong>23 at-risk tenants</strong> factored in</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         TAB: AUTO-SCALE
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'scale'" class="tab-content">
+      <div class="card-elevated">
+        <div class="section-hdr-row">
+          <h4 class="section-title">Auto-Scale Suggestions</h4>
+          <p class="section-sub-txt">
+            AI-analyzed infrastructure recommendations based on usage patterns
+          </p>
+        </div>
+        <div class="scale-list">
+          <div *ngFor="let s of scaleSuggestions" class="scale-card"
+               [class.sc-urgent]="s.urgency === 'high'"
+               [class.sc-applied]="s.autoApply">
+
+            <div class="sc-header">
+              <div class="sc-icon-wrap">
+                <svg class="icon-md" fill="none" stroke="currentColor"
+                     viewBox="0 0 24 24" style="color:#2563EB">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </div>
+              <div class="sc-title-group">
+                <h5 class="sc-resource">{{ s.resource }}</h5>
+                <span class="urg-pill" [ngClass]="getUrgencyClass(s.urgency)">
+                  {{ s.urgency | titlecase }} Urgency
+                </span>
+              </div>
+              <span *ngIf="s.autoApply" class="applied-badge">✓ Applied</span>
+            </div>
+
+            <!-- Before / After -->
+            <div class="sc-change">
+              <div class="sc-before">
+                <span class="scb-label">Current</span>
+                <span class="scb-val">{{ s.currentValue }}</span>
+              </div>
+              <div class="sc-arrow">
+                <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+              </div>
+              <div class="sc-after">
+                <span class="scb-label">Suggested</span>
+                <span class="scb-val sc-suggested">{{ s.suggestedValue }}</span>
+              </div>
+            </div>
+
+            <!-- Reason + Impact -->
+            <p class="sc-reason"><strong>Why:</strong> {{ s.reason }}</p>
+            <p class="sc-impact">
+              <svg class="icon-xs" fill="none" stroke="#16A34A" viewBox="0 0 24 24"
+                   style="display:inline;vertical-align:middle">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+              </svg>
+              <strong>Impact:</strong> {{ s.impact }}
+            </p>
+
+            <div class="sc-actions">
+              <button *ngIf="!s.autoApply"
+                      class="btn-primary btn-sm"
+                      (click)="applyScale(s)">
+                Apply Now
+              </button>
+              <button *ngIf="!s.autoApply" class="btn-ghost btn-sm">
+                Dismiss
+              </button>
+              <span *ngIf="s.autoApply" class="sc-applied-msg">
+                ✅ Scale applied automatically
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         TAB: RISK ALERTS
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'risk'" class="tab-content">
+      <div class="card-elevated">
+        <div class="section-hdr-row">
+          <h4 class="section-title">AI Risk Alerting</h4>
+          <div class="risk-summary-chips">
+            <span class="rsc-chip chip-active">
+              {{ activeRisks }} active
+            </span>
+            <span class="rsc-chip chip-monitor">
+              {{ monitoringRisks }} monitoring
+            </span>
+          </div>
+        </div>
+
+        <div class="risk-list">
+          <div *ngFor="let r of riskAlerts" class="risk-card"
+               [class.risk-critical]="r.severity === 'critical'"
+               [class.risk-high]="r.severity === 'high'"
+               [class.risk-resolved]="r.status === 'resolved'">
+
+            <div class="risk-sev-bar"
+                 [class.rsb-crit]="r.severity === 'critical'"
+                 [class.rsb-high]="r.severity === 'high'"
+                 [class.rsb-med]="r.severity === 'medium'"
+                 [class.rsb-low]="r.severity === 'low'">
+            </div>
+
+            <div class="risk-body">
+              <div class="risk-top">
+                <h5 class="risk-title">{{ r.title }}</h5>
+                <span class="risk-category-chip">{{ r.category }}</span>
+                <span class="sev-pill" [ngClass]="getSeverityClass(r.severity)">
+                  {{ r.severity | titlecase }}
+                </span>
+                <span class="risk-status-pill"
+                      [ngClass]="getRiskStatusClass(r.status)">
+                  {{ r.status | titlecase }}
+                </span>
+              </div>
+              <p class="risk-desc">{{ r.description }}</p>
+              <div class="risk-meta-row">
+                <span class="risk-meta-item" *ngIf="r.affectedTenants > 0">
+                  👥 {{ r.affectedTenants }} tenants affected
+                </span>
+                <span class="risk-meta-item">
+                  🕐 Detected {{ r.detectedAt }}
+                </span>
+              </div>
+            </div>
+
+            <div class="risk-actions">
+              <button *ngIf="r.status !== 'resolved'"
+                      class="action-btn"
+                      (click)="resolveAlert(r)">
+                {{ r.status === 'active' ? 'Acknowledge' : 'Resolve' }}
+              </button>
+              <span *ngIf="r.status === 'resolved'"
+                    class="resolved-txt">✓ Resolved</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>

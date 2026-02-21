@@ -16,6 +16,16 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { RestaurantSetupComponent } from './core/component/restaurant-setup/restaurant-setup.component';
 import { PendingApprovalComponent } from './core/component/pending-approval/pending-approval.component';
 import { SubscriptionComponent } from './core/component/subscription/subscription.component';
+import { AdminDashboardComponent } from '../Admin/pages/admin-dashboard/admin-dashboard.component';
+import { UserTenantManagementComponent } from '../Admin/pages/user-tenant-management/user-tenant-management.component';
+import { SubscriptionRevenueComponent } from '../Admin/pages/subscription-revenue/subscription-revenue.component';
+import { RbacEngineComponent } from '../Admin/pages/rbac-engine/rbac-engine.component';
+import { SecurityComplianceComponent } from '../Admin/pages/security-compliance/security-compliance.component';
+import { NotificationsComponent } from '../Admin/pages/notification/notifications.component';
+import { ProductFeatureComponent } from '../Admin/pages/product-feature/product-feature.component';
+import { AiSmartControlComponent } from '../Admin/pages/AI-Smart-Control/ai-smart-control.component';
+import { ConfigManagementComponent } from '../Admin/pages/configure-management/config-management.component';
+import { SignupComponent } from './core/component/sign-up/signup.component';
 
 export const routes: Routes = [
 
@@ -25,11 +35,23 @@ export const routes: Routes = [
     component: AppLayoutComponent,
     children: [
       { path: 'login', component: LoginComponent },
+      { path: 'signup', component: SignupComponent },
       { path: 'onboarding/subscription', component: SubscriptionComponent },
       { path: 'onboarding/pending',      component: PendingApprovalComponent },
       { path: 'onboarding/setup',        component: RestaurantSetupComponent },
       { path: '',                     redirectTo: 'login', pathMatch: 'full' },
 
+      { path: 'admin', component: AdminDashboardComponent},
+      { path: 'admin/users', component: UserTenantManagementComponent},
+      { path: 'admin/subscriptions', component: SubscriptionRevenueComponent},
+      { path: 'admin/rbac', component: RbacEngineComponent},
+      { path: 'admin/security', component: SecurityComplianceComponent},
+      { path: 'admin/notifications', component: NotificationsComponent},
+      { path: 'admin/products', component: ProductFeatureComponent},
+      { path: 'admin/configuration', component: ConfigManagementComponent},
+      { path: 'admin/ai-control', component: AiSmartControlComponent},
+
+      
       // ✅ DASHBOARD
       { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
 

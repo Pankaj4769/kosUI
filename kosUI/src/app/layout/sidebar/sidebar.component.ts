@@ -29,7 +29,30 @@ export class SidebarComponent implements OnInit {
   ) {}
 
   menuItems: SidebarMenu[] = [
-    { label: 'login', icon: 'dashboard', route: '/login' },
+    { label: 'login', icon: 'dashboard',
+      expanded: false,
+      children: [
+        { label: 'login', icon: 'dashboard', route: '/login' },
+        { label: 'onboarding/subscription', icon: 'dashboard', route: '/onboarding/subscription' },
+        { label: 'onboarding/pending', icon: 'dashboard', route: '/onboarding/pending' },
+        { label: 'onboarding/setup', icon: 'dashboard', route: '/onboarding/setup' },
+      ]
+    },
+    { label: 'Admin Dashboard', icon: 'dashboard',
+      expanded: false,
+      children: [
+        { label: 'Admin Dashboard', icon: 'dashboard',route: '/admin' },
+        { label: 'User & Tenant Management', icon: 'dashboard', route: '/admin/users' },
+        { label: 'Subscription Revenue', icon: 'dashboard', route: '/admin/subscriptions' },
+        { label: 'RBAC Engine', icon: 'dashboard', route: '/admin/rbac' },
+        { label: 'Product & Feature Management', icon: 'dashboard', route: '/admin/products' },
+        { label: 'Notifications', icon: 'dashboard', route: '/admin/notifications' },
+        { label: 'Security Compliance', icon: 'dashboard', route: '/admin/security' },
+        { label: 'Configuration & Management', icon: 'dashboard', route: '/admin/configuration' },
+        { label: 'AI Smart Control', icon: 'dashboard', route: '/admin/ai-control' },
+        // { label: 'System Monitoring', icon: 'dashboard', route: '/admin/system-monitoring' },
+      ]
+    },
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
     {
       label: 'Inventory',

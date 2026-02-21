@@ -1,0 +1,684 @@
+<div class="pf-wrapper">
+
+  <!-- ══ HEADER ══ -->
+  <header class="dash-header">
+    <div class="header-inner">
+
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="url(#lgPF)"/>
+          <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="lgPF" x1="0" y1="0" x2="40" y2="40">
+              <stop offset="0%"   stop-color="#2563EB"/>
+              <stop offset="100%" stop-color="#7C3AED"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1 class="logo-title">Control Panel</h1>
+          <p class="logo-subtitle">Product / Feature Control</p>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a routerLink="/admin" class="nav-link">Dashboard</a>
+        <a routerLink="/admin/users"     class="nav-link">Users</a>
+        <a routerLink="/admin/subscriptions" class="nav-link">Subscriptions</a>
+        <a routerLink="/admin/security"  class="nav-link">Security</a>
+        <a routerLink="/admin/notifications" class="nav-link">Notifications</a>
+        <a routerLink="/admin/rbac"       class="nav-link">RBAC</a>
+        <a routerLink="/admin/products"   class="nav-link nav-active">Products</a>
+        <a routerLink="/admin/configuration" class="nav-link">Configuration</a>
+        <a routerLink="/admin/ai-control"        class="nav-link">AI Control</a>
+      </nav>
+
+      <div class="user-area">
+        <div class="live-badge">
+          <span class="pulse-dot dot-success"></span>Live
+        </div>
+        <div class="profile-group">
+          <div class="avatar">SA</div>
+          <div>
+            <p class="profile-name">Super Admin</p>
+            <p class="profile-role">Administrator</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ══ MAIN ══ -->
+  <main class="dash-main">
+
+    <!-- Welcome -->
+    <div class="welcome-row">
+      <div>
+        <h2 class="welcome-title">Product / Feature Control</h2>
+        <p class="welcome-sub">
+          Products · Inventory · Pricing · Flags · Visibility · A/B · Rollout — {{ today }}
+        </p>
+      </div>
+      <button class="btn-primary" (click)="openAddProduct()">
+        + Add Product
+      </button>
+    </div>
+
+    <!-- ── Stats ── -->
+    <div class="stats-grid">
+      <div *ngFor="let s of stats" class="stat-card">
+        <div class="sc-left">
+          <p class="sc-label">{{ s.label }}</p>
+          <h3 class="sc-value">{{ s.value }}</h3>
+          <p class="sc-sub">{{ s.sub }}</p>
+        </div>
+        <div class="sc-icon"
+             [style.background]="s.iconBg"
+             [style.color]="s.iconColor">
+          <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab Nav ── -->
+    <div class="tab-nav card-elevated">
+      <button *ngFor="let t of tabs"
+              class="tab-btn"
+              [class.tab-active]="activeTab === t.key"
+              (click)="setTab(t.key)">
+        {{ t.label }}
+        <span *ngIf="t.key === 'inventory' && lowStockProducts.length > 0"
+              class="tab-badge badge-red">
+          {{ lowStockProducts.length }}
+        </span>
+      </button>
+    </div>
+
+    <!-- ════════════════════════════
+         TAB: PRODUCTS
+    ════════════════════════════ -->
+    <div *ngIf="activeTab === 'products'" class="tab-content">
+      <div class="products-grid">
+        <div *ngFor="let p of products"
+             class="product-card"
+             [class.product-inactive]="p.status === 'inactive'">
+
+          <!-- Card Header -->
+          <div class="pc-header">
+            <div class="pc-avatar">{{ p.imageInitial }}</div>
+            <div class="pc-meta">
+              <h4 class="pc-name">{{ p.name }}</h4>
+              <span class="pc-category">{{ p.category }}</span>
+            </div>
+            <span class="product-status-pill"
+                  [ngClass]="getStatusClass(p.status)">
+              {{ p.status | titlecase }}
+            </span>
+          </div>
+
+          <!-- Description -->
+          <p class="pc-desc">{{ p.description }}</p>
+
+          <!-- Price Row -->
+          <div class="pc-price-row">
+            <div class="pc-price">
+              <span class="price-symbol">₹</span>
+              <span class="price-val">{{ p.price | number }}</span>
+              <span class="price-period">/mo</span>
+            </div>
+            <span class="pricing-type-pill"
+                  [ngClass]="getPricingClass(p.pricingType)">
+              {{ p.pricingType | titlecase }}
+            </span>
+          </div>
+
+          <!-- Plans -->
+          <div class="pc-plans">
+            <span *ngFor="let pl of p.assignedPlans"
+                  class="plan-chip plan-{{ pl | lowercase }}">
+              {{ pl }}
+            </span>
+          </div>
+
+          <!-- Actions -->
+          <div class="pc-actions">
+            <button class="icon-text-btn"
+                    (click)="toggleProductStatus(p)">
+              {{ p.status === 'active' ? '⏸ Disable' : '▶ Enable' }}
+            </button>
+            <button class="icon-text-btn"
+                    (click)="openEditProduct(p)">
+              ✏️ Edit
+            </button>
+            <button class="icon-text-btn icon-text-btn-del"
+                    (click)="deleteProduct(p)">
+              🗑
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════
+         TAB: INVENTORY
+    ════════════════════════════ -->
+    <div *ngIf="activeTab === 'inventory'" class="tab-content">
+
+      <!-- Low Stock Alert -->
+      <div class="low-stock-alert" *ngIf="lowStockProducts.length > 0">
+        <svg class="icon-sm" fill="none" stroke="currentColor"
+             viewBox="0 0 24 24" style="color:#D97706;flex-shrink:0">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+                   1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34
+                   16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span>
+          <strong>{{ lowStockProducts.length }} products</strong>
+          are at or below low-stock threshold.
+        </span>
+      </div>
+
+      <div class="card-elevated table-card">
+        <div class="table-top-row">
+          <h4 class="section-title">Inventory Tracking</h4>
+          <span class="hist-count">{{ products.length }} products</span>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Current Stock</th>
+                <th>Low Threshold</th>
+                <th>Stock Level</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of products"
+                  [class.row-warning]="p.stock <= p.lowStockThreshold">
+                <td>
+                  <div class="td-product">
+                    <div class="td-avatar">{{ p.imageInitial }}</div>
+                    <strong>{{ p.name }}</strong>
+                  </div>
+                </td>
+                <td>{{ p.category }}</td>
+                <td class="td-mono">{{ p.stock }}</td>
+                <td class="td-mono">{{ p.lowStockThreshold }}</td>
+                <td style="min-width:160px">
+                  <div class="stock-bar-wrap">
+                    <div class="stock-bar-bg">
+                      <div class="stock-bar-fill"
+                           [style.width.%]="Math.min(100, (p.stock / (p.lowStockThreshold * 5)) * 100)"
+                           [style.background]="p.stock <= p.lowStockThreshold ? '#DC2626'
+                                             : p.stock <= p.lowStockThreshold * 2 ? '#D97706'
+                                             : '#16A34A'">
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span *ngIf="p.stock <= p.lowStockThreshold"
+                        class="stock-badge stock-low">Low Stock</span>
+                  <span *ngIf="p.stock > p.lowStockThreshold"
+                        class="stock-badge stock-ok">OK</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════
+         TAB: DYNAMIC PRICING
+    ════════════════════════════ -->
+    <div *ngIf="activeTab === 'pricing'" class="tab-content">
+      <div class="pricing-layout">
+
+        <div class="card-elevated table-card">
+          <div class="table-top-row">
+            <h4 class="section-title">Dynamic Pricing Rules</h4>
+            <span class="hist-count">{{ pricingRules.length }} rules</span>
+          </div>
+          <div class="pricing-list">
+            <div *ngFor="let r of pricingRules"
+                 class="pricing-card"
+                 [class.pricing-inactive]="!r.active">
+
+              <div class="prr-header">
+                <div class="prr-name-group">
+                  <h5 class="prr-product">{{ r.product }}</h5>
+                  <span class="prr-rule-tag">{{ r.rule }}</span>
+                </div>
+                <div class="prr-toggle">
+                  <div class="toggle-wrap" (click)="r.active = !r.active">
+                    <div class="toggle-track" [class.toggle-on]="r.active">
+                      <div class="toggle-thumb"></div>
+                    </div>
+                    <span class="toggle-lbl">{{ r.active ? 'ON' : 'OFF' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="prr-prices">
+                <div class="prr-price-box">
+                  <span class="ppb-label">Base Price</span>
+                  <span class="ppb-val">₹{{ r.basePrice }}</span>
+                </div>
+                <div class="prr-arrow">→</div>
+                <div class="prr-price-box prr-current">
+                  <span class="ppb-label">Current Price</span>
+                  <span class="ppb-val ppb-current">₹{{ r.currentPrice }}</span>
+                </div>
+                <div class="prr-arrow">→</div>
+                <div class="prr-price-box">
+                  <span class="ppb-label">Max Price</span>
+                  <span class="ppb-val">₹{{ r.maxPrice }}</span>
+                </div>
+              </div>
+
+              <div class="prr-trigger">
+                <svg class="icon-xs" fill="none" stroke="#D97706"
+                     viewBox="0 0 24 24" style="flex-shrink:0">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span>{{ r.trigger }}</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing Info -->
+        <div class="card-elevated pricing-info-card">
+          <h4 class="section-title mb-16">Pricing Types</h4>
+          <div class="ptype-list">
+            <div class="ptype-row">
+              <span class="pricing-type-pill pt-fixed">Fixed</span>
+              <p class="ptype-desc">Static price — never changes regardless of usage</p>
+            </div>
+            <div class="ptype-row">
+              <span class="pricing-type-pill pt-dynamic">Dynamic</span>
+              <p class="ptype-desc">Price adjusts automatically based on real-time usage metrics</p>
+            </div>
+            <div class="ptype-row">
+              <span class="pricing-type-pill pt-tiered">Tiered</span>
+              <p class="ptype-desc">Different price bands based on volume or plan tier</p>
+            </div>
+          </div>
+          <div class="pricing-note">
+            <p>💡 Dynamic rules run every <strong>15 minutes</strong>. Changes apply on next billing cycle unless marked as immediate.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════════════════
+         TAB: FEATURE FLAGS
+    ════════════════════════════ -->
+    <div *ngIf="activeTab === 'flags'" class="tab-content">
+
+      <!-- Category filter -->
+      <div class="flag-filter-row card-elevated">
+        <button *ngFor="let c of flagCategories"
+                class="filter-chip"
+                [class.filter-chip-active]="activeFlagCategory === c"
+                (click)="activeFlagCategory = c">
+          {{ c }}
+        </button>
+      </div>
+
+      <div class="flags-grid">
+        <div *ngFor="let f of filteredFlags" class="flag-card"
+             [class.flag-enabled]="f.enabled"
+             [class.flag-disabled]="!f.enabled">
+
+          <div class="fc-top">
+            <div class="fc-key-group">
+              <span class="fc-key">{{ f.key }}</span>
+              <span class="fc-category-chip">{{ f.category }}</span>
+            </div>
+            <div class="toggle-wrap" (click)="toggleFlag(f)">
+              <div class="toggle-track" [class.toggle-on]="f.enabled">
+                <div class="toggle-thumb"></div>
+              </div>
+              <span class="toggle-lbl">{{ f.enabled ? 'ON' : 'OFF' }}</span>
+            </div>
+          </div>
+
+          <h4 class="fc-name">{{ f.name }}</h4>
+          <p class="fc-desc">{{ f.description }}</p>
+
+          <div class="fc-plans">
+            <span *ngFor="let pl of allPlans"
+                  class="fc-plan-chip"
+                  [class.fc-plan-on]="f.visibleToPlans.includes(pl)"
+                  (click)="toggleFlagPlan(f, pl)">
+              {{ pl }}
+            </span>
+          </div>
+
+          <div class="fc-footer">
+            <span class="fc-overrides">
+              {{ f.tenantOverrides }} tenant override(s)
+            </span>
+            <span class="fc-modified">Modified {{ f.lastModified }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════
+         TAB: VISIBILITY
+    ════════════════════════════ -->
+    <div *ngIf="activeTab === 'visibility'" class="tab-content">
+      <div class="card-elevated table-card">
+        <div class="table-top-row">
+          <h4 class="section-title">Feature Visibility per Plan</h4>
+          <p class="table-sub">Click cells to toggle visibility per plan</p>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Category</th>
+                <th *ngFor="let pl of allPlans" class="th-plan">
+                  <span class="plan-header-chip plan-{{ pl | lowercase }}">{{ pl }}</span>
+                </th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let f of featureFlags">
+                <td>
+                  <div>
+                    <strong>{{ f.name }}</strong>
+                    <p class="td-key">{{ f.key }}</p>
+                  </div>
+                </td>
+                <td>
+                  <span class="fc-category-chip">{{ f.category }}</span>
+                </td>
+                <td *ngFor="let pl of allPlans" class="td-center">
+                  <button class="visibility-cell"
+                          [class.vis-on]="f.visibleToPlans.includes(pl)"
+                          [class.vis-off]="!f.visibleToPlans.includes(pl)"
+                          (click)="toggleFlagPlan(f, pl)">
+                    {{ f.visibleToPlans.includes(pl) ? '✓' : '✕' }}
+                  </button>
+                </td>
+                <td>
+                  <span class="flag-status-pill"
+                        [class.fsp-on]="f.enabled"
+                        [class.fsp-off]="!f.enabled">
+                    {{ f.enabled ? 'Enabled' : 'Disabled' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════
+         TAB: A/B TESTING
+    ════════════════════════════ -->
+    <div *ngIf="activeTab === 'abtesting'" class="tab-content">
+      <div class="ab-grid">
+        <div *ngFor="let t of abTests" class="ab-card">
+
+          <div class="ab-header">
+            <div class="ab-title-group">
+              <h4 class="ab-name">{{ t.name }}</h4>
+              <span class="ab-status-pill" [ngClass]="getABStatusClass(t.status)">
+                {{ t.status | titlecase }}
+              </span>
+            </div>
+            <div *ngIf="getWinnerVariant(t)" class="ab-winner-badge">
+              🏆 Variant {{ getWinnerVariant(t) }} Won
+            </div>
+          </div>
+
+          <p class="ab-hypothesis">💡 {{ t.hypothesis }}</p>
+
+          <!-- Variants -->
+          <div class="ab-variants">
+            <div class="ab-variant"
+                 [class.ab-variant-winner]="t.status === 'completed' && getWinnerVariant(t) === 'A'">
+              <div class="abv-header">
+                <span class="abv-label abv-a">A</span>
+                <span class="abv-name">{{ t.variantA }}</span>
+                <span class="abv-split">{{ 100 - t.splitPct }}%</span>
+              </div>
+              <div class="abv-bar-bg">
+                <div class="abv-bar-fill abv-fill-a"
+                     [style.width.%]="t.conversionA">
+                </div>
+              </div>
+              <span class="abv-conversion">{{ t.conversionA }}% conversion</span>
+            </div>
+
+            <div class="ab-vs">VS</div>
+
+            <div class="ab-variant"
+                 [class.ab-variant-winner]="t.status === 'completed' && getWinnerVariant(t) === 'B'">
+              <div class="abv-header">
+                <span class="abv-label abv-b">B</span>
+                <span class="abv-name">{{ t.variantB }}</span>
+                <span class="abv-split">{{ t.splitPct }}%</span>
+              </div>
+              <div class="abv-bar-bg">
+                <div class="abv-bar-fill abv-fill-b"
+                     [style.width.%]="t.conversionB">
+                </div>
+              </div>
+              <span class="abv-conversion">{{ t.conversionB }}% conversion</span>
+            </div>
+          </div>
+
+          <div class="ab-footer">
+            <span class="ab-meta">👥 {{ t.participantCount | number }} participants</span>
+            <span class="ab-meta">📅 Started {{ t.startedAt }}</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════
+         TAB: GRADUAL ROLLOUT
+    ════════════════════════════ -->
+    <div *ngIf="activeTab === 'rollout'" class="tab-content">
+      <div class="rollout-list">
+        <div *ngFor="let r of rollouts" class="rollout-card">
+
+          <div class="ro-header">
+            <div class="ro-info">
+              <h4 class="ro-name">{{ r.featureName }}</h4>
+              <p class="ro-desc">{{ r.description }}</p>
+            </div>
+            <div class="ro-badges">
+              <span class="rollout-stage-pill"
+                    [ngClass]="getRolloutStageClass(r.stage)">
+                {{ r.stage | titlecase }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Rollout Bar -->
+          <div class="ro-bar-section">
+            <div class="ro-bar-labels">
+              <span class="ro-bar-label">Rollout Progress</span>
+              <span class="ro-bar-pct"
+                    [style.color]="getRolloutBarColor(r.rolloutPct)">
+                {{ r.rolloutPct }}%
+              </span>
+            </div>
+            <div class="ro-bar-bg">
+              <div class="ro-bar-fill"
+                   [style.width.%]="r.rolloutPct"
+                   [style.background]="getRolloutBarColor(r.rolloutPct)">
+              </div>
+            </div>
+            <!-- Step markers -->
+            <div class="ro-markers">
+              <span *ngFor="let m of [0,10,25,50,75,100]"
+                    class="ro-marker"
+                    [style.left.%]="m">
+                {{ m }}%
+              </span>
+            </div>
+          </div>
+
+          <!-- Plans & Tenants -->
+          <div class="ro-meta-row">
+            <div class="ro-plans">
+              <span *ngFor="let pl of r.targetPlans"
+                    class="plan-chip plan-{{ pl | lowercase }}">
+                {{ pl }}
+              </span>
+            </div>
+            <span class="ro-tenants">
+              👥 {{ r.affectedTenants }} tenants affected
+            </span>
+          </div>
+
+          <!-- Dates -->
+          <div class="ro-dates">
+            <span>📅 Started: {{ r.startedAt }}</span>
+            <span *ngIf="r.completedAt">✅ Completed: {{ r.completedAt }}</span>
+          </div>
+
+          <!-- Actions -->
+          <div class="ro-actions" *ngIf="r.stage !== 'full'">
+            <button class="btn-ghost btn-sm"
+                    (click)="pauseRollout(r)">
+              {{ r.stage === 'paused' ? '▶ Resume' : '⏸ Pause' }}
+            </button>
+            <button class="btn-primary btn-sm"
+                    *ngIf="r.stage !== 'paused'"
+                    (click)="increaseRollout(r, 10)">
+              +10% Rollout
+            </button>
+            <button class="btn-primary btn-sm"
+                    *ngIf="r.stage !== 'paused'"
+                    (click)="increaseRollout(r, 100 - r.rolloutPct)">
+              → Full Rollout (100%)
+            </button>
+          </div>
+          <div *ngIf="r.stage === 'full'" class="ro-complete-msg">
+            ✅ Feature fully rolled out to all {{ r.affectedTenants }} tenants
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══ PRODUCT MODAL ══ -->
+  <div class="modal-overlay" *ngIf="showProductModal"
+       (click)="showProductModal = false"></div>
+  <div class="modal-box" *ngIf="showProductModal">
+    <div class="modal-hdr">
+      <h3>{{ editingProduct ? 'Edit Product' : 'Add New Product' }}</h3>
+      <button class="close-btn" (click)="showProductModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Product Name</label>
+          <input type="text" class="form-input"
+                 [(ngModel)]="productForm.name"
+                 placeholder="e.g. POS Terminal"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" [(ngModel)]="productForm.category">
+            <option *ngFor="let c of categories">{{ c }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" rows="2"
+                  [(ngModel)]="productForm.description"
+                  placeholder="Short product description…"></textarea>
+      </div>
+
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label class="form-label">Price (₹/mo)</label>
+          <input type="number" class="form-input"
+                 [(ngModel)]="productForm.price" min="0"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pricing Type</label>
+          <select class="form-select" [(ngModel)]="productForm.pricingType">
+            <option value="fixed">Fixed</option>
+            <option value="dynamic">Dynamic</option>
+            <option value="tiered">Tiered</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="productForm.status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Stock</label>
+          <input type="number" class="form-input"
+                 [(ngModel)]="productForm.stock" min="0"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Low Stock Threshold</label>
+          <input type="number" class="form-input"
+                 [(ngModel)]="productForm.lowStockThreshold" min="0"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Assign to Plans</label>
+        <div class="plan-selector">
+          <button *ngFor="let pl of allPlans"
+                  class="plan-select-btn"
+                  [class.plan-select-on]="isPlanSelected(pl)"
+                  (click)="togglePlan(pl)">
+            {{ pl }}
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="showProductModal = false">Cancel</button>
+      <button class="btn-primary"
+              [disabled]="!productForm.name"
+              (click)="saveProduct()">
+        {{ editingProduct ? 'Save Changes' : 'Add Product' }}
+      </button>
+    </div>
+  </div>
+
+</div>
