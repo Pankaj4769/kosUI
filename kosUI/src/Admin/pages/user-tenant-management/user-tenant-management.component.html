@@ -1,0 +1,711 @@
+<div class="utm-wrapper">
+
+  <!-- ══ HEADER ══════════════════════════════════════ -->
+  <header class="dash-header">
+    <div class="header-inner">
+
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="url(#logoGrad2)"/>
+          <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="logoGrad2" x1="0" y1="0" x2="40" y2="40">
+              <stop offset="0%" stop-color="#2563EB"/>
+              <stop offset="100%" stop-color="#1D4ED8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1 class="logo-title">Control Panel</h1>
+          <p class="logo-subtitle">User & Tenant Management</p>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a *ngFor="let item of navItems"
+           [routerLink]="item.route"
+           [class.nav-active]="item.active"
+           class="nav-link">{{ item.label }}</a>
+      </nav>
+
+      <div class="user-area">
+        <div class="live-badge">
+          <span class="pulse-dot dot-success"></span>
+          Live
+        </div>
+        <div class="profile-group">
+          <div class="avatar">SA</div>
+          <div class="profile-info">
+            <p class="profile-name">Super Admin</p>
+            <p class="profile-role">Administrator</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ══ MAIN ════════════════════════════════════════ -->
+  <main class="dash-main">
+
+    <!-- Welcome -->
+    <div class="welcome-section">
+      <h2 class="welcome-title">User & Tenant Management</h2>
+      <p class="welcome-sub">Manage all tenants, roles, subscriptions and security — {{ today }}</p>
+    </div>
+
+    <!-- ── SUMMARY STATS (6 cards) ──────────────── -->
+    <div class="stats-grid-6">
+      <div *ngFor="let s of summaryStats" class="stat-card">
+        <div class="stat-top">
+          <div>
+            <p class="stat-label">{{ s.label }}</p>
+            <h3 class="stat-value">{{ s.value }}</h3>
+            <p class="stat-sub">{{ s.sub }}</p>
+          </div>
+          <div class="stat-icon" [style.background]="s.iconBg">
+
+            <!-- Tenants -->
+            <svg *ngIf="s.iconKey === 'tenants'" class="icon-md" [style.color]="s.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9
+                       0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1
+                       1 0 011 1v5m-4 0h4"/>
+            </svg>
+            <!-- Active -->
+            <svg *ngIf="s.iconKey === 'active'" class="icon-md" [style.color]="s.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <!-- Suspended -->
+            <svg *ngIf="s.iconKey === 'suspended'" class="icon-md" [style.color]="s.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0
+                       015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+            <!-- Flags -->
+            <svg *ngIf="s.iconKey === 'flags'" class="icon-md" [style.color]="s.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+                       1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77
+                       1.333.192 3 1.732 3z"/>
+            </svg>
+            <!-- Premium -->
+            <svg *ngIf="s.iconKey === 'premium'" class="icon-md" [style.color]="s.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M5 3l14 9-14 9V3z"/>
+            </svg>
+            <!-- Trial -->
+            <svg *ngIf="s.iconKey === 'trial'" class="icon-md" [style.color]="s.iconColor"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SUSPICIOUS ACTIVITY BANNER ─────────────── -->
+    <div *ngIf="suspiciousTenants.length > 0" class="suspicious-banner">
+      <div class="susp-left">
+        <svg class="icon-sm color-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+                   1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34
+                   16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span>
+          <strong>{{ suspiciousTenants.length }} tenants</strong> flagged for suspicious activity —
+          <span *ngFor="let t of suspiciousTenants; let last = last">
+            {{ t.restaurantName }}<span *ngIf="!last">, </span>
+          </span>
+        </span>
+      </div>
+      <button class="btn-ghost-sm" (click)="setStatusFilter('suspicious')">Review</button>
+    </div>
+
+    <!-- ── SEARCH & FILTERS ────────────────────────── -->
+    <div class="filters-bar card-elevated">
+      <!-- Search -->
+      <div class="search-box">
+        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input
+          type="text"
+          placeholder="Search by name, email or restaurant…"
+          [(ngModel)]="searchQuery"
+          class="search-input"/>
+        <button *ngIf="searchQuery" class="clear-btn" (click)="searchQuery = ''">✕</button>
+      </div>
+
+      <!-- Status Filters -->
+      <div class="filter-chips">
+        <span class="filter-label">Status:</span>
+        <button *ngFor="let f of statusFilters"
+                class="chip-btn"
+                [class.chip-active]="activeStatusFilter === f"
+                (click)="setStatusFilter(f)">
+          {{ f === 'ALL' ? 'All' : f | titlecase }}
+        </button>
+      </div>
+
+      <!-- Plan Filters -->
+      <div class="filter-chips">
+        <span class="filter-label">Plan:</span>
+        <button *ngFor="let p of planFilters"
+                class="chip-btn"
+                [class.chip-active]="activePlanFilter === p"
+                (click)="setPlanFilter(p)">
+          {{ p }}
+        </button>
+      </div>
+
+      <div class="filter-result">
+        <span class="result-count">{{ filteredTenants.length }} tenants</span>
+      </div>
+    </div>
+
+    <!-- ── TENANT TABLE ────────────────────────────── -->
+    <div class="card-elevated table-card">
+      <div class="table-header-row">
+        <h3 class="section-title">All Tenants</h3>
+        <button class="btn-export">
+          <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Export
+        </button>
+      </div>
+
+      <div class="table-scroll">
+        <table class="utm-table">
+          <thead>
+            <tr>
+              <th>Tenant / Restaurant</th>
+              <th>Plan</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Activity</th>
+              <th>Last Active</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of filteredTenants"
+                [class.row-suspicious]="t.activityLevel === 'suspicious'"
+                [class.row-deleted]="t.status === 'deleted'">
+
+              <!-- Tenant Info -->
+              <td class="td-tenant">
+                <div class="tenant-cell">
+                  <div class="tenant-avatar">{{ t.name[0] }}</div>
+                  <div>
+                    <p class="tenant-name">{{ t.name }}</p>
+                    <p class="tenant-email">{{ t.email }}</p>
+                    <p class="tenant-restaurant">{{ t.restaurantName }}</p>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Plan -->
+              <td>
+                <span class="plan-badge" [ngClass]="getPlanClass(t.plan)">{{ t.plan }}</span>
+              </td>
+
+              <!-- Role -->
+              <td>
+                <span class="role-tag">{{ t.role }}</span>
+              </td>
+
+              <!-- Status -->
+              <td>
+                <span class="status-pill" [ngClass]="getStatusClass(t.status)">
+                  <span class="pulse-dot"
+                        [class.dot-success]="t.status === 'active'"
+                        [class.dot-warning]="t.status === 'suspended' || t.status === 'pending'"
+                        [class.dot-error]="t.status === 'deleted'">
+                  </span>
+                  {{ t.status | titlecase }}
+                </span>
+              </td>
+
+              <!-- Activity -->
+              <td>
+                <div class="activity-cell">
+                  <span class="pulse-dot" [ngClass]="getActivityClass(t.activityLevel)"></span>
+                  <span [class.color-warning]="t.activityLevel === 'suspicious'"
+                        [class.color-error]="t.activityLevel === 'blocked'">
+                    {{ t.activityLevel | titlecase }}
+                  </span>
+                  <span *ngIf="t.suspiciousFlags > 0" class="flag-badge">
+                    ⚑ {{ t.suspiciousFlags }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Last Active -->
+              <td class="td-date">{{ t.lastActive }}</td>
+
+              <!-- Actions -->
+              <td class="td-actions">
+                <!-- View Details -->
+                <button class="action-icon-btn btn-view" title="View Details"
+                        (click)="openDetails(t)">
+                  <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0
+                             8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542
+                             7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </button>
+                <!-- Change Role -->
+                <button class="action-icon-btn btn-role" title="Change Role"
+                        (click)="openRoleModal(t)">
+                  <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724
+                             1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724
+                             1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724
+                             1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724
+                             1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724
+                             1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724
+                             1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724
+                             1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608
+                             2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </button>
+                <!-- Suspend/Unsuspend -->
+                <button class="action-icon-btn"
+                        [class.btn-suspend]="t.status !== 'suspended'"
+                        [class.btn-activate]="t.status === 'suspended'"
+                        [title]="t.status === 'suspended' ? 'Unsuspend' : 'Suspend'"
+                        (click)="openSuspendModal(t)">
+                  <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9
+                             9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                  </svg>
+                </button>
+                <!-- Force Logout -->
+                <button class="action-icon-btn btn-logout" title="Force Logout"
+                        (click)="forceLogout(t)">
+                  <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0
+                             01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                  </svg>
+                </button>
+                <!-- Reset Password -->
+                <button class="action-icon-btn btn-reset" title="Reset Password"
+                        (click)="openResetModal(t)">
+                  <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11
+                             17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6
+                             6 0 1121 9z"/>
+                  </svg>
+                </button>
+                <!-- Impersonate -->
+                <button class="action-icon-btn btn-impersonate" title="Login as Tenant"
+                        (click)="openImpersonateModal(t)">
+                  <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7
+                             7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+
+            <!-- Empty State -->
+            <tr *ngIf="filteredTenants.length === 0">
+              <td colspan="7" class="empty-state">
+                <div class="empty-inner">
+                  <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M17 20h5v-2a4 4 0 00-5-3.87M9 20H4v-2a4 4 0
+                             015-3.87m6 0a4 4 0 10-6 0m6 0H9"/>
+                  </svg>
+                  <p>No tenants match your filters</p>
+                  <button class="btn-ghost-sm" (click)="searchQuery=''; setStatusFilter('ALL'); setPlanFilter('ALL')">
+                    Clear Filters
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── MULTI-TENANT ISOLATION PANEL ───────────── -->
+    <div class="card-elevated isolation-card">
+      <div class="section-header">
+        <div class="section-header-left">
+          <div class="section-icon bg-primary-soft">
+            <svg class="icon-md color-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955
+                       11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824
+                       10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="section-title">Multi-Tenant Isolation Monitoring</h3>
+            <p class="section-sub">Real-time isolation health across all tenants</p>
+          </div>
+        </div>
+      </div>
+      <div class="isolation-grid">
+        <div *ngFor="let item of multiTenantIsolation"
+             class="isolation-item" [ngClass]="getIsolationClass(item.status)">
+          <div class="isol-left">
+            <svg *ngIf="item.status === 'pass'" class="icon-sm color-success"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <svg *ngIf="item.status === 'warning'" class="icon-sm color-warning"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732
+                       4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div>
+              <p class="isol-label">{{ item.label }}</p>
+              <p class="isol-detail">{{ item.detail }}</p>
+            </div>
+          </div>
+          <span class="isol-badge"
+                [class.badge-pass]="item.status === 'pass'"
+                [class.badge-warn]="item.status === 'warning'">
+            {{ item.status === 'pass' ? 'PASS' : 'WARN' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </main><!-- end main -->
+
+
+  <!-- ══ DETAIL SIDE PANEL ══════════════════════════ -->
+  <div class="detail-overlay" *ngIf="showDetailsPanel" (click)="closeDetails()"></div>
+  <aside class="detail-panel" *ngIf="showDetailsPanel && selectedTenant">
+
+    <!-- Panel Header -->
+    <div class="panel-hdr">
+      <div class="panel-tenant-info">
+        <div class="panel-avatar">{{ selectedTenant.name[0] }}</div>
+        <div>
+          <h3 class="panel-name">{{ selectedTenant.name }}</h3>
+          <p class="panel-restaurant">{{ selectedTenant.restaurantName }}</p>
+          <span class="plan-badge" [ngClass]="getPlanClass(selectedTenant.plan)">
+            {{ selectedTenant.plan }}
+          </span>
+        </div>
+      </div>
+      <button class="close-panel-btn" (click)="closeDetails()">✕</button>
+    </div>
+
+    <!-- Panel Tabs -->
+    <div class="panel-tabs">
+      <button *ngFor="let tab of ['overview','subscription','activity','analytics']"
+              class="panel-tab"
+              [class.panel-tab-active]="activeTab === tab"
+              (click)="setDetailTab(tab)">
+        {{ tab | titlecase }}
+      </button>
+    </div>
+
+    <!-- ── Tab: Overview ────────────────────────── -->
+    <div *ngIf="activeTab === 'overview'" class="panel-body">
+
+      <!-- Contact -->
+      <div class="panel-section">
+        <h4 class="ps-title">Contact Details</h4>
+        <div class="info-rows">
+          <div class="info-row"><span>Email</span><strong>{{ selectedTenant.email }}</strong></div>
+          <div class="info-row"><span>Phone</span><strong>{{ selectedTenant.phone }}</strong></div>
+          <div class="info-row"><span>Joined</span><strong>{{ selectedTenant.joinDate }}</strong></div>
+          <div class="info-row"><span>Status</span>
+            <span class="status-pill" [ngClass]="getStatusClass(selectedTenant.status)">
+              {{ selectedTenant.status | titlecase }}
+            </span>
+          </div>
+          <div class="info-row"><span>Role</span>
+            <span class="role-tag">{{ selectedTenant.role }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="panel-section">
+        <h4 class="ps-title">Quick Actions</h4>
+        <div class="quick-action-grid">
+          <button class="qa-btn qa-role"   (click)="closeDetails(); openRoleModal(selectedTenant!)">
+            Change Role
+          </button>
+          <button class="qa-btn qa-suspend" (click)="closeDetails(); openSuspendModal(selectedTenant!)">
+            {{ selectedTenant.status === 'suspended' ? 'Unsuspend' : 'Suspend' }}
+          </button>
+          <button class="qa-btn qa-logout" (click)="forceLogout(selectedTenant!)">
+            Force Logout
+          </button>
+          <button class="qa-btn qa-reset"  (click)="closeDetails(); openResetModal(selectedTenant!)">
+            Reset Password
+          </button>
+          <button class="qa-btn qa-impersonate" (click)="closeDetails(); openImpersonateModal(selectedTenant!)">
+            Login as Tenant
+          </button>
+          <button class="qa-btn qa-delete"
+                  (click)="closeDetails(); deleteUser(selectedTenant!)">
+            Delete User
+          </button>
+        </div>
+      </div>
+
+      <!-- Suspicious Flags -->
+      <div *ngIf="selectedTenant.suspiciousFlags > 0" class="panel-section warn-section">
+        <h4 class="ps-title color-warning">⚑ Suspicious Activity Detected</h4>
+        <p class="warn-text">
+          {{ selectedTenant.suspiciousFlags }} suspicious events flagged on this account.
+          Activity level: <strong>{{ selectedTenant.activityLevel | titlecase }}</strong>
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Tab: Subscription ─────────────────────── -->
+    <div *ngIf="activeTab === 'subscription'" class="panel-body">
+      <div class="panel-section">
+        <h4 class="ps-title">Subscription Plan</h4>
+        <div class="sub-plan-card" [ngClass]="getPlanClass(selectedTenant.subscription.plan)">
+          <div class="sub-plan-header">
+            <span class="sub-plan-name">{{ selectedTenant.subscription.plan }}</span>
+            <span class="sub-plan-status"
+                  [class.sub-active]="selectedTenant.subscription.status === 'active'"
+                  [class.sub-trial]="selectedTenant.subscription.status === 'trial'"
+                  [class.sub-expired]="selectedTenant.subscription.status === 'expired'">
+              {{ selectedTenant.subscription.status | titlecase }}
+            </span>
+          </div>
+          <p class="sub-amount">{{ selectedTenant.subscription.amount }}</p>
+          <p class="sub-cycle">{{ selectedTenant.subscription.billingCycle }} Billing</p>
+        </div>
+        <div class="info-rows mt-8">
+          <div class="info-row"><span>Start Date</span><strong>{{ selectedTenant.subscription.startDate }}</strong></div>
+          <div class="info-row"><span>Next Renewal</span><strong>{{ selectedTenant.subscription.nextRenewal }}</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab: Activity History ──────────────────── -->
+    <div *ngIf="activeTab === 'activity'" class="panel-body">
+      <div class="panel-section">
+        <h4 class="ps-title">Activity History</h4>
+        <div class="activity-log-list">
+          <div *ngFor="let log of selectedTenant.activityHistory"
+               class="log-entry" [ngClass]="getLogClass(log.status)">
+            <div class="log-left">
+              <span class="log-time">{{ log.timestamp }}</span>
+              <span class="log-action">{{ log.action }}</span>
+            </div>
+            <div class="log-right">
+              <span class="log-ip">{{ log.ip }}</span>
+              <span class="log-device">{{ log.device }}</span>
+              <span class="log-status-pill"
+                    [class.lsp-success]="log.status === 'success'"
+                    [class.lsp-fail]="log.status === 'failed'"
+                    [class.lsp-block]="log.status === 'blocked'">
+                {{ log.status | titlecase }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab: Usage Analytics ───────────────────── -->
+    <div *ngIf="activeTab === 'analytics'" class="panel-body">
+      <div class="panel-section">
+        <h4 class="ps-title">Usage Analytics</h4>
+        <div class="analytics-grid">
+          <div class="anl-card">
+            <p class="anl-label">Orders / Month</p>
+            <p class="anl-value">{{ selectedTenant.usageStats.ordersThisMonth | number }}</p>
+          </div>
+          <div class="anl-card">
+            <p class="anl-label">Total Revenue</p>
+            <p class="anl-value">{{ selectedTenant.usageStats.totalRevenue }}</p>
+          </div>
+          <div class="anl-card">
+            <p class="anl-label">API Calls Today</p>
+            <p class="anl-value">{{ selectedTenant.usageStats.apiCallsToday | number }}</p>
+          </div>
+          <div class="anl-card">
+            <p class="anl-label">Logins (30d)</p>
+            <p class="anl-value">{{ selectedTenant.usageStats.loginCount30d }}</p>
+          </div>
+        </div>
+
+        <!-- Storage -->
+        <div class="usage-bar-row">
+          <div class="usage-bar-label">
+            <span>Storage</span>
+            <span>{{ selectedTenant.usageStats.storageUsedMB }} / {{ selectedTenant.usageStats.storageMaxMB }} MB</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill"
+                 [style.width.%]="storagePercent(selectedTenant.usageStats)"
+                 [style.background]="storagePercent(selectedTenant.usageStats) > 80 ? '#EF4444' : '#2563EB'">
+            </div>
+          </div>
+          <span class="usage-pct">{{ storagePercent(selectedTenant.usageStats) }}%</span>
+        </div>
+
+        <!-- Staff -->
+        <div class="usage-bar-row">
+          <div class="usage-bar-label">
+            <span>Staff Seats</span>
+            <span>{{ selectedTenant.usageStats.activeStaff }} / {{ selectedTenant.usageStats.maxStaff }}</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill"
+                 [style.width.%]="staffPercent(selectedTenant.usageStats)"
+                 [style.background]="staffPercent(selectedTenant.usageStats) > 90 ? '#EF4444' : '#16A34A'">
+            </div>
+          </div>
+          <span class="usage-pct">{{ staffPercent(selectedTenant.usageStats) }}%</span>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+
+  <!-- ══ MODALS ══════════════════════════════════════ -->
+
+  <!-- Modal Overlay -->
+  <div class="modal-overlay" *ngIf="showRoleModal || showResetModal || showImpersonateModal || showSuspendModal"
+       (click)="closeModals()">
+  </div>
+
+  <!-- Change Role Modal -->
+  <div class="modal-box" *ngIf="showRoleModal && selectedTenant">
+    <div class="modal-hdr">
+      <h3>Change Role</h3>
+      <button class="close-panel-btn" (click)="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">
+        Changing role for <strong>{{ selectedTenant.name }}</strong>
+        ({{ selectedTenant.restaurantName }})
+      </p>
+      <div class="form-group">
+        <label class="form-label">Select New Role</label>
+        <select class="form-select" [(ngModel)]="newRole">
+          <option *ngFor="let r of roleOptions" [value]="r">{{ r }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeModals()">Cancel</button>
+      <button class="btn-primary" (click)="confirmRoleChange()">Confirm</button>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal -->
+  <div class="modal-box" *ngIf="showResetModal && selectedTenant">
+    <div class="modal-hdr">
+      <h3>Reset Password</h3>
+      <button class="close-panel-btn" (click)="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">
+        A password reset link will be sent to:<br/>
+        <strong>{{ selectedTenant.email }}</strong>
+      </p>
+      <div class="warn-box">
+        This will immediately invalidate their current password.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeModals()">Cancel</button>
+      <button class="btn-warning" (click)="confirmPasswordReset()">Send Reset Link</button>
+    </div>
+  </div>
+
+  <!-- Impersonation Modal -->
+  <div class="modal-box" *ngIf="showImpersonateModal && selectedTenant">
+    <div class="modal-hdr">
+      <h3>Login as Tenant</h3>
+      <button class="close-panel-btn" (click)="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">
+        You are about to impersonate <strong>{{ selectedTenant.name }}</strong>
+        and access their account. This action is logged.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Reason for Impersonation *</label>
+        <textarea class="form-textarea"
+                  [(ngModel)]="impersonateReason"
+                  rows="3"
+                  placeholder="e.g. Debugging payment issue reported by tenant…">
+        </textarea>
+      </div>
+      <div class="warn-box warn-box-red">
+        This session will be fully audited and logged.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeModals()">Cancel</button>
+      <button class="btn-danger"
+              [disabled]="!impersonateReason.trim()"
+              (click)="confirmImpersonate()">
+        Proceed as Tenant
+      </button>
+    </div>
+  </div>
+
+  <!-- Suspend/Unsuspend Modal -->
+  <div class="modal-box" *ngIf="showSuspendModal && selectedTenant">
+    <div class="modal-hdr">
+      <h3>{{ selectedTenant.status === 'suspended' ? 'Unsuspend' : 'Suspend' }} User</h3>
+      <button class="close-panel-btn" (click)="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">
+        {{ selectedTenant.status === 'suspended'
+          ? 'Restore access for'
+          : 'Suspend and block access for' }}
+        <strong>{{ selectedTenant.name }}</strong>?
+      </p>
+      <div class="form-group">
+        <label class="form-label">Reason</label>
+        <input class="form-input" [(ngModel)]="suspendReason"
+               placeholder="Reason for this action…"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeModals()">Cancel</button>
+      <button class="btn-warning" (click)="confirmSuspend()">
+        {{ selectedTenant.status === 'suspended' ? 'Unsuspend' : 'Suspend' }}
+      </button>
+    </div>
+  </div>
+
+</div><!-- end utm-wrapper -->

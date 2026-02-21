@@ -1,0 +1,230 @@
+<div class="signup-wrapper">
+
+  <!-- ══ Animated Background Orbs ══ -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <!-- ══ Left Brand Panel ══ -->
+  <div class="signup-brand">
+    <div class="brand-content">
+
+      <div class="brand-logo">
+        <span class="material-icons">restaurant</span>
+      </div>
+      <h1 class="brand-title">KOS</h1>
+      <p class="brand-subtitle">Kitchen Operations System</p>
+
+      <div class="brand-features">
+        <div class="feature-item">
+          <span class="material-icons">check_circle</span>
+          <span>Real-time order &amp; kitchen display</span>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons">check_circle</span>
+          <span>Multi-outlet POS &amp; billing</span>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons">check_circle</span>
+          <span>Role-based access control</span>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons">check_circle</span>
+          <span>Inventory &amp; recipe management</span>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons">check_circle</span>
+          <span>Zoho &amp; Google SSO integration</span>
+        </div>
+      </div>
+
+      <!-- Dev quick-fill -->
+      <button class="quick-fill-btn" (click)="quickFill()">
+        <span class="material-icons" style="font-size:14px">flash_on</span>
+        Quick Fill (dev)
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ══ Right Form Panel ══ -->
+  <div class="signup-form-panel">
+    <div class="signup-card glass-card">
+
+      <!-- ── Header ── -->
+      <div class="signup-header">
+        <h2>Create your account</h2>
+        <p>Join KOS — set up your kitchen in minutes</p>
+      </div>
+
+      <!-- ── Step Progress ── -->
+      <div class="step-progress">
+        <div class="step-track">
+          <div class="step-fill" [style.width.%]="(currentStep / totalSteps) * 100"></div>
+        </div>
+        <div class="step-labels">
+          <span [class.active]="currentStep >= 1" [class.done]="currentStep > 1">
+            <span class="material-icons">person</span> Profile
+          </span>
+          <span [class.active]="currentStep >= 2">
+            <span class="material-icons">lock</span> Security
+          </span>
+        </div>
+      </div>
+
+      <!-- ── Error / Success Banner ── -->
+      <div class="error-banner" *ngIf="errorMessage" role="alert">
+        <span class="material-icons">error_outline</span>
+        {{ errorMessage }}
+      </div>
+      <div class="success-banner" *ngIf="successMessage" role="status">
+        <span class="material-icons">check_circle</span>
+        {{ successMessage }}
+      </div>
+
+      <!-- ══════════ STEP 1 : Profile ══════════ -->
+      <div class="step-panel" *ngIf="currentStep === 1">
+
+        <!-- Restaurant / Business Name -->
+        <div class="form-group">
+          <label class="float-label">
+            <span class="material-icons input-icon">storefront</span>
+            <input type="text" [(ngModel)]="form.restaurantName" name="restaurantName"
+                   placeholder=" " autocomplete="organization" required />
+            <span class="label-text">Restaurant / Business Name</span>
+          </label>
+        </div>
+
+        <!-- Full Name -->
+        <div class="form-group">
+          <label class="float-label">
+            <span class="material-icons input-icon">person</span>
+            <input type="text" [(ngModel)]="form.fullName" name="fullName"
+                   placeholder=" " autocomplete="name" required />
+            <span class="label-text">Full Name</span>
+          </label>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="float-label">
+            <span class="material-icons input-icon">email</span>
+            <input type="email" [(ngModel)]="form.email" name="email"
+                   placeholder=" " autocomplete="email" required />
+            <span class="label-text">Work Email</span>
+          </label>
+        </div>
+
+        <!-- Mobile -->
+        <div class="form-group">
+          <label class="float-label">
+            <span class="material-icons input-icon">smartphone</span>
+            <input type="tel" [(ngModel)]="form.mobile" name="mobile"
+                   placeholder=" " maxlength="10" autocomplete="tel" required />
+            <span class="label-text">Mobile Number</span>
+          </label>
+        </div>
+
+        <button class="btn-next" (click)="nextStep()">
+          Continue <span class="material-icons">arrow_forward</span>
+        </button>
+
+        <p class="login-redirect">
+          Already have an account? <a routerLink="/login">Sign in</a>
+        </p>
+      </div>
+
+      <!-- ══════════ STEP 2 : Security ══════════ -->
+      <div class="step-panel" *ngIf="currentStep === 2">
+
+        <!-- Username -->
+        <div class="form-group">
+          <label class="float-label">
+            <span class="material-icons input-icon">manage_accounts</span>
+            <input type="text" [(ngModel)]="form.username" name="username"
+                   placeholder=" " autocomplete="username" required />
+            <span class="label-text">Username</span>
+          </label>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="float-label">
+            <span class="material-icons input-icon">lock</span>
+            <input [type]="showPassword ? 'text' : 'password'"
+                   [(ngModel)]="form.password" name="password"
+                   placeholder=" " autocomplete="new-password"
+                   (ngModelChange)="onPasswordChange()" required />
+            <span class="label-text">Password</span>
+            <span class="material-icons toggle-eye" (click)="togglePassword()">
+              {{ showPassword ? 'visibility_off' : 'visibility' }}
+            </span>
+          </label>
+          <!-- Strength Meter -->
+          <div class="strength-meter" *ngIf="form.password">
+            <div class="strength-bars">
+              <div class="bar" [class.active]="passwordStrength >= 1"
+                   [attr.data-level]="passwordStrength"></div>
+              <div class="bar" [class.active]="passwordStrength >= 2"
+                   [attr.data-level]="passwordStrength"></div>
+              <div class="bar" [class.active]="passwordStrength >= 3"
+                   [attr.data-level]="passwordStrength"></div>
+              <div class="bar" [class.active]="passwordStrength >= 4"
+                   [attr.data-level]="passwordStrength"></div>
+            </div>
+            <span class="strength-label strength-{{ passwordStrength }}">
+              {{ passwordStrengthLabel }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label class="float-label">
+            <span class="material-icons input-icon">lock_clock</span>
+            <input [type]="showConfirmPassword ? 'text' : 'password'"
+                   [(ngModel)]="form.confirmPassword" name="confirmPassword"
+                   placeholder=" " autocomplete="new-password" required />
+            <span class="label-text">Confirm Password</span>
+            <span class="material-icons toggle-eye" (click)="toggleConfirmPassword()">
+              {{ showConfirmPassword ? 'visibility_off' : 'visibility' }}
+            </span>
+          </label>
+          <span class="match-hint error"
+                *ngIf="form.confirmPassword && form.password !== form.confirmPassword">
+            <span class="material-icons" style="font-size:14px">close</span>
+            Passwords do not match
+          </span>
+          <span class="match-hint success"
+                *ngIf="form.confirmPassword && form.password === form.confirmPassword">
+            <span class="material-icons" style="font-size:14px">check</span>
+            Passwords match
+          </span>
+        </div>
+
+        <!-- Terms -->
+        <div class="terms-row">
+          <input type="checkbox" id="acceptTerms"
+                 [(ngModel)]="form.acceptTerms" name="acceptTerms" />
+          <label for="acceptTerms">
+            I agree to the
+            <a href="/terms" target="_blank">Terms of Service</a> and
+            <a href="/privacy" target="_blank">Privacy Policy</a>
+          </label>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn-back" (click)="prevStep()">
+            <span class="material-icons">arrow_back</span> Back
+          </button>
+          <button class="btn-submit" (click)="onSubmit()" [disabled]="isLoading">
+            <span class="material-icons spin" *ngIf="isLoading">autorenew</span>
+            <span>{{ isLoading ? 'Creating account...' : 'Create Account' }}</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
