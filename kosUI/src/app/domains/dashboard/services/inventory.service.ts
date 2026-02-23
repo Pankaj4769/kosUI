@@ -8,7 +8,7 @@ import { MessageResponse } from '../models/message.model';
 })
 export class InventoryService {
 
-  baseUrl='http://localhost:8080/api'
+  baseUrl='http://localhost:8080'
 
     private items: Item[] = [];
 
