@@ -1,54 +1,282 @@
 <header class="header">
 
-  <!-- LEFT SECTION -->
-  <div class="left">
+  <!-- ══════════════════════════════
+       LEFT — Page Title + Restaurant
+  ══════════════════════════════ -->
+  <div class="header-left">
 
-    <!-- <button class="menu-btn" (click)="toggleSidebar()">
-      <span class="material-icons">menu</span>
-    </button> -->
-
-    <div class="page-title">
-      Kitchen Order System
+    <div class="page-context">
+      <span class="material-icons page-icon">{{ pageIcon }}</span>
+      <span class="page-title">{{ pageTitle }}</span>
     </div>
 
-  </div>
+    <!-- Restaurant switcher — manager + multi-branch only -->
+    <div class="restaurant-switcher" *ngIf="isManager && restaurants.length > 1">
 
-  <!-- CENTER SECTION (SEARCH) -->
-  <div class="center">
-    <div class="search-box">
-      <span class="material-icons">search</span>
-      <input type="text" placeholder="Search menu, orders, inventory..." />
-    </div>
-  </div>
+      <button
+        class="restaurant-btn"
+        [class.open]="showRestaurantMenu"
+        (click)="toggleRestaurantMenu(); $event.stopPropagation()"
+        aria-haspopup="listbox"
+        [attr.aria-expanded]="showRestaurantMenu">
+        <span class="material-icons">store</span>
+        <span class="restaurant-name">
+          {{ activeRestaurant?.name ?? 'Select Restaurant' }}
+        </span>
+        <span class="restaurant-branch" *ngIf="activeRestaurant?.branch">
+          · {{ activeRestaurant!.branch }}
+        </span>
+        <span class="material-icons chevron" [class.rotated]="showRestaurantMenu">
+          expand_more
+        </span>
+      </button>
 
-  <!-- RIGHT SECTION -->
-  <div class="right">
+      <div
+        class="dropdown restaurant-dropdown"
+        *ngIf="showRestaurantMenu"
+        role="listbox"
+        aria-label="Select restaurant">
 
-    <!-- Notifications -->
-    <button class="icon-btn">
-      <span class="material-icons">notifications</span>
-      <span class="badge">3</span>
-    </button>
+        <div class="dropdown-header">Switch Restaurant</div>
 
-    <!-- Theme Toggle (future) -->
-    <button class="icon-btn">
-      <span class="material-icons">dark_mode</span>
-    </button>
+        <div
+          *ngFor="let r of restaurants"
+          class="dropdown-item restaurant-item"
+          [class.active]="r.id === activeRestaurant?.id"
+          role="option"
+          [attr.aria-selected]="r.id === activeRestaurant?.id"
+          (click)="switchRestaurant(r); $event.stopPropagation()">
+          <ng-container *ngIf="r.logo; else logoInitial">
+            <div class="restaurant-logo">
+              <img [src]="r.logo" [alt]="r.name" />
+            </div>
+          </ng-container>
+          <ng-template #logoInitial>
+            <div class="restaurant-logo-initial">{{ r.name.charAt(0) }}</div>
+          </ng-template>
+          <div class="restaurant-info">
+            <span class="r-name">{{ r.name }}</span>
+            <span class="r-branch">{{ r.branch }}</span>
+          </div>
+          <span class="material-icons check-icon" *ngIf="r.id === activeRestaurant?.id">
+            check_circle
+          </span>
+        </div>
 
-    <!-- User Profile -->
-    <div class="user" (click)="toggleUserMenu()">
-      <div class="avatar">A</div>
-      <span class="username">{{ userName }}</span>
-      <span class="material-icons arrow">expand_more</span>
-
-      <!-- Dropdown -->
-      <div class="user-menu" *ngIf="showUserMenu">
-        <div class="menu-item">Profile</div>
-        <div class="menu-item">Settings</div>
-        <div class="menu-item logout" (click)="logout()">Logout</div>
       </div>
     </div>
 
   </div>
 
+  <!-- ══════════════════════════════
+       CENTER — Search | Cashier Context | Spacer
+  ══════════════════════════════ -->
+
+  <!-- CASE 1: Global Search — non-cashier pages -->
+  <div class="header-center" *ngIf="!hideSearch && !isCashierPage">
+    <div class="search-box" [class.focused]="searchFocused">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search orders, menu, inventory..."
+        [value]="searchQuery"
+        (input)="onSearchInput($event)"
+        (focus)="searchFocused = true"
+        (blur)="searchFocused = false"
+        aria-label="Global search"
+        autocomplete="off" />
+      <button
+        class="search-clear"
+        *ngIf="searchQuery"
+        (click)="clearSearch()"
+        aria-label="Clear search"
+        type="button">
+        <span class="material-icons">close</span>
+      </button>
+      <kbd class="search-kbd" *ngIf="!searchFocused && !searchQuery">⌘K</kbd>
+    </div>
+  </div>
+
+  <!-- CASE 2: Cashier Context Bar -->
+  <div class="header-center cashier-context" *ngIf="isCashierPage && cashierContext">
+
+    <!-- Table chip — only when table is selected -->
+    <ng-container *ngIf="cashierContext.tableName">
+      <div class="ctx-chip ctx-table">
+        <span class="material-icons">table_restaurant</span>
+        <span class="ctx-label">{{ cashierContext.tableName }}</span>
+      </div>
+      <span class="ctx-divider">|</span>
+    </ng-container>
+
+    <!-- Order Type chip — always visible on cashier page -->
+    <div class="ctx-chip ctx-type">
+      <span class="material-icons">{{ getOrderTypeIcon(cashierContext.orderType) }}</span>
+      <span class="ctx-label">{{ cashierContext.orderType }}</span>
+    </div>
+
+    <!-- Order Number chip — only when table is selected -->
+    <ng-container *ngIf="cashierContext.orderNumber">
+      <span class="ctx-divider">|</span>
+      <div class="ctx-chip ctx-order">
+        <span class="material-icons">receipt</span>
+        <span class="ctx-label">{{ cashierContext.orderNumber }}</span>
+      </div>
+    </ng-container>
+
+  </div>
+
+  <!-- CASE 3: Spacer — search hidden AND not cashier page -->
+  <div class="header-spacer" *ngIf="hideSearch && !isCashierPage"></div>
+
+  <!-- ══════════════════════════════
+       RIGHT — Actions + User
+  ══════════════════════════════ -->
+  <div class="header-right">
+
+    <!-- Dark mode -->
+    <button
+      class="icon-btn"
+      type="button"
+      (click)="toggleDarkMode()"
+      [title]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+      [attr.aria-label]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+      [attr.aria-pressed]="isDarkMode">
+      <span class="material-icons">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</span>
+    </button>
+
+    <!-- Notifications -->
+    <div class="notif-section">
+      <button
+        class="icon-btn notif-btn"
+        type="button"
+        [class.has-notif]="notificationCount > 0"
+        (click)="toggleNotifications(); $event.stopPropagation()"
+        aria-label="Notifications"
+        [attr.aria-expanded]="showNotifications">
+        <span class="material-icons">notifications</span>
+        <span class="badge" *ngIf="notificationCount > 0" aria-live="polite">
+          {{ notificationCount > 9 ? '9+' : notificationCount }}
+        </span>
+      </button>
+
+      <div class="dropdown notif-dropdown" *ngIf="showNotifications">
+        <div class="dropdown-header">
+          <span>Notifications</span>
+          <button
+            class="mark-read-btn"
+            type="button"
+            *ngIf="notificationCount > 0"
+            (click)="markAllRead()">
+            Mark all read
+          </button>
+        </div>
+        <div class="notif-list" *ngIf="notifications.length > 0; else noNotif">
+          <div
+            *ngFor="let n of notifications"
+            class="notif-item"
+            [class.unread]="!n.read">
+            <div class="notif-dot" *ngIf="!n.read"></div>
+            <div class="notif-content">
+              <p class="notif-message">{{ n.message }}</p>
+              <span class="notif-time">{{ n.time }}</span>
+            </div>
+            <button
+              class="notif-dismiss"
+              type="button"
+              (click)="dismissNotification(n.id)"
+              aria-label="Dismiss notification">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        </div>
+        <ng-template #noNotif>
+          <div class="notif-empty">
+            <span class="material-icons">notifications_none</span>
+            <p>You're all caught up!</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Role badge -->
+    <div
+      class="role-badge"
+      [ngClass]="'role-' + userRole.toLowerCase()"
+      [title]="'Role: ' + userRole">
+      {{ userRole }}
+    </div>
+
+    <!-- User section -->
+    <div class="user-section" (click)="toggleUserMenu(); $event.stopPropagation()">
+      <div
+        class="user-trigger"
+        [class.open]="showUserMenu"
+        role="button"
+        tabindex="0"
+        [attr.aria-expanded]="showUserMenu"
+        aria-haspopup="menu"
+        (keydown.enter)="toggleUserMenu()"
+        (keydown.space)="toggleUserMenu()">
+
+        <ng-container *ngIf="userAvatar; else initialAvatar">
+          <img class="avatar avatar-img" [src]="userAvatar" [alt]="userName" />
+        </ng-container>
+        <ng-template #initialAvatar>
+          <div class="avatar">{{ userInitial }}</div>
+        </ng-template>
+
+        <div class="user-info">
+          <span class="user-name">{{ userName }}</span>
+          <span class="user-role">{{ userRole | lowercase }}</span>
+        </div>
+
+        <span class="material-icons chevron" [class.rotated]="showUserMenu">
+          expand_more
+        </span>
+      </div>
+
+      <div class="dropdown user-dropdown" *ngIf="showUserMenu" role="menu">
+
+        <div class="dropdown-user-header">
+          <ng-container *ngIf="userAvatar; else headerInitial">
+            <img class="avatar avatar-lg avatar-img" [src]="userAvatar" [alt]="userName" />
+          </ng-container>
+          <ng-template #headerInitial>
+            <div class="avatar avatar-lg">{{ userInitial }}</div>
+          </ng-template>
+          <div>
+            <p class="duh-name">{{ userName }}</p>
+            <p class="duh-role">{{ userRole | lowercase }}</p>
+          </div>
+        </div>
+
+        <div class="dropdown-divider"></div>
+
+        <button class="dropdown-item" type="button" role="menuitem"
+          (click)="navigateTo('/profile')">
+          <span class="material-icons">person</span>My Profile
+        </button>
+
+        <button class="dropdown-item" type="button" role="menuitem"
+          *ngIf="isManager" (click)="navigateTo('/settings')">
+          <span class="material-icons">settings</span>Settings
+        </button>
+
+        <button class="dropdown-item" type="button" role="menuitem"
+          *ngIf="isAdmin" (click)="navigateTo('/reports')">
+          <span class="material-icons">bar_chart</span>Reports
+        </button>
+
+        <div class="dropdown-divider"></div>
+
+        <button class="dropdown-item item-danger" type="button"
+          role="menuitem" (click)="logout()">
+          <span class="material-icons">logout</span>Sign Out
+        </button>
+
+      </div>
+    </div>
+
+  </div>
 </header>

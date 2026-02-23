@@ -1,16 +1,19 @@
-<div class="layout">
+<div class="app-shell" [class.auth-mode]="isAuthPage">
 
-  <app-sidebar></app-sidebar>
+  <!-- SIDEBAR — left column, full height -->
+  <app-sidebar
+    *ngIf="!isAuthPage"
+    [class.collapsed]="layout.isSidebarCollapsed">
+  </app-sidebar>
 
-  <div
-    class="content"
-    [class.collapsed]="layout.isCollapsed()">
+  <!-- RIGHT COLUMN — header stacked above main -->
+  <div class="content-column">
 
-    <app-header></app-header>
+    <app-header *ngIf="!isAuthPage"></app-header>
 
-    <div class="page">
+    <main class="main-content">
       <router-outlet></router-outlet>
-    </div>
+    </main>
 
   </div>
 

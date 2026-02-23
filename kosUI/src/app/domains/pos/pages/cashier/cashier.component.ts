@@ -33,6 +33,7 @@ import { CartPanelComponent } from '../../components/cart-panel/cart-panel.compo
 import { TableService } from '../../services/table.service';
 import { HoldService } from '../../services/hold.service';
 import { CartService } from '../../services/cart.service';
+import { CashierContextService } from '../../services/cashier-context.service';
 
 // Models
 import { CartItem } from '../../models/cart-item.model';
@@ -109,7 +110,7 @@ export class CashierComponent implements OnInit, OnDestroy {
   // Notifications
   notifications: { id: number; message: string; type: 'success' | 'error' | 'info' }[] = [];
   notificationCount = 0;
-
+  
   private subscriptions = new Subscription();
 
   /* ================= CONSTRUCTOR ================= */
@@ -121,7 +122,8 @@ export class CashierComponent implements OnInit, OnDestroy {
     private holdService: HoldService,
     private cartService: CartService,
     private cdr: ChangeDetectorRef,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cashierCtx:    CashierContextService
   ) {
     this.initializeSession();
     this.listenToRoute();
@@ -137,6 +139,7 @@ export class CashierComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+    this.cashierCtx.clear(); // ✅ ADD — hides bar when leaving cashier
     this.saveState();
   }
 
@@ -195,6 +198,7 @@ export class CashierComponent implements OnInit, OnDestroy {
   private initializeSession(): void {
     this.sessionId = `SES-${Date.now()}`;
     this.orderNumber = this.generateOrderNumber();
+    this.pushContext(); // Push initial context to header
   }
 
   private generateOrderNumber(): string {
@@ -339,6 +343,7 @@ export class CashierComponent implements OnInit, OnDestroy {
       this.showNotification('Error loading table', 'error');
     } finally {
       this.loading = false;
+      this.pushContext(); // Push updated context to header
       this.cdr.markForCheck();
     }
   }
@@ -348,6 +353,25 @@ export class CashierComponent implements OnInit, OnDestroy {
       this.tableService.setOrderForTable(this.selectedTable, this.cart);
     }
   }
+
+  // ✅ ADD — pushes current state to header, called after any context change
+private pushContext(): void {
+  if (this.selectedTable) {
+    // ✅ Table selected — show all three chips
+    this.cashierCtx.set({
+      tableName:   `Table #${this.selectedTable}`,
+      orderType:   this.orderType,
+      orderNumber: this.orderNumber
+    });
+  } else {
+    // ✅ No table — show only order type (tableName = null signals partial mode)
+  this.cashierCtx.set({
+      tableName:   '',              // empty = no table chip
+      orderType:   this.orderType,
+      orderNumber: ''              // empty = no order number chip
+    });
+  }
+}
 
   /* ================= ORDER TYPE ================= */
 
@@ -361,7 +385,7 @@ export class CashierComponent implements OnInit, OnDestroy {
     if (type === 'Dine-In') {
       this.customerInfo = null;
     }
-
+    this.pushContext(); // Push updated context to header
     this.cdr.markForCheck();
   }
 
@@ -495,6 +519,7 @@ export class CashierComponent implements OnInit, OnDestroy {
       if (data.tableNumber) {
         this.selectedTable = data.tableNumber;
       }
+      
       if (data.orderType) {
         this.orderType = data.orderType;
       }
@@ -574,7 +599,7 @@ export class CashierComponent implements OnInit, OnDestroy {
     
     // Clear saved state
     localStorage.removeItem('cashier_state');
-    
+    this.pushContext(); // Push updated context to header
     this.cdr.markForCheck();
   }
 

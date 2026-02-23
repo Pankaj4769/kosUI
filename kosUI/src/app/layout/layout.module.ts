@@ -3,25 +3,19 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
 import { AppLayoutComponent } from './app-layout/app-layout.component';
-import { HeaderComponent } from './header/header.component';
-import { SidebarComponent } from './sidebar/sidebar.component';
+import { HeaderComponent }    from './header/header.component';
+import { SidebarComponent }   from './sidebar/sidebar.component';
 
 @NgModule({
-  declarations: [
-    AppLayoutComponent // ✅ only non-standalone component
-  ],
   imports: [
     CommonModule,
-
-    // ✅ Router for layout-level navigation
-    RouterModule.forChild([]),
-
-    // ✅ Standalone components
-    HeaderComponent,
-    SidebarComponent
+    RouterModule,
+    AppLayoutComponent,       // ✅ standalone — goes in imports[]
+    HeaderComponent,          // ✅ standalone — goes in imports[]
+    SidebarComponent          // ✅ standalone — goes in imports[]
   ],
   exports: [
-    AppLayoutComponent
+    AppLayoutComponent        // ✅ re-export so app.module.ts can use <app-layout>
   ]
 })
 export class LayoutModule {}
