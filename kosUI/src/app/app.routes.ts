@@ -12,7 +12,7 @@ import { LeaveManagementComponent } from './domains/staff/components/leave-manag
 import { PayrollComponent } from './domains/staff/components/payroll/payroll.component';
 import { ShiftManagementComponent } from './domains/staff/components/shift-management/shift-management.component';
 import { LoginComponent } from './core/component/login/login.component';
-import { authGuard } from './core/guards/auth.guard';
+import { AuthGuard } from './core/guards/auth.guard';
 import { RestaurantSetupComponent } from './core/component/restaurant-setup/restaurant-setup.component';
 import { PendingApprovalComponent } from './core/component/pending-approval/pending-approval.component';
 import { SubscriptionComponent } from './core/component/subscription/subscription.component';
@@ -53,7 +53,7 @@ export const routes: Routes = [
 
       
       // ✅ DASHBOARD
-      { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
+      { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
 
       // ✅ INVENTORY MODULE
       {
@@ -62,7 +62,7 @@ export const routes: Routes = [
           { path: 'dashboard', component: DashboardComponent },
           { path: 'manage', component: ManageInventoryComponent },
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
-        ]
+        ], canActivate: [AuthGuard]
       },
 
       // ✅ ORDERS MODULE
@@ -72,14 +72,14 @@ export const routes: Routes = [
           { path: 'live', component: LiveOrdersComponent },
           { path: 'history', component: OrderHistoryComponent }, 
           { path: '', redirectTo: 'live', pathMatch: 'full' }
-        ]
+        ], canActivate: [AuthGuard]
       },
 
       // ✅ POS MODULE (LAZY LOADED)
       {
         path: 'pos',
         loadChildren: () =>
-          import('./domains/pos/pos.module').then(m => m.PosModule)
+          import('./domains/pos/pos.module').then(m => m.PosModule), canActivate: [AuthGuard]
       },
 
       // ✅ STAFF MODULE
@@ -93,7 +93,7 @@ export const routes: Routes = [
           { path: 'shifts', component: ShiftManagementComponent },
           { path: 'roles', component: RoleManagementComponent },
           { path: '', redirectTo: 'directory', pathMatch: 'full' }
-        ]
+        ], canActivate: [AuthGuard]
       },
 
 
@@ -103,10 +103,10 @@ export const routes: Routes = [
       // { path: 'settings', loadComponent: () => import('./system/settings/settings.component').then(m => m.SettingsComponent) },
 
       // ✅ DEFAULT
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+      { path: '', redirectTo: 'login', pathMatch: 'full' }
     ]
   },
 
   // ✅ FALLBACK
-  { path: '**', redirectTo: 'dashboard' }
+  { path: '**', redirectTo: 'login' }
 ];

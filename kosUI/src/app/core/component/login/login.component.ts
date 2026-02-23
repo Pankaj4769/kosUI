@@ -155,9 +155,10 @@ export class LoginComponent implements OnDestroy {
     this.isLoading    = true;
     this.errorMessage = '';
     setTimeout(() => {
-      const res = this.auth.login(req);
-      if (!res.success) this.errorMessage = res.message || 'Login failed. Please try again.';
-      this.isLoading = false;
+      this.auth.login(req).subscribe(res=>{
+        if (!res.success) this.errorMessage = res.message;
+        this.isLoading = false;
+      });
     }, 800);
   }
 

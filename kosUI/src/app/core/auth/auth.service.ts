@@ -1,6 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthUser, LoginRequest, OnboardingStatus, SubscriptionPlan, UserRole } from './auth.model';
+import { HttpClient } from '@angular/common/http';
+import { map, Observable, of, switchMap, tap } from 'rxjs';
+import { BASE_URL } from '../../apiUrls';
+
+
+interface LoginResponse {
+  accessToken: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -21,31 +29,69 @@ export class AuthService {
     },
   ];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private http: HttpClient) {}
 
-  // ── Password Login ───────────────────────────────────────
-  login(req: LoginRequest): { success: boolean; message: string } {
-    let user: AuthUser | undefined;
+    private baseUrl = BASE_URL;
+    preLogin(username: string, password: string): Observable<LoginResponse> {
+      return this.http.post<LoginResponse>(`${this.baseUrl}/auth/login`, { username, password })
+        .pipe(
+          tap(response => {
+            // Store token in localStorage
+            localStorage.setItem('token', response.accessToken);
 
-    if (req.method === 'PASSWORD') {
-      user = this.mockUsers.find(
-        u => u.username === req.username && req.password === 'kos&#64;123'
-      );
-    } else if (req.method === 'MOBILE_OTP') {
-      user = this.mockUsers.find(u => u.mobile === req.mobile);
-      // In real app: verify OTP via API
-    } else if (req.method === 'GOOGLE' || req.method === 'ZOHO') {
-      // In real app: OAuth token verification
-      // Simulate first-time social login → create new OWNER
-      user = this.createSocialUser(req.method);
+          })
+        );
     }
 
-    if (!user) return { success: false, message: 'Invalid credentials. Please try again.' };
 
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
-    this.handlePostLogin(user);
-    return { success: true, message: '' };
+  // ── Password Login ───────────────────────────────────────
+  login(req: LoginRequest): Observable<{ success: boolean; message: string }> {
+    if (!req.username && !req.password) {
+      return of({ success: false, message: 'Invalid credentials. Please try again.' });
+    }
+  
+    return this.preLogin(req.username!, req.password!).pipe(
+      switchMap((res :LoginResponse)=> {
+        let user: AuthUser | undefined;
+    
+        if (!res.accessToken) {
+          return of({ success: false, message: 'Invalid credentials. Please try again.' });
+        }
+        if (req.method === 'PASSWORD') {
+          // Call the backend API and return the Observable directly
+          return this.http.get<AuthUser>(`${this.baseUrl}/auth/getUser/${req.username}`).pipe(
+            map(user => {
+              if (!user) {
+                return { success: false, message: 'Invalid credentials. Please try again.' };
+              }
+    
+              localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+              this.handlePostLogin(user);
+    
+              return { success: true, message: '' };
+            })
+          );
+        } else if (req.method === 'MOBILE_OTP') {
+          user = this.mockUsers.find(u => u.mobile === req.mobile);
+        } else if (req.method === 'GOOGLE' || req.method === 'ZOHO') {
+          user = this.createSocialUser(req.method);
+        }
+    
+        // Handle non-PASSWORD cases synchronously
+        if (!user) {
+          return of({ success: false, message: 'Invalid credentials. Please try again.' });
+        }
+    
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+        this.handlePostLogin(user);
+    
+        return of({ success: true, message: '' });
+      })
+    );
   }
+  
 
   // ── OTP Send (mock) ──────────────────────────────────────
   sendOtp(mobile: string): { success: boolean; message: string } {
@@ -97,7 +143,12 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem('token');
     this.router.navigate(['/login']);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
   }
 
   get currentUser(): AuthUser | null {
@@ -105,7 +156,7 @@ export class AuthService {
     return raw ? JSON.parse(raw) : null;
   }
 
-  get isLoggedIn(): boolean { return !!this.currentUser; }
+  get isLoggedIn(): boolean {return !!this.getToken();}
 
   private redirectByRole(role: UserRole): void {
     const map: Record<UserRole, string> = {
