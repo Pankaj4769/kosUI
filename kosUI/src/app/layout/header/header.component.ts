@@ -104,8 +104,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     public layout: LayoutService,
     private authService: AuthService,
     private router: Router,
-    public  layout: LayoutService,
-    private router: Router,
     private cdr:    ChangeDetectorRef,
     private cashierCtx: CashierContextService
   ) {}
