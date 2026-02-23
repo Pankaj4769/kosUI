@@ -1,513 +1,400 @@
 <div class="payment-overlay" (click)="onClose()">
-  
-  <div class="payment-popup" (click)="$event.stopPropagation()">
+<div class="payment-popup" (click)="$event.stopPropagation()">
 
-    <!-- ================= HEADER ================= -->
-    <div class="popup-header">
-      <div class="header-left">
-        <mat-icon>payment</mat-icon>
-        <div class="header-info">
-          <h2>Payment</h2>
-          <span class="order-number">{{ orderNumber }}</span>
+  <!-- ── HEADER ── -->
+  <div class="popup-header">
+    <div class="header-left">
+      <mat-icon>payment</mat-icon>
+      <div>
+        <h2>Payment</h2>
+        <span class="order-tag">{{ orderNumber }}</span>
+      </div>
+    </div>
+    <button class="close-btn" (click)="onClose()" [disabled]="processing">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- ── BODY ── -->
+  <div class="popup-content">
+
+    <!-- ══ LEFT: Bill Summary ══ -->
+    <div class="bill-summary">
+
+      <div class="summary-header">
+        <h3>Bill Summary</h3>
+        <button class="icon-btn" (click)="showBillDetails = !showBillDetails">
+          <mat-icon>{{ showBillDetails ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+      </div>
+
+      <!-- Order context chip -->
+      <div class="context-chips">
+        <span class="chip" *ngIf="orderType === 'Dine-In' && tableNumber">
+          <mat-icon>table_restaurant</mat-icon> Table {{ tableNumber }}
+        </span>
+        <span class="chip" *ngIf="orderType === 'Takeaway'">
+          <mat-icon>shopping_bag</mat-icon> Takeaway
+        </span>
+        <span class="chip" *ngIf="orderType === 'Delivery'">
+          <mat-icon>delivery_dining</mat-icon> Delivery
+        </span>
+        <span class="chip mode-chip">
+          <mat-icon>{{ paymentMode === 'part' ? 'payments' : paymentMode === 'split' ? 'people' : 'check_circle' }}</mat-icon>
+          {{ paymentMode | titlecase }}
+        </span>
+      </div>
+
+      <!-- Items -->
+      <div class="items-list" *ngIf="showBillDetails">
+        <div class="item-row" *ngFor="let item of cart">
+          <span><span class="item-qty">{{ item.qty }}×</span> {{ item.name }}</span>
+          <span>{{ fmt(item.price * item.qty) }}</span>
         </div>
       </div>
 
-      <button class="close-btn" (click)="onClose()" [disabled]="processing">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
+      <mat-divider></mat-divider>
 
-    <!-- ================= CONTENT ================= -->
-    <div class="popup-content">
+      <!-- Pricing rows -->
+      <div class="pricing">
+        <div class="price-row"><span>Subtotal</span><span>{{ fmt(subtotal) }}</span></div>
+        <div class="price-row"><span>Tax (5%)</span><span>{{ fmt(tax) }}</span></div>
+        <div class="price-row accent" *ngIf="tipAmount > 0">
+          <span>Tip <em class="badge">{{ tipPercentage }}%</em></span>
+          <span class="pos">+{{ fmt(tipAmount) }}</span>
+        </div>
+        <div class="price-row" *ngIf="discountTotal > 0">
+          <span>Discount</span>
+          <span class="neg">−{{ fmt(discountTotal) }}</span>
+        </div>
+      </div>
 
-      <!-- LEFT SIDE: Bill Summary -->
-      <div class="bill-summary">
-        
-        <div class="summary-header">
-          <h3>Bill Summary</h3>
-          <button 
-            class="toggle-details-btn"
-            (click)="showBillDetails = !showBillDetails">
-            <mat-icon>{{ showBillDetails ? 'expand_less' : 'expand_more' }}</mat-icon>
+      <mat-divider class="thick"></mat-divider>
+
+      <div class="final-row">
+        <span>TOTAL</span>
+        <span class="final-amount">{{ fmt(finalTotal) }}</span>
+      </div>
+
+      <!-- Part payment progress -->
+      <div class="part-progress" *ngIf="paymentMode === 'part' && partPayments.length > 0">
+        <div class="progress-bar">
+          <div class="progress-fill"
+               [style.width.%]="(partPaidTotal / finalTotal) * 100"></div>
+        </div>
+        <div class="progress-labels">
+          <span class="pos">Paid: {{ fmt(partPaidTotal) }}</span>
+          <span class="neg">Due: {{ fmt(partRemainingTotal) }}</span>
+        </div>
+      </div>
+
+      <!-- Split info -->
+      <div class="split-info-row" *ngIf="paymentMode === 'split'">
+        <mat-icon>people</mat-icon>
+        <span>Split {{ splitCount }} ways — <strong>{{ fmt(splitAmountPerPerson) }} each</strong></span>
+      </div>
+
+    </div><!-- /bill-summary -->
+
+    <!-- ══ RIGHT: Payment Options ══ -->
+    <div class="payment-options">
+
+      <!-- ── Payment Mode selector ── -->
+      <section class="section">
+        <h3 class="section-title">Payment Mode</h3>
+        <div class="mode-tabs">
+          <button class="mode-tab" [class.active]="paymentMode==='full'"  (click)="setMode('full')">
+            <mat-icon>check_circle</mat-icon> Full
+          </button>
+          <button class="mode-tab" [class.active]="paymentMode==='part'"  (click)="setMode('part')">
+            <mat-icon>payments</mat-icon> Part
+          </button>
+          <button class="mode-tab" [class.active]="paymentMode==='split'" (click)="setMode('split')">
+            <mat-icon>people</mat-icon> Split
+          </button>
+        </div>
+      </section>
+
+      <!-- ── Payment Method (Full / Part modes) ── -->
+      <section class="section" *ngIf="paymentMode !== 'split'">
+        <h3 class="section-title">Payment Method</h3>
+        <div class="method-grid">
+          <button *ngFor="let m of methods"
+                  class="method-btn"
+                  [class.active]="selectedMethod === m"
+                  (click)="selectMethod(m)"
+                  [disabled]="processing">
+            <mat-icon>{{ methodIcon(m) }}</mat-icon>
+            <span>{{ methodLabel(m) }}</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ── Full: Cash ── -->
+      <section class="section detail-section"
+               *ngIf="paymentMode === 'full' && selectedMethod === 'cash'">
+        <div class="form-row">
+          <label>Cash Received</label>
+          <input type="number" class="amt-input"
+                 [(ngModel)]="cashReceived" [disabled]="processing"
+                 placeholder="Enter amount" />
+        </div>
+        <div class="quick-row">
+          <button class="chip-btn" (click)="setExactAmount()" [disabled]="processing">Exact</button>
+          <button class="chip-btn" *ngFor="let a of quickCashOptions"
+                  (click)="addQuickCash(a)" [disabled]="processing">+{{ fmt(a) }}</button>
+        </div>
+        <div class="change-box" *ngIf="cashReceived >= finalTotal">
+          <span>Change to Return</span>
+          <strong>{{ fmt(changeAmount) }}</strong>
+        </div>
+        <div class="alert-row" *ngIf="cashReceived > 0 && cashReceived < finalTotal">
+          <mat-icon>warning</mat-icon>
+          Need {{ fmt(finalTotal - cashReceived) }} more
+        </div>
+      </section>
+
+      <!-- ── Full: Card ── -->
+      <section class="section detail-section"
+               *ngIf="paymentMode === 'full' && selectedMethod === 'card'">
+        <div class="form-row">
+          <label>Card Number</label>
+          <input type="text" class="form-input" [(ngModel)]="cardNumber"
+                 [disabled]="processing" placeholder="1234 5678 9012 3456" maxlength="19" />
+        </div>
+        <div class="form-row">
+          <label>Cardholder Name</label>
+          <input type="text" class="form-input" [(ngModel)]="cardHolderName"
+                 [disabled]="processing" placeholder="Name on card" />
+        </div>
+        <div class="info-note">
+          <mat-icon>info</mat-icon> Charging {{ fmt(finalTotal) }}
+        </div>
+      </section>
+
+      <!-- ── Full: UPI ── -->
+      <section class="section detail-section"
+               *ngIf="paymentMode === 'full' && selectedMethod === 'upi'">
+        <div class="upi-providers">
+          <button *ngFor="let p of ['gpay','phonepe','paytm','bhim']"
+                  class="upi-btn" [class.active]="upiProvider === p"
+                  (click)="upiProvider = $any(p)" [disabled]="processing">
+            {{ upiProviderIcon(p) }} {{ p | titlecase }}
+          </button>
+        </div>
+        <div class="form-row">
+          <label>UPI ID</label>
+          <input type="text" class="form-input" [(ngModel)]="upiId"
+                 [disabled]="processing" placeholder="yourname@upi" />
+        </div>
+        <div class="qr-box">
+          <mat-icon>qr_code_2</mat-icon>
+          <span>Scan to pay {{ fmt(finalTotal) }}</span>
+        </div>
+      </section>
+
+      <!-- ── Full: Wallet ── -->
+      <section class="section detail-section"
+               *ngIf="paymentMode === 'full' && selectedMethod === 'wallet'">
+        <div class="wallet-row">
+          <mat-icon>account_balance_wallet</mat-icon>
+          <div>
+            <small>Available Balance</small>
+            <strong>₹5,000</strong>
+          </div>
+        </div>
+        <div class="info-note">
+          <mat-icon>info</mat-icon> {{ fmt(finalTotal) }} will be deducted
+        </div>
+      </section>
+
+      <!-- ══════════ PART PAYMENT ══════════ -->
+      <section class="section" *ngIf="paymentMode === 'part'">
+
+        <!-- Existing part payments -->
+        <div class="part-list" *ngIf="partPayments.length > 0">
+          <div class="part-card" *ngFor="let p of partPayments; let i = index">
+            <div class="part-card-left">
+              <span class="part-index">{{ p.index }}</span>
+              <div>
+                <strong>{{ fmt(p.amount) }}</strong>
+                <small>{{ methodLabel(p.method) }}<span *ngIf="p.note"> · {{ p.note }}</span></small>
+              </div>
+            </div>
+            <div class="part-card-right">
+              <span class="paid-chip"><mat-icon>check</mat-icon> Paid</span>
+              <button class="icon-btn danger" (click)="removePartPayment(i)"
+                      [disabled]="processing" matTooltip="Remove">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- New part entry form — hidden when fully paid -->
+        <div class="part-entry" *ngIf="!partFullyPaid">
+          <h4 class="sub-title">
+            Add Payment
+            <span class="remaining-tag">Remaining: {{ fmt(partRemainingTotal) }}</span>
+          </h4>
+          <div class="form-row">
+            <label>Amount</label>
+            <div class="input-group">
+              <input type="number" class="amt-input"
+                     [(ngModel)]="partEntryAmount" [disabled]="processing"
+                     [max]="partRemainingTotal" placeholder="Enter amount" />
+              <button class="chip-btn" (click)="setPartEntryToRemaining()"
+                      [disabled]="processing">Full</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Method</label>
+            <div class="method-grid compact">
+              <button *ngFor="let m of methods"
+                      class="method-btn sm"
+                      [class.active]="partEntryMethod === m"
+                      (click)="partEntryMethod = m" [disabled]="processing">
+                <mat-icon>{{ methodIcon(m) }}</mat-icon>
+                <span>{{ methodLabel(m) }}</span>
+              </button>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Note <small>(optional)</small></label>
+            <input type="text" class="form-input" [(ngModel)]="partEntryNote"
+                   [disabled]="processing" placeholder="e.g. Advance, token..." />
+          </div>
+          <button class="add-part-btn"
+                  (click)="addPartPayment()"
+                  [disabled]="processing || partEntryAmount <= 0">
+            <mat-icon>add_circle</mat-icon>
+            Add {{ fmt(partEntryAmount || 0) }} via {{ methodLabel(partEntryMethod) }}
           </button>
         </div>
 
-        <!-- Order Context -->
-        <div class="order-context">
-          <div class="context-item" *ngIf="orderType === 'Dine-In' && tableNumber">
-            <mat-icon>table_restaurant</mat-icon>
-            <span>Table {{ tableNumber }}</span>
-          </div>
-          <div class="context-item" *ngIf="orderType === 'Takeaway'">
-            <mat-icon>shopping_bag</mat-icon>
-            <span>Takeaway Order</span>
-          </div>
-          <div class="context-item" *ngIf="orderType === 'Delivery'">
-            <mat-icon>delivery_dining</mat-icon>
-            <span>Delivery Order</span>
-          </div>
+        <!-- Fully paid state -->
+        <div class="fully-paid-banner" *ngIf="partFullyPaid">
+          <mat-icon>check_circle</mat-icon>
+          Full amount collected via {{ partPayments.length }} payment(s)
         </div>
 
-        <!-- Items List (Collapsible) -->
-        <div class="items-list" *ngIf="showBillDetails">
-          <div class="item-row" *ngFor="let item of cart">
-            <span class="item-info">
-              <span class="item-qty">{{ item.qty }}×</span>
-              {{ item.name }}
-            </span>
-            <span class="item-price">₹{{ item.price * item.qty }}</span>
+      </section>
+
+      <!-- ══════════ SPLIT BILL ══════════ -->
+      <section class="section" *ngIf="paymentMode === 'split'">
+        <div class="split-controls">
+          <label>Number of People</label>
+          <div class="stepper">
+            <button (click)="updateSplitCount(splitCount - 1)" [disabled]="splitCount <= 2">−</button>
+            <span>{{ splitCount }}</span>
+            <button (click)="updateSplitCount(splitCount + 1)" [disabled]="splitCount >= 10">+</button>
           </div>
+        </div>
+        <div class="split-list">
+          <div class="split-card" *ngFor="let s of splitPayments; let i = index"
+               [class.paid]="s.paid">
+            <div class="split-left">
+              <span class="person-dot">{{ s.personIndex }}</span>
+              <strong>{{ fmt(s.amount) }}</strong>
+            </div>
+            <div class="split-right" *ngIf="!s.paid">
+              <select [(ngModel)]="s.method" class="method-select">
+                <option *ngFor="let m of methods" [value]="m">{{ methodLabel(m) }}</option>
+              </select>
+              <button class="mark-btn" (click)="markSplitPaid(i, s.method)">Paid</button>
+            </div>
+            <div class="split-paid-label" *ngIf="s.paid">
+              <mat-icon>check_circle</mat-icon> {{ methodLabel(s.method) }}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════ TIP & DISCOUNT ══════════ -->
+      <section class="section extras">
+
+        <!-- Tip -->
+        <div class="extra-block">
+          <div class="extra-header">
+            <h4>Tip</h4>
+            <button class="text-btn" *ngIf="tipAmount > 0" (click)="clearTip()">Clear</button>
+          </div>
+          <div class="chip-row">
+            <button *ngFor="let t of quickTipOptions"
+                    class="chip-btn" [class.active]="tipPercentage === t"
+                    (click)="applyTip(t)" [disabled]="processing">{{ t }}%</button>
+          </div>
+          <input type="number" class="form-input" [value]="tipAmount"
+                 (input)="updateTip(+$any($event.target).value)"
+                 [disabled]="processing" placeholder="Custom tip" />
         </div>
 
         <mat-divider></mat-divider>
 
-        <!-- Pricing Breakdown -->
-        <div class="pricing-breakdown">
-          <div class="price-row">
-            <span>Subtotal</span>
-            <span>{{ formatCurrency(subtotal) }}</span>
+        <!-- Discount -->
+        <div class="extra-block">
+          <div class="extra-header">
+            <h4>Discount</h4>
+            <button class="text-btn" *ngIf="customDiscount > 0" (click)="clearDiscount()">Clear</button>
           </div>
-
-          <div class="price-row">
-            <span>Tax (5%)</span>
-            <span>{{ formatCurrency(tax) }}</span>
+          <div class="toggle-pair">
+            <button class="toggle-btn" [class.active]="discountType==='percentage'"
+                    (click)="discountType='percentage'">%</button>
+            <button class="toggle-btn" [class.active]="discountType==='fixed'"
+                    (click)="discountType='fixed'">₹ Fixed</button>
           </div>
-
-          <div class="price-row tip-row" *ngIf="tipAmount > 0">
-            <span class="with-badge">
-              Tip
-              <span class="tip-badge">{{ tipPercentage }}%</span>
-            </span>
-            <span class="positive">+{{ formatCurrency(tipAmount) }}</span>
+          <div class="chip-row" *ngIf="discountType === 'percentage'">
+            <button *ngFor="let d of quickDiscountOptions"
+                    class="chip-btn" (click)="applyDiscount(d)" [disabled]="processing">
+              {{ d }}%
+            </button>
           </div>
-
-          <div class="price-row discount-row" *ngIf="discountTotal > 0">
-            <span>Discount</span>
-            <span class="negative">-{{ formatCurrency(discountTotal) }}</span>
-          </div>
+          <input type="number" class="form-input"
+                 [value]="discountType==='percentage' ? getDiscountPct() : customDiscount"
+                 (input)="updateDiscount(+$any($event.target).value)"
+                 [disabled]="processing"
+                 [placeholder]="discountType==='percentage' ? 'Discount %' : 'Amount'" />
+          <input type="text" class="form-input mt-4" [(ngModel)]="discountReason"
+                 [disabled]="processing" placeholder="Reason (optional)" />
         </div>
 
-        <mat-divider class="thick-divider"></mat-divider>
+      </section>
 
-        <!-- Final Total -->
-        <div class="final-total">
-          <span class="total-label">TOTAL</span>
-          <span class="total-amount">{{ formatCurrency(finalTotal) }}</span>
-        </div>
+      <!-- ── Options ── -->
+      <section class="section options-row">
+        <label class="cb-label">
+          <input type="checkbox" [(ngModel)]="printAfterPayment" [disabled]="processing" />
+          Print receipt
+        </label>
+        <label class="cb-label">
+          <input type="checkbox" [(ngModel)]="sendSMS" [disabled]="processing" />
+          <span *ngIf="customerInfo">SMS to {{ customerInfo.phone || '(no phone)' }}</span>
+          <span *ngIf="!customerInfo">Send SMS</span>
+        </label>
+      </section>
 
-        <!-- Split Bill Info -->
-        <div class="split-info" *ngIf="splitEnabled">
-          <mat-icon>people</mat-icon>
-          <span>Split between {{ splitCount }} people</span>
-          <strong>{{ formatCurrency(splitAmountPerPerson) }} each</strong>
-        </div>
+    </div><!-- /payment-options -->
+  </div><!-- /popup-content -->
 
-      </div>
-
-      <!-- RIGHT SIDE: Payment Options -->
-      <div class="payment-options">
-
-        <!-- ================= PAYMENT METHODS ================= -->
-        <section class="payment-methods">
-          <h3>Payment Method</h3>
-
-          <div class="method-buttons">
-            <button 
-              class="method-btn"
-              [class.active]="selectedMethod === 'cash'"
-              (click)="selectPaymentMethod('cash')"
-              [disabled]="processing">
-              <mat-icon>{{ getPaymentMethodIcon('cash') }}</mat-icon>
-              <span>Cash</span>
-            </button>
-
-            <button 
-              class="method-btn"
-              [class.active]="selectedMethod === 'card'"
-              (click)="selectPaymentMethod('card')"
-              [disabled]="processing">
-              <mat-icon>{{ getPaymentMethodIcon('card') }}</mat-icon>
-              <span>Card</span>
-            </button>
-
-            <button 
-              class="method-btn"
-              [class.active]="selectedMethod === 'upi'"
-              (click)="selectPaymentMethod('upi')"
-              [disabled]="processing">
-              <mat-icon>{{ getPaymentMethodIcon('upi') }}</mat-icon>
-              <span>UPI</span>
-            </button>
-
-            <button 
-              class="method-btn"
-              [class.active]="selectedMethod === 'wallet'"
-              (click)="selectPaymentMethod('wallet')"
-              [disabled]="processing">
-              <mat-icon>{{ getPaymentMethodIcon('wallet') }}</mat-icon>
-              <span>Wallet</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- ================= CASH PAYMENT ================= -->
-        <section class="payment-details" *ngIf="selectedMethod === 'cash' && !splitEnabled">
-          <h4>Cash Payment</h4>
-
-          <div class="form-group">
-            <label>Cash Received</label>
-            <input 
-              type="number"
-              class="amount-input"
-              [(ngModel)]="cashReceived"
-              (input)="updateCashReceived(cashReceived)"
-              [disabled]="processing"
-              placeholder="Enter amount">
-          </div>
-
-          <!-- Quick Cash Buttons -->
-          <div class="quick-buttons">
-            <button 
-              class="quick-btn"
-              (click)="setExactAmount()"
-              [disabled]="processing">
-              Exact
-            </button>
-            <button 
-              class="quick-btn"
-              *ngFor="let amt of [100, 200, 500]"
-              (click)="addQuickCash(amt)"
-              [disabled]="processing">
-              +₹{{ amt }}
-            </button>
-          </div>
-
-          <!-- Change Display -->
-          <div class="change-display" *ngIf="cashReceived >= finalTotal">
-            <div class="change-label">Change to Return:</div>
-            <div class="change-amount">{{ formatCurrency(changeAmount) }}</div>
-          </div>
-
-          <div class="insufficient-alert" *ngIf="cashReceived > 0 && cashReceived < finalTotal">
-            <mat-icon>warning</mat-icon>
-            <span>Insufficient amount. Need ₹{{ finalTotal - cashReceived }} more.</span>
-          </div>
-        </section>
-
-        <!-- ================= CARD PAYMENT ================= -->
-        <section class="payment-details" *ngIf="selectedMethod === 'card' && !splitEnabled">
-          <h4>Card Payment</h4>
-
-          <div class="form-group">
-            <label>Card Number</label>
-            <input 
-              type="text"
-              class="form-input"
-              [(ngModel)]="cardNumber"
-              [disabled]="processing"
-              placeholder="1234 5678 9012 3456"
-              maxlength="19">
-          </div>
-
-          <div class="form-group">
-            <label>Cardholder Name</label>
-            <input 
-              type="text"
-              class="form-input"
-              [(ngModel)]="cardHolderName"
-              [disabled]="processing"
-              placeholder="Name on card">
-          </div>
-
-          <div class="card-info-note">
-            <mat-icon>info</mat-icon>
-            <span>Card will be charged {{ formatCurrency(finalTotal) }}</span>
-          </div>
-        </section>
-
-        <!-- ================= UPI PAYMENT ================= -->
-        <section class="payment-details" *ngIf="selectedMethod === 'upi' && !splitEnabled">
-          <h4>UPI Payment</h4>
-
-          <!-- UPI Provider Selection -->
-          <div class="upi-providers">
-            <button 
-              class="upi-btn"
-              [class.active]="upiProvider === 'gpay'"
-              (click)="upiProvider = 'gpay'"
-              [disabled]="processing">
-              {{ getUpiProviderIcon('gpay') }} GPay
-            </button>
-            <button 
-              class="upi-btn"
-              [class.active]="upiProvider === 'phonepe'"
-              (click)="upiProvider = 'phonepe'"
-              [disabled]="processing">
-              {{ getUpiProviderIcon('phonepe') }} PhonePe
-            </button>
-            <button 
-              class="upi-btn"
-              [class.active]="upiProvider === 'paytm'"
-              (click)="upiProvider = 'paytm'"
-              [disabled]="processing">
-              {{ getUpiProviderIcon('paytm') }} Paytm
-            </button>
-            <button 
-              class="upi-btn"
-              [class.active]="upiProvider === 'bhim'"
-              (click)="upiProvider = 'bhim'"
-              [disabled]="processing">
-              {{ getUpiProviderIcon('bhim') }} BHIM
-            </button>
-          </div>
-
-          <div class="form-group">
-            <label>UPI ID</label>
-            <input 
-              type="text"
-              class="form-input"
-              [(ngModel)]="upiId"
-              [disabled]="processing"
-              placeholder="yourname@upi">
-          </div>
-
-          <div class="qr-code-section">
-            <div class="qr-placeholder">
-              <mat-icon>qr_code_2</mat-icon>
-              <span>Scan QR Code</span>
-            </div>
-            <p>Scan with any UPI app to pay {{ formatCurrency(finalTotal) }}</p>
-          </div>
-        </section>
-
-        <!-- ================= WALLET PAYMENT ================= -->
-        <section class="payment-details" *ngIf="selectedMethod === 'wallet' && !splitEnabled">
-          <h4>Wallet Payment</h4>
-
-          <div class="wallet-info">
-            <mat-icon>account_balance_wallet</mat-icon>
-            <div class="wallet-details">
-              <span class="wallet-label">Available Balance</span>
-              <span class="wallet-balance">₹5,000</span>
-            </div>
-          </div>
-
-          <div class="wallet-note">
-            <mat-icon>info</mat-icon>
-            <span>Amount {{ formatCurrency(finalTotal) }} will be deducted from your wallet</span>
-          </div>
-        </section>
-
-        <!-- ================= SPLIT BILL ================= -->
-        <section class="split-bill-section" *ngIf="splitEnabled">
-          <h4>Split Bill</h4>
-
-          <div class="split-controls">
-            <label>Number of People:</label>
-            <div class="number-input">
-              <button (click)="updateSplitCount(splitCount - 1)">-</button>
-              <input 
-                type="number"
-                [(ngModel)]="splitCount"
-                (input)="updateSplitCount(splitCount)"
-                min="2"
-                max="10">
-              <button (click)="updateSplitCount(splitCount + 1)">+</button>
-            </div>
-          </div>
-
-          <div class="split-payments-list">
-            <div 
-              class="split-payment-card"
-              *ngFor="let split of splitPayments; let i = index"
-              [class.paid]="split.paid">
-              
-              <div class="split-header">
-                <span class="person-label">Person {{ split.personIndex }}</span>
-                <span class="split-amount">{{ formatCurrency(split.amount) }}</span>
-              </div>
-
-              <div class="split-status" *ngIf="!split.paid">
-                <select [(ngModel)]="split.method" class="method-select">
-                  <option value="cash">Cash</option>
-                  <option value="card">Card</option>
-                  <option value="upi">UPI</option>
-                  <option value="wallet">Wallet</option>
-                </select>
-                <button 
-                  class="mark-paid-btn"
-                  (click)="markSplitPaymentPaid(i, split.method)">
-                  Mark Paid
-                </button>
-              </div>
-
-              <div class="split-paid" *ngIf="split.paid">
-                <mat-icon>check_circle</mat-icon>
-                <span>Paid via {{ split.method }}</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ================= TIP & DISCOUNT ================= -->
-        <section class="extras-section">
-          
-          <!-- Tip -->
-          <div class="extra-item">
-            <div class="extra-header">
-              <h4>Add Tip</h4>
-              <button 
-                class="clear-btn-small"
-                *ngIf="tipAmount > 0"
-                (click)="clearTip()">
-                Clear
-              </button>
-            </div>
-
-            <div class="quick-options">
-              <button 
-                *ngFor="let tip of quickTipOptions"
-                class="option-btn"
-                [class.active]="tipPercentage === tip"
-                (click)="applyQuickTip(tip)"
-                [disabled]="processing">
-                {{ tip }}%
-              </button>
-            </div>
-
-            <input 
-              type="number"
-              class="custom-input"
-              [value]="tipAmount"
-              (input)="updateCustomTip($any($event.target).value)"
-              [disabled]="processing"
-              placeholder="Custom tip amount">
-          </div>
-
-          <mat-divider></mat-divider>
-
-          <!-- Discount -->
-          <div class="extra-item">
-            <div class="extra-header">
-              <h4>Apply Discount</h4>
-              <button 
-                class="clear-btn-small"
-                *ngIf="customDiscount > 0"
-                (click)="clearDiscount()">
-                Clear
-              </button>
-            </div>
-
-            <div class="discount-type-toggle">
-              <button 
-                class="toggle-btn"
-                [class.active]="discountType === 'percentage'"
-                (click)="discountType = 'percentage'">
-                Percentage
-              </button>
-              <button 
-                class="toggle-btn"
-                [class.active]="discountType === 'fixed'"
-                (click)="discountType = 'fixed'">
-                Fixed Amount
-              </button>
-            </div>
-
-            <div class="quick-options" *ngIf="discountType === 'percentage'">
-              <button 
-                *ngFor="let disc of quickDiscountOptions"
-                class="option-btn"
-                (click)="applyQuickDiscount(disc)"
-                [disabled]="processing">
-                {{ disc }}%
-              </button>
-            </div>
-
-            <input 
-              type="number"
-              class="custom-input"
-              [value]="discountType === 'percentage' ? getDiscountPercentage() : customDiscount"
-              (input)="updateCustomDiscount($any($event.target).value)"
-              [disabled]="processing"
-              [placeholder]="discountType === 'percentage' ? 'Discount %' : 'Discount amount'">
-
-            <input 
-              type="text"
-              class="form-input small-input"
-              [(ngModel)]="discountReason"
-              [disabled]="processing"
-              placeholder="Reason for discount (optional)">
-          </div>
-
-        </section>
-
-        <!-- ================= OPTIONS ================= -->
-        <section class="options-section">
-          <label class="checkbox-label">
-            <input 
-              type="checkbox"
-              [(ngModel)]="printAfterPayment"
-              [disabled]="processing">
-            <span>Print receipt after payment</span>
-          </label>
-
-          <!-- ✅ FIXED LINE 459: Safe customerInfo?.phone access -->
-          <label class="checkbox-label">
-            <input 
-              type="checkbox"
-              [(ngModel)]="sendSMS"
-              [disabled]="processing">
-              <span *ngIf="customerInfo">Send SMS receipt to {{ customerInfo.phone || '(no phone)' }}</span>
-              <span *ngIf="!customerInfo">Send SMS receipt (no phone number)</span>
-            </label>
-
-          <label class="checkbox-label">
-            <input 
-              type="checkbox"
-              [(ngModel)]="splitEnabled"
-              (change)="toggleSplitBill()"
-              [disabled]="processing">
-            <span>Split Bill</span>
-          </label>
-        </section>
-
-      </div>
-
-    </div>
-
-    <!-- ================= FOOTER ================= -->
-    <div class="popup-footer">
-      <button 
-        class="footer-btn secondary"
-        (click)="viewReceipt()"
-        [disabled]="processing">
-        <mat-icon>receipt</mat-icon>
-        View Receipt
-      </button>
-
-      <button 
-        class="footer-btn secondary"
-        (click)="onClose()"
-        [disabled]="processing">
-        <mat-icon>close</mat-icon>
-        Cancel
-      </button>
-
-      <button 
-        class="footer-btn primary"
-        (click)="processPayment()"
-        [disabled]="!canProceed || processing">
-        <mat-icon *ngIf="!processing">{{ splitEnabled ? 'people' : 'check_circle' }}</mat-icon>
-        <span *ngIf="!processing">
-          {{ splitEnabled ? 'Complete Split Payment' : 'Complete Payment' }}
-        </span>
-        <span *ngIf="processing" class="processing-text">
-          <span class="spinner-small"></span>
-          Processing...
-        </span>
-      </button>
-    </div>
-
+  <!-- ── FOOTER ── -->
+  <div class="popup-footer">
+    <button class="footer-btn ghost" (click)="viewReceipt()" [disabled]="processing">
+      <mat-icon>receipt</mat-icon> Receipt
+    </button>
+    <button class="footer-btn ghost" (click)="onClose()" [disabled]="processing">
+      <mat-icon>close</mat-icon> Cancel
+    </button>
+    <button class="footer-btn primary" (click)="processPayment()"
+            [disabled]="!canProceed || processing">
+      <ng-container *ngIf="!processing">
+        <mat-icon>{{ paymentMode === 'split' ? 'people' : paymentMode === 'part' ? 'payments' : 'check_circle' }}</mat-icon>
+        {{ paymentMode === 'split' ? 'Complete Split' : paymentMode === 'part' ? 'Complete Part Payment' : 'Complete Payment' }}
+      </ng-container>
+      <span *ngIf="processing" class="proc">
+        <span class="spin-sm"></span> Processing...
+      </span>
+    </button>
   </div>
 
-</div>
+</div><!-- /payment-popup -->
+</div><!-- /overlay -->

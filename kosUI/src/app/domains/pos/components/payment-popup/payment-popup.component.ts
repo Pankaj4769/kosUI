@@ -1,74 +1,59 @@
-import { 
-  Component, 
-  Input, 
-  Output, 
-  EventEmitter, 
-  OnInit,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef
+import {
+  Component, Input, Output, EventEmitter,
+  OnInit, ChangeDetectionStrategy, ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-// Material Imports
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
-
-// Models
-import { CartItem } from '../../models/cart-item.model';
-import { ConfirmDialogComponent } from '../../../common-popup/pages/confirm-dialog.component'; // Import your confirm dialog
 import { MatDialog } from '@angular/material/dialog';
-/* ================= TYPES ================= */
+import { CartItem } from '../../models/cart-item.model';
+import { ConfirmDialogComponent } from '../../../common-popup/pages/confirm-dialog.component';
 
-export type OrderType = 'Dine-In' | 'Takeaway' | 'Delivery';
-export type PaymentMethod = 'cash' | 'card' | 'upi' | 'wallet';
+
+/* ── Types ─────────────────────────────────────────── */
+export type OrderType      = 'Dine-In' | 'Takeaway' | 'Delivery';
+export type PaymentMethod  = 'cash' | 'card' | 'upi' | 'wallet';
+export type PaymentMode    = 'full' | 'split' | 'part';
 
 export interface CustomerInfo {
-  name: string;
-  phone: string;
-  address?: string;
-  email?: string;
+  name: string; phone: string; address?: string; email?: string;
 }
 
 export interface PaymentData {
   method: PaymentMethod;
+  mode: PaymentMode;
   amount: number;
   tip?: number;
   discount?: number;
   splitCount?: number;
+  partPayments?: PartPaymentEntry[];
   transactionId?: string;
   timestamp: Date;
 }
 
 export interface SplitPayment {
-  personIndex: number;
-  amount: number;
-  method: PaymentMethod;
-  paid: boolean;
+  personIndex: number; amount: number; method: PaymentMethod; paid: boolean;
 }
 
-/* ================= COMPONENT ================= */
+export interface PartPaymentEntry {
+  index: number; amount: number; method: PaymentMethod;
+  note?: string; timestamp: Date;
+}
 
+
+/* ── Component ─────────────────────────────────────── */
 @Component({
   selector: 'app-payment-popup',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    MatIconModule,
-    MatButtonModule,
-    MatTabsModule,
-    MatRadioModule,
-    MatCheckboxModule,
-    MatTooltipModule,
-    MatMenuModule,
-    MatDividerModule
+    CommonModule, FormsModule,
+    MatIconModule, MatButtonModule, MatRadioModule,
+    MatCheckboxModule, MatTooltipModule, MatDividerModule
   ],
   templateUrl: './payment-popup.component.html',
   styleUrls: ['./payment-popup.component.css'],
@@ -76,405 +61,318 @@ export interface SplitPayment {
 })
 export class PaymentPopupComponent implements OnInit {
 
-  /* ================= INPUTS ================= */
-
-  @Input() total: number = 0;
-  @Input() subtotal: number = 0;
-  @Input() tax: number = 0;
-  @Input() discount: number = 0;
+  /* ── Inputs ───────────────────────────────────────── */
+  @Input() total       = 0;
+  @Input() subtotal    = 0;
+  @Input() tax         = 0;
+  @Input() discount    = 0;
   @Input() cart: CartItem[] = [];
   @Input() orderType: OrderType = 'Dine-In';
   @Input() tableNumber: number | null = null;
   @Input() customerInfo: CustomerInfo | null = null;
-  @Input() orderNumber: string = '';
+  @Input() orderNumber = '';
 
-  /* ================= OUTPUTS ================= */
-
-  @Output() close = new EventEmitter<void>();
+  /* ── Outputs ──────────────────────────────────────── */
+  @Output() close    = new EventEmitter<void>();
   @Output() complete = new EventEmitter<PaymentData>();
 
-  /* ================= STATE - PAYMENT METHOD ================= */
-
+  /* ── Payment method & mode ────────────────────────── */
   selectedMethod: PaymentMethod = 'cash';
-  
-  // Cash Payment
-  cashReceived: number = 0;
-  
-  // Card Payment
-  cardNumber: string = '';
-  cardHolderName: string = '';
-  
-  // UPI Payment
-  upiId: string = '';
+  paymentMode: PaymentMode = 'full';
+
+  // Cash
+  cashReceived = 0;
+
+  // Card
+  cardNumber      = '';
+  cardHolderName  = '';
+
+  // UPI
+  upiId       = '';
   upiProvider: 'gpay' | 'phonepe' | 'paytm' | 'bhim' = 'gpay';
-  
-  /* ================= STATE - TIP & DISCOUNT ================= */
 
-  tipAmount: number = 0;
-  tipPercentage: number = 0;
-  customDiscount: number = 0;
+  /* ── Tip & Discount ───────────────────────────────── */
+  tipAmount       = 0;
+  tipPercentage   = 0;
+  customDiscount  = 0;
   discountType: 'percentage' | 'fixed' = 'percentage';
-  discountReason: string = '';
-  
-  /* ================= STATE - SPLIT BILL ================= */
+  discountReason  = '';
 
-  splitEnabled = false;
-  splitCount = 2;
+  /* ── Split ────────────────────────────────────────── */
+  splitCount    = 2;
   splitPayments: SplitPayment[] = [];
-  
-  /* ================= STATE - UI ================= */
 
-  processing = false;
-  showBillDetails = true;
+  /* ── Part Payment ─────────────────────────────────── */
+  partPayments: PartPaymentEntry[] = [];
+  partEntryAmount = 0;
+  partEntryMethod: PaymentMethod = 'cash';
+  partEntryNote   = '';
+
+  /* ── UI state ─────────────────────────────────────── */
+  processing       = false;
+  showBillDetails  = true;
   printAfterPayment = true;
-  sendSMS = false;
-  
-  /* ================= QUICK OPTIONS ================= */
+  sendSMS          = false;
 
-  quickTipOptions = [0, 5, 10, 15, 20];
-  quickDiscountOptions = [5, 10, 15, 20, 25];
+  /* ── Quick options ────────────────────────────────── */
+  readonly quickTipOptions      = [0, 5, 10, 15, 20];
+  readonly quickDiscountOptions = [5, 10, 15, 20, 25];
+  readonly quickCashOptions     = [100, 200, 500];
+  readonly methods: PaymentMethod[] = ['cash', 'card', 'upi', 'wallet'];
 
-  /* ================= CONSTRUCTOR ================= */
-
-  constructor(
-    private cdr: ChangeDetectorRef,
-    private dialog: MatDialog // Injected MatDialog service
-  ) {}
-
-  /* ================= LIFECYCLE ================= */
+  constructor(private cdr: ChangeDetectorRef, private dialog: MatDialog) {}
 
   ngOnInit(): void {
-    this.initializePayment();
+    this.cashReceived   = Math.ceil(this.finalTotal / 100) * 100;
+    this.partEntryAmount = this.finalTotal;
   }
 
-  /* ================= INITIALIZATION ================= */
-
-  private initializePayment(): void {
-    this.cashReceived = Math.ceil(this.finalTotal / 100) * 100;
-    this.cdr.markForCheck();
-  }
-
-  /* ================= COMPUTED PROPERTIES ================= */
-
-  get tipTotal(): number {
-    return this.tipAmount;
-  }
-
-  get discountTotal(): number {
-    return this.customDiscount + this.discount;
-  }
-
+  /* ── Computed ─────────────────────────────────────── */
   get finalTotal(): number {
-    return Math.max(0, this.total + this.tipTotal - this.customDiscount);
+    return Math.max(0, this.total + this.tipAmount - this.customDiscount);
   }
+
+  get discountTotal(): number { return this.customDiscount + this.discount; }
 
   get changeAmount(): number {
-    if (this.selectedMethod !== 'cash') return 0;
-    return Math.max(0, this.cashReceived - this.finalTotal);
+    return this.selectedMethod === 'cash'
+      ? Math.max(0, this.cashReceived - this.finalTotal) : 0;
   }
 
   get splitAmountPerPerson(): number {
-    if (!this.splitEnabled || this.splitCount <= 1) return this.finalTotal;
-    return this.finalTotal / this.splitCount;
+    return this.splitCount > 1 ? this.finalTotal / this.splitCount : this.finalTotal;
   }
+
+  get partPaidTotal(): number {
+    return this.partPayments.reduce((s, p) => s + p.amount, 0);
+  }
+
+  get partRemainingTotal(): number {
+    return Math.max(0, this.finalTotal - this.partPaidTotal);
+  }
+
+  get partFullyPaid(): boolean { return this.partRemainingTotal <= 0; }
 
   get canProceed(): boolean {
     if (this.processing) return false;
-
-    if (this.splitEnabled) {
-      return this.splitPayments.every(p => p.paid);
-    }
-
+    if (this.paymentMode === 'split') return this.splitPayments.every(p => p.paid);
+    if (this.paymentMode === 'part')  return this.partFullyPaid;
     switch (this.selectedMethod) {
-      case 'cash':
-        return this.cashReceived >= this.finalTotal;
-      case 'card':
-        return this.cardNumber.length >= 16 && this.cardHolderName.trim().length > 0;
-      case 'upi':
-        return this.upiId.trim().length > 0;
-      case 'wallet':
-        return true;
-      default:
-        return false;
+      case 'cash':   return this.cashReceived >= this.finalTotal;
+      case 'card':   return this.cardNumber.length >= 16 && !!this.cardHolderName.trim();
+      case 'upi':    return !!this.upiId.trim();
+      case 'wallet': return true;
+      default:       return false;
     }
   }
 
-  /* ================= PAYMENT METHOD SELECTION ================= */
-
-  selectPaymentMethod(method: PaymentMethod): void {
-    this.selectedMethod = method;
-    this.cdr.markForCheck();
-  }
-
-  /* ================= TIP MANAGEMENT ================= */
-
-  applyQuickTip(percentage: number): void {
-    this.tipPercentage = percentage;
-    this.tipAmount = Math.round((this.subtotal * percentage) / 100);
-    this.cdr.markForCheck();
-  }
-
-  updateCustomTip(amount: number): void {
-    this.tipAmount = Math.max(0, amount);
-    this.tipPercentage = this.subtotal > 0 
-      ? Math.round((this.tipAmount / this.subtotal) * 100) 
-      : 0;
-    this.cdr.markForCheck();
-  }
-
-  clearTip(): void {
-    this.tipAmount = 0;
-    this.tipPercentage = 0;
-    this.cdr.markForCheck();
-  }
-
-  /* ================= DISCOUNT MANAGEMENT ================= */
-
-  applyQuickDiscount(percentage: number): void {
-    this.discountType = 'percentage';
-    this.customDiscount = Math.round((this.subtotal * percentage) / 100);
-    this.cdr.markForCheck();
-  }
-
-  updateCustomDiscount(value: number): void {
-    if (this.discountType === 'percentage') {
-      this.customDiscount = Math.round((this.subtotal * value) / 100);
-    } else {
-      this.customDiscount = Math.max(0, value);
+  /* ── Mode toggle ──────────────────────────────────── */
+  setMode(mode: PaymentMode): void {
+    this.paymentMode = mode;
+    if (mode === 'split') this.initSplitPayments();
+    else if (mode === 'part') {
+      this.partPayments    = [];
+      this.partEntryAmount = this.finalTotal;
     }
-    this.cdr.markForCheck();
+    this.mark();
   }
 
-  clearDiscount(): void {
-    this.customDiscount = 0;
-    this.discountReason = '';
-    this.cdr.markForCheck();
+  /* ── Method selection ─────────────────────────────── */
+  selectMethod(m: PaymentMethod): void { this.selectedMethod = m; this.mark(); }
+
+  /* ── Tip ──────────────────────────────────────────── */
+  applyTip(pct: number): void {
+    this.tipPercentage = pct;
+    this.tipAmount     = Math.round((this.subtotal * pct) / 100);
+    this.mark();
   }
 
-  getDiscountPercentage(): number {
-    if (this.subtotal <= 0) return 0;
-    return Math.round((this.customDiscount / this.subtotal) * 100);
+  updateTip(v: number): void {
+    this.tipAmount     = Math.max(0, v);
+    this.tipPercentage = this.subtotal > 0
+      ? Math.round((this.tipAmount / this.subtotal) * 100) : 0;
+    this.mark();
   }
 
-  /* ================= SPLIT BILL ================= */
+  clearTip(): void { this.tipAmount = 0; this.tipPercentage = 0; this.mark(); }
 
-  toggleSplitBill(): void {
-    this.splitEnabled = !this.splitEnabled;
-    
-    if (this.splitEnabled) {
-      this.initializeSplitPayments();
-    } else {
-      this.splitPayments = [];
-    }
-    
-    this.cdr.markForCheck();
+  /* ── Discount ─────────────────────────────────────── */
+  applyDiscount(pct: number): void {
+    this.discountType   = 'percentage';
+    this.customDiscount = Math.round((this.subtotal * pct) / 100);
+    this.mark();
   }
 
-  updateSplitCount(count: number): void {
-    this.splitCount = Math.max(2, Math.min(10, count));
-    this.initializeSplitPayments();
-    this.cdr.markForCheck();
+  updateDiscount(v: number): void {
+    this.customDiscount = this.discountType === 'percentage'
+      ? Math.round((this.subtotal * v) / 100) : Math.max(0, v);
+    this.mark();
   }
 
-  private initializeSplitPayments(): void {
+  clearDiscount(): void { this.customDiscount = 0; this.discountReason = ''; this.mark(); }
+
+  getDiscountPct(): number {
+    return this.subtotal > 0
+      ? Math.round((this.customDiscount / this.subtotal) * 100) : 0;
+  }
+
+  /* ── Split ────────────────────────────────────────── */
+  updateSplitCount(n: number): void {
+    this.splitCount = Math.max(2, Math.min(10, n));
+    this.initSplitPayments();
+    this.mark();
+  }
+
+  private initSplitPayments(): void {
     this.splitPayments = Array.from({ length: this.splitCount }, (_, i) => ({
-      personIndex: i + 1,
-      amount: this.splitAmountPerPerson,
-      method: 'cash',
-      paid: false
+      personIndex: i + 1, amount: this.splitAmountPerPerson,
+      method: 'cash', paid: false
     }));
   }
 
-  markSplitPaymentPaid(index: number, method: PaymentMethod): void {
-    if (this.splitPayments[index]) {
-      this.splitPayments[index].paid = true;
-      this.splitPayments[index].method = method;
-      this.cdr.markForCheck();
+  markSplitPaid(i: number, m: PaymentMethod): void {
+    if (this.splitPayments[i]) {
+      this.splitPayments[i].paid = true;
+      this.splitPayments[i].method = m;
+      this.mark();
     }
   }
 
-  /* ================= CASH PAYMENT ================= */
-
-  updateCashReceived(amount: number): void {
-    this.cashReceived = Math.max(0, amount);
-    this.cdr.markForCheck();
+  /* ── Part Payment ─────────────────────────────────── */
+  addPartPayment(): void {
+    const amt = Math.min(this.partEntryAmount, this.partRemainingTotal);
+    if (amt <= 0) return;
+    this.partPayments.push({
+      index:     this.partPayments.length + 1,
+      amount:    amt,
+      method:    this.partEntryMethod,
+      note:      this.partEntryNote.trim() || undefined,
+      timestamp: new Date()
+    });
+    this.partEntryAmount = this.partRemainingTotal - amt;
+    this.partEntryNote   = '';
+    this.mark();
   }
 
-  addQuickCash(amount: number): void {
-    this.cashReceived += amount;
-    this.cdr.markForCheck();
+  removePartPayment(i: number): void {
+    this.partPayments.splice(i, 1);
+    this.partPayments.forEach((p, idx) => p.index = idx + 1);
+    this.partEntryAmount = this.partRemainingTotal;
+    this.mark();
   }
 
-  setExactAmount(): void {
-    this.cashReceived = this.finalTotal;
-    this.cdr.markForCheck();
+  setPartEntryToRemaining(): void {
+    this.partEntryAmount = this.partRemainingTotal;
+    this.mark();
   }
 
-  /* ================= PAYMENT PROCESSING ================= */
+  /* ── Cash helpers ─────────────────────────────────── */
+  setExactAmount(): void  { this.cashReceived = this.finalTotal; this.mark(); }
+  addQuickCash(n: number): void { this.cashReceived += n; this.mark(); }
 
+  /* ── Process ──────────────────────────────────────── */
   async processPayment(): Promise<void> {
     if (!this.canProceed) return;
-
-    this.processing = true;
-    this.cdr.markForCheck();
+    this.processing = true; this.mark();
 
     try {
-      await this.delay(1500);
+      await new Promise(r => setTimeout(r, 1200));
 
-      const paymentData: PaymentData = {
-        method: this.selectedMethod,
-        amount: this.finalTotal,
-        tip: this.tipAmount,
-        discount: this.discountTotal,
-        splitCount: this.splitEnabled ? this.splitCount : undefined,
-        transactionId: this.generateTransactionId(),
-        timestamp: new Date()
+      const data: PaymentData = {
+        method:         this.selectedMethod,
+        mode:           this.paymentMode,
+        amount:         this.finalTotal,
+        tip:            this.tipAmount || undefined,
+        discount:       this.discountTotal || undefined,
+        splitCount:     this.paymentMode === 'split' ? this.splitCount : undefined,
+        partPayments:   this.paymentMode === 'part'  ? this.partPayments : undefined,
+        transactionId:  `TXN${Date.now()}${Math.random().toString(36).slice(2,9).toUpperCase()}`,
+        timestamp:      new Date()
       };
 
-      if (this.printAfterPayment) {
-        this.printReceipt();
-      }
+      if (this.printAfterPayment) this.printReceipt();
+      if (this.sendSMS && this.customerInfo?.phone) this.sendPaymentSMS();
 
-      if (this.sendSMS && this.customerInfo?.phone) {
-        this.sendPaymentSMS();
-      }
-
-      this.complete.emit(paymentData);
-    } catch (err) {
-      console.error('Payment processing failed:', err);
-      alert('Payment failed. Please try again.');
+      this.complete.emit(data);
+    } catch (e) {
+      console.error(e);
     } finally {
-      this.processing = false;
-      this.cdr.markForCheck();
+      this.processing = false; this.mark();
     }
   }
 
-  private generateTransactionId(): string {
-    return `TXN${Date.now()}${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /* ================= RECEIPT & PRINTING ================= */
-
-  printReceipt(): void {
-    console.log('Printing receipt...');
-    console.log('Order:', this.orderNumber);
-    console.log('Items:', this.cart);
-    console.log('Total:', this.finalTotal);
-  }
+  /* ── Receipt ──────────────────────────────────────── */
+  printReceipt(): void { console.log('Print:', this.orderNumber, this.finalTotal); }
 
   private sendPaymentSMS(): void {
-    console.log('Sending SMS to:', this.customerInfo?.phone);
+    console.log('SMS to:', this.customerInfo?.phone);
   }
 
   viewReceipt(): void {
-    const receiptWindow = window.open('', '_blank');
-    if (receiptWindow) {
-      receiptWindow.document.write(this.generateReceiptHTML());
-      receiptWindow.document.close();
-    }
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(this.buildReceiptHTML()); w.document.close(); }
   }
 
-  private generateReceiptHTML(): string {
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Receipt - ${this.orderNumber}</title>
-        <style>
-          body { font-family: monospace; padding: 20px; max-width: 400px; margin: 0 auto; }
-          h1 { text-align: center; font-size: 18px; }
-          .divider { border-top: 2px dashed #000; margin: 10px 0; }
-          .row { display: flex; justify-content: space-between; margin: 5px 0; }
-          .total { font-weight: bold; font-size: 16px; }
-        </style>
-      </head>
-      <body>
-        <h1>RESTAURANT NAME</h1>
-        <div class="divider"></div>
-        <div class="row"><span>Order #:</span><span>${this.orderNumber}</span></div>
-        <div class="row"><span>Date:</span><span>${new Date().toLocaleString()}</span></div>
-        ${this.tableNumber ? `<div class="row"><span>Table:</span><span>${this.tableNumber}</span></div>` : ''}
-        <div class="divider"></div>
-        ${this.cart.map(item => `
-          <div class="row">
-            <span>${item.name} x${item.qty}</span>
-            <span>₹${item.price * item.qty}</span>
-          </div>
-        `).join('')}
-        <div class="divider"></div>
-        <div class="row"><span>Subtotal:</span><span>₹${this.subtotal}</span></div>
-        <div class="row"><span>Tax:</span><span>₹${this.tax}</span></div>
-        ${this.tipAmount > 0 ? `<div class="row"><span>Tip:</span><span>₹${this.tipAmount}</span></div>` : ''}
-        ${this.discountTotal > 0 ? `<div class="row"><span>Discount:</span><span>-₹${this.discountTotal}</span></div>` : ''}
-        <div class="divider"></div>
-        <div class="row total"><span>TOTAL:</span><span>₹${this.finalTotal}</span></div>
-        <div class="row"><span>Payment:</span><span>${this.selectedMethod.toUpperCase()}</span></div>
-        ${this.selectedMethod === 'cash' ? `
-          <div class="row"><span>Cash Received:</span><span>₹${this.cashReceived}</span></div>
-          <div class="row"><span>Change:</span><span>₹${this.changeAmount}</span></div>
-        ` : ''}
-        <div class="divider"></div>
-        <p style="text-align: center; margin-top: 20px;">Thank You! Visit Again</p>
-      </body>
-      </html>
-    `;
+  private buildReceiptHTML(): string {
+    const rows = this.cart
+      .map(i => `<div class="row"><span>${i.name} ×${i.qty}</span><span>₹${i.price * i.qty}</span></div>`)
+      .join('');
+    return `<!DOCTYPE html><html><head><title>Receipt - ${this.orderNumber}</title>
+      <style>body{font-family:monospace;padding:20px;max-width:400px;margin:0 auto}
+      h1{text-align:center;font-size:18px}.d{border-top:2px dashed #000;margin:10px 0}
+      .row{display:flex;justify-content:space-between;margin:5px 0}
+      .total{font-weight:700;font-size:16px}</style></head><body>
+      <h1>RESTAURANT NAME</h1><div class="d"></div>
+      <div class="row"><span>Order #:</span><span>${this.orderNumber}</span></div>
+      <div class="row"><span>Date:</span><span>${new Date().toLocaleString()}</span></div>
+      ${this.tableNumber ? `<div class="row"><span>Table:</span><span>${this.tableNumber}</span></div>` : ''}
+      <div class="d"></div>${rows}<div class="d"></div>
+      <div class="row"><span>Subtotal:</span><span>₹${this.subtotal}</span></div>
+      <div class="row"><span>Tax:</span><span>₹${this.tax}</span></div>
+      ${this.tipAmount     ? `<div class="row"><span>Tip:</span><span>₹${this.tipAmount}</span></div>` : ''}
+      ${this.discountTotal ? `<div class="row"><span>Discount:</span><span>-₹${this.discountTotal}</span></div>` : ''}
+      <div class="d"></div>
+      <div class="row total"><span>TOTAL:</span><span>₹${this.finalTotal}</span></div>
+      ${this.paymentMode === 'part' ? this.partPayments.map(p =>
+        `<div class="row"><span>Part ${p.index} (${p.method}):</span><span>₹${p.amount}</span></div>`
+      ).join('') : `<div class="row"><span>Payment:</span><span>${this.selectedMethod.toUpperCase()}</span></div>`}
+      ${this.selectedMethod === 'cash' && this.paymentMode === 'full' ? `
+        <div class="row"><span>Cash Received:</span><span>₹${this.cashReceived}</span></div>
+        <div class="row"><span>Change:</span><span>₹${this.changeAmount}</span></div>` : ''}
+      <div class="d"></div>
+      <p style="text-align:center;margin-top:20px">Thank You! Visit Again</p>
+      </body></html>`;
   }
 
-  /* ================= CLOSE ================= */
-
+  /* ── Close ────────────────────────────────────────── */
   onClose(): void {
     if (this.processing) return;
-
-    // UPDATED: Using ConfirmDialog instead of window.confirm
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
         title: 'Cancel Payment?',
-        message: 'Are you sure you want to cancel the payment process and go back? All entered data will be lost.',
+        message: 'All entered data will be lost.',
         confirmText: 'Yes, Cancel',
         cancelText: 'No, Stay',
         confirmColor: 'warn'
       }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result === true) {
-        this.close.emit();
-      }
-    });
-    
-    // if (confirm('Cancel payment and go back?')) {
-    //   this.close.emit();
-    // }
+    }).afterClosed().subscribe(r => { if (r) this.close.emit(); });
   }
 
-  /* ================= HELPERS ================= */
+  /* ── Display helpers ──────────────────────────────── */
+  fmt(n: number): string { return `₹${n.toFixed(0)}`; }
 
-  formatCurrency(amount: number): string {
-    return `₹${amount.toFixed(0)}`;
+  methodIcon(m: PaymentMethod): string {
+    return { cash: 'payments', card: 'credit_card', upi: 'qr_code_scanner', wallet: 'account_balance_wallet' }[m];
   }
 
-  getPaymentMethodIcon(method: PaymentMethod): string {
-    switch (method) {
-      case 'cash': return 'payments';
-      case 'card': return 'credit_card';
-      case 'upi': return 'qr_code_scanner';
-      case 'wallet': return 'account_balance_wallet';
-      default: return 'payment';
-    }
+  methodLabel(m: PaymentMethod): string {
+    return { cash: 'Cash', card: 'Card', upi: 'UPI', wallet: 'Wallet' }[m];
   }
 
-  getUpiProviderIcon(provider: string): string {
-    switch (provider) {
-      case 'gpay': return '💰';
-      case 'phonepe': return '📱';
-      case 'paytm': return '💳';
-      case 'bhim': return '🏦';
-      default: return '💵';
-    }
+  upiProviderIcon(p: string): string {
+    return { gpay: '💰', phonepe: '📱', paytm: '💳', bhim: '🏦' }[p] ?? '💵';
   }
+
+  private mark(): void { this.cdr.markForCheck(); }
 }

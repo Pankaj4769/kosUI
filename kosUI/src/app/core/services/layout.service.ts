@@ -1,22 +1,26 @@
 import { Injectable } from '@angular/core';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class LayoutService {
 
-  private collapsed = false;
+  isSidebarCollapsed = false;
 
-  isCollapsed() {
-    return this.collapsed;
+  toggle(): void {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+    localStorage.setItem('sidebar', String(this.isSidebarCollapsed));
   }
 
-  toggle() {
-    this.collapsed = !this.collapsed;
-    localStorage.setItem('sidebar', String(this.collapsed));
+  collapse(): void {
+    this.isSidebarCollapsed = true;
+    localStorage.setItem('sidebar', 'true');
   }
 
-  init() {
-    this.collapsed = localStorage.getItem('sidebar') === 'true';
+  expand(): void {
+    this.isSidebarCollapsed = false;
+    localStorage.setItem('sidebar', 'false');
+  }
+
+  init(): void {
+    this.isSidebarCollapsed = localStorage.getItem('sidebar') === 'true';
   }
 }

@@ -1,18 +1,62 @@
-.layout {
+/* =====================================================
+   APP SHELL
+===================================================== */
+.app-shell {
   display: flex;
+  flex-direction: row;          /* sidebar LEFT | content-column RIGHT */
   height: 100vh;
-  min-height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #f1f5f9;
 }
 
-.content {
-  flex: 1;
-  display: flex;
+/* Auth pages — full dark screen, no sidebar/header */
+.app-shell.auth-mode {
   flex-direction: column;
+  background: #020617;
+}
+
+/* =====================================================
+   RIGHT COLUMN — header on top, main below
+===================================================== */
+.content-column {
+  display: flex;
+  flex-direction: column;       /* header TOP | main BOTTOM */
+  flex: 1;
+  min-width: 0;                 /* prevents flex overflow on small screens */
   overflow: hidden;
 }
 
-.page {
+/* =====================================================
+   MAIN CONTENT
+===================================================== */
+.main-content {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  background: #f1f5f9;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
+.main-content::-webkit-scrollbar {
+  width: 5px;
+}
+.main-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.main-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+/* =====================================================
+   RESPONSIVE — Mobile
+===================================================== */
+@media (max-width: 767px) {
+  .app-shell {
+    flex-direction: column;
+  }
+  .content-column {
+    width: 100%;
+  }
+}
