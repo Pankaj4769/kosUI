@@ -42,6 +42,32 @@ const ROUTE_TITLES: Record<string, { title: string; icon: string; hideSearch?: b
   '/settings':          { title: 'Settings',        icon: 'settings',      hideSearch: false, isCashier: false },
 };
 
+export interface Restaurant {
+  id:     string;
+  name:   string;
+  branch: string;
+  logo?:  string;
+}
+
+export interface Notification {
+  id:      number;
+  message: string;
+  time:    string;
+  read:    boolean;
+}
+
+const ROUTE_TITLES: Record<string, { title: string; icon: string; hideSearch?: boolean; isCashier?: boolean }> = {
+  '/dashboard':         { title: 'Dashboard',      icon: 'dashboard',     hideSearch: false, isCashier: false },
+  '/pos/cashier':       { title: 'Cashier',         icon: 'point_of_sale', hideSearch: true,  isCashier: true  },
+  '/pos':               { title: 'Cashier',         icon: 'point_of_sale', hideSearch: true,  isCashier: true  },
+  '/order/live-orders': { title: 'Live Orders',     icon: 'receipt_long',  hideSearch: false, isCashier: false },
+  '/kitchen':           { title: 'Kitchen Display', icon: 'soup_kitchen',  hideSearch: false, isCashier: false },
+  '/menu':              { title: 'Menu Management', icon: 'menu_book',     hideSearch: false, isCashier: false },
+  '/inventory':         { title: 'Inventory',       icon: 'inventory_2',   hideSearch: false, isCashier: false },
+  '/reports':           { title: 'Reports',         icon: 'bar_chart',     hideSearch: false, isCashier: false },
+  '/settings':          { title: 'Settings',        icon: 'settings',      hideSearch: false, isCashier: false },
+};
+
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -238,6 +264,26 @@ export class HeaderComponent implements OnInit, OnDestroy {
   logout() {
     this.authService.logout();
 
+  }
+
+  /* ═══════════════════════════════════════════
+     OUTSIDE CLICK / ESCAPE
+  ═══════════════════════════════════════════ */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.user-section'))        this.showUserMenu       = false;
+    if (!target.closest('.notif-section'))       this.showNotifications  = false;
+    if (!target.closest('.restaurant-switcher')) this.showRestaurantMenu = false;
+    this.cdr.markForCheck();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.showUserMenu       = false;
+    this.showNotifications  = false;
+    this.showRestaurantMenu = false;
+    this.cdr.markForCheck();
   }
 
   /* ═══════════════════════════════════════════
