@@ -111,8 +111,8 @@ export class LoginComponent implements OnDestroy {
     this.doLogin({
       method:   'PASSWORD',
       username: this.username.trim(),
-      password: this.password
-      // pass selectedRole to backend when ready: role: this.selectedRole
+      password: this.password,
+      role: this.selectedRole
     });
   }
 

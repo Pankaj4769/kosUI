@@ -34,8 +34,11 @@ export class AuthService {
     private http: HttpClient) {}
 
     private baseUrl = BASE_URL;
-    preLogin(username: string, password: string): Observable<LoginResponse> {
-      return this.http.post<LoginResponse>(`${this.baseUrl}/auth/login`, { username, password })
+    preLogin(req: LoginRequest): Observable<LoginResponse> {
+      let username = req.username;
+      let password = req.password;
+      let role = req.role;
+      return this.http.post<LoginResponse>(`${this.baseUrl}/auth/login`, { username, password, role })
         .pipe(
           tap(response => {
             // Store token in localStorage
@@ -48,11 +51,11 @@ export class AuthService {
 
   // ── Password Login ───────────────────────────────────────
   login(req: LoginRequest): Observable<{ success: boolean; message: string }> {
-    if (!req.username && !req.password) {
+    if (!req.username && !req.password && !req.role) {
       return of({ success: false, message: 'Invalid credentials. Please try again.' });
     }
   
-    return this.preLogin(req.username!, req.password!).pipe(
+    return this.preLogin(req).pipe(
       switchMap((res :LoginResponse)=> {
         let user: AuthUser | undefined;
     

@@ -12,6 +12,7 @@ export type LoginMethod = 'PASSWORD' | 'MOBILE_OTP' | 'GOOGLE' | 'ZOHO';
 export interface LoginRequest {
   username?: string;
   password?: string;
+  role?: string;
   mobile?: string;
   otp?: string;
   method: LoginMethod;
