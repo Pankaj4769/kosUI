@@ -139,9 +139,16 @@ export class SignupComponent implements OnDestroy {
     this.errorMessage = '';
 
     setTimeout(() => {
-      this.successMessage = `Account created! Welcome, ${this.form.fullName.split(' ')[0]}.`;
-      this.isLoading = false;
-      setTimeout(() => this.router.navigate(['/login']), 2000);
+
+      this.auth.signUp(this.form).subscribe(res =>{
+        if(res.status){
+          this.successMessage = `Account created! Welcome, ${this.form.fullName.split(' ')[0]}.`;
+          this.isLoading = false;
+          setTimeout(() => this.router.navigate(['/login']), 2000);
+        }else{
+          this.errorMessage = `Sign up failed for some reason.Try in some time.`;
+        }
+      });      
     }, 1000);
   }
 

@@ -4,10 +4,17 @@ import { AuthUser, LoginRequest, OnboardingStatus, SubscriptionPlan, UserRole } 
 import { HttpClient } from '@angular/common/http';
 import { map, Observable, of, switchMap, tap } from 'rxjs';
 import { BASE_URL } from '../../apiUrls';
+import { SignupForm } from '../component/sign-up/signup.component';
 
 
 interface LoginResponse {
   accessToken: string;
+}
+
+
+interface SignUpResponse {
+  message: string,
+  status: boolean
 }
 
 @Injectable({ providedIn: 'root' })
@@ -169,4 +176,9 @@ export class AuthService {
     };
     this.router.navigate([map[role] ?? '/dashboard']);
   }
+
+  signUp(form: SignupForm): Observable<SignUpResponse>{
+    return this.http.post<SignUpResponse>(`${this.baseUrl}/auth/signUp`, form);
+  }
+
 }
