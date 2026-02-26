@@ -1,20 +1,28 @@
-<div class="app-shell" [class.auth-mode]="isAuthPage">
+<div class="app-layout">
 
-  <!-- SIDEBAR — left column, full height -->
-  <app-sidebar
-    *ngIf="!isAuthPage"
-    [class.collapsed]="layout.isSidebarCollapsed">
-  </app-sidebar>
-
-  <!-- RIGHT COLUMN — header stacked above main -->
-  <div class="content-column">
-
-    <app-header *ngIf="!isAuthPage"></app-header>
-
-    <main class="main-content">
+  <!-- AUTH pages — no sidebar/header -->
+  <ng-container *ngIf="isAuthPage">
+    <main class="auth-main">
       <router-outlet></router-outlet>
     </main>
+  </ng-container>
 
-  </div>
+  <!-- APP pages — sidebar + header + content -->
+  <ng-container *ngIf="!isAuthPage">
+
+    <!-- Sidebar spacer wrapper — holds 72px/250px in flex flow, never resizes on hover -->
+    <div class="sidebar-wrapper" [class.collapsed]="layout.isSidebarCollapsed">
+      <app-sidebar></app-sidebar>
+    </div>
+
+    <!-- Content column — header stacked above main, never pushed by sidebar hover -->
+    <div class="content-column">
+      <app-header></app-header>
+      <main class="main-content">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+
+  </ng-container>
 
 </div>

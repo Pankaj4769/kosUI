@@ -22,7 +22,7 @@ export class RestaurantSetupComponent {
   };
 
   staffLimitMap: Record<SubscriptionPlan, number> = {
-    BASIC: 5, BASIC_PLUS: 15, PREMIUM: 50, ULTRA: 999
+    STARTER: 1, GROWTH: 3, PRO: 10, ENTERPRISE: 15
   };
 
   availableRoles: UserRole[] = ['MANAGER', 'CASHIER', 'BILLING_ASSISTANT', 'CHEF', 'WAITER'];

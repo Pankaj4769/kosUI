@@ -1,10 +1,10 @@
 <div class="cashier-container" [class.loading]="loading">
 
   <!-- ================= ENHANCED HEADER ================= -->
-  <header class="cashier-header">
-    <div class="header-left">
+  <!-- <header class="cashier-header">
+    <div class="header-left"> -->
       <!-- App Title & Context -->
-      <div class="header-title-block">
+      <!-- <div class="header-title-block">
         <div class="app-title">
           <mat-icon class="title-icon">restaurant</mat-icon>
           <h1>Cashier Station</h1>
@@ -22,7 +22,7 @@
         </div>
       </div>
 
-      <!-- Session Info -->
+      Session Info
       <div class="session-info">
         <span class="session-item">
           <mat-icon>person</mat-icon>
@@ -37,23 +37,26 @@
     </div>
 
     <div class="header-right">
-      <!-- Time Display -->
+      Time Display
       <div class="time-display">
         <div class="time">{{ formattedTime }}</div>
         <div class="date">{{ formattedDate }}</div>
       </div>
 
-      <!-- Notifications Badge -->
+      Notifications Badge
       <button class="header-icon-btn" (click)="showNotifications = !showNotifications">
         <mat-icon [matBadge]="notifications.length" 
                   [matBadgeHidden]="notifications.length === 0"
                   matBadgeColor="warn">
           notifications
         </mat-icon>
-      </button>
+      </button> -->
 
       <!-- Quick Actions Menu -->
-      <button class="header-icon-btn" [matMenuTriggerFor]="quickMenu">
+      
+    <!-- </div>
+  </header> -->
+    <button class="header-icon-btn" [matMenuTriggerFor]="quickMenu">
         <mat-icon>menu</mat-icon>
       </button>
 
@@ -76,8 +79,6 @@
           <span>New Order (Ctrl+N)</span>
         </button>
       </mat-menu>
-    </div>
-  </header>
 
   <!-- ================= KEYBOARD SHORTCUTS HINT ================= -->
   <div class="shortcuts-bar">

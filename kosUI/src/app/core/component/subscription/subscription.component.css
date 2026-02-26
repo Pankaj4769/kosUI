@@ -1,112 +1,264 @@
-/* ── Wrapper ── */
+/* ══════════════════════════════════════════════════════════
+   SUBSCRIPTION PAGE — Kitchen Book KOS
+   Structure:
+     1.  Wrapper
+     2.  Header
+     3.  Hero & Billing Toggle
+     4.  Plan Grid & Cards
+     5.  Popular Badge
+     6.  Plan Details
+     7.  Proceed Button
+     8.  Comparison Table
+     9.  Testimonials
+    10.  FAQ
+    11.  Contact Step & Form
+    12.  Back Button
+    13.  Spinner
+    14.  Responsive
+══════════════════════════════════════════════════════════ */
+
+
+/* ══════════════════════════════════════
+   1. WRAPPER
+══════════════════════════════════════ */
 .subscription-wrapper {
-  min-height: 100vh;
-  background: #f1f5f9;
-  padding: 32px 24px;
-  font-family: 'Segoe UI', sans-serif;
+  min-height: 100dvh;
+  background: #f8fafc;
+  padding: 28px 24px 64px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
   box-sizing: border-box;
 }
 
-/* ── Header ── */
+
+/* ══════════════════════════════════════
+   2. HEADER
+══════════════════════════════════════ */
 .sub-header {
   display: flex;
   align-items: center;
-  gap: 10px;
   justify-content: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.sub-header-icon-wrap {
+  width: 94px;
+  height: 94px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.sub-header-icon-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.sub-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-name {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+}
+
+.brand-name em {
+  color: #16a34a;
+  font-style: normal;
+}
+
+.brand-tagline {
+  font-size: 0.60rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+
+
+/* ══════════════════════════════════════
+   3. HERO & BILLING TOGGLE
+══════════════════════════════════════ */
+.sub-hero {
+  text-align: center;
   margin-bottom: 32px;
 }
 
-.sub-header .brand-icon {
-  font-size: 36px;
-  color: #2563eb;
-}
-
-.sub-header h1 {
+.sub-title {
   font-size: 2rem;
   font-weight: 800;
   color: #1e293b;
-  letter-spacing: 3px;
-  margin: 0;
+  margin: 0 0 4px;
+  line-height: 1.15;
+  text-align: center;
 }
 
-/* ── Titles ── */
-.sub-title {
+.sub-title-accent {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #2563eb;
+  margin: 0 0 10px;
+  line-height: 1.15;
   text-align: center;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 8px;
 }
 
 .sub-subtitle {
-  text-align: center;
   color: #64748b;
-  font-size: 0.95rem;
-  margin: 0 0 36px;
+  font-size: 0.93rem;
+  margin: 0 0 24px;
+  text-align: center;
 }
 
-/* ── Plans Grid ── */
+.billing-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 40px;
+  padding: 6px 18px;
+  user-select: none;
+}
+
+.billing-toggle span {
+  font-size: 0.90rem;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.billing-toggle span.active {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.toggle-switch {
+  width: 42px;
+  height: 22px;
+  background: #e2e8f0;
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+.toggle-knob {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #2563eb;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: left 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+.toggle-knob.annual { left: 23px; }
+
+.save-badge {
+  display: inline-block;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+
+/* ══════════════════════════════════════
+   4. PLAN GRID & CARDS
+══════════════════════════════════════ */
 .plans-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
-  max-width: 1100px;
-  margin: 0 auto;
+  max-width: 1060px;
+  margin: 0 auto 32px;
 }
 
-/* ── Plan Card ── */
 .plan-card {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  text-align: left;
   background: #fff;
   border: 2px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 28px 22px;
+  border-radius: 18px;
+  padding: 28px 20px 20px;
   cursor: pointer;
   position: relative;
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  outline: none;
 }
 
 .plan-card:hover {
   border-color: #93c5fd;
-  box-shadow: 0 6px 24px rgba(37, 99, 235, 0.10);
-  transform: translateY(-3px);
+  box-shadow: 0 6px 24px rgba(37,99,235,0.10);
+  transform: translateY(-4px);
+}
+
+.plan-card:focus-visible {
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.20);
 }
 
 .plan-card.selected {
   border-color: #2563eb;
-  box-shadow: 0 8px 28px rgba(37, 99, 235, 0.18);
-  background: #eff6ff;
+  box-shadow: 0 8px 28px rgba(37,99,235,0.16);
+  background: #f0f6ff;
 }
 
 .plan-card.popular {
   border-color: #7c3aed;
+  background: #faf5ff;
 }
 
 .plan-card.popular.selected {
   border-color: #7c3aed;
   background: #f5f3ff;
-  box-shadow: 0 8px 28px rgba(124, 58, 237, 0.18);
+  box-shadow: 0 8px 28px rgba(124,58,237,0.18);
 }
 
-/* ── Popular Badge ── */
+
+/* ══════════════════════════════════════
+   5. POPULAR BADGE
+══════════════════════════════════════ */
 .popular-badge {
   position: absolute;
   top: -13px;
   left: 50%;
   transform: translateX(-50%);
-  background: #7c3aed;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
   color: #fff;
-  font-size: 0.72rem;
+  font-size: 0.70rem;
   font-weight: 700;
-  padding: 4px 14px;
+  padding: 4px 16px;
   border-radius: 20px;
   white-space: nowrap;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
+  box-shadow: 0 3px 10px rgba(124,58,237,0.35);
+  pointer-events: none;
 }
 
-/* ── Plan Name ── */
+
+/* ══════════════════════════════════════
+   6. PLAN DETAILS
+══════════════════════════════════════ */
 .plan-name {
   font-size: 1.15rem;
   font-weight: 700;
@@ -114,175 +266,494 @@
   text-align: center;
 }
 
-/* ── Plan Price ── */
+.plan-tagline {
+  text-align: center;
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: -6px;
+  font-style: italic;
+}
+
 .plan-price {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 800;
   color: #2563eb;
   text-align: center;
   line-height: 1;
 }
 
-.plan-card.popular .plan-price {
-  color: #7c3aed;
-}
+.plan-card.popular .plan-price { color: #7c3aed; }
 
 .plan-period {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 400;
   color: #94a3b8;
   margin-left: 2px;
 }
 
-/* ── Staff Count ── */
+.plan-billed-note {
+  text-align: center;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: -8px;
+}
+
 .plan-staff {
   display: flex;
   align-items: center;
   gap: 6px;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: 0.83rem;
   color: #475569;
   background: #f1f5f9;
   border-radius: 8px;
-  padding: 6px 12px;
+  padding: 5px 10px;
 }
 
-.plan-staff .material-icons {
-  font-size: 16px;
-  color: #64748b;
-}
+.plan-staff .material-icons { font-size: 15px; color: #64748b; }
 
-/* ── Features List ── */
 .plan-features {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
   flex: 1;
 }
 
 .plan-features li {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  font-size: 0.84rem;
+  gap: 7px;
+  font-size: 0.83rem;
   color: #475569;
   line-height: 1.4;
 }
 
 .plan-features .check {
-  font-size: 16px;
+  font-size: 15px;
   color: #22c55e;
   flex-shrink: 0;
   margin-top: 1px;
 }
 
-.plan-card.popular .plan-features .check {
-  color: #7c3aed;
-}
+.plan-card.popular .plan-features .check { color: #7c3aed; }
 
-/* ── Select Indicator ── */
 .plan-select-indicator {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 0.85rem;
+  font-size: 0.83rem;
   font-weight: 600;
   color: #94a3b8;
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px solid #e2e8f0;
   transition: color 0.2s;
 }
 
-.plan-card.selected .plan-select-indicator {
-  color: #2563eb;
+.plan-card.selected .plan-select-indicator         { color: #2563eb; }
+.plan-card.popular.selected .plan-select-indicator { color: #7c3aed; }
+.plan-select-indicator .material-icons             { font-size: 18px; }
+
+/* Plan card — positioning pill */
+.plan-positioning {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 20px;
+  padding: 3px 12px;
+  margin-top: -4px;
+  display: inline-block;
+  align-self: center;
 }
 
-.plan-card.popular.selected .plan-select-indicator {
-  color: #7c3aed;
+.plan-card.popular .plan-positioning {
+  background: #ede9fe;
+  color: #6d28d9;
 }
 
-.plan-select-indicator .material-icons {
-  font-size: 18px;
+/* Table header — positioning line */
+.th-positioning {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #94a3b8;
+  margin-bottom: 4px;
 }
 
-/* ── Proceed Button ── */
+.plan-th.popular-th .th-positioning {
+  color: #a78bfa;
+}
+
+/* ══════════════════════════════════════
+   7. PROCEED BUTTON
+══════════════════════════════════════ */
 .sub-actions {
   display: flex;
   justify-content: center;
-  margin-top: 36px;
+  margin-top: 4px;
+  margin-bottom: 48px;
 }
 
 .btn-proceed {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
   color: #fff;
   border: none;
   border-radius: 10px;
-  padding: 13px 32px;
+  padding: 14px 40px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 18px rgba(37,99,235,0.30);
+  font-family: 'Segoe UI', sans-serif;
+  position: relative;
+  overflow: hidden;
 }
 
+.btn-proceed::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(
+    105deg, transparent 20%, rgba(255,255,255,0.18) 50%, transparent 80%
+  );
+  transition: left 0.45s ease;
+  pointer-events: none;
+}
+
+.btn-proceed:hover:not(:disabled)::after { left: 160%; }
+
 .btn-proceed:hover:not(:disabled) {
-  background: #1d4ed8;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37,99,235,0.40);
+}
+
+.btn-proceed:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(37,99,235,0.26);
 }
 
 .btn-proceed:disabled {
   background: #94a3b8;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
-.btn-proceed .material-icons {
+.btn-proceed .material-icons { font-size: 20px; }
+
+
+/* ══════════════════════════════════════
+   8. COMPARISON TABLE
+══════════════════════════════════════ */
+.comparison-section {
+  max-width: 1060px;
+  margin: 0 auto 56px;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 6px;
+}
+
+.section-subtitle {
+  text-align: center;
+  font-size: 0.88rem;
+  color: #94a3b8;
+  margin: 0 0 24px;
+}
+
+/* Horizontal scroll on small screens */
+.comparison-table-wrap {
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+  background: #fff;
+}
+
+/* ── Sticky header ── */
+.comparison-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.thead-row {
+  background: #fff;
+  border-bottom: 2px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Feature name column header (blank) */
+.feat-col {
+  width: 42%;
+  padding: 16px 20px;
+}
+
+/* Plan column headers */
+.plan-th {
+  text-align: center;
+  padding: 14px 12px;
+  min-width: 110px;
+}
+
+.plan-th.popular-th {
+  background: #faf5ff;
+}
+
+.th-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 3px;
+}
+
+.th-price {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.th-price.popular-price { color: #7c3aed; }
+
+.th-period {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+/* ── Category header rows ── */
+.cat-header-row td {
+  background: #f1f5f9;
+  padding: 10px 20px;
+  border-top: 2px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cat-header-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.80rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.cat-icon {
+  font-size: 16px;
+  color: #64748b;
+}
+
+/* ── Feature rows ── */
+.feat-row {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s;
+}
+
+.feat-row:hover { background: #f8fafc; }
+
+/* Zebra stripe */
+.feat-row-odd { background: #fafafa; }
+.feat-row-odd:hover { background: #f1f5f9; }
+
+/* Feature name cell */
+.feat-name-cell {
+  padding: 11px 20px;
+  font-size: 0.88rem;
+  color: #334155;
+  font-weight: 500;
+}
+
+/* Check / dash cells */
+.feat-check-cell {
+  text-align: center;
+  padding: 11px 8px;
+}
+
+/* Popular column tint on every data cell */
+.feat-check-cell.popular-col {
+  background: #faf5ff;
+}
+
+/* Hover override for popular col */
+.feat-row:hover .feat-check-cell.popular-col,
+.feat-row-odd:hover .feat-check-cell.popular-col {
+  background: #f3eeff;
+}
+
+.icon-check {
+  font-size: 18px;
+  color: #22c55e;
+  vertical-align: middle;
+}
+
+/* Popular col check in purple */
+.popular-col .icon-check { color: #7c3aed; }
+
+.icon-dash {
+  font-size: 18px;
+  color: #cbd5e1;
+  vertical-align: middle;
+}
+
+
+/* ══════════════════════════════════════
+   9. TESTIMONIALS
+══════════════════════════════════════ */
+.testimonials-section {
+  max-width: 1060px;
+  margin: 0 auto 56px;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.testimonial-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+.testimonial-text {
+  font-size: 0.92rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0 0 16px;
+  font-style: italic;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.author-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.author-info strong {
+  font-size: 0.88rem;
+  color: #1e293b;
+}
+
+.author-info span {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+
+/* ══════════════════════════════════════
+   10. FAQ
+══════════════════════════════════════ */
+.faq-section {
+  max-width: 720px;
+  margin: 0 auto 56px;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.faq-item {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.faq-item:hover { border-color: #93c5fd; }
+
+.faq-item.open {
+  border-color: #2563eb;
+  box-shadow: 0 4px 16px rgba(37,99,235,0.10);
+}
+
+.faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.93rem;
+  font-weight: 600;
+  color: #1e293b;
+  gap: 12px;
+}
+
+.faq-question .material-icons {
   font-size: 20px;
+  color: #64748b;
+  flex-shrink: 0;
 }
 
-/* ── Contact Step ── */
+.faq-answer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+
+/* ══════════════════════════════════════
+   11. CONTACT STEP & FORM
+══════════════════════════════════════ */
 .contact-step {
   max-width: 680px;
   margin: 0 auto;
 }
 
-.btn-back {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: 1.5px solid #e2e8f0;
-  color: #475569;
-  border-radius: 8px;
-  padding: 7px 16px;
-  font-size: 0.88rem;
-  font-weight: 500;
-  cursor: pointer;
-  margin-bottom: 24px;
-  transition: background 0.2s, color 0.2s;
-}
-
-.btn-back:hover {
-  background: #f1f5f9;
-  color: #1e293b;
-}
-
-.btn-back .material-icons {
-  font-size: 18px;
-}
-
-/* ── Contact Form ── */
 .contact-form {
   background: #fff;
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
 }
 
 .form-row {
@@ -299,6 +770,8 @@
   margin-bottom: 18px;
 }
 
+.form-group:last-of-type { margin-bottom: 0; }
+
 .form-group label {
   font-size: 0.85rem;
   font-weight: 600;
@@ -306,8 +779,7 @@
 }
 
 .form-group input,
-.form-group textarea,
-.form-group select {
+.form-group textarea {
   padding: 11px 14px;
   border: 1.5px solid #e2e8f0;
   border-radius: 9px;
@@ -321,19 +793,56 @@
   width: 100%;
 }
 
+.form-group input:hover:not(:focus),
+.form-group textarea:hover:not(:focus) { border-color: #cbd5e1; }
+
 .form-group input:focus,
 .form-group textarea:focus {
   border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
   background: #fff;
 }
 
 .form-group textarea {
   resize: vertical;
   min-height: 90px;
+  line-height: 1.5;
+  margin-bottom: 14px;
 }
 
-/* ── Spinner ── */
+
+/* ══════════════════════════════════════
+   12. BACK BUTTON
+══════════════════════════════════════ */
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1.5px solid #e2e8f0;
+  color: #475569;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 24px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.btn-back:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.btn-back .material-icons { font-size: 18px; }
+
+
+/* ══════════════════════════════════════
+   13. SPINNER
+══════════════════════════════════════ */
 .spin {
   animation: spin 0.9s linear infinite;
   font-size: 18px;
@@ -344,31 +853,27 @@
   to   { transform: rotate(360deg); }
 }
 
-/* ── Responsive ── */
-@media (max-width: 1024px) {
-  .plans-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+
+/* ══════════════════════════════════════
+   14. RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 600px) {
+  .subscription-wrapper { padding: 20px 14px 40px; }
+  .sub-title             { font-size: 1.5rem; }
+  .sub-title-accent      { font-size: 1.4rem; }
+  .brand-name            { font-size: 1.3rem; }
+  .brand-tagline         { font-size: 0.55rem; letter-spacing: 2px; }
+  .plan-price            { font-size: 1.7rem; }
+  .form-row              { grid-template-columns: 1fr; gap: 0; margin-bottom: 0; }
+  .contact-form          { padding: 20px 16px; }
+  .feat-name-cell        { font-size: 0.82rem; padding: 10px 12px; }
+  .feat-check-cell       { padding: 10px 6px; }
+  .icon-check,
+  .icon-dash             { font-size: 16px; }
 }
 
-@media (max-width: 600px) {
-  .plans-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .contact-form {
-    padding: 20px 16px;
-  }
-
-  .sub-title {
-    font-size: 1.3rem;
-  }
-
-  .plan-price {
-    font-size: 1.6rem;
-  }
+@media (max-width: 400px) {
+  .plan-card   { padding: 22px 14px 16px; }
+  .btn-proceed { padding: 12px 20px; font-size: 0.9rem; }
+  .brand-name  { font-size: 1.15rem; }
 }

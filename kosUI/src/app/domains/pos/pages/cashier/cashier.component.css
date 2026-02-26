@@ -217,6 +217,7 @@
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb; /* border-color */
   overflow-x: auto;
+  margin-top: -30px;
 }
 
 .shortcut-hint {

@@ -2,7 +2,7 @@ export type UserRole =
   'ADMIN' | 'OWNER' | 'MANAGER' | 'CASHIER' |
   'BILLING_ASSISTANT' | 'CHEF' | 'WAITER';
 
-export type SubscriptionPlan = 'BASIC' | 'BASIC_PLUS' | 'PREMIUM' | 'ULTRA';
+export type SubscriptionPlan = 'STARTER' | 'GROWTH' | 'PRO' | 'ENTERPRISE';
 
 export type OnboardingStatus =
   'NEW' | 'SUBSCRIPTION_SELECTED' | 'PENDING_APPROVAL' | 'APPROVED' | 'SETUP_COMPLETE';
@@ -38,8 +38,11 @@ export interface SubscriptionPlanDetail {
   price: string;
   period: string;
   staffLimit: number;
-  features: string[];
+  annualPrice?: string; 
+  tagline?: string;
   popular?: boolean;
+  positioning: string;
+  features: string[];
 }
 
 export interface StaffSetup {
