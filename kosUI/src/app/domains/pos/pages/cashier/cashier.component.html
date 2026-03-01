@@ -1,126 +1,68 @@
 <div class="cashier-container" [class.loading]="loading">
 
-  <!-- ================= ENHANCED HEADER ================= -->
-  <!-- <header class="cashier-header">
-    <div class="header-left"> -->
-      <!-- App Title & Context -->
-      <!-- <div class="header-title-block">
-        <div class="app-title">
-          <mat-icon class="title-icon">restaurant</mat-icon>
-          <h1>Cashier Station</h1>
-        </div>
-        <div class="context-info">
-          <span class="context-item" *ngIf="selectedTable">
-            <mat-icon>table_restaurant</mat-icon>
-            Table #{{ selectedTable }}
-          </span>
-          <span class="context-divider" *ngIf="selectedTable">•</span>
-          <span class="context-item order-type">
-            <mat-icon>{{ getOrderTypeIcon(orderType) }}</mat-icon>
-            {{ orderType }}
-          </span>
-        </div>
+  <!-- ===== BODY ROW: Left Column + Right Sidebar ===== -->
+  <div class="body-row">
+
+    <!-- ── LEFT COLUMN: Shortcuts Bar + Menu Panel ── -->
+    <div class="left-column">
+
+      <!-- Shortcuts Bar sits INSIDE left column only -->
+      <div class="shortcuts-bar">
+
+        <button
+          class="header-icon-btn"
+          [matMenuTriggerFor]="quickMenu"
+          type="button">
+          <mat-icon>menu</mat-icon>
+        </button>
+
+        <mat-menu #quickMenu="matMenu">
+          <button mat-menu-item (click)="refreshData()">
+            <mat-icon>refresh</mat-icon>
+            <span>Refresh (F5)</span>
+          </button>
+          <button mat-menu-item (click)="showHeldOrders()">
+            <mat-icon>pending_actions</mat-icon>
+            <span>View Held Orders</span>
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="clearCart()" [disabled]="!hasItems">
+            <mat-icon>delete_sweep</mat-icon>
+            <span>Clear Cart (Ctrl+Del)</span>
+          </button>
+          <button mat-menu-item (click)="resetOrder()">
+            <mat-icon>restart_alt</mat-icon>
+            <span>New Order (Ctrl+N)</span>
+          </button>
+        </mat-menu>
+
+        <div class="shortcut-hint"><kbd>F2</kbd> Hold</div>
+        <div class="shortcut-hint"><kbd>F3</kbd> Payment</div>
+        <div class="shortcut-hint"><kbd>F4</kbd> KOT</div>
+        <div class="shortcut-hint"><kbd>Ctrl+N</kbd> New Order</div>
+        <div class="shortcut-hint"><kbd>Esc</kbd> Close Popups</div>
+
       </div>
 
-      Session Info
-      <div class="session-info">
-        <span class="session-item">
-          <mat-icon>person</mat-icon>
-          {{ waiterName }}
-        </span>
-        <span class="session-divider">|</span>
-        <span class="session-item">
-          <mat-icon>receipt</mat-icon>
-          {{ orderNumber }}
-        </span>
-      </div>
+      <!-- Menu Panel fills remaining left column height -->
+      <section class="center-panel">
+        <app-menu-area (itemAdd)="onItemAdd($event)">
+        </app-menu-area>
+      </section>
+
     </div>
 
-    <div class="header-right">
-      Time Display
-      <div class="time-display">
-        <div class="time">{{ formattedTime }}</div>
-        <div class="date">{{ formattedDate }}</div>
-      </div>
+    <!-- ── RIGHT COLUMN: Sidebar full height (top to bottom) ── -->
+    <aside class="sidebar-panel">
 
-      Notifications Badge
-      <button class="header-icon-btn" (click)="showNotifications = !showNotifications">
-        <mat-icon [matBadge]="notifications.length" 
-                  [matBadgeHidden]="notifications.length === 0"
-                  matBadgeColor="warn">
-          notifications
-        </mat-icon>
-      </button> -->
-
-      <!-- Quick Actions Menu -->
-      
-    <!-- </div>
-  </header> -->
-    <button class="header-icon-btn" [matMenuTriggerFor]="quickMenu">
-        <mat-icon>menu</mat-icon>
-      </button>
-
-      <mat-menu #quickMenu="matMenu">
-        <button mat-menu-item (click)="refreshData()">
-          <mat-icon>refresh</mat-icon>
-          <span>Refresh (F5)</span>
-        </button>
-        <button mat-menu-item (click)="showHeldOrders()">
-          <mat-icon>pending_actions</mat-icon>
-          <span>View Held Orders</span>
-        </button>
-        <mat-divider></mat-divider>
-        <button mat-menu-item (click)="clearCart()" [disabled]="!hasItems">
-          <mat-icon>delete_sweep</mat-icon>
-          <span>Clear Cart (Ctrl+Del)</span>
-        </button>
-        <button mat-menu-item (click)="resetOrder()">
-          <mat-icon>restart_alt</mat-icon>
-          <span>New Order (Ctrl+N)</span>
-        </button>
-      </mat-menu>
-
-  <!-- ================= KEYBOARD SHORTCUTS HINT ================= -->
-  <div class="shortcuts-bar">
-    <div class="shortcut-hint">
-      <kbd>F2</kbd> Hold
-    </div>
-    <div class="shortcut-hint">
-      <kbd>F3</kbd> Payment
-    </div>
-    <div class="shortcut-hint">
-      <kbd>F4</kbd> KOT
-    </div>
-    <div class="shortcut-hint">
-      <kbd>Ctrl+N</kbd> New Order
-    </div>
-    <div class="shortcut-hint">
-      <kbd>Esc</kbd> Close Popups
-    </div>
-  </div>
-
-  <!-- ================= MAIN WORK AREA ================= -->
-  <div class="main-area">
-
-    <!-- LEFT: ORDER SIDEBAR -->
-    <section class="panel left-panel">
       <app-order-sidebar
         [orderType]="orderType"
         [selectedTable]="selectedTable"
+        [cartItemCount]="itemCount"
         (orderTypeChange)="onOrderTypeChange($event)"
         (tableSelect)="onTableSelected($event)">
       </app-order-sidebar>
-    </section>
 
-    <!-- CENTER: MENU AREA -->
-    <section class="panel center-panel">
-      <app-menu-area
-        (itemAdd)="onItemAdd($event)">
-      </app-menu-area>
-    </section>
-
-    <!-- RIGHT: CART PANEL (STICKY) -->
-    <section class="panel right-panel">
       <app-cart-panel
         [cart]="cart"
         [subtotal]="subtotal"
@@ -133,58 +75,59 @@
         (itemRemove)="onItemRemove($event)"
         (checkout)="openPayment()">
       </app-cart-panel>
-    </section>
+
+    </aside>
 
   </div>
 
-  <!-- ================= BOTTOM ACTION BAR ================= -->
+  <!-- ===== BOTTOM ACTION BAR ===== -->
   <footer class="bottom-bar">
 
-    <!-- Left Actions -->
     <div class="left-actions">
-      
-      <button 
+      <button
         class="action-btn btn-secondary"
         (click)="printKOT()"
         [disabled]="!hasItems"
         matTooltip="Print Kitchen Order (F4)"
-        matTooltipPosition="above">
+        matTooltipPosition="above"
+        type="button">
         <mat-icon>print</mat-icon>
         <span>Print KOT</span>
       </button>
 
-      <button 
+      <button
         class="action-btn btn-secondary"
         (click)="saveOrder()"
         [disabled]="!hasItems"
         matTooltip="Save Order (Ctrl+S)"
-        matTooltipPosition="above">
+        matTooltipPosition="above"
+        type="button">
         <mat-icon>save</mat-icon>
         <span>Save Order</span>
       </button>
 
-      <button 
+      <button
         class="action-btn btn-warning"
         (click)="holdOrder()"
         [disabled]="!hasItems"
         matTooltip="Hold Order (F2)"
-        matTooltipPosition="above">
+        matTooltipPosition="above"
+        type="button">
         <mat-icon>pause_circle</mat-icon>
         <span>Hold Order</span>
       </button>
 
-      <button 
+      <button
         class="action-btn btn-info"
         (click)="showHeldOrders()"
         matTooltip="View Held Orders"
-        matTooltipPosition="above">
+        matTooltipPosition="above"
+        type="button">
         <mat-icon>pending_actions</mat-icon>
         <span>Held Orders</span>
       </button>
-
     </div>
 
-    <!-- Center Status -->
     <div class="center-status">
       <div class="order-summary" *ngIf="hasItems">
         <div class="summary-line">
@@ -198,84 +141,84 @@
         </div>
       </div>
       <div class="empty-state-text" *ngIf="!hasItems">
-        Cart is empty - Start adding items
+        Cart is empty — Start adding items
       </div>
     </div>
 
-    <!-- Right Actions -->
     <div class="right-actions">
-      
-      <button 
+      <button
         class="action-btn btn-danger"
         (click)="closeTable()"
         [disabled]="!selectedTable"
         matTooltip="Close Current Table"
-        matTooltipPosition="above">
+        matTooltipPosition="above"
+        type="button">
         <mat-icon>close</mat-icon>
         <span>Close Table</span>
       </button>
 
-      <button 
+      <button
         class="action-btn btn-primary pay-btn"
         [disabled]="!hasItems"
         (click)="openPayment()"
         matTooltip="Proceed to Payment (F3)"
-        matTooltipPosition="above">
+        matTooltipPosition="above"
+        type="button">
         <mat-icon>payments</mat-icon>
         <span>Pay Now</span>
         <span class="amount">₹{{ total | number:'1.0-0' }}</span>
         <mat-icon class="arrow">arrow_forward</mat-icon>
       </button>
-
     </div>
 
   </footer>
 
 </div>
 
-<!-- ================= NOTIFICATIONS PANEL ================= -->
-<div class="notifications-panel" *ngIf="showNotifications && notifications.length > 0">
+<!-- ===== NOTIFICATIONS PANEL ===== -->
+<div class="notifications-panel"
+  *ngIf="showNotifications && notifications.length > 0">
   <div class="notifications-header">
     <h3>Notifications</h3>
-    <button class="close-btn" (click)="showNotifications = false">
+    <button class="close-btn" (click)="showNotifications = false" type="button">
       <mat-icon>close</mat-icon>
     </button>
   </div>
   <div class="notifications-list">
-    <div 
+    <div
       class="notification-item"
       *ngFor="let notif of notifications; trackBy: trackByNotificationId"
-      [ngClass]="'notification-' + notif.type"
-      [@slideIn]>
-      <mat-icon class="notif-icon">
-        {{ getNotificationIcon(notif.type) }}
-      </mat-icon>
+      [ngClass]="'notification-' + notif.type">
+      <mat-icon class="notif-icon">{{ getNotificationIcon(notif.type) }}</mat-icon>
       <span class="notif-message">{{ notif.message }}</span>
-      <button class="notif-close" (click)="dismissNotification(notif.id)">
+      <button
+        class="notif-close"
+        (click)="dismissNotification(notif.id)"
+        type="button">
         <mat-icon>close</mat-icon>
       </button>
     </div>
   </div>
 </div>
 
-<!-- ================= TOAST NOTIFICATIONS (FLOATING) ================= -->
+<!-- ===== TOAST NOTIFICATIONS ===== -->
 <div class="toast-container">
-  <div 
+  <div
     class="toast-notification"
     *ngFor="let notif of notifications.slice(-3); trackBy: trackByNotificationId"
-    [ngClass]="'toast-' + notif.type"
-    [@slideInOut]>
-    <mat-icon class="toast-icon">
-      {{ getNotificationIcon(notif.type) }}
-    </mat-icon>
+    [ngClass]="'toast-' + notif.type">
+    <mat-icon class="toast-icon">{{ getNotificationIcon(notif.type) }}</mat-icon>
     <span class="toast-message">{{ notif.message }}</span>
-    <button class="toast-close" (click)="dismissNotification(notif.id)">
+    <button
+      class="toast-close"
+      (click)="dismissNotification(notif.id)"
+      type="button">
       <mat-icon>close</mat-icon>
     </button>
   </div>
 </div>
 
-<!-- ================= PAYMENT POPUP ================= -->
+<!-- ===== PAYMENT POPUP ===== -->
 <app-payment-popup
   *ngIf="showPayment"
   [total]="total"
@@ -291,40 +234,43 @@
   (complete)="onPaymentComplete($event)">
 </app-payment-popup>
 
-<!-- ================= HELD ORDERS POPUP ================= -->
+<!-- ===== HELD ORDERS POPUP ===== -->
 <app-hold-orders
   *ngIf="showHoldOrders"
   (recallOrder)="recallOrder($event)"
   (close)="showHoldOrders = false">
 </app-hold-orders>
 
-<!-- ================= CUSTOMER INFO DIALOG ================= -->
+<!-- ===== CUSTOMER INFO DIALOG ===== -->
 <div class="customer-info-overlay" *ngIf="showCustomerInfo">
   <div class="customer-info-modal">
     <div class="modal-header">
       <h3>Customer Information</h3>
-      <button class="close-btn" (click)="showCustomerInfo = false">
+      <button
+        class="close-btn"
+        (click)="showCustomerInfo = false"
+        type="button">
         <mat-icon>close</mat-icon>
       </button>
     </div>
-
-    <form class="customer-form" #customerForm="ngForm" (ngSubmit)="onCustomerInfoSubmit(customerForm.value)">
-      
+    <form
+      class="customer-form"
+      #customerForm="ngForm"
+      (ngSubmit)="onCustomerInfoSubmit(customerForm.value)">
       <div class="form-group">
         <label>Customer Name *</label>
-        <input 
-          type="text" 
+        <input
+          type="text"
           name="name"
           ngModel
           required
           placeholder="Enter customer name"
           class="form-control">
       </div>
-
       <div class="form-group">
         <label>Phone Number *</label>
-        <input 
-          type="tel" 
+        <input
+          type="tel"
           name="phone"
           ngModel
           required
@@ -332,10 +278,9 @@
           placeholder="10-digit mobile number"
           class="form-control">
       </div>
-
       <div class="form-group" *ngIf="orderType === 'Delivery'">
         <label>Delivery Address *</label>
-        <textarea 
+        <textarea
           name="address"
           ngModel
           required
@@ -343,31 +288,34 @@
           placeholder="Enter complete delivery address"
           class="form-control"></textarea>
       </div>
-
       <div class="form-group">
         <label>Email (Optional)</label>
-        <input 
-          type="email" 
+        <input
+          type="email"
           name="email"
           ngModel
           placeholder="customer@example.com"
           class="form-control">
       </div>
-
       <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="showCustomerInfo = false">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="showCustomerInfo = false">
           Cancel
         </button>
-        <button type="submit" class="btn btn-primary" [disabled]="!customerForm.valid">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="!customerForm.valid">
           Continue to Payment
         </button>
       </div>
-
     </form>
   </div>
 </div>
 
-<!-- ================= LOADING OVERLAY ================= -->
+<!-- ===== LOADING OVERLAY ===== -->
 <div class="loading-overlay" *ngIf="loading">
   <div class="loading-spinner">
     <mat-spinner diameter="50"></mat-spinner>
@@ -375,11 +323,11 @@
   </div>
 </div>
 
-<!-- ================= ERROR DISPLAY ================= -->
+<!-- ===== ERROR BANNER ===== -->
 <div class="error-banner" *ngIf="error">
   <mat-icon>error</mat-icon>
   <span>{{ error }}</span>
-  <button (click)="error = null">
+  <button (click)="error = null" type="button">
     <mat-icon>close</mat-icon>
   </button>
 </div>

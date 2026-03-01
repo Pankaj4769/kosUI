@@ -1,9 +1,8 @@
 <div class="order-sidebar-container">
-  
-  <!-- ================= ORDER TYPE SELECTION ================= -->
+
+  <!-- ===== ORDER TYPE SELECTION ===== -->
   <section class="order-type-section">
     <h3 class="section-title">Order Type</h3>
-    
     <div class="order-type-buttons">
       <button
         *ngFor="let type of orderTypes"
@@ -16,12 +15,13 @@
     </div>
   </section>
 
-  <!-- ================= TABLE STATISTICS (Dine-In Only) ================= -->
+  <!-- ===== TABLE STATISTICS (Dine-In Only) ===== -->
   <section class="stats-section" *ngIf="orderType === 'Dine-In'">
+
     <div class="stat-card occupied">
       <mat-icon>event_seat</mat-icon>
       <div class="stat-content">
-        <span class="stat-label">Occupied</span>
+        <span class="stat-label">OCC</span>
         <span class="stat-value">{{ occupiedCount }}</span>
         <span class="stat-percentage">{{ occupancyRate }}%</span>
       </div>
@@ -30,26 +30,28 @@
     <div class="stat-card available">
       <mat-icon>chair</mat-icon>
       <div class="stat-content">
-        <span class="stat-label">Available</span>
-        <span class="stat-value available">{{ availableCount }}</span>
+        <span class="stat-label">AVAIL</span>
+        <span class="stat-value">{{ availableCount }}</span>
       </div>
     </div>
 
     <div class="stat-card revenue">
-      <mat-icon>attach_money</mat-icon>
+      <mat-icon>currency_rupee</mat-icon>
       <div class="stat-content">
-        <span class="stat-label">Revenue</span>
+        <span class="stat-label">REV</span>
         <span class="stat-value">₹{{ totalBill | number:'1.0-0' }}</span>
         <span class="stat-percentage">Today</span>
       </div>
     </div>
+
   </section>
 
-  <!-- ================= NEW: COMPACT TABLE SELECTOR (Dine-In Only) ================= -->
-  <section class="table-selector-section-compact" *ngIf="orderType === 'Dine-In' && useCompactDesign">
-    
-    <!-- Table Selector Card -->
-    <div class="table-selector-card" (click)="openTableSelectorPopup()">
+  <!-- ===== COMPACT TABLE SELECTOR (Dine-In + useCompactDesign) ===== -->
+  <section class="table-selector-section-compact"
+    *ngIf="orderType === 'Dine-In' && useCompactDesign">
+
+    <!-- <div class="table-selector-card" (click)="openTableSelectorPopup()">
+
       <div class="table-selector-header">
         <div class="selector-title">
           <mat-icon>chair</mat-icon>
@@ -58,13 +60,13 @@
         <mat-icon class="dropdown-icon">expand_more</mat-icon>
       </div>
 
-      <!-- When Table is Selected -->
-      <div class="selected-table-display" *ngIf="selectedTable">
+      <!-- Table Selected State -->
+      <!-- <div class="selected-table-display" *ngIf="selectedTable">
         <p class="table-info-text">Table #{{ selectedTable }}</p>
         <div class="table-details-text">
           <ng-container *ngIf="getSelectedTableObject() as table">
             <span>👥 {{ table.capacity }} seats</span>
-            <span 
+            <span
               class="table-status-indicator"
               [class.available]="table.status === 'available'"
               [class.occupied]="table.status === 'occupied'">
@@ -80,25 +82,25 @@
             <span *ngIf="table.timeOccupied">• {{ getFormattedTime(table.timeOccupied) }}</span>
           </ng-container>
         </div>
-      </div>
+      </div> -->
 
-      <!-- When No Table is Selected -->
-      <div class="no-table-selected-compact" *ngIf="!selectedTable">
+      <!-- No Table Selected State -->
+      <!-- <div class="no-table-selected-compact" *ngIf="!selectedTable">
         <p>No table selected</p>
         <p class="helper-text">Click to select a table</p>
-      </div>
+      </div> -->
 
-      <!-- Change/Select Button -->
-      <button 
-        class="change-table-btn" 
+      <!-- Change / Select Button -->
+      <!-- <button
+        class="change-table-btn"
         (click)="openTableSelectorPopup(); $event.stopPropagation()"
         type="button">
         <mat-icon>{{ selectedTable ? 'sync' : 'add' }}</mat-icon>
         <span>{{ selectedTable ? 'Change Table' : 'Select Table' }}</span>
       </button>
-    </div>
 
-    <!-- View Table Map Link -->
+    </div> --> 
+
     <a class="view-table-map-link" (click)="openTableSelectorPopup()">
       <mat-icon>map</mat-icon>
       <span>View table map</span>
@@ -106,31 +108,30 @@
 
   </section>
 
-  <!-- ================= OLD TABLE SELECTION (Keep for fallback) ================= -->
-  <section class="table-selection-section" *ngIf="orderType === 'Dine-In' && !useCompactDesign">
-    
-    <!-- Header with Refresh -->
+  <!-- ===== OLD TABLE SELECTION (Fallback — useCompactDesign = false) ===== -->
+  <section class="table-selection-section"
+    *ngIf="orderType === 'Dine-In' && !useCompactDesign">
+
     <div class="section-header">
       <h3 class="section-title">Select Table</h3>
-      <button 
-        class="refresh-btn" 
-        (click)="refreshData()" 
+      <button
+        class="refresh-btn"
+        (click)="refreshData()"
         matTooltip="Refresh table status">
         <mat-icon>refresh</mat-icon>
       </button>
     </div>
 
-    <!-- Search Bar -->
     <div class="search-bar">
       <mat-icon class="search-icon">search</mat-icon>
-      <input 
-        type="text" 
+      <input
+        type="text"
         placeholder="Search tables..."
         [(ngModel)]="searchQuery"
         (ngModelChange)="onSearchChange($event)"
         class="search-input">
-      <button 
-        *ngIf="searchQuery" 
+      <button
+        *ngIf="searchQuery"
         class="clear-search-btn"
         (click)="clearSearch()"
         matTooltip="Clear">
@@ -138,27 +139,26 @@
       </button>
     </div>
 
-    <!-- Status Filter -->
     <div class="status-filter">
-      <button 
+      <button
         class="filter-chip"
         [class.active]="statusFilter === 'all'"
         (click)="selectStatusFilter('all')">
         All ({{ totalTables }})
       </button>
-      <button 
+      <button
         class="filter-chip available"
         [class.active]="statusFilter === 'available'"
         (click)="selectStatusFilter('available')">
         Available ({{ availableCount }})
       </button>
-      <button 
+      <button
         class="filter-chip occupied"
         [class.active]="statusFilter === 'occupied'"
         (click)="selectStatusFilter('occupied')">
         Occupied ({{ occupiedCount }})
       </button>
-      <button 
+      <button
         class="filter-chip reserved"
         [class.active]="statusFilter === 'reserved'"
         (click)="selectStatusFilter('reserved')">
@@ -166,24 +166,23 @@
       </button>
     </div>
 
-    <!-- Sort Options -->
     <div class="sort-options">
       <span class="sort-label">Sort by:</span>
-      <button 
+      <button
         class="sort-btn"
         [class.active]="sortBy === 'table'"
         (click)="onSortChange('table')">
         <mat-icon>tag</mat-icon>
         Table
       </button>
-      <button 
+      <button
         class="sort-btn"
         [class.active]="sortBy === 'items'"
         (click)="onSortChange('items')">
         <mat-icon>restaurant</mat-icon>
         Items
       </button>
-      <button 
+      <button
         class="sort-btn"
         [class.active]="sortBy === 'amount'"
         (click)="onSortChange('amount')">
@@ -192,7 +191,6 @@
       </button>
     </div>
 
-    <!-- Tables Grid -->
     <div class="tables-grid">
       <button
         *ngFor="let table of filteredTables; trackBy: trackByTableId"
@@ -203,14 +201,12 @@
         (click)="selectTable(table.number)"
         [disabled]="table.status === 'cleaning'"
         [matTooltip]="getTableSummary(table)">
-        
-        <!-- Status Icon -->
+
         <div class="table-status">
           <span class="status-icon">{{ getTableStatusIcon(table.status) }}</span>
           <span class="table-number">{{ table.number }}</span>
         </div>
 
-        <!-- Table Info -->
         <div class="table-info">
           <div class="table-capacity">{{ table.capacity }} seats</div>
           <div class="items-count" *ngIf="table.status === 'occupied'">
@@ -221,35 +217,34 @@
           </div>
         </div>
 
-        <!-- Selected Indicator -->
-        <mat-icon class="selected-indicator" *ngIf="isTableSelected(table.number)">
+        <mat-icon
+          class="selected-indicator"
+          *ngIf="isTableSelected(table.number)">
           check_circle
         </mat-icon>
 
-        <!-- Info Button -->
-        <button 
+        <button
           class="info-btn"
           (click)="openTableDetails(table, $event)"
           matTooltip="View Details"
           type="button">
           <mat-icon>info</mat-icon>
         </button>
+
       </button>
     </div>
 
-    <!-- No Results -->
     <div class="no-results" *ngIf="filteredTables.length === 0">
       <mat-icon>search_off</mat-icon>
       <p>No tables found</p>
     </div>
 
-    <!-- Selected Table Info -->
     <div class="selected-table-info" *ngIf="selectedTable">
       <div class="info-header">
         <mat-icon>event_seat</mat-icon>
         <span>Table {{ selectedTable }} Selected</span>
       </div>
-      <button 
+      <button
         class="clear-selection-btn"
         (click)="clearTableSelection()">
         <mat-icon>close</mat-icon>
@@ -259,497 +254,520 @@
 
   </section>
 
-<!-- ================= CUSTOMER INFO (Enhanced Design) ================= -->
-<section class="customer-section-enhanced" *ngIf="orderType !== 'Dine-In' || useCompactDesign">
-  
-  <!-- Section Header -->
-  <div class="customer-section-header">
-    <h3 class="customer-section-title">Customer Information</h3>
-  </div>
+  <!-- ===== CUSTOMER INFO SUMMARY STRIP (shown after popup confirms) ===== -->
+  <!-- Shows a compact read-only strip inside sidebar once customer is set -->
+  <section class="customer-summary-strip"
+    *ngIf="customerInfo && orderType">
 
-  <!-- Customer Info Display (When Saved) -->
-  <div class="customer-info-card" *ngIf="customerInfo && !showCustomerForm">
-    <div class="customer-info-row">
-      <div class="customer-info-icon">
-        <mat-icon>person</mat-icon>
-      </div>
-      <div class="customer-info-content">
-        <span class="customer-info-label">Customer Name</span>
-        <span class="customer-info-value">{{ customerInfo.name }}</span>
-      </div>
+    <div class="customer-summary-icon">
+      <mat-icon>person</mat-icon>
     </div>
 
-    <div class="customer-info-row">
-      <div class="customer-info-icon">
-        <mat-icon>phone</mat-icon>
-      </div>
-      <div class="customer-info-content">
-        <span class="customer-info-label">Phone Number</span>
-        <span class="customer-info-value">{{ customerInfo.phone }}</span>
-      </div>
+    <div class="customer-summary-content">
+      <span class="customer-summary-name">{{ customerInfo.name }}</span>
+      <span class="customer-summary-phone">{{ customerInfo.phone }}</span>
+      <span
+        class="customer-summary-address"
+        *ngIf="customerInfo.address">
+        {{ customerInfo.address }}
+      </span>
     </div>
 
-    <div class="customer-info-row" *ngIf="customerInfo.address">
-      <div class="customer-info-icon">
-        <mat-icon>location_on</mat-icon>
-      </div>
-      <div class="customer-info-content">
-        <span class="customer-info-label">Delivery Address</span>
-        <span class="customer-info-value">{{ customerInfo.address }}</span>
-      </div>
-    </div>
-
-    <button class="customer-edit-btn" (click)="toggleCustomerForm()">
+    <button
+      class="customer-summary-edit-btn"
+      (click)="selectOrderType(orderType)"
+      type="button"
+      matTooltip="Edit customer info">
       <mat-icon>edit</mat-icon>
-      <span>Edit Information</span>
     </button>
-  </div>
 
-  <!-- Customer Info Form (When Empty or Editing) -->
-  <div class="customer-form-card" *ngIf="!customerInfo || showCustomerForm">
-    
-    <!-- Customer Name Field -->
-    <div class="customer-form-field">
-      <label class="customer-form-label" for="customerName">
-        <mat-icon>person</mat-icon>
-        <span>Customer Name <span class="required">*</span></span>
-      </label>
-      <input 
-        id="customerName"
-        type="text" 
-        [(ngModel)]="customerName"
-        placeholder="Enter customer name"
-        class="customer-form-input">
-    </div>
+  </section>
 
-    <!-- Phone Number Field -->
-    <div class="customer-form-field">
-      <label class="customer-form-label" for="customerPhone">
-        <mat-icon>phone</mat-icon>
-        <span>Phone Number <span class="required">*</span></span>
-      </label>
-      <input 
-        id="customerPhone"
-        type="tel" 
-        [(ngModel)]="customerPhone"
-        placeholder="Enter phone number"
-        class="customer-form-input">
-    </div>
+</div>
 
-    <!-- Delivery Address Field (Only for Delivery) -->
-    <div class="customer-form-field" *ngIf="orderType === 'Delivery'">
-      <label class="customer-form-label" for="customerAddress">
-        <mat-icon>location_on</mat-icon>
-        <span>Delivery Address</span>
-      </label>
-      <textarea 
-        id="customerAddress"
-        [(ngModel)]="customerAddress"
-        placeholder="Enter delivery address"
-        rows="3"
-        class="customer-form-textarea"></textarea>
-    </div>
+<!-- ===== TABLE SELECTOR POPUP (outside sidebar container — fixed overlay) ===== -->
+<div
+  class="table-popup-overlay"
+  *ngIf="showTableSelectorPopup"
+  (click)="closeTableSelectorPopup()"
+  tabindex="0"
+  (keydown)="handlePopupKeyboard($event)">
 
-    <!-- Form Actions -->
-    <div class="customer-form-actions">
-      <button 
-        class="customer-save-btn"
-        (click)="saveCustomerInfo()"
-        [disabled]="!customerName || !customerPhone">
-        <mat-icon>check</mat-icon>
-        <span>Save Information</span>
-      </button>
-      <button 
-        class="customer-cancel-btn"
-        (click)="clearCustomerInfo()"
-        *ngIf="customerInfo">
+  <div class="table-popup-container" (click)="$event.stopPropagation()">
+
+    <div class="table-popup-header">
+      <div class="popup-header-left">
+        <mat-icon>chair</mat-icon>
+        <h2>Select Table</h2>
+      </div>
+      <button
+        class="popup-close-btn"
+        (click)="closeTableSelectorPopup()"
+        type="button">
         <mat-icon>close</mat-icon>
-        <span>Cancel</span>
       </button>
     </div>
 
-  </div>
-
-</section>
-
-
-  <!-- ================= NEW: TABLE SELECTOR POPUP ================= -->
-  <div 
-    class="table-popup-overlay" 
-    *ngIf="showTableSelectorPopup" 
-    (click)="closeTableSelectorPopup()"
-    (keydown)="handlePopupKeyboard($event)">
-    
-    <div class="table-popup-container" (click)="$event.stopPropagation()">
-      
-      <!-- Popup Header -->
-      <div class="table-popup-header">
-        <div class="popup-header-left">
-          <mat-icon>chair</mat-icon>
-          <h2>Select Table</h2>
-        </div>
-        <button class="popup-close-btn" (click)="closeTableSelectorPopup()" type="button">
+    <div class="popup-search-section">
+      <div class="popup-search-bar">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          class="popup-search-input"
+          placeholder="Search by table number..."
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange($event)"
+          autocomplete="off">
+        <button
+          *ngIf="searchQuery"
+          class="clear-search-btn-popup"
+          (click)="clearSearch()"
+          type="button">
           <mat-icon>close</mat-icon>
         </button>
       </div>
+    </div>
 
-      <!-- Search Bar in Popup -->
-      <div class="popup-search-section">
-        <div class="popup-search-bar">
-          <mat-icon>search</mat-icon>
-          <input 
-            type="text" 
-            class="popup-search-input" 
-            placeholder="Search by table number..."
-            [(ngModel)]="searchQuery"
-            (ngModelChange)="onSearchChange($event)"
-            autocomplete="off">
-          <button 
-            *ngIf="searchQuery"
-            class="clear-search-btn-popup"
-            (click)="clearSearch()"
-            type="button">
-            <mat-icon>close</mat-icon>
+    <div class="popup-filter-section">
+      <div class="popup-filter-chips">
+        <button
+          class="popup-filter-chip"
+          [class.active]="statusFilter === 'all'"
+          (click)="selectStatusFilter('all')"
+          type="button">
+          All ({{ totalTables }})
+        </button>
+        <button
+          class="popup-filter-chip"
+          [class.active]="statusFilter === 'available'"
+          (click)="selectStatusFilter('available')"
+          type="button">
+          Available ({{ availableCount }})
+        </button>
+        <button
+          class="popup-filter-chip"
+          [class.active]="statusFilter === 'occupied'"
+          (click)="selectStatusFilter('occupied')"
+          type="button">
+          Occupied ({{ occupiedCount }})
+        </button>
+        <button
+          class="popup-filter-chip"
+          [class.active]="statusFilter === 'reserved'"
+          (click)="selectStatusFilter('reserved')"
+          type="button">
+          Reserved ({{ reservedTablesCount }})
+        </button>
+      </div>
+    </div>
+
+    <div class="popup-sort-section">
+      <span class="popup-sort-label">Sort by:</span>
+      <div class="popup-sort-buttons">
+        <button
+          class="popup-sort-btn"
+          [class.active]="sortBy === 'table'"
+          (click)="onSortChange('table')"
+          type="button">
+          <mat-icon>tag</mat-icon>
+          Table
+        </button>
+        <button
+          class="popup-sort-btn"
+          [class.active]="sortBy === 'items'"
+          (click)="onSortChange('items')"
+          type="button">
+          <mat-icon>restaurant</mat-icon>
+          Items
+        </button>
+        <button
+          class="popup-sort-btn"
+          [class.active]="sortBy === 'amount'"
+          (click)="onSortChange('amount')"
+          type="button">
+          <mat-icon>attach_money</mat-icon>
+          Amount
+        </button>
+      </div>
+    </div>
+
+    <div class="popup-table-list">
+
+      <div
+        *ngFor="let table of filteredTables; trackBy: trackByTableId"
+        class="popup-table-item"
+        [class.table-available]="table.status === 'available'"
+        [class.table-occupied]="table.status === 'occupied'"
+        [class.table-reserved]="table.status === 'reserved'"
+        [class.table-cleaning]="table.status === 'cleaning'"
+        [class.selected]="tempSelectedTable?.id === table.id"
+        (click)="selectTableInPopup(table)"
+        [style.cursor]="table.status === 'cleaning' ? 'not-allowed' : 'pointer'"
+        [style.opacity]="table.status === 'cleaning' ? '0.6' : '1'">
+
+        <div class="popup-table-left">
+          <span class="popup-status-dot"></span>
+          <span class="popup-table-number">{{ table.number }}</span>
+          <div class="popup-table-details">
+            <span class="popup-table-capacity">{{ table.capacity }} seats</span>
+            <span
+              class="popup-table-items"
+              *ngIf="table.status === 'occupied'">
+              {{ table.itemCount }} items
+            </span>
+          </div>
+        </div>
+
+        <div class="popup-table-right">
+          <span
+            class="popup-table-amount"
+            *ngIf="table.status === 'occupied'">
+            ₹{{ table.totalAmount | number:'1.0-0' }}
+          </span>
+          <button
+            class="popup-info-btn"
+            (click)="openTableDetails(table, $event)"
+            type="button"
+            matTooltip="View details">
+            <mat-icon>info</mat-icon>
           </button>
+        </div>
+
+      </div>
+
+      <div class="popup-no-results" *ngIf="filteredTables.length === 0">
+        <mat-icon>search_off</mat-icon>
+        <p>No tables found</p>
+        <p class="helper-text">Try adjusting your search or filters</p>
+      </div>
+
+    </div>
+
+    <div class="popup-footer">
+      <p class="popup-footer-info">
+        Showing {{ filteredTables.length }} table{{ filteredTables.length !== 1 ? 's' : '' }}
+        <span *ngIf="getAvailableCountInPopup() > 0">
+          ({{ getAvailableCountInPopup() }} available)
+        </span>
+      </p>
+      <div class="popup-actions-new">
+        <button
+          class="popup-action-btn cancel"
+          (click)="closeTableSelectorPopup()"
+          type="button">
+          <mat-icon>close</mat-icon>
+          <span>Cancel</span>
+        </button>
+        <button
+          class="popup-action-btn primary"
+          [disabled]="!tempSelectedTable"
+          (click)="confirmTableSelection()"
+          type="button">
+          <mat-icon>check</mat-icon>
+          <span>Select Table</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== TABLE DETAILS POPUP (outside sidebar container — fixed overlay) ===== -->
+<div
+  class="popup-overlay"
+  *ngIf="showTableDetailsPopup"
+  (click)="closeTableDetails()">
+
+  <div
+    class="popup-container"
+    *ngIf="selectedTableForDetails"
+    (click)="$event.stopPropagation()">
+
+    <div class="popup-header">
+      <div class="header-left">
+        <mat-icon class="table-icon">table_restaurant</mat-icon>
+        <div class="header-title">
+          <h2>{{ selectedTableForDetails.name }}</h2>
+          <span class="table-number-label">Table #{{ selectedTableForDetails.number }}</span>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeTableDetails()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="status-section">
+      <div
+        class="status-badge-large"
+        [style.background-color]="getTableStatusColor(selectedTableForDetails.status)">
+        <mat-icon>{{ getStatusIcon(selectedTableForDetails.status) }}</mat-icon>
+        <span>{{ selectedTableForDetails.status | titlecase }}</span>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="popup-body">
+
+      <div class="info-section">
+        <h3 class="section-title">Basic Information</h3>
+        <div class="info-grid">
+
+          <div class="info-item">
+            <mat-icon class="info-icon">event_seat</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Capacity</span>
+              <span class="info-value">{{ selectedTableForDetails.capacity }} seats</span>
+            </div>
+          </div>
+
+          <div class="info-item" *ngIf="selectedTableForDetails.section">
+            <mat-icon class="info-icon">location_on</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Section</span>
+              <span class="info-value">{{ selectedTableForDetails.section }}</span>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- Filter Chips in Popup -->
-      <div class="popup-filter-section">
-        <div class="popup-filter-chips">
-          <button 
-            class="popup-filter-chip"
-            [class.active]="statusFilter === 'all'"
-            (click)="selectStatusFilter('all')"
-            type="button">
-            All ({{ totalTables }})
-          </button>
-          <button 
-            class="popup-filter-chip"
-            [class.active]="statusFilter === 'available'"
-            (click)="selectStatusFilter('available')"
-            type="button">
-            Available ({{ availableCount }})
-          </button>
-          <button 
-            class="popup-filter-chip"
-            [class.active]="statusFilter === 'occupied'"
-            (click)="selectStatusFilter('occupied')"
-            type="button">
-            Occupied ({{ occupiedCount }})
-          </button>
-          <button 
-            class="popup-filter-chip"
-            [class.active]="statusFilter === 'reserved'"
-            (click)="selectStatusFilter('reserved')"
-            type="button">
-            Reserved ({{ reservedTablesCount }})
-          </button>
-        </div>
-      </div>
+      <div class="info-section" *ngIf="selectedTableForDetails.status === 'occupied'">
+        <h3 class="section-title">Current Order</h3>
+        <div class="info-grid">
 
-      <!-- Sort Options in Popup -->
-      <div class="popup-sort-section">
-        <span class="popup-sort-label">Sort by:</span>
-        <div class="popup-sort-buttons">
-          <button 
-            class="popup-sort-btn"
-            [class.active]="sortBy === 'table'"
-            (click)="onSortChange('table')"
-            type="button">
-            <mat-icon>tag</mat-icon>
-            Table
-          </button>
-          <button 
-            class="popup-sort-btn"
-            [class.active]="sortBy === 'items'"
-            (click)="onSortChange('items')"
-            type="button">
-            <mat-icon>restaurant</mat-icon>
-            Items
-          </button>
-          <button 
-            class="popup-sort-btn"
-            [class.active]="sortBy === 'amount'"
-            (click)="onSortChange('amount')"
-            type="button">
-            <mat-icon>attach_money</mat-icon>
-            Amount
-          </button>
-        </div>
-      </div>
+          <div class="info-item" *ngIf="selectedTableForDetails.currentOrder">
+            <mat-icon class="info-icon">receipt</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Order Number</span>
+              <span class="info-value">{{ selectedTableForDetails.currentOrder }}</span>
+            </div>
+          </div>
 
-      <!-- Table List (Scrollable) -->
-      <div class="popup-table-list">
-        <!-- Table Items -->
-        <div 
-          *ngFor="let table of filteredTables; trackBy: trackByTableId"
-          class="popup-table-item"
-          [class.table-available]="table.status === 'available'"
-          [class.table-occupied]="table.status === 'occupied'"
-          [class.table-reserved]="table.status === 'reserved'"
-          [class.table-cleaning]="table.status === 'cleaning'"
-          [class.selected]="tempSelectedTable?.id === table.id"
-          (click)="selectTableInPopup(table)"
-          [style.cursor]="table.status === 'cleaning' ? 'not-allowed' : 'pointer'"
-          [style.opacity]="table.status === 'cleaning' ? '0.6' : '1'">
-          
-          <div class="popup-table-left">
-            <span class="popup-status-dot"></span>
-            <span class="popup-table-number">{{ table.number }}</span>
-            <div class="popup-table-details">
-              <span class="popup-table-capacity">{{ table.capacity }} seats</span>
-              <span class="popup-table-items" *ngIf="table.status === 'occupied'">
-                {{ table.itemCount }} items
+          <div class="info-item" *ngIf="selectedTableForDetails.waiter">
+            <mat-icon class="info-icon">person</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Waiter</span>
+              <span class="info-value">{{ selectedTableForDetails.waiter }}</span>
+            </div>
+          </div>
+
+          <div class="info-item" *ngIf="selectedTableForDetails.timeOccupied">
+            <mat-icon class="info-icon">schedule</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Time Occupied</span>
+              <span class="info-value">{{ getTimeOccupied(selectedTableForDetails) }}</span>
+            </div>
+          </div>
+
+          <div class="info-item" *ngIf="selectedTableForDetails.timeOccupied">
+            <mat-icon class="info-icon">access_time</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Started At</span>
+              <span class="info-value">{{ getFormattedTime(selectedTableForDetails.timeOccupied) }}</span>
+            </div>
+          </div>
+
+          <div class="info-item" *ngIf="selectedTableForDetails.itemCount !== undefined">
+            <mat-icon class="info-icon">restaurant_menu</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Items Ordered</span>
+              <span class="info-value">{{ selectedTableForDetails.itemCount }} items</span>
+            </div>
+          </div>
+
+          <div class="info-item" *ngIf="selectedTableForDetails.totalAmount !== undefined">
+            <mat-icon class="info-icon">payments</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Total Amount</span>
+              <span class="info-value amount">
+                ₹{{ selectedTableForDetails.totalAmount | number:'1.0-0' }}
               </span>
             </div>
           </div>
 
-          <div class="popup-table-right">
-            <span class="popup-table-amount" *ngIf="table.status === 'occupied'">
-              {{ table.totalAmount }}
-            </span>
-            <button 
-              class="popup-info-btn" 
-              (click)="openTableDetails(table, $event)"
-              type="button"
-              matTooltip="View details">
-              <mat-icon>info</mat-icon>
-            </button>
-          </div>
-        </div>
-
-        <!-- No Results -->
-        <div class="popup-no-results" *ngIf="filteredTables.length === 0">
-          <mat-icon>search_off</mat-icon>
-          <p>No tables found</p>
-          <p class="helper-text">Try adjusting your search or filters</p>
         </div>
       </div>
 
-      <!-- Popup Footer -->
-      <div class="popup-footer">
-        <p class="popup-footer-info">
-          Showing {{ filteredTables.length }} table{{ filteredTables.length !== 1 ? 's' : '' }}
-          <span *ngIf="getAvailableCountInPopup() > 0">
-            ({{ getAvailableCountInPopup() }} available)
-          </span>
-        </p>
-        <div class="popup-actions-new">
-          <button 
-            class="popup-action-btn cancel" 
-            (click)="closeTableSelectorPopup()"
-            type="button">
-            <mat-icon>close</mat-icon>
-            <span>Cancel</span>
-          </button>
-          <button 
-            class="popup-action-btn primary" 
-            [disabled]="!tempSelectedTable"
-            (click)="confirmTableSelection()"
-            type="button">
-            <mat-icon>check</mat-icon>
-            <span>Select Table</span>
-          </button>
+      <div class="info-section" *ngIf="selectedTableForDetails.status === 'reserved'">
+        <h3 class="section-title">Reservation</h3>
+        <div class="info-message">
+          <mat-icon>info</mat-icon>
+          <span>This table is reserved. Contact manager to override.</span>
+        </div>
+      </div>
+
+      <div class="info-section" *ngIf="selectedTableForDetails.status === 'cleaning'">
+        <h3 class="section-title">Status</h3>
+        <div class="info-message warning">
+          <mat-icon>cleaning_services</mat-icon>
+          <span>This table is currently being cleaned.</span>
         </div>
       </div>
 
     </div>
-  </div>
 
-  <!-- ================= TABLE DETAILS POP-UP (EXISTING - UNCHANGED) ================= -->
-  <div class="popup-overlay" *ngIf="showTableDetailsPopup" (click)="closeTableDetails()">
-    <div class="popup-container" *ngIf="selectedTableForDetails" (click)="$event.stopPropagation()">
-      
-      <!-- Header -->
-      <div class="popup-header">
-        <div class="header-left">
-          <mat-icon class="table-icon">table_restaurant</mat-icon>
-          <div class="header-title">
-            <h2>{{ selectedTableForDetails.name }}</h2>
-            <span class="table-number-label">Table #{{ selectedTableForDetails.number }}</span>
-          </div>
-        </div>
-        <button class="close-btn" (click)="closeTableDetails()">
+    <mat-divider></mat-divider>
+
+    <div class="popup-actions">
+
+      <ng-container *ngIf="selectedTableForDetails.status === 'available'">
+        <button
+          class="action-btn primary"
+          (click)="onSelectTableFromPopup(selectedTableForDetails.number)">
+          <mat-icon>check_circle</mat-icon>
+          <span>Select Table</span>
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="selectedTableForDetails.status === 'occupied'">
+        <button
+          class="action-btn secondary"
+          (click)="onSelectTableFromPopup(selectedTableForDetails.number)">
+          <mat-icon>visibility</mat-icon>
+          <span>View Order</span>
+        </button>
+        <button
+          class="action-btn secondary"
+          (click)="onTransferTableFromPopup(selectedTableForDetails.number)">
+          <mat-icon>swap_horiz</mat-icon>
+          <span>Transfer</span>
+        </button>
+        <button
+          class="action-btn danger"
+          (click)="onCloseTableFromPopup(selectedTableForDetails.number)">
           <mat-icon>close</mat-icon>
+          <span>Close Table</span>
         </button>
-      </div>
+      </ng-container>
 
-      <!-- Status Badge -->
-      <div class="status-section">
-        <div 
-          class="status-badge-large"
-          [style.background-color]="getTableStatusColor(selectedTableForDetails.status)"
-          [style.color]="'white'">
-          <mat-icon>{{ getStatusIcon(selectedTableForDetails.status) }}</mat-icon>
-          <span>{{ selectedTableForDetails.status | titlecase }}</span>
-        </div>
-      </div>
-
-      <mat-divider></mat-divider>
-
-      <!-- Table Details -->
-      <div class="popup-body">
-        
-        <!-- Basic Info -->
-        <div class="info-section">
-          <h3 class="section-title">Basic Information</h3>
-          
-          <div class="info-grid">
-            <div class="info-item">
-              <mat-icon class="info-icon">event_seat</mat-icon>
-              <div class="info-content">
-                <span class="info-label">Capacity</span>
-                <span class="info-value">{{ selectedTableForDetails.capacity }} seats</span>
-              </div>
-            </div>
-
-            <div class="info-item" *ngIf="selectedTableForDetails.section">
-              <mat-icon class="info-icon">location_on</mat-icon>
-              <div class="info-content">
-                <span class="info-label">Section</span>
-                <span class="info-value">{{ selectedTableForDetails.section }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Occupied Table Details -->
-        <div class="info-section" *ngIf="selectedTableForDetails.status === 'occupied'">
-          <h3 class="section-title">Current Order</h3>
-          
-          <div class="info-grid">
-            <div class="info-item" *ngIf="selectedTableForDetails.currentOrder">
-              <mat-icon class="info-icon">receipt</mat-icon>
-              <div class="info-content">
-                <span class="info-label">Order Number</span>
-                <span class="info-value">{{ selectedTableForDetails.currentOrder }}</span>
-              </div>
-            </div>
-
-            <div class="info-item" *ngIf="selectedTableForDetails.waiter">
-              <mat-icon class="info-icon">person</mat-icon>
-              <div class="info-content">
-                <span class="info-label">Waiter</span>
-                <span class="info-value">{{ selectedTableForDetails.waiter }}</span>
-              </div>
-            </div>
-
-            <div class="info-item" *ngIf="selectedTableForDetails.timeOccupied">
-              <mat-icon class="info-icon">schedule</mat-icon>
-              <div class="info-content">
-                <span class="info-label">Time Occupied</span>
-                <span class="info-value">{{ getTimeOccupied(selectedTableForDetails) }}</span>
-              </div>
-            </div>
-
-            <div class="info-item" *ngIf="selectedTableForDetails.timeOccupied">
-              <mat-icon class="info-icon">access_time</mat-icon>
-              <div class="info-content">
-                <span class="info-label">Started At</span>
-                <span class="info-value">{{ getFormattedTime(selectedTableForDetails.timeOccupied) }}</span>
-              </div>
-            </div>
-
-            <div class="info-item" *ngIf="selectedTableForDetails.itemCount !== undefined">
-              <mat-icon class="info-icon">restaurant_menu</mat-icon>
-              <div class="info-content">
-                <span class="info-label">Items Ordered</span>
-                <span class="info-value">{{ selectedTableForDetails.itemCount }} items</span>
-              </div>
-            </div>
-
-            <div class="info-item" *ngIf="selectedTableForDetails.totalAmount !== undefined">
-              <mat-icon class="info-icon">payments</mat-icon>
-              <div class="info-content">
-                <span class="info-label">Total Amount</span>
-                <span class="info-value amount">₹{{ selectedTableForDetails.totalAmount | number:'1.0-0' }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Reserved Table Details -->
-        <div class="info-section" *ngIf="selectedTableForDetails.status === 'reserved'">
-          <h3 class="section-title">Reservation</h3>
-          
-          <div class="info-message">
-            <mat-icon>info</mat-icon>
-            <span>This table is reserved. Contact manager to override.</span>
-          </div>
-        </div>
-
-        <!-- Cleaning Status -->
-        <div class="info-section" *ngIf="selectedTableForDetails.status === 'cleaning'">
-          <h3 class="section-title">Status</h3>
-          
-          <div class="info-message warning">
-            <mat-icon>cleaning_services</mat-icon>
-            <span>This table is currently being cleaned.</span>
-          </div>
-        </div>
-
-      </div>
-
-      <mat-divider></mat-divider>
-
-      <!-- Action Buttons -->
-      <div class="popup-actions">
-        
-        <!-- Available Table Actions -->
-        <ng-container *ngIf="selectedTableForDetails.status === 'available'">
-          <button 
-            class="action-btn primary"
-            (click)="onSelectTableFromPopup(selectedTableForDetails.number)">
-            <mat-icon>check_circle</mat-icon>
-            <span>Select Table</span>
-          </button>
-        </ng-container>
-
-        <!-- Occupied Table Actions -->
-        <ng-container *ngIf="selectedTableForDetails.status === 'occupied'">
-          <button 
-            class="action-btn secondary"
-            (click)="onSelectTableFromPopup(selectedTableForDetails.number)">
-            <mat-icon>visibility</mat-icon>
-            <span>View Order</span>
-          </button>
-          
-          <button 
-            class="action-btn secondary"
-            (click)="onTransferTableFromPopup(selectedTableForDetails.number)">
-            <mat-icon>swap_horiz</mat-icon>
-            <span>Transfer</span>
-          </button>
-          
-          <button 
-            class="action-btn danger"
-            (click)="onCloseTableFromPopup(selectedTableForDetails.number)">
-            <mat-icon>close</mat-icon>
-            <span>Close Table</span>
-          </button>
-        </ng-container>
-
-        <!-- Reserved Table Actions -->
-        <ng-container *ngIf="selectedTableForDetails.status === 'reserved'">
-          <button 
-            class="action-btn secondary"
-            (click)="onSelectTableFromPopup(selectedTableForDetails.number)">
-            <mat-icon>event</mat-icon>
-            <span>View Reservation</span>
-          </button>
-        </ng-container>
-
-        <!-- Cancel Button -->
-        <button 
-          class="action-btn cancel"
-          (click)="closeTableDetails()">
-          <span>Cancel</span>
+      <ng-container *ngIf="selectedTableForDetails.status === 'reserved'">
+        <button
+          class="action-btn secondary"
+          (click)="onSelectTableFromPopup(selectedTableForDetails.number)">
+          <mat-icon>event</mat-icon>
+          <span>View Reservation</span>
         </button>
+      </ng-container>
 
+      <button
+        class="action-btn cancel"
+        (click)="closeTableDetails()">
+        <span>Cancel</span>
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== ORDER TYPE CONFIRM POPUP (customer info entry) ===== -->
+<div
+  class="order-confirm-overlay"
+  *ngIf="showOrderTypeConfirmPopup"
+  (click)="cancelOrderTypeChange()">
+
+  <div class="order-confirm-container" (click)="$event.stopPropagation()">
+
+    <div class="order-confirm-header">
+      <div class="order-confirm-header-left">
+        <div class="order-confirm-type-badge">
+          <mat-icon>
+            {{ pendingOrderType === 'Dine-In'   ? 'restaurant'      :
+               pendingOrderType === 'Takeaway'  ? 'shopping_bag'    : 'delivery_dining' }}
+          </mat-icon>
+        </div>
+        <div>
+          <h3 class="order-confirm-title">{{ pendingOrderType }}</h3>
+          <p class="order-confirm-subtitle">Enter customer details to continue</p>
+        </div>
+      </div>
+      <button
+        class="order-confirm-close-btn"
+        (click)="cancelOrderTypeChange()"
+        type="button">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="order-confirm-error" *ngIf="inlineError">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ inlineError }}</span>
+    </div>
+
+    <div class="order-confirm-body">
+
+      <div class="order-confirm-field">
+        <label class="order-confirm-label" for="popupCustomerName">
+          <mat-icon>person</mat-icon>
+          <span>Customer Name <span class="order-confirm-required">*</span></span>
+        </label>
+        <input
+          id="popupCustomerName"
+          type="text"
+          [(ngModel)]="customerName"
+          placeholder="Enter customer name"
+          class="order-confirm-input"
+          (input)="inlineError = null"
+          autocomplete="off">
+      </div>
+
+      <div class="order-confirm-field">
+        <label class="order-confirm-label" for="popupCustomerPhone">
+          <mat-icon>phone</mat-icon>
+          <span>Phone Number <span class="order-confirm-required">*</span></span>
+        </label>
+        <input
+          id="popupCustomerPhone"
+          type="tel"
+          [(ngModel)]="customerPhone"
+          placeholder="Enter phone number"
+          class="order-confirm-input"
+          (input)="inlineError = null"
+          autocomplete="off">
+      </div>
+
+      <div
+        class="order-confirm-field"
+        *ngIf="pendingOrderType === 'Delivery'">
+        <label class="order-confirm-label" for="popupCustomerAddress">
+          <mat-icon>location_on</mat-icon>
+          <span>Delivery Address</span>
+        </label>
+        <textarea
+          id="popupCustomerAddress"
+          [(ngModel)]="customerAddress"
+          placeholder="Enter delivery address"
+          rows="3"
+          class="order-confirm-textarea"></textarea>
+      </div>
+
+      <div
+        class="order-confirm-table-note"
+        *ngIf="pendingOrderType === 'Dine-In'">
+        <mat-icon>chair</mat-icon>
+        <span>You can select a table after confirming</span>
       </div>
 
     </div>
-  </div>
 
+    <div class="order-confirm-footer">
+      <button
+        class="order-confirm-cancel-btn"
+        (click)="cancelOrderTypeChange()"
+        type="button">
+        <mat-icon>close</mat-icon>
+        <span>Cancel</span>
+      </button>
+      <button
+        class="order-confirm-submit-btn"
+        (click)="confirmOrderType()"
+        [disabled]="!customerName || !customerPhone"
+        type="button">
+        <mat-icon>check</mat-icon>
+        <span>Confirm {{ pendingOrderType }}</span>
+      </button>
+    </div>
+
+  </div>
 </div>
