@@ -1,30 +1,48 @@
+/* =====================================================
+   SIDEBAR SHELL
+===================================================== */
 .sidebar {
   width: 250px;
-  height: 100vh;
+  height: 100%;
   background: linear-gradient(180deg, #020617, #0f172a);
   color: #e5e7eb;
-  /* ✅ Smooth width transition */
-  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   flex-direction: column;
-  overflow-x: hidden; /* Prevent horizontal scroll during anim */
-  white-space: nowrap; /* Prevent text wrap */
-  z-index: 1000; /* Ensure it sits on top if we used absolute */
+  overflow-x: hidden;
+  white-space: nowrap;
+  position: relative;              /* stays in flow when expanded */
+  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 100;
 }
 
-/* ✅ COLLAPSED STATE */
+/* ── Scrollable nav ── */
+nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #1e293b transparent;
+}
+
+/* ── COLLAPSED STATE ── */
 .sidebar.collapsed {
   width: 72px;
 }
 
-/* ✅ HOVER STATE (Slide Open) */
-/* When collapsed class exists BUT user is hovering */
+/* ── HOVER OVERLAY — expands over content, does NOT push it ── */
 .sidebar.collapsed:hover {
   width: 250px;
-  box-shadow: 5px 0 15px rgba(0,0,0,0.3); /* Optional shadow for depth */
+  position: absolute;             /* lifts OUT of flex flow */
+  top: 0;
+  left: 0;
+  height: 100%;
+  z-index: 500;                   /* floats above content */
+  box-shadow: 6px 0 24px rgba(0, 0, 0, 0.50);
 }
 
-/* Toggle */
+/* =====================================================
+   TOGGLE BUTTON
+===================================================== */
 .toggle {
   background: transparent;
   border: none;
@@ -34,20 +52,35 @@
   cursor: pointer;
   margin-left: 8px;
   display: flex;
-  min-width: 40px; /* Ensure click area doesn't shrink */
+  align-items: center;
+  min-width: 40px;
+  flex-shrink: 0;
+  transition: color 0.15s;
 }
 
-/* Logo */
-.logo {
-  text-align: left;
-  font-size: 22px;
-  font-weight: 700;
-  padding: 6px 21px 16px;
-  letter-spacing: 2px;
-  height: 50px; /* Fixed height to prevent jump */
+.toggle:hover { color: #60a5fa; }
+
+/* =====================================================
+   TEXT & ARROW VISIBILITY
+===================================================== */
+.text, .arrow {
+  opacity: 1;
+  transition: opacity 0.15s ease-in-out;
+  transition-delay: 0.08s;
 }
 
-/* Menu Item */
+/* Hide when collapsed AND NOT hovered */
+.sidebar.collapsed:not(:hover) .text,
+.sidebar.collapsed:not(:hover) .arrow {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  overflow: hidden;
+}
+
+/* =====================================================
+   MENU ITEMS
+===================================================== */
 .menu-item {
   display: flex;
   align-items: center;
@@ -58,10 +91,15 @@
   color: #c7d2fe;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
   font-size: 14px;
   font-weight: 500;
-  overflow: hidden; /* clean edges */
+  overflow: hidden;
+  white-space: nowrap;
+  border: none;
+  width: calc(100% - 20px);
+  text-align: left;
+  background: transparent;
 }
 
 .menu-item:hover {
@@ -77,23 +115,32 @@
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
-/* ✅ TEXT & ARROW VISIBILITY CONTROL */
-.text, .arrow {
-  opacity: 1;
-  transition: opacity 0.2s ease-in-out;
-  transition-delay: 0.1s; /* Slight delay so width animates first */
+/* ── Icon ── */
+.icon {
+  font-size: 20px;
+  min-width: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Hide text when collapsed AND NOT hovered */
-.sidebar.collapsed:not(:hover) .text,
-.sidebar.collapsed:not(:hover) .arrow {
-  opacity: 0;
-  pointer-events: none;
-  width: 0; /* Helps removing space */
-  display: none; /* Using display none here is okay for end-state, but opacity handles the fade */
+/* ── Arrow ── */
+.arrow {
+  font-size: 16px;
+  opacity: 0.6;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, opacity 0.15s ease;
 }
 
-/* Group Header */
+.menu-group.expanded .arrow {
+  transform: rotate(180deg);
+}
+
+/* =====================================================
+   GROUP HEADER
+===================================================== */
 .group-header {
   background: transparent;
   border-radius: 10px;
@@ -104,7 +151,9 @@
   background: rgba(37, 99, 235, 0.18);
 }
 
-/* Submenu */
+/* =====================================================
+   SUBMENU
+===================================================== */
 .submenu {
   margin-left: 30px;
   padding-left: 12px;
@@ -113,22 +162,23 @@
   overflow: hidden;
   opacity: 0;
   transform: translateY(-4px);
-  transition: all 0.25s ease;
+  transition: max-height 0.25s ease,
+              opacity    0.25s ease,
+              transform  0.25s ease;
 }
 
 .menu-group.expanded .submenu {
-  max-height: 500px;
+  max-height: 600px;
   opacity: 1;
   transform: translateY(0);
 }
 
-/* ✅ Fix Submenu in Collapsed Mode */
-/* If sidebar is collapsed and NOT hovered, forcefully hide submenu even if expanded */
+/* Force hide submenu when collapsed and not hovered */
 .sidebar.collapsed:not(:hover) .submenu {
-  display: none; 
+  display: none;
 }
 
-/* Submenu Items */
+/* ── Submenu Items ── */
 .submenu-item {
   display: flex;
   align-items: center;
@@ -138,7 +188,9 @@
   color: #9ca3af;
   text-decoration: none;
   font-size: 13px;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .submenu-item:hover {
@@ -148,26 +200,26 @@
 }
 
 .submenu-item.active {
-  background: rgba(37, 99, 235, 0.3);
+  background: rgba(37, 99, 235, 0.30);
   color: #fff;
   font-weight: 600;
 }
 
-.icon {
-  font-size: 20px;
-  min-width: 22px; /* Fixed width for icon so it doesn't squash */
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+@media (max-width: 767px) {
+  .sidebar.collapsed:hover {
+    position: fixed;     /* fixed on mobile so it covers from edge */
+  }
 }
 
-.arrow {
-  font-size: 16px;
-  opacity: 0.6;
-  margin-left: auto;
-  transition: transform 0.2s ease;
-}
-
-.menu-group.expanded .arrow {
-  transform: rotate(180deg);
+/* =====================================================
+   FOCUS / ACCESSIBILITY
+===================================================== */
+.menu-item:focus-visible,
+.submenu-item:focus-visible,
+.toggle:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }

@@ -13,7 +13,7 @@ import { HeaderComponent }  from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { LayoutService }    from '../../core/services/layout.service';
 
-const AUTH_ROUTES = ['/login','/signup', '/register', '/forgot-password', '/reset-password'];
+const AUTH_ROUTES = ['/login','/signup', '/register', '/forgot-password', '/reset-password', '/onboarding/subscription', '/onboarding/pending', '/onboarding/payment'];
 
 @Component({
   selector: 'app-layout',

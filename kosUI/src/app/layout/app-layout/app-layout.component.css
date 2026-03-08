@@ -1,62 +1,81 @@
 /* =====================================================
    APP SHELL
 ===================================================== */
-.app-shell {
+.app-layout {
   display: flex;
-  flex-direction: row;          /* sidebar LEFT | content-column RIGHT */
   height: 100vh;
-  width: 100vw;
+  width: 100%;
   overflow: hidden;
-  background: #f1f5f9;
-}
-
-/* Auth pages — full dark screen, no sidebar/header */
-.app-shell.auth-mode {
-  flex-direction: column;
   background: #020617;
 }
 
+/* ── Auth pages — full screen ── */
+.auth-main {
+  flex: 1;
+  overflow-y: auto;
+}
+
 /* =====================================================
-   RIGHT COLUMN — header on top, main below
+   SIDEBAR WRAPPER
+   This is the ONLY element that participates in flex layout.
+   Its width drives the content offset — the actual sidebar
+   uses position:absolute on hover so it overlays content.
+===================================================== */
+.sidebar-wrapper {
+  width: 250px;
+  flex-shrink: 0;
+  position: relative;    /* anchor for absolute-positioned sidebar on hover */
+  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 100;
+}
+
+.sidebar-wrapper.collapsed {
+  width: 72px;           /* content area gains back 178px — stays at its width */
+}
+
+/* =====================================================
+   CONTENT COLUMN — header + main stacked vertically
 ===================================================== */
 .content-column {
-  display: flex;
-  flex-direction: column;       /* header TOP | main BOTTOM */
   flex: 1;
-  min-width: 0;                 /* prevents flex overflow on small screens */
+  min-width: 0;          /* prevents flex blowout on long content */
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
-/* =====================================================
-   MAIN CONTENT
-===================================================== */
 .main-content {
   flex: 1;
   overflow-y: auto;
-  background: #f1f5f9;
+  background: #020617;
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
-}
-
-.main-content::-webkit-scrollbar {
-  width: 5px;
-}
-.main-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-.main-content::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  scrollbar-color: #1e293b transparent;
 }
 
 /* =====================================================
-   RESPONSIVE — Mobile
+   RESPONSIVE
 ===================================================== */
 @media (max-width: 767px) {
-  .app-shell {
-    flex-direction: column;
+  .sidebar-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 72px !important;   /* always collapsed on mobile */
+    z-index: 400;
   }
+
   .content-column {
-    width: 100%;
+    margin-left: 72px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-wrapper {
+    display: none;
+  }
+
+  .content-column {
+    margin-left: 0;
   }
 }

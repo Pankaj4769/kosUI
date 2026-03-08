@@ -1,20 +1,24 @@
 /* =====================================================
-   HEADER SHELL
+   HEADER SHELL — CSS Grid 3-column layout
 ===================================================== */
 .header {
   height: 60px;
   width: 100%;
   background: #020617;
   border-bottom: 1px solid rgba(255,255,255,0.07);
-  display: flex;
+
+  /* ✅ Grid: left takes 1fr | center is auto | right takes 1fr */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+
   padding: 0 16px;
   position: sticky;
   top: 0;
   z-index: 200;
-  gap: 12px;
+  column-gap: 8px;
   font-family: 'Segoe UI', -apple-system, sans-serif;
+  overflow: visible;        /* dropdowns must escape header */
 }
 
 /* =====================================================
@@ -24,66 +28,132 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;             /* ✅ allows truncation inside */
+  overflow: hidden;         /* ✅ clips content before it bleeds */
+  justify-content: flex-start;
+}
+
+/* ── Logo ── */
+.logo-link {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.header-logo {
+  height: 40px;
+  width: auto;
+  max-width: 150px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+  filter: brightness(1.4) saturate(1.3) drop-shadow(0 0 6px rgba(34,197,94,0.4));
+}
+
+/* ── Divider between logo and page title ── */
+.header-logo-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255,255,255,0.10);
   flex-shrink: 0;
 }
 
+/* ── Page context ── */
 .page-context {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  overflow: hidden;
 }
-.page-icon  { font-size: 18px; color: #60a5fa; }
+
+.page-icon {
+  font-size: 18px;
+  color: #60a5fa;
+  flex-shrink: 0;
+}
+
 .page-title {
-  font-size: 15px; font-weight: 700;
-  color: #f1f5f9; letter-spacing: 0.2px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: 0.2px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
 }
 
 /* ── Restaurant Switcher ── */
-.restaurant-switcher { position: relative; }
+.restaurant-switcher {
+  position: relative;
+  flex-shrink: 0;
+}
 
 .restaurant-btn {
-  display: flex; align-items: center; gap: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.10);
   border-radius: 8px;
   padding: 5px 10px;
-  color: #e2e8f0; font-size: 12.5px; font-weight: 600;
+  color: #e2e8f0;
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
   transition: background .15s, border-color .15s;
   white-space: nowrap;
+  max-width: 180px;
 }
 .restaurant-btn:hover,
 .restaurant-btn.open {
   background: rgba(37,99,235,0.18);
   border-color: rgba(96,165,250,0.35);
 }
-.restaurant-btn .material-icons { font-size: 16px; color: #60a5fa; }
+.restaurant-btn .material-icons { font-size: 16px; color: #60a5fa; flex-shrink: 0; }
 .restaurant-branch { color: #94a3b8; font-size: 11px; }
 .restaurant-btn .chevron {
-  font-size: 16px; opacity: 0.6;
+  font-size: 16px;
+  opacity: 0.6;
   transition: transform .2s;
+  flex-shrink: 0;
 }
 .restaurant-btn.open .chevron { transform: rotate(180deg); }
 
-/* =====================================================
-   CENTER — SEARCH
-===================================================== */
-.header-center {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  max-width: 420px;
-  margin: 0 auto;
+.restaurant-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100px;
 }
 
+/* =====================================================
+   CENTER — always mathematically centered via grid
+===================================================== */
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  /* ✅ No position:absolute, no z-index juggling needed */
+}
+
+/* ── Search box ── */
 .search-box {
-  display: flex; align-items: center; gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.10);
   border-radius: 10px;
   padding: 6px 12px;
   width: 100%;
+  min-width: 200px;
+  max-width: 380px;
   transition: border-color .2s, background .2s, box-shadow .2s;
 }
 .search-box.focused {
@@ -94,14 +164,23 @@
 .search-icon { font-size: 17px; color: #64748b; flex-shrink: 0; }
 
 .search-box input {
-  flex: 1; background: transparent; border: none; outline: none;
-  color: #e2e8f0; font-size: 13px;
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e2e8f0;
+  font-size: 13px;
+  min-width: 0;
 }
 .search-box input::placeholder { color: #475569; }
 
 .search-clear {
-  background: none; border: none; cursor: pointer;
-  color: #64748b; padding: 0; display: flex;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0;
+  display: flex;
   transition: color .15s;
 }
 .search-clear:hover { color: #e2e8f0; }
@@ -112,8 +191,76 @@
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 4px;
   padding: 1px 6px;
-  font-size: 10px; color: #64748b;
-  white-space: nowrap; pointer-events: none;
+  font-size: 10px;
+  color: #64748b;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ── Chip bar + cashier context inherit from header-center ── */
+/* ── Header spacer handled by grid layout ── */
+.header-spacer   { display: none; } /* ✅ grid handles spacing — spacer unused */
+
+/* ── Shared chip style ── */
+.ctx-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.ctx-chip .material-icons { font-size: 15px; }
+.ctx-chip strong { font-weight: 800; }
+
+/* Colour variants */
+.chip-blue   { background: rgba(96,165,250,0.12);  border: 1px solid rgba(96,165,250,0.25);  color: #93c5fd; }
+.chip-blue   .material-icons { color: #60a5fa; }
+
+.chip-green  { background: rgba(34,197,94,0.12);   border: 1px solid rgba(34,197,94,0.25);   color: #4ade80; }
+.chip-green  .material-icons { color: #22c55e; }
+
+.chip-amber  { background: rgba(251,191,36,0.12);  border: 1px solid rgba(251,191,36,0.25);  color: #fcd34d; }
+.chip-amber  .material-icons { color: #f59e0b; }
+
+.chip-red    { background: rgba(239,68,68,0.12);   border: 1px solid rgba(239,68,68,0.25);   color: #fca5a5; }
+.chip-red    .material-icons { color: #ef4444; }
+
+.chip-purple { background: rgba(124,58,237,0.12);  border: 1px solid rgba(124,58,237,0.25);  color: #c4b5fd; }
+.chip-purple .material-icons { color: #a78bfa; }
+
+/* Cashier chips */
+.ctx-table {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #e2e8f0;
+}
+.ctx-table .material-icons { font-size: 15px; color: #94a3b8; }
+
+.ctx-type {
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.25);
+  color: #4ade80;
+}
+.ctx-type .material-icons { font-size: 15px; color: #4ade80; }
+
+.ctx-order {
+  background: rgba(96,165,250,0.12);
+  border: 1px solid rgba(96,165,250,0.25);
+  color: #93c5fd;
+}
+.ctx-order .material-icons { font-size: 15px; color: #93c5fd; }
+
+/* ── Shared divider between chips ── */
+.ctx-divider {
+  color: rgba(255,255,255,0.20);
+  font-size: 14px;
+  font-weight: 300;
+  user-select: none;
+  flex-shrink: 0;
 }
 
 /* =====================================================
@@ -123,18 +270,26 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-shrink: 0;
+  justify-content: flex-end;  /* ✅ pushes content to right edge */
+  min-width: 0;
+  padding-right: 16px; 
 }
 
 /* ── Icon buttons ── */
 .icon-btn {
   position: relative;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
-  border: none; border-radius: 8px;
-  width: 36px; height: 36px;
-  color: #94a3b8; cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  color: #94a3b8;
+  cursor: pointer;
   transition: background .15s, color .15s;
+  flex-shrink: 0;
 }
 .icon-btn:hover { background: rgba(37,99,235,0.15); color: #e2e8f0; }
 .icon-btn .material-icons { font-size: 20px; }
@@ -144,46 +299,42 @@
   animation: bellShake 3s ease-in-out infinite;
 }
 @keyframes bellShake {
-  0%, 85%, 100% { transform: rotate(0); }
-  88%  { transform: rotate(12deg);  }
-  91%  { transform: rotate(-10deg); }
-  94%  { transform: rotate(8deg);   }
-  97%  { transform: rotate(-6deg);  }
+  0%, 85%, 100% { transform: rotate(0);      }
+  88%            { transform: rotate(12deg);  }
+  91%            { transform: rotate(-10deg); }
+  94%            { transform: rotate(8deg);   }
+  97%            { transform: rotate(-6deg);  }
 }
 
-/* Badge */
+/* ── Badge ── */
 .badge {
-  position: absolute; top: 3px; right: 3px;
-  background: #ef4444; color: #fff;
-  font-size: 9px; font-weight: 800;
-  min-width: 16px; height: 16px;
-  padding: 0 4px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
+  position: absolute;
+  top: 3px; right: 3px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1.5px solid #020617;
 }
-
-/* ── Role badge ── */
-.role-badge {
-  padding: 3px 9px;
-  border-radius: 6px;
-  font-size: 10px; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.5px;
-  white-space: nowrap;
-}
-.role-admin,
-.role-super_admin { background: rgba(124,58,237,0.18); color: #a78bfa; border: 1px solid rgba(124,58,237,0.30); }
-.role-manager     { background: rgba(37,99,235,0.18);  color: #60a5fa; border: 1px solid rgba(37,99,235,0.30);  }
-.role-cashier     { background: rgba(22,163,74,0.18);  color: #4ade80; border: 1px solid rgba(22,163,74,0.30);  }
-.role-kitchen,
-.role-chef        { background: rgba(234,88,12,0.18);  color: #fb923c; border: 1px solid rgba(234,88,12,0.30);  }
 
 /* ── Avatar ── */
 .avatar {
   width: 32px; height: 32px;
   background: linear-gradient(135deg, #2563eb, #7c3aed);
   border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 800; color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
   flex-shrink: 0;
 }
 .avatar-img { object-fit: cover; }
@@ -193,8 +344,12 @@
 .user-section { position: relative; }
 
 .user-trigger {
-  display: flex; align-items: center; gap: 8px;
-  padding: 4px 8px; border-radius: 10px; cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  cursor: pointer;
   transition: background .15s;
   border: 1px solid transparent;
 }
@@ -205,13 +360,16 @@
 }
 
 .user-info {
-  display: flex; flex-direction: column; line-height: 1.2;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
 }
-.user-name  { font-size: 12.5px; font-weight: 700; color: #f1f5f9; }
-.user-role  { font-size: 10px;   font-weight: 500; color: #64748b; text-transform: capitalize; }
+.user-name { font-size: 12.5px; font-weight: 700; color: #f1f5f9; }
+.user-role { font-size: 10px; font-weight: 500; color: #64748b; text-transform: capitalize; }
 
 .chevron {
-  font-size: 17px; color: #64748b;
+  font-size: 17px;
+  color: #64748b;
   transition: transform .25s ease;
 }
 .chevron.rotated { transform: rotate(180deg); }
@@ -239,21 +397,35 @@
 
 .dropdown-header {
   padding: 10px 14px;
-  font-size: 11px; font-weight: 800;
-  color: #64748b; text-transform: uppercase; letter-spacing: 0.6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .dropdown-divider {
-  height: 1px; background: rgba(255,255,255,0.07); margin: 4px 0;
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+  margin: 4px 0;
 }
 
 .dropdown-item {
-  display: flex; align-items: center; gap: 9px;
-  width: 100%; padding: 9px 14px;
-  background: none; border: none; cursor: pointer;
-  font-size: 13px; font-weight: 500; color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #cbd5e1;
   text-align: left;
   transition: background .14s, color .14s;
 }
@@ -267,33 +439,46 @@
 
 /* ── User dropdown header ── */
 .dropdown-user-header {
-  display: flex; align-items: center; gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 12px 14px 10px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
 }
 .duh-name { font-size: 13px; font-weight: 700; color: #f1f5f9; margin: 0; }
 .duh-role { font-size: 11px; color: #64748b; margin: 2px 0 0; text-transform: capitalize; }
 
-/* ── User dropdown width ── */
 .user-dropdown { min-width: 200px; }
 
 /* ── Restaurant dropdown ── */
 .restaurant-dropdown { min-width: 240px; left: 0; right: auto; }
 
 .restaurant-item {
-  display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
 }
 .restaurant-logo img,
 .restaurant-logo-initial {
-  width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .restaurant-logo-initial {
   background: linear-gradient(135deg, #1d4ed8, #7c3aed);
-  font-size: 13px; font-weight: 800; color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
 }
 .restaurant-info {
-  flex: 1; display: flex; flex-direction: column; line-height: 1.3;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
 }
 .r-name   { font-size: 12.5px; font-weight: 700; color: #e2e8f0; }
 .r-branch { font-size: 10.5px; color: #64748b; }
@@ -301,14 +486,20 @@
 .restaurant-item.active { background: rgba(37,99,235,0.10); }
 
 /* ── Notification dropdown ── */
-.notif-section   { position: relative; }
-.notif-dropdown  { min-width: 320px; max-height: 380px; overflow: hidden; }
+.notif-section  { position: relative; }
+.notif-dropdown { min-width: 320px; max-height: 380px; overflow: hidden; }
 
-.notif-list { overflow-y: auto; max-height: 290px;
-  scrollbar-width: thin; scrollbar-color: #1e293b transparent; }
+.notif-list {
+  overflow-y: auto;
+  max-height: 290px;
+  scrollbar-width: thin;
+  scrollbar-color: #1e293b transparent;
+}
 
 .notif-item {
-  display: flex; align-items: flex-start; gap: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   padding: 10px 14px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   transition: background .14s;
@@ -317,13 +508,17 @@
 .notif-item.unread { background: rgba(37,99,235,0.06); }
 
 .notif-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: #3b82f6; flex-shrink: 0; margin-top: 5px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #3b82f6;
+  flex-shrink: 0;
+  margin-top: 5px;
 }
-.notif-content   { flex: 1; }
-.notif-message   { font-size: 12.5px; color: #e2e8f0; margin: 0 0 3px; line-height: 1.4; }
-.notif-time      { font-size: 11px; color: #475569; }
-.notif-dismiss   {
+.notif-content { flex: 1; }
+.notif-message { font-size: 12.5px; color: #e2e8f0; margin: 0 0 3px; line-height: 1.4; }
+.notif-time    { font-size: 11px; color: #475569; }
+
+.notif-dismiss {
   background: none; border: none; cursor: pointer;
   color: #475569; padding: 0; display: flex;
   transition: color .15s;
@@ -339,7 +534,8 @@
 .mark-read-btn:hover { color: #60a5fa; }
 
 .notif-empty {
-  display: flex; flex-direction: column; align-items: center;
+  display: flex; flex-direction: column;
+  align-items: center;
   padding: 24px 16px; gap: 6px; color: #475569;
 }
 .notif-empty .material-icons { font-size: 36px; }
@@ -349,19 +545,27 @@
    RESPONSIVE — Mobile
 ===================================================== */
 @media (max-width: 767px) {
-  .page-title       { display: none; }
+  .header {
+    /* ✅ Drop center column entirely on tablet/mobile */
+    grid-template-columns: 1fr auto;
+  }
+
+  .header-center            { display: none; }
+  .header-logo              { height: 28px; }
+  .header-logo-divider      { display: none; }
+  .page-title               { display: none; }
   .restaurant-btn .restaurant-branch { display: none; }
-  .header-center    { max-width: 180px; }
-  .search-box input { font-size: 12px; }
-  .search-kbd       { display: none; }
-  .user-info        { display: none; }
-  .role-badge       { display: none; }
-  .notif-dropdown   { min-width: 280px; right: -60px; }
+  .restaurant-name          { max-width: 80px; }
+  .search-box input         { font-size: 12px; }
+  .search-kbd               { display: none; }
+  .user-info                { display: none; }
+  .notif-dropdown           { min-width: 280px; right: -60px; }
 }
 
 @media (max-width: 480px) {
-  .header-center  { display: none; }
-  .restaurant-btn { padding: 4px 7px; }
+  .header-logo              { height: 24px; }
+  .restaurant-btn           { padding: 4px 7px; }
+  .restaurant-name          { max-width: 60px; }
 }
 
 /* =====================================================
@@ -373,63 +577,4 @@
 .dropdown-item:focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
-}
-/* =====================================================
-   CASHIER CONTEXT BAR — center of header
-===================================================== */
-.cashier-context {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: center;
-  flex: 1;
-}
-
-.ctx-chip {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 11px;
-  border-radius: 8px;
-  font-size: 12.5px;
-  font-weight: 700;
-  white-space: nowrap;
-  transition: background .15s;
-}
-
-/* Table chip */
-.ctx-table {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: #e2e8f0;
-}
-.ctx-table .material-icons { font-size: 15px; color: #94a3b8; }
-
-/* Order type chip */
-.ctx-type {
-  background: rgba(34,197,94,0.12);
-  border: 1px solid rgba(34,197,94,0.25);
-  color: #4ade80;
-}
-.ctx-type .material-icons { font-size: 15px; color: #4ade80; }
-
-/* Order number chip */
-.ctx-order {
-  background: rgba(96,165,250,0.12);
-  border: 1px solid rgba(96,165,250,0.25);
-  color: #93c5fd;
-}
-.ctx-order .material-icons { font-size: 15px; color: #93c5fd; }
-
-/* Divider between chips */
-.ctx-divider {
-  color: rgba(255,255,255,0.20);
-  font-size: 14px;
-  font-weight: 300;
-  user-select: none;
-}
-
-/* Responsive — hide on small screens */
-@media (max-width: 767px) {
-  .cashier-context { display: none; }
 }

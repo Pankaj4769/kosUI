@@ -1,5 +1,21 @@
+/* ══════════════════════════════════════════════════════════
+   LOGIN PAGE STYLES — Kitchen Book KOS
+   Component: LoginComponent
+   Structure:
+     1. Wrapper
+     2. Animated Background Orbs
+     3. Left Brand Panel (logo, title, features)
+     4. Right Form Panel (card, tabs, forms, social, footer)
+     5. Shared Form Elements
+     6. Animations & Keyframes
+     7. Responsive Breakpoints
+══════════════════════════════════════════════════════════ */
+
+
 /* ══════════════════════════════════════
-   WRAPPER
+   1. WRAPPER
+   Full-viewport two-panel flex layout.
+   Left panel = brand, Right panel = form.
 ══════════════════════════════════════ */
 .login-wrapper {
   display: flex;
@@ -10,8 +26,12 @@
   position: relative;
 }
 
+
 /* ══════════════════════════════════════
-   ANIMATED ORBS
+   2. ANIMATED BACKGROUND ORBS
+   Decorative blurred gradient circles.
+   pointer-events: none — never block clicks.
+   z-index: 0 — always behind content.
 ══════════════════════════════════════ */
 .bg-orb {
   position: absolute;
@@ -21,25 +41,34 @@
   pointer-events: none;
   z-index: 0;
 }
+
+/* Top-left blue orb */
 .orb-1 {
   width: 420px; height: 420px;
   background: radial-gradient(circle, #1d4ed8, transparent);
   top: -100px; left: -80px;
   animation: orbDrift 10s ease-in-out infinite alternate;
 }
+
+/* Bottom-center purple orb */
 .orb-2 {
   width: 300px; height: 300px;
   background: radial-gradient(circle, #7c3aed, transparent);
   bottom: -60px; left: 20%;
   animation: orbDrift 14s ease-in-out infinite alternate-reverse;
 }
+
 @keyframes orbDrift {
   from { transform: translate(0, 0) scale(1); }
   to   { transform: translate(20px, 28px) scale(1.10); }
 }
 
+
 /* ══════════════════════════════════════
-   LEFT BRAND PANEL
+   3. LEFT BRAND PANEL
+   Dark blue gradient panel.
+   Hidden on mobile (see responsive section).
+   ::after adds a subtle right-edge divider line.
 ══════════════════════════════════════ */
 .login-brand {
   flex: 1;
@@ -52,6 +81,8 @@
   z-index: 1;
   overflow: hidden;
 }
+
+/* Subtle right-edge separator line between panels */
 .login-brand::after {
   content: '';
   position: absolute;
@@ -65,75 +96,135 @@
   );
 }
 
+/* Vertical flex container for all brand content */
 .brand-content {
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 16px;           /* uniform spacing between all brand elements */
   position: relative;
   z-index: 1;
   width: 100%;
+  max-width: 340px;    /* prevent over-stretching on wide screens */
 }
 
-/* ── Logo ── */
+
+/* ── App Icon (kitchen-book-icon.png)
+   Rounded square app icon — no background wrapper.
+   Floating pulse animation adds visual life.
+   NOTE: margin-bottom: 0 — gap on brand-content handles spacing.
+── */
 .brand-logo {
-  width: 84px; height: 84px;
-  background: rgba(255,255,255,0.10);
-  border: 2px solid rgba(255,255,255,0.20);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(37,99,235,0.35);
-  animation: logoPulse 3s ease-in-out infinite;
-}
-.brand-logo .material-icons {
-  font-size: 42px; color: #fff;
-  filter: drop-shadow(0 2px 8px rgba(37,99,235,0.5));
-}
-@keyframes logoPulse {
-  0%, 100% { box-shadow: 0 8px 32px rgba(37,99,235,0.35); }
-  50%       { box-shadow: 0 8px 48px rgba(37,99,235,0.60); }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10;       /* ✅ use brand-content gap instead */
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+
+  img.kb-icon {
+    width: 96px;           /* ✅ FIXED: was 20px (too small) → 96px */
+    height: 96px;
+    object-fit: contain;
+    border-radius: 24px;   /* matches the rounded square app icon shape */
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.40),
+      0 4px 12px rgba(0, 0, 0, 0.25);
+    animation: iconFloat 4s ease-in-out infinite;
+  }
 }
 
+/* Icon floats up/down with green glow at peak */
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.40), 0 4px 12px rgba(0,0,0,0.25);
+  }
+  50% {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(52,211,153,0.35), 0 4px 12px rgba(0,0,0,0.25);
+  }
+}
+
+
+/* ── Brand Title: "Kitchen Book"
+   <span> wraps "Book" for green accent color.
+   Usage: <h1 class="brand-title">Kitchen <span>Book</span></h1>
+── */
 .brand-title {
-  font-size: 3.2rem; font-weight: 800;
-  color: #fff; letter-spacing: 8px;
-  margin: 0; line-height: 1;
-  text-shadow: 0 2px 20px rgba(37,99,235,0.40);
-}
-.brand-subtitle {
-  font-size: 0.78rem; font-weight: 500;
-  color: rgba(255,255,255,0.55);
-  margin: 0; letter-spacing: 1px;
-  text-transform: uppercase;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  margin: 0;
+  line-height: 1.1;
+
+  span {
+    color: #34d399;   /* green accent — matches icon brand color */
+  }
 }
 
-/* ── Feature List ── */
+/* ── Brand Subtitle: "— CLOUD KITCHEN ERP —"
+   Small caps, muted — secondary brand descriptor.
+── */
+.brand-subtitle {
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+
+/* ── Feature Highlights List
+   Glassmorphism card containing 4 product features.
+   max-width ensures it doesn't stretch on wide viewports.
+── */
 .brand-features {
-  display: flex; flex-direction: column;
-  gap: 10px; margin-top: 6px; text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.10);
   border-radius: 14px;
   padding: 16px 20px;
-  min-width: 240px;
+  width: 100%;
+  max-width: 300px;   /* ✅ ADDED: prevents over-stretching on large screens */
 }
+
+/* Individual feature row: icon + text */
 .feature-item {
-  display: flex; align-items: center; gap: 10px;
-  color: rgba(255,255,255,0.78); font-size: 0.86rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255,255,255,0.78);
+  font-size: 0.86rem;
 }
+
+/* Green check icon with subtle glow */
 .feature-item .material-icons {
-  font-size: 17px; color: #34d399; flex-shrink: 0;
+  font-size: 17px;
+  color: #34d399;
+  flex-shrink: 0;   /* prevent icon from shrinking on small widths */
   filter: drop-shadow(0 0 5px rgba(52,211,153,0.45));
 }
 
+
 /* ══════════════════════════════════════
-   ROLE SCROLLER
+   ROLE SCROLLER (Dev Mode Only)
+   Marquee animation for role quick-fill badges.
+   Pauses on hover for easier clicking.
+   Currently commented out in HTML — styles kept for future use.
 ══════════════════════════════════════ */
 .brand-roles-scroller {
   width: 100%;
   overflow: hidden;
+  /* Fade out edges with mask for seamless scroll effect */
   -webkit-mask-image: linear-gradient(
     to right, transparent 0%, black 12%, black 88%, transparent 100%
   );
@@ -141,33 +232,45 @@
     to right, transparent 0%, black 12%, black 88%, transparent 100%
   );
 }
+
 .brand-roles-scroller:hover .roles-track {
-  animation-play-state: paused;
+  animation-play-state: paused;   /* pause scroll on hover */
 }
+
 .roles-track {
   display: flex;
   gap: 8px;
   width: max-content;
   animation: marqueeScroll 18s linear infinite;
 }
+
 @keyframes marqueeScroll {
   from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  to   { transform: translateX(-50%); }   /* -50% because track is doubled */
 }
+
+/* Individual role pill badge */
 .role-badge {
-  display: flex; align-items: center; gap: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   background: rgba(255,255,255,0.10);
   border: 1px solid rgba(255,255,255,0.18);
   color: rgba(255,255,255,0.82);
   padding: 6px 13px;
   border-radius: 20px;
-  font-size: 0.76rem; font-weight: 500;
-  cursor: pointer; white-space: nowrap;
+  font-size: 0.76rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
   transition: background 0.2s, border-color 0.2s, color 0.2s,
               transform 0.15s, box-shadow 0.2s;
-  user-select: none; flex-shrink: 0;
+  user-select: none;
+  flex-shrink: 0;
 }
+
 .role-badge .material-icons { font-size: 13px; }
+
 .role-badge:hover {
   background: rgba(37,99,235,0.35);
   border-color: rgba(96,165,250,0.50);
@@ -175,27 +278,39 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 14px rgba(37,99,235,0.28);
 }
+
+/* Dev mode indicator text */
 .brand-hint {
   font-size: 0.68rem;
-  color: rgba(255,255,255,0.30); margin: 0;
+  color: rgba(255,255,255,0.30);
+  margin: 0;
 }
 
+
 /* ══════════════════════════════════════
-   RIGHT FORM PANEL
+   4. RIGHT FORM PANEL
+   Light grey panel with centered login card.
+   overflow-y: auto handles tall content on small screens.
 ══════════════════════════════════════ */
 .login-form-panel {
   flex: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;     /* ✅ changed from center → flex-start */
   justify-content: center;
   background:
     radial-gradient(ellipse at 70% 30%, rgba(37,99,235,0.06) 0%, transparent 55%),
     #f1f5f9;
-  padding: 24px;
+  padding: 40px 24px;          /* ✅ increased top padding from 24px → 40px */
   overflow-y: auto;
+  min-height: 100vh;           /* ✅ ensures panel fills full height */
+  box-sizing: border-box;      /* ✅ padding included in height calculation */
 }
 
-/* ── Card ── */
+
+/* ── Login Card
+   White rounded card with slide-up entrance animation.
+   max-width: 420px — optimal form width for readability.
+── */
 .login-card {
   background: #ffffff;
   border-radius: 20px;
@@ -209,290 +324,543 @@
   border: 1px solid rgba(226,232,240,0.80);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   animation: cardSlideUp 0.40s cubic-bezier(0.16,1,0.3,1) both;
 }
+
 @keyframes cardSlideUp {
   from { opacity: 0; transform: translateY(18px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ── Small logo ── */
+
+/* ── Card Header Logo (Right Panel)
+   Small version of the full Kitchen Book logo (with text).
+   Uses original colors on white background — no filter needed.
+   Source: assets/images/kitchen-book-logo.png
+── */
 .login-logo-sm {
-  width: 44px; height: 44px;
-  background: linear-gradient(135deg, #2563eb, #4f46e5);
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 8px;
-  box-shadow: 0 4px 16px rgba(37,99,235,0.28);
-}
-.login-logo-sm .material-icons { font-size: 24px; color: #fff; }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;   /* ✅ reduced: card gap handles spacing */
+  background: transparent;
+  border: none;
+  padding: 0;
 
-/* ── Login Header ── */
-.login-header { text-align: center; }
+  img.kb-logo-sm {
+    width: 180px;
+    height: auto;
+    object-fit: contain;
+    /* No filter — original green + dark text looks correct on white card */
+  }
+}
+
+
+/* ── Login Card Header
+   Centred title + subtitle below the small logo.
+── */
+.login-header { 
+  text-align: center;
+  
+ }
+
 .login-header h2 {
-  font-size: 1.55rem; font-weight: 700;
-  color: #0f172a; margin: 0 0 5px; letter-spacing: -0.3px;
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: -30px auto -10px;
+  letter-spacing: -0.3px;
 }
-.login-header p { color: #64748b; font-size: 0.88rem; margin: 0; }
 
-/* ── Error Banner ── */
+.login-header p {
+  color: #64748b;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+
+/* ── Error Banner
+   Animated red banner shown when errorMessage is set.
+   role="alert" on the HTML element ensures screen-reader announcement.
+── */
 .error-banner {
-  display: flex; align-items: center; gap: 8px;
-  background: #fef2f2; border: 1px solid #fca5a5;
-  color: #dc2626; border-radius: 10px;
-  padding: 10px 14px; font-size: 0.86rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.86rem;
   animation: bannerIn 0.22s ease both;
 }
+
 @keyframes bannerIn {
   from { opacity: 0; transform: translateY(-5px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
 .error-banner .material-icons { font-size: 17px; flex-shrink: 0; }
 
-/* ── Tab Switcher ── */
+
+/* ── Tab Switcher: Password | Mobile OTP
+   Pill-style segmented control. Active tab gets white bg + shadow.
+── */
 .tab-switcher {
-  display: flex; background: #f1f5f9;
-  border-radius: 11px; padding: 4px; gap: 4px;
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 11px;
+  padding: 4px;
+  gap: 4px;
 }
+
 .tab-switcher button {
   flex: 1;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 9px 12px; border: none; border-radius: 8px;
-  background: transparent; color: #64748b;
-  font-size: 0.87rem; font-weight: 500; cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.87rem;
+  font-weight: 500;
+  cursor: pointer;
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
   font-family: 'Segoe UI', sans-serif;
 }
+
 .tab-switcher button .material-icons { font-size: 16px; }
+
+/* Active tab: white background with shadow */
 .tab-switcher button.active {
-  background: #fff; color: #2563eb;
-  font-weight: 600; box-shadow: 0 2px 10px rgba(0,0,0,0.09);
-}
-
-/* ── Login Form ── */
-.login-form { display: flex; flex-direction: column; gap: 0; }
-
-/* ── Form Group ── */
-.form-group {
-  display: flex; flex-direction: column;
-  gap: 6px; margin-bottom: 16px;
-}
-.form-group:last-of-type { margin-bottom: 0; }
-.form-group label { font-size: 0.83rem; font-weight: 600; color: #334155; }
-
-/* ── Label Row ── */
-.label-row { display: flex; align-items: center; justify-content: space-between; }
-.label-row label { margin: 0; }
-.forgot-link {
-  font-size: 0.78rem; font-weight: 500;
-  color: #2563eb; text-decoration: none; transition: color 0.2s;
-}
-.forgot-link:hover { color: #1d4ed8; text-decoration: underline; }
-
-/* ── Input Wrapper ── */
-.input-wrapper { position: relative; display: flex; align-items: center; }
-.input-icon {
-  position: absolute; left: 12px;
-  font-size: 18px; color: #94a3b8;
-  pointer-events: none; transition: color 0.2s;
-}
-.input-wrapper:focus-within .input-icon { color: #2563eb; }
-.input-wrapper input {
-  width: 100%;
-  padding: 11px 44px 11px 42px;
-  border: 1.5px solid #e2e8f0; border-radius: 10px;
-  font-size: 0.92rem; color: #1e293b;
-  background: #f8fafc; outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-  font-family: 'Segoe UI', sans-serif; box-sizing: border-box;
-}
-.input-wrapper input:hover:not(:focus) { border-color: #cbd5e1; }
-.input-wrapper input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
   background: #fff;
+  color: #2563eb;
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.09);
 }
-.input-wrapper input:disabled { opacity: 0.60; cursor: not-allowed; }
 
-/* ── Toggle Eye ── */
-.toggle-eye {
-  position: absolute; right: 12px;
-  font-size: 18px; color: #94a3b8;
-  cursor: pointer; transition: color 0.2s, transform 0.15s; user-select: none;
-}
-.toggle-eye:hover { color: #2563eb; transform: scale(1.12); }
 
 /* ══════════════════════════════════════
-   ROLE SELECT DROPDOWN  ← new block
+   5. SHARED FORM ELEMENTS
+   Used across both Password and OTP tabs.
 ══════════════════════════════════════ */
-.select-wrapper {
+
+/* Form layout: vertical stack */
+.login-form { display: flex; flex-direction: column; gap: 0; }
+
+/* Form group: label + input pair */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+/* Remove bottom margin from last form-group before submit button */
+.form-group:last-of-type { margin-bottom: 16px; }
+
+.form-group label {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+
+/* ── Label Row (password field)
+   Horizontal layout: label on left, "Forgot password?" on right.
+── */
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label-row label { margin: 0; }
+
+.forgot-link {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #2563eb;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.forgot-link:hover { color: #1d4ed8; text-decoration: underline; }
+
+
+/* ── Input Wrapper
+   Relative container for left icon + input + optional right icon.
+── */
+.input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-/* Left icon — reuses .input-icon positioning */
-.select-wrapper .input-icon {
+/* Left icon inside input (non-interactive) */
+.input-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 18px;
+  color: #94a3b8;
   pointer-events: none;
-  z-index: 1;
   transition: color 0.2s;
 }
-.select-wrapper:focus-within .input-icon { color: #2563eb; }
 
-/* Custom chevron on the right */
-.select-chevron {
-  position: absolute; right: 12px;
-  font-size: 18px; color: #94a3b8;
-  pointer-events: none;
-  transition: color 0.2s, transform 0.2s;
-}
-.select-wrapper:focus-within .select-chevron {
-  color: #2563eb;
-  transform: rotate(180deg);
-}
+/* Icon turns blue when input is focused */
+.input-wrapper:focus-within .input-icon { color: #2563eb; }
 
-/* The <select> element itself */
-.select-wrapper select {
+/* Base input styles */
+.input-wrapper input {
   width: 100%;
-  padding: 11px 42px 11px 42px;   /* left room for icon, right room for chevron */
+  padding: 11px 44px 11px 42px;   /* left: icon space, right: toggle/OTP button space */
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
   font-size: 0.92rem;
   color: #1e293b;
   background: #f8fafc;
   outline: none;
-  appearance: none;               /* hide native arrow */
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  font-family: 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+.input-wrapper input:hover:not(:focus) { border-color: #cbd5e1; }
+
+.input-wrapper input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+  background: #fff;
+}
+
+.input-wrapper input:disabled { opacity: 0.60; cursor: not-allowed; }
+
+
+/* ── Password Toggle Eye
+   Clickable icon on right of password input.
+   Switches between visibility / visibility_off.
+── */
+.toggle-eye {
+  position: absolute;
+  right: 12px;
+  font-size: 18px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.15s;
+  user-select: none;
+}
+
+.toggle-eye:hover { color: #2563eb; transform: scale(1.12); }
+
+
+/* ── Role Select Dropdown
+   Native <select> styled with custom left icon + right chevron.
+   appearance: none removes native OS arrow.
+── */
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select-wrapper .input-icon {
+  pointer-events: none;
+  z-index: 1;
+  transition: color 0.2s;
+}
+
+.select-wrapper:focus-within .input-icon { color: #2563eb; }
+
+/* Custom right chevron (rotates 180° on open) */
+.select-chevron {
+  position: absolute;
+  right: 12px;
+  font-size: 18px;
+  color: #94a3b8;
+  pointer-events: none;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.select-wrapper:focus-within .select-chevron {
+  color: #2563eb;
+  transform: rotate(180deg);
+}
+
+.select-wrapper select {
+  width: 100%;
+  padding: 11px 42px 11px 42px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  color: #1e293b;
+  background: #f8fafc;
+  outline: none;
+  appearance: none;
   -webkit-appearance: none;
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
   font-family: 'Segoe UI', sans-serif;
   box-sizing: border-box;
 }
-/* Placeholder option color */
+
+/* Placeholder option shown in grey */
 .select-wrapper select:invalid,
-.select-wrapper:not(.has-value) select {
-  color: #94a3b8;
-}
+.select-wrapper:not(.has-value) select { color: #94a3b8; }
+
 .select-wrapper select:hover:not(:focus) { border-color: #cbd5e1; }
+
 .select-wrapper select:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
   background: #fff;
 }
+
 .select-wrapper select:disabled { opacity: 0.60; cursor: not-allowed; }
 
-/* ── OTP Button ── */
+
+/* ── Send OTP Button (inside mobile input)
+   Positioned absolutely on the right of the mobile input.
+   Disabled during countdown (otpTimer > 0).
+── */
 .btn-otp {
-  position: absolute; right: 8px;
-  display: flex; align-items: center; gap: 4px;
-  background: #eff6ff; border: 1px solid #bfdbfe;
-  color: #2563eb; border-radius: 7px;
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  border-radius: 7px;
   padding: 5px 11px;
-  font-size: 0.76rem; font-weight: 600;
-  cursor: pointer; transition: background 0.2s;
-  white-space: nowrap; font-family: 'Segoe UI', sans-serif;
-}
-.btn-otp:hover:not(:disabled) { background: #dbeafe; }
-.btn-otp:disabled {
-  color: #94a3b8; border-color: #e2e8f0;
-  background: #f1f5f9; cursor: not-allowed;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+  font-family: 'Segoe UI', sans-serif;
 }
 
-/* ── OTP Hint ── */
-.otp-hint { font-size: 0.74rem; font-weight: 400; color: #64748b; margin-left: 6px; }
+.btn-otp:hover:not(:disabled) { background: #dbeafe; }
+
+.btn-otp:disabled {
+  color: #94a3b8;
+  border-color: #e2e8f0;
+  background: #f1f5f9;
+  cursor: not-allowed;
+}
+
+
+/* ── OTP Hint Text (inline with OTP label) */
+.otp-hint {
+  font-size: 0.74rem;
+  font-weight: 400;
+  color: #64748b;
+  margin-left: 6px;
+}
+
+/* OTP field slides in after Send OTP */
 .otp-field { animation: bannerIn 0.25s ease both; }
 
-/* ── Login Button ── */
+
+/* ── Primary Login / Verify Button
+   Full-width gradient button with shimmer hover effect.
+── */
 .btn-login {
-  width: 100%; padding: 13px;
+  width: 100%;
+  padding: 13px;
   background: linear-gradient(135deg, #2563eb, #4f46e5);
-  color: #fff; border: none; border-radius: 11px;
-  font-size: 0.97rem; font-weight: 600; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
+  color: #fff;
+  border: none;
+  border-radius: 11px;
+  font-size: 0.97rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
   box-shadow: 0 4px 18px rgba(37,99,235,0.32);
-  margin-top: 6px; position: relative; overflow: hidden;
+  margin-top: 6px;
+  position: relative;
+  overflow: hidden;
   font-family: 'Segoe UI', sans-serif;
 }
+
+/* Shimmer sweep on hover */
 .btn-login::after {
   content: '';
-  position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  position: absolute;
+  top: 0; left: -100%; width: 60%; height: 100%;
   background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.18) 50%, transparent 80%);
-  transition: left 0.45s ease; pointer-events: none;
+  transition: left 0.45s ease;
+  pointer-events: none;
 }
+
 .btn-login:hover:not(:disabled)::after { left: 160%; }
+
 .btn-login:hover:not(:disabled) {
-  transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,99,235,0.42);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37,99,235,0.42);
 }
+
 .btn-login:active:not(:disabled) {
-  transform: translateY(0); box-shadow: 0 4px 14px rgba(37,99,235,0.28);
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(37,99,235,0.28);
 }
+
 .btn-login:disabled {
-  background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none;
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
+
 .btn-login .material-icons { font-size: 18px; }
 
-/* ── Divider ── */
+
+/* ── Or Divider */
 .divider {
-  display: flex; align-items: center;
-  gap: 12px; color: #94a3b8; font-size: 0.80rem;
-}
-.divider::before, .divider::after {
-  content: ''; flex: 1; height: 1px; background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #94a3b8;
+  font-size: 0.80rem;
 }
 
-/* ── Social Buttons ── */
-.social-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+
+/* ── Social Login Buttons (Google, Zoho)
+   2-column grid. Each button highlights brand color on hover.
+── */
+.social-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 .btn-social {
-  display: flex; align-items: center; justify-content: center;
-  gap: 8px; padding: 11px 16px; border-radius: 10px;
-  font-size: 0.88rem; font-weight: 600; cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
   transition: background 0.2s, box-shadow 0.2s, transform 0.15s, border-color 0.2s;
-  border: 1.5px solid #e2e8f0; background: #fff; color: #1e293b;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #1e293b;
   font-family: 'Segoe UI', sans-serif;
 }
-.btn-social img { width: 18px; height: 18px; object-fit: contain; }
-.social-fallback {
-  width: 18px; height: 18px; border-radius: 50%;
-  background: #e2e8f0; font-size: 0.70rem; font-weight: 800;
-  display: flex; align-items: center; justify-content: center; color: #475569;
-}
-.btn-social:hover:not(:disabled) {
-  box-shadow: 0 4px 14px rgba(0,0,0,0.10); transform: translateY(-1px);
-}
-.btn-social:disabled { opacity: 0.55; cursor: not-allowed; }
-.btn-google:hover:not(:disabled) { border-color: #ea4335; color: #ea4335; background: #fff5f5; }
-.btn-zoho:hover:not(:disabled)   { border-color: #e2231a; color: #e2231a; background: #fff5f5; }
 
-/* ── Footer ── */
-.login-footer { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.btn-social img { width: 18px; height: 18px; object-fit: contain; }
+
+/* Fallback letter shown when SVG fails to load */
+.social-fallback {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  font-size: 0.70rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+}
+
+.btn-social:hover:not(:disabled) {
+  box-shadow: 0 4px 14px rgba(0,0,0,0.10);
+  transform: translateY(-1px);
+}
+
+.btn-social:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Google: red brand hover */
+.btn-google:hover:not(:disabled) {
+  border-color: #ea4335;
+  color: #ea4335;
+  background: #fff5f5;
+}
+
+/* Zoho: red brand hover */
+.btn-zoho:hover:not(:disabled) {
+  border-color: #e2231a;
+  color: #e2231a;
+  background: #fff5f5;
+}
+
+
+/* ── Card Footer */
+.login-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
 .login-hint { font-size: 0.79rem; color: #94a3b8; margin: 0; text-align: center; }
 .login-hint strong { color: #475569; }
+
 .signup-redirect { font-size: 0.82rem; color: #64748b; margin: 0; }
+
 .signup-redirect a {
-  color: #2563eb; font-weight: 600; text-decoration: none; transition: color 0.2s;
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
 }
+
 .signup-redirect a:hover { color: #1d4ed8; text-decoration: underline; }
 
-/* ── Spinner ── */
+
+/* ══════════════════════════════════════
+   6. SPINNER (Loading State)
+   Applied to autorenew icon during API calls.
+══════════════════════════════════════ */
 .spin { animation: spin 0.85s linear infinite; font-size: 18px; }
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 
+
 /* ══════════════════════════════════════
-   RESPONSIVE
+   7. RESPONSIVE BREAKPOINTS
 ══════════════════════════════════════ */
+
+/* Tablet: hide left brand panel, simplify form panel */
 @media (max-width: 768px) {
   .login-brand { display: none; }
   .login-form-panel { background: #f8fafc; padding: 16px; }
-  .login-card { box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 28px 20px; max-width: 100%; }
+  .login-card {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    padding: 32px 16px;
+    max-width: 100%;
+  }
 }
+
+/* Small phone */
 @media (max-width: 480px) {
   .login-card { padding: 24px 16px; border-radius: 16px; }
 }
+
+/* Extra small phone: stack social buttons vertically */
 @media (max-width: 400px) {
   .social-buttons { grid-template-columns: 1fr; }
   .login-card { padding: 22px 12px; }

@@ -77,37 +77,62 @@
 
 /* ── Logo ── */
 .brand-logo {
-  width: 88px; height: 88px;
-  background: rgba(255,255,255,0.10);
-  border: 2px solid rgba(255,255,255,0.20);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(37,99,235,0.35);
-  animation: logoPulse 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;       /* ✅ use brand-content gap instead */
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+
+  img.kb-icon {
+    width: 96px;           /* ✅ FIXED: was 20px (too small) → 96px */
+    height: 96px;
+    object-fit: contain;
+    border-radius: 24px;   /* matches the rounded square app icon shape */
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.40),
+      0 4px 12px rgba(0, 0, 0, 0.25);
+    animation: iconFloat 4s ease-in-out infinite;
+  }
 }
-.brand-logo .material-icons {
-  font-size: 44px; color: #fff;
-  filter: drop-shadow(0 2px 8px rgba(37,99,235,0.5));
-}
-@keyframes logoPulse {
-  0%, 100% { box-shadow: 0 8px 32px rgba(37,99,235,0.35); }
-  50%       { box-shadow: 0 8px 48px rgba(37,99,235,0.60); }
+
+/* Icon floats up/down with green glow at peak */
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.40), 0 4px 12px rgba(0,0,0,0.25);
+  }
+  50% {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(52,211,153,0.35), 0 4px 12px rgba(0,0,0,0.25);
+  }
 }
 
 .brand-title {
-  font-size: clamp(2.4rem, 4vw, 3.2rem);
+  font-size: 2rem;
   font-weight: 800;
-  color: #fff;
-  letter-spacing: 8px;
-  margin: 0; line-height: 1;
-  text-shadow: 0 2px 20px rgba(37,99,235,0.40);
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  margin: 0;
+  line-height: 1.1;
+
+  span {
+    color: #34d399;   /* green accent — matches icon brand color */
+  }
 }
+
+/* ── Brand Subtitle: "— CLOUD KITCHEN ERP —"
+   Small caps, muted — secondary brand descriptor.
+── */
 .brand-subtitle {
-  font-size: 0.78rem; font-weight: 500;
-  color: rgba(255,255,255,0.55);
-  margin: 0; letter-spacing: 1px;
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 3px;
   text-transform: uppercase;
+  margin: 0;
 }
 
 /* ── Feature List ── */
@@ -155,12 +180,12 @@
 .signup-form-panel {
   flex: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   background:
     radial-gradient(ellipse at 70% 30%, rgba(37,99,235,0.06) 0%, transparent 55%),
     #f1f5f9;
-  padding: 24px;
+  padding: 40px 24px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
@@ -286,7 +311,7 @@
   display: flex; flex-direction: column;
   gap: 6px; margin-bottom: 14px;
 }
-.form-group:last-of-type { margin-bottom: 0; }
+.form-group:last-of-type { margin-bottom: 14px; }
 
 /* ── Floating Label ── */
 .float-label {
@@ -294,7 +319,7 @@
 }
 .float-label input {
   width: 100%;
-  padding: 18px 44px 7px 42px;
+  padding: 26px 44px 8px 42px;
   background: #f8fafc;
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
@@ -318,11 +343,14 @@
   font-size: 0.88rem; color: #94a3b8;
   pointer-events: none;
   transition: all 0.2s cubic-bezier(.4,0,.2,1);
+  white-space: nowrap;
+  background: transparent;
 }
 .float-label input:focus ~ .label-text,
 .float-label input:not(:placeholder-shown) ~ .label-text {
-  top: 9px; transform: translateY(0);
-  font-size: 0.70rem; color: #2563eb; font-weight: 600;
+  top: 8px; transform: translateY(0);
+  font-size: 0.68rem; color: #2563eb; font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
 .input-icon {

@@ -9,11 +9,20 @@
   <div class="signup-brand">
     <div class="brand-content">
 
+      <!-- ✅ UPDATED: Logo image replaces material icon -->
       <div class="brand-logo">
-        <span class="material-icons">restaurant</span>
+        <img
+          src="assets\images\IconKitchenBook.png"
+          alt="Kitchen Book - Cloud Kitchen ERP"
+          class="kb-logo"
+          width="96"
+          height="96"
+          style="border-radius: 24px; object-fit: contain;"
+        />
       </div>
-      <h1 class="brand-title">KOS</h1>
-      <p class="brand-subtitle">Kitchen Operations System</p>
+      <!-- Brand name rendered in CSS — white text on dark panel -->
+        <h1 class="brand-title">Kitchen <span>Book</span></h1>
+        <p class="brand-subtitle">— CLOUD KITCHEN ERP —</p>
 
       <div class="brand-features">
         <div class="feature-item">
@@ -54,7 +63,7 @@
       <!-- ── Header ── -->
       <div class="signup-header">
         <h2>Create your account</h2>
-        <p>Join KOS — set up your kitchen in minutes</p>
+        <p>Join KB — set up your kitchen in minutes</p>
       </div>
 
       <!-- ── Step Progress ── -->
@@ -97,32 +106,32 @@
 
         <!-- Full Name -->
         <div class="form-group">
-          <label class="float-label">
+          <div class="float-label">
             <span class="material-icons input-icon">person</span>
             <input type="text" [(ngModel)]="form.fullName" name="fullName"
                    placeholder=" " autocomplete="name" required />
             <span class="label-text">Full Name</span>
-          </label>
+          </div>
         </div>
 
         <!-- Email -->
         <div class="form-group">
-          <label class="float-label">
+          <div class="float-label">
             <span class="material-icons input-icon">email</span>
             <input type="email" [(ngModel)]="form.email" name="email"
                    placeholder=" " autocomplete="email" required />
             <span class="label-text">Work Email</span>
-          </label>
+          </div>
         </div>
 
         <!-- Mobile -->
         <div class="form-group">
-          <label class="float-label">
+          <div class="float-label">
             <span class="material-icons input-icon">smartphone</span>
             <input type="tel" [(ngModel)]="form.mobile" name="mobile"
                    placeholder=" " maxlength="10" autocomplete="tel" required />
             <span class="label-text">Mobile Number</span>
-          </label>
+          </div>
         </div>
 
         <button class="btn-next" (click)="nextStep()">
@@ -139,17 +148,17 @@
 
         <!-- Username -->
         <div class="form-group">
-          <label class="float-label">
+          <div class="float-label">
             <span class="material-icons input-icon">manage_accounts</span>
             <input type="text" [(ngModel)]="form.username" name="username"
                    placeholder=" " autocomplete="username" required />
             <span class="label-text">Username</span>
-          </label>
+          </div>
         </div>
 
         <!-- Password -->
         <div class="form-group">
-          <label class="float-label">
+          <div class="float-label">
             <span class="material-icons input-icon">lock</span>
             <input [type]="showPassword ? 'text' : 'password'"
                    [(ngModel)]="form.password" name="password"
@@ -159,7 +168,7 @@
             <span class="material-icons toggle-eye" (click)="togglePassword()">
               {{ showPassword ? 'visibility_off' : 'visibility' }}
             </span>
-          </label>
+          </div>
           <!-- Strength Meter -->
           <div class="strength-meter" *ngIf="form.password">
             <div class="strength-bars">
@@ -180,7 +189,7 @@
 
         <!-- Confirm Password -->
         <div class="form-group">
-          <label class="float-label">
+          <div class="float-label">
             <span class="material-icons input-icon">lock_clock</span>
             <input [type]="showConfirmPassword ? 'text' : 'password'"
                    [(ngModel)]="form.confirmPassword" name="confirmPassword"
@@ -189,7 +198,7 @@
             <span class="material-icons toggle-eye" (click)="toggleConfirmPassword()">
               {{ showConfirmPassword ? 'visibility_off' : 'visibility' }}
             </span>
-          </label>
+          </div>
           <span class="match-hint error"
                 *ngIf="form.confirmPassword && form.password !== form.confirmPassword">
             <span class="material-icons" style="font-size:14px">close</span>

@@ -1,28 +1,90 @@
 <div class="subscription-wrapper">
 
-  <div class="sub-header">
-    <span class="material-icons brand-icon">restaurant</span>
-    <h1>KOS</h1>
-  </div>
+  <!-- ══ Header ══ -->
+  <header class="sub-header" aria-label="Kitchen Book">
+    <div class="sub-header-icon-wrap">
+      <img src="assets/images/DarkKitchenbookLogo.png" alt="Kitchen Book" />
+    </div>
+    <div class="sub-header-text">
+      <span class="brand-name">Kitchen <em>Book</em></span>
+      <span class="brand-tagline">— CLOUD KITCHEN ERP —</span>
+    </div>
+  </header>
 
-  <!-- ── Step 1: Plan Selection ── -->
-  <div *ngIf="step === 'plan'">
-    <h2 class="sub-title">Choose Your Plan</h2>
-    <p class="sub-subtitle">Select a subscription that fits your restaurant</p>
+  <!-- ══════════════════════════════
+       STEP 1 — PLAN SELECTION
+  ══════════════════════════════ -->
+  <ng-container *ngIf="step === 'plan'">
 
+    <!-- ── Hero ── -->
+    <div class="sub-hero">
+      <h1 class="sub-title">Value-packed features</h1>
+      <h2 class="sub-title-accent">Wallet-friendly prices</h2>
+      <p class="sub-subtitle">
+        No hidden fees &nbsp;·&nbsp; No surprise charges &nbsp;·&nbsp; Cancel anytime
+      </p>
+
+      <!-- Billing Toggle -->
+      <div class="billing-toggle">
+        <span
+          [class.active]="billingCycle === 'monthly'"
+          (click)="setBilling('monthly')"
+        >Monthly</span>
+
+        <div
+          class="toggle-switch"
+          role="switch"
+          [attr.aria-checked]="billingCycle === 'annual'"
+          tabindex="0"
+          (click)="toggleBilling()"
+          (keydown.enter)="toggleBilling()"
+          (keydown.space)="toggleBilling()"
+        >
+          <div class="toggle-knob" [class.annual]="billingCycle === 'annual'"></div>
+        </div>
+
+        <span
+          [class.active]="billingCycle === 'annual'"
+          (click)="setBilling('annual')"
+        >
+          Annual <span class="save-badge">Save 20%</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- ── Plan Cards ── -->
     <div class="plans-grid">
-      <div class="plan-card"
-           *ngFor="let plan of plans"
-           [class.selected]="selectedPlan === plan.id"
-           [class.popular]="plan.popular"
-           (click)="selectPlan(plan.id)">
-
-        <div class="popular-badge" *ngIf="plan.popular">Most Popular</div>
+      <button
+        type="button"
+        class="plan-card"
+        *ngFor="let plan of plans"
+        [class.selected]="selectedPlan === plan.id"
+        [class.popular]="plan.popular"
+        (click)="selectPlan(plan.id)"
+        [attr.aria-pressed]="selectedPlan === plan.id"
+      >
+        <div class="popular-badge" *ngIf="plan.popular">🔥 Most Popular</div>
 
         <div class="plan-name">{{ plan.name }}</div>
-        <div class="plan-price">
-          {{ plan.price }}<span class="plan-period">{{ plan.period }}</span>
+
+        <div class="plan-positioning" *ngIf="plan.positioning">
+          {{ plan.positioning }}
         </div>
+
+        <div class="plan-tagline" *ngIf="plan.tagline">
+          {{ plan.tagline }}
+        </div>
+
+        <div class="plan-price">
+          {{ billingCycle === 'annual' && plan.annualPrice
+              ? plan.annualPrice : plan.price }}
+          <span class="plan-period">{{ plan.period }}</span>
+        </div>
+
+        <div class="plan-billed-note" *ngIf="billingCycle === 'annual'">
+          billed annually
+        </div>
+
         <div class="plan-staff">
           <span class="material-icons">people</span>
           {{ plan.staffLimit === 999 ? 'Unlimited' : 'Up to ' + plan.staffLimit }} staff
@@ -36,71 +98,210 @@
         </ul>
 
         <div class="plan-select-indicator">
-          <span class="material-icons" *ngIf="selectedPlan === plan.id">radio_button_checked</span>
-          <span class="material-icons" *ngIf="selectedPlan !== plan.id">radio_button_unchecked</span>
+          <span class="material-icons" *ngIf="selectedPlan === plan.id">
+            radio_button_checked
+          </span>
+          <span class="material-icons" *ngIf="selectedPlan !== plan.id">
+            radio_button_unchecked
+          </span>
           {{ selectedPlan === plan.id ? 'Selected' : 'Select Plan' }}
         </div>
-      </div>
+      </button>
     </div>
 
+    <!-- ── Proceed Button ── -->
     <div class="sub-actions">
-      <button class="btn-proceed" [disabled]="!selectedPlan" (click)="proceedToContact()">
-        Proceed with {{ selectedPlan ? getPlanById(selectedPlan)?.name : '...' }}
+      <button
+        class="btn-proceed"
+        [disabled]="!selectedPlan"
+        (click)="proceedToContact()"
+      >
+        Proceed with
+        {{ selectedPlan ? getPlanById(selectedPlan)?.name : '...' }}
         <span class="material-icons">arrow_forward</span>
       </button>
     </div>
-  </div>
 
-  <!-- ── Step 2: Contact Details ── -->
-  <div *ngIf="step === 'contact'" class="contact-step">
-    <button class="btn-back" (click)="goBack()">
-      <span class="material-icons">arrow_back</span> Back
-    </button>
+    <!-- ══════════════════════════════
+         COMPARISON TABLE — Style A
+         Always visible, sticky header
+    ══════════════════════════════ -->
+    <div class="comparison-section">
+      <h3 class="section-title">Full Feature Comparison</h3>
+      <p class="section-subtitle">
+        Everything included across all plans — scroll to explore
+      </p>
 
-    <h2 class="sub-title">Contact Details</h2>
-    <p class="sub-subtitle">
-      Our team will review and activate your
-      <strong>{{ getPlanById(selectedPlan!)?.name }}</strong> plan
-    </p>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
 
-    <form class="contact-form" (ngSubmit)="submitContact()" novalidate>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Your Name *</label>
-          <input type="text" [(ngModel)]="contact.name" name="name"
-                 placeholder="Full name" required />
-        </div>
-        <div class="form-group">
-          <label>Restaurant Name *</label>
-          <input type="text" [(ngModel)]="contact.restaurantName"
-                 name="restaurantName" placeholder="Restaurant name" required />
+          <!-- Sticky header -->
+          <thead>
+            <tr class="thead-row">
+              <th class="feat-col"></th>
+              <th
+                *ngFor="let plan of plans"
+                class="plan-th"
+                [class.popular-th]="plan.popular"
+              >
+                <div class="th-name">{{ plan.name }}</div>
+                <div class="th-positioning">{{ plan.positioning }}</div>
+                <div class="th-price" [class.popular-price]="plan.popular">
+                  {{ billingCycle === 'annual' && plan.annualPrice
+                      ? plan.annualPrice : plan.price }}
+                  <span class="th-period">/mo</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <ng-container *ngFor="let cat of comparisonCategories">
+
+              <!-- Category header row -->
+              <tr class="cat-header-row">
+                <td [attr.colspan]="plans.length + 1" class="cat-header-cell">
+                  <span class="material-icons cat-icon">{{ cat.icon }}</span>
+                  {{ cat.category }}
+                </td>
+              </tr>
+
+              <!-- Feature rows -->
+              <tr
+                *ngFor="let row of cat.rows; let odd = odd"
+                class="feat-row"
+                [class.feat-row-odd]="odd"
+              >
+                <td class="feat-name-cell">{{ row.label }}</td>
+                <td
+                  *ngFor="let plan of plans"
+                  class="feat-check-cell"
+                  [class.popular-col]="plan.popular"
+                >
+                  <span
+                    class="material-icons icon-check"
+                    *ngIf="row.plans.includes(plan.id)"
+                  >check_circle</span>
+                  <span
+                    class="material-icons icon-dash"
+                    *ngIf="!row.plans.includes(plan.id)"
+                  >remove</span>
+                </td>
+              </tr>
+
+            </ng-container>
+          </tbody>
+
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Testimonials ── -->
+    <div class="testimonials-section">
+      <h3 class="section-title">Real Restaurants · Real Results</h3>
+      <div class="testimonials-grid">
+        <div class="testimonial-card" *ngFor="let t of testimonials">
+          <p class="testimonial-text">"{{ t.text }}"</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">{{ t.name[0] }}</div>
+            <div class="author-info">
+              <strong>{{ t.name }}</strong>
+              <span>{{ t.role }}</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Email Address *</label>
-          <input type="email" [(ngModel)]="contact.email" name="email"
-                 placeholder="your&#64;email.com" required />
-        </div>
-        <div class="form-group">
-          <label>Phone Number *</label>
-          <input type="tel" [(ngModel)]="contact.phone" name="phone"
-                 placeholder="10-digit number" maxlength="10" required />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Message (Optional)</label>
-        <textarea [(ngModel)]="contact.message" name="message" rows="3"
-                  placeholder="Any specific requirements..."></textarea>
-      </div>
+    </div>
 
-      <button type="submit" class="btn-proceed"
-              [disabled]="isLoading || !contact.name || !contact.email || !contact.phone">
-        <span class="material-icons spin" *ngIf="isLoading">autorenew</span>
-        <span>{{ isLoading ? 'Submitting...' : 'Submit for Approval' }}</span>
-        <span class="material-icons" *ngIf="!isLoading">send</span>
+    <!-- ── FAQ ── -->
+    <div class="faq-section">
+      <h3 class="section-title">Frequently Asked Questions</h3>
+      <div class="faq-list">
+        <div
+          class="faq-item"
+          *ngFor="let faq of faqs; let i = index"
+          [class.open]="openFaq === i"
+          (click)="toggleFaq(i)"
+        >
+          <div class="faq-question">
+            {{ faq.q }}
+            <span class="material-icons">
+              {{ openFaq === i ? 'expand_less' : 'expand_more' }}
+            </span>
+          </div>
+          <div class="faq-answer" *ngIf="openFaq === i">{{ faq.a }}</div>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ══════════════════════════════
+       STEP 2 — CONTACT DETAILS
+  ══════════════════════════════ -->
+  <ng-container *ngIf="step === 'contact'">
+    <div class="contact-step">
+
+      <button class="btn-back" (click)="goBack()">
+        <span class="material-icons">arrow_back</span> Back
       </button>
-    </form>
-  </div>
+
+      <h2 class="sub-title">Contact Details</h2>
+      <p class="sub-subtitle">
+        Our team will review and activate your
+        <strong>{{ getPlanById(selectedPlan!)?.name }}</strong> plan
+      </p>
+
+      <form class="contact-form" (ngSubmit)="submitContact()" novalidate>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="c-name">Your Name *</label>
+            <input id="c-name" type="text" [(ngModel)]="contact.name"
+                   name="name" placeholder="Full name" required />
+          </div>
+          <div class="form-group">
+            <label for="c-restaurant">Restaurant Name *</label>
+            <input id="c-restaurant" type="text"
+                   [(ngModel)]="contact.restaurantName"
+                   name="restaurantName" placeholder="Restaurant name" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="c-email">Email Address *</label>
+            <input id="c-email" type="email" [(ngModel)]="contact.email"
+                   name="email" placeholder="your@email.com" required />
+          </div>
+          <div class="form-group">
+            <label for="c-phone">Phone Number *</label>
+            <input id="c-phone" type="tel" [(ngModel)]="contact.phone"
+                   name="phone" placeholder="10-digit number"
+                   maxlength="10" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="c-msg">Message (Optional)</label>
+          <textarea id="c-msg" [(ngModel)]="contact.message"
+                    name="message" rows="3"
+                    placeholder="Any specific requirements..."></textarea>
+        </div>
+
+        <button
+          type="submit"
+          class="btn-proceed"
+          [disabled]="isLoading || !contact.name
+                      || !contact.email || !contact.phone"
+        >
+          <span class="material-icons spin" *ngIf="isLoading">autorenew</span>
+          <span>{{ isLoading ? 'Submitting...' : 'Submit for Approval' }}</span>
+          <span class="material-icons" *ngIf="!isLoading">send</span>
+        </button>
+
+      </form>
+    </div>
+  </ng-container>
 
 </div>
