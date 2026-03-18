@@ -1,5 +1,27 @@
 <div class="cart-panel">
 
+  <!-- ===== NOTIFICATIONS ===== -->
+  <div class="cart-notifications" *ngIf="notifications.length > 0">
+    <div
+      class="notification-toast"
+      *ngFor="let note of notifications"
+      [class.success]="note.type === 'success'"
+      [class.error]="note.type === 'error'"
+      [class.info]="note.type === 'info'">
+      <mat-icon>
+        {{ note.type === 'success' ? 'check_circle' :
+           note.type === 'error'   ? 'error' : 'info' }}
+      </mat-icon>
+      <span>{{ note.message }}</span>
+      <button
+        class="dismiss-btn"
+        (click)="dismissNotification(note.id)"
+        type="button">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
   <!-- ===== HEADER ===== -->
   <div class="cart-header">
     <div class="header-info">
@@ -12,7 +34,7 @@
       </span>
     </div>
 
-    <!-- Context Badge — single ngSwitch -->
+    <!-- Context Badge -->
     <div class="context-badge" [ngSwitch]="orderType">
       <ng-container *ngSwitchCase="'Dine-In'">
         <mat-icon>table_restaurant</mat-icon>
@@ -244,17 +266,194 @@
 
   </div>
 
-  <!-- ===== CHECKOUT BUTTON ===== -->
+  <!-- ===== FOOTER ===== -->
   <div class="cart-footer" *ngIf="hasItems">
-    <button
-      class="checkout-btn"
-      (click)="proceedToCheckout()"
-      [disabled]="!canCheckout"
-      type="button">
-      <mat-icon>payments</mat-icon>
-      <span>Proceed to Payment</span>
-      <span class="checkout-amount">{{ formatCurrency(total) }}</span>
-    </button>
+
+    <!-- Pay Now + Close Table row -->
+    <div class="footer-pay-row">
+
+      <button
+        class="pay-now-btn"
+        (click)="openPayment()"
+        [disabled]="!canCheckout"
+        type="button">
+        <mat-icon>credit_card</mat-icon>
+        <span>Pay Now</span>
+        <span class="checkout-amount">{{ formatCurrency(total) }}</span>
+      </button>
+
+      <!-- Close Table — Dine-In with table only -->
+      <button
+        class="close-table-btn"
+        *ngIf="tableNumber && orderType === 'Dine-In'"
+        (click)="closeTable()"
+        type="button">
+        <mat-icon>table_restaurant</mat-icon>
+        <span>Close Table</span>
+      </button>
+
+    </div>
+
+    <!-- Action Buttons Row -->
+    <div class="cart-action-buttons">
+
+      <button
+        class="action-icon-btn"
+        title="Print KOT"
+        (click)="printKOT()"
+        type="button">
+        <mat-icon>print</mat-icon>
+        <span>KOT</span>
+      </button>
+
+      <button
+        class="action-icon-btn"
+        title="Save Order"
+        (click)="saveOrder()"
+        type="button">
+        <mat-icon>save</mat-icon>
+        <span>Save</span>
+      </button>
+
+      <button
+        class="action-icon-btn hold"
+        title="Hold Order"
+        (click)="holdOrder()"
+        type="button">
+        <mat-icon>pause_circle</mat-icon>
+        <span>Hold</span>
+      </button>
+
+      <button
+        class="action-icon-btn held"
+        title="Held Orders"
+        (click)="viewHeldOrders()"
+        type="button">
+        <mat-icon>list_alt</mat-icon>
+        <span>Held</span>
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- ===== HELD ORDERS PANEL ===== -->
+  <!-- ✅ FIX: No wrapper — component handles its own close via (closed) output -->
+  <!-- ✅ CSS positions it as full absolute overlay via app-hold-orders selector -->
+  <app-hold-orders
+    *ngIf="showHoldOrders"
+    (orderRecalled)="recallOrder($event)"
+    (closed)="showHoldOrders = false">
+  </app-hold-orders>
+
+  <!-- ===== PAYMENT POPUP ===== -->
+  <!-- ✅ FIX: No wrapper — component handles its own close via (paymentCancel) output -->
+  <app-payment-popup
+    *ngIf="showPayment"
+    [cart]="cart"
+    [total]="total"
+    [orderType]="orderType"
+    [tableNumber]="tableNumber"
+    (paymentComplete)="onPaymentComplete($event)"
+    (paymentCancel)="onPaymentCancel()">
+  </app-payment-popup>
+
+  <!-- ===== CUSTOMER INFO OVERLAY ===== -->
+  <!-- ✅ FIX: Backdrop click closes, panel stopPropagation only on panel div not on buttons -->
+  <div
+    class="customer-info-overlay"
+    *ngIf="showCustomerInfo"
+    (click)="showCustomerInfo = false">
+
+    <div
+      class="customer-info-panel"
+      (click)="$event.stopPropagation()">
+
+      <div class="customer-info-header">
+        <div class="customer-info-title">
+          <mat-icon>person</mat-icon>
+          <h3>Customer Information</h3>
+        </div>
+        <!-- ✅ FIX: stopPropagation on button itself so it doesn't need to bubble -->
+        <button
+          class="customer-info-close"
+          (click)="$event.stopPropagation(); showCustomerInfo = false"
+          type="button">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <p class="customer-info-subtitle">
+        Required for {{ orderType }} orders
+      </p>
+
+      <form
+        class="customer-info-form"
+        #customerForm="ngForm"
+        (ngSubmit)="onCustomerInfoSubmit(customerForm.value)">
+
+        <div class="form-field">
+          <label>Name <span class="required">*</span></label>
+          <input
+            type="text"
+            name="name"
+            ngModel
+            required
+            placeholder="Customer name"
+            class="form-input">
+        </div>
+
+        <div class="form-field">
+          <label>Phone <span class="required">*</span></label>
+          <input
+            type="tel"
+            name="phone"
+            ngModel
+            required
+            placeholder="Mobile number"
+            class="form-input">
+        </div>
+
+        <div class="form-field" *ngIf="orderType === 'Delivery'">
+          <label>Address <span class="required">*</span></label>
+          <textarea
+            name="address"
+            ngModel
+            placeholder="Delivery address"
+            class="form-input"
+            rows="2"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label>Email <span class="optional">(optional)</span></label>
+          <input
+            type="email"
+            name="email"
+            ngModel
+            placeholder="customer@email.com"
+            class="form-input">
+        </div>
+
+        <div class="customer-info-actions">
+          <!-- ✅ FIX: stopPropagation ensures cancel button always fires -->
+          <button
+            type="button"
+            class="info-cancel-btn"
+            (click)="$event.stopPropagation(); showCustomerInfo = false">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="info-confirm-btn"
+            [disabled]="customerForm.invalid">
+            <mat-icon>check</mat-icon>
+            Confirm & Pay
+          </button>
+        </div>
+
+      </form>
+
+    </div>
   </div>
 
 </div>
