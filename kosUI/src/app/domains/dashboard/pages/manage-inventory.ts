@@ -1,4 +1,4 @@
-import { Component, HostListener, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
@@ -6,6 +6,7 @@ import { InventoryService } from '../../dashboard/services/inventory.service';
 import { Item } from '../../dashboard/models/item.model';
 import { MatSelect, MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 type Category = 'Breakfast' | 'Lunch' | 'Snacks' | 'Dinner';
 type Group = 'Veg' | 'Non-Veg';
@@ -14,17 +15,35 @@ type StockView = 'ALL' | 'LOW' | 'SOLD' | 'DISABLED';
 @Component({
   selector: 'app-manage-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule,MatSelectModule,
-    MatCheckboxModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatProgressSpinnerModule
+  ],
   templateUrl: './manage-inventory.html',
   styleUrls: ['./manage-inventory.css']
 })
 export class ManageInventoryComponent {
 
-  constructor(private inventoryService: InventoryService) {}
+  constructor(
+    private inventoryService: InventoryService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.inventoryService.getItemlist();
+    this.inventoryService.getItemlist().subscribe(res=>{
+      let itemList: Item[] = res;
+      itemList.sort((a, b) => {
+        if (a.id == null) return 1;
+        if (b.id == null) return -1;
+        return Number(b.id) - Number(a.id);
+      });
+      this.inventoryService.populateItems(itemList);
+      this.cdr.detectChanges();
+      this.loading = false;
+  });
   }
 
   @ViewChild('categorySelect') categorySelect!: MatSelect;
@@ -36,7 +55,7 @@ export class ManageInventoryComponent {
     }
   }
 
-
+  loading = true;
   bulkPreview: any[] = [];
   bulkErrors: string[] = [];
   excelFileName: string = '';
@@ -197,8 +216,17 @@ export class ManageInventoryComponent {
         to: this.to,
         image: this.selectedImage || undefined
       };
-
-      this.inventoryService.updateItem(updated);
+      this.loading = true;
+      this.inventoryService.updateItem(updated).subscribe(res=>{
+        let newItem= res;
+        if(newItem.id != null && newItem.id > 0){
+          this.inventoryService.getItemlist().subscribe(res=>{
+            this.inventoryService.populateItems(res as Item[]);
+            this.cdr.detectChanges();
+            this.loading = false;
+          });
+        }
+      });
 
     } else {
 
@@ -214,8 +242,17 @@ export class ManageInventoryComponent {
         to: this.to,
         image: this.selectedImage || undefined,
       };
-
-      this.inventoryService.addItem(newItem);
+      this.loading = true;
+      this.inventoryService.addItem(newItem).subscribe(response=>{
+        let newItem= response;
+        if(newItem.id != null && newItem.id > 0){
+          this.inventoryService.getItemlist().subscribe(res=>{
+            this.inventoryService.populateItems(res as Item[]);
+            this.cdr.detectChanges();
+            this.loading = false;
+          });
+        }
+      });;
     }
 
     this.showSuccessToast();
@@ -254,7 +291,17 @@ export class ManageInventoryComponent {
   deleteItem(id: number | null) {
     const ok = confirm('Delete this item?');
     if (ok) {
-      this.inventoryService.deleteItem(id);
+      this.loading =true;
+      this.inventoryService.deleteItem(id).subscribe(res=>{
+        let message = res;
+        if(message.status){
+          this.inventoryService.getItemlist().subscribe(res=>{
+            this.inventoryService.populateItems(res as Item[]);
+            this.cdr.detectChanges();
+            this.loading = false;
+          });;
+        }
+      });;
     }
   }
 

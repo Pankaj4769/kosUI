@@ -116,12 +116,10 @@
 
   <!-- ================= MENU ITEMS ================= -->
   <div class="menu-content" *ngIf="!loading && !error">
-
     <!-- Grid View -->
     <div
       class="menu-grid"
       *ngIf="viewMode === 'grid' && filteredItems.length > 0">
-
       <div
         class="menu-card"
         *ngFor="let item of filteredItems">
@@ -236,9 +234,8 @@
   </div>
 
   <!-- Loading -->
-  <div class="loading-state" *ngIf="loading">
-    <div class="spinner"></div>
-    <p>Loading menu...</p>
+  <div class="spinner-container" *ngIf="loading">
+    <mat-spinner></mat-spinner>
   </div>
 
   <!-- Error -->

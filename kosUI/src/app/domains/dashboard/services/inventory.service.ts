@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {  ChangeDetectorRef, Injectable } from '@angular/core';
 import { Item } from '../models/item.model';
 import { HttpClient } from '@angular/common/http';
 import { MessageResponse } from '../models/message.model';
@@ -23,45 +23,26 @@ export class InventoryService {
 
   }
 
+  populateItems(items: Item[]){
+    this.items = [...items];
+  }
+
   getItemlist(){
-    this.httpclient.get<Item[]>(this.baseUrl+'/getAllItems').subscribe(res=>{
-      let itemList: Item[] = res;
-      itemList.sort((a, b) => {
-        if (a.id == null) return 1;
-        if (b.id == null) return -1;
-        return Number(b.id) - Number(a.id);
-      });
-      this.items = itemList;
-  }); 
+      console.log(1);
+     return this.httpclient.get<Item[]>(this.baseUrl+'/getAllItems');
   }
   addItem(item: Item) {
 
-    this.httpclient.post<Item>(this.baseUrl+'/addItem',item).subscribe(response=>{
-      let newItem= response;
-      if(newItem.id != null && newItem.id > 0){
-        this.getItemlist();
-      }
-    });
+    return this.httpclient.post<Item>(this.baseUrl+'/addItem',item);
   }
 
   updateItem(updated: Item) {
-    this.httpclient.patch<Item>(this.baseUrl+'/updateItem',updated).subscribe(res=>{
-
-      let newItem= res;
-      if(newItem.id != null && newItem.id > 0){
-        this.getItemlist();
-      }
-    });
+    return this.httpclient.patch<Item>(this.baseUrl+'/updateItem',updated);
     
   }
 
   deleteItem(id: number | null) {
-    this.httpclient.delete<MessageResponse>(this.baseUrl+'/deleteItemById/'+id).subscribe(res=>{
-      let message = res;
-      if(message.status){
-        this.getItemlist();
-      }
-    });
+    return this.httpclient.delete<MessageResponse>(this.baseUrl+'/deleteItemById/'+id);
   }
 
   toggleItemStatus(id: number|null, status:boolean) {
