@@ -10,6 +10,19 @@
   overflow: hidden;
 }
 
+.spinner-container {
+  display: flex;
+  justify-content: center; /* center horizontally */
+  align-items: center;     /* center vertically */
+  position: fixed;         /* overlay on screen */
+  top: 0;
+  left: 0;
+  width: 100%;             /* full width of viewport */
+  height: 100%;            /* full height of viewport */
+  z-index: 999;
+  background: rgba(0,0,0,0.1); /* optional dim */
+}
+
 /* =====================================================
    HEADER — Compact 2-row design
 ===================================================== */

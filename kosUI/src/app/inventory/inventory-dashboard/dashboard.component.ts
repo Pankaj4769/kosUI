@@ -942,4 +942,4 @@ export class DashboardComponent implements OnInit, OnDestroy {
   trackById(index: number, item: any): any {
     return item.id || index;
   }
-}
+};

@@ -27,6 +27,7 @@ import { InventoryService } from '../../../dashboard/services/inventory.service'
 import { CartService } from '../../services/cart.service';
 import { Observable } from 'rxjs/internal/Observable';
 import { of, Subscription } from 'rxjs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 /* ================= TYPES ================= */
 
@@ -72,7 +73,8 @@ export interface MenuCategory {
     MatChipsModule,
     MatTooltipModule,
     MatMenuModule,
-    MatBadgeModule
+    MatBadgeModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './menu-area.component.html',
   styleUrls: ['./menu-area.component.css'],
@@ -111,6 +113,7 @@ export class MenuAreaComponent implements OnInit, OnDestroy  {  // NEW: Added On
   cartItemStatus: boolean = false;
   cartItemQty: number = 0;
   private dataSubscription?: Subscription;  // NEW: Track subscription for cleanup
+  spinnerLoading = true;
 
   /* ================= CONSTRUCTOR ================= */
 
@@ -123,8 +126,13 @@ constructor(
 /* ================= LIFECYCLE ================= */
 
 ngOnInit(): void {
-  this.inventoryservice.getItemlist();
-  this.loadMenuData();
+  this.loading = true;
+  this.inventoryservice.getItemlist().subscribe(res=>{
+    this.inventoryservice.populateItems(res as Item[]);
+    this.loadMenuData();
+    this.loading = false;
+  });
+  
 }
 
 // NEW: Cleanup subscription on destroy
