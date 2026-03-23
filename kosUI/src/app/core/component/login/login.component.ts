@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { LoginRequest } from '../../../core/auth/auth.model';
+import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
 
 
 type LoginTab = 'password' | 'mobile';
@@ -17,7 +18,7 @@ export type UserRole =
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ForgotPasswordComponent],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -55,8 +56,9 @@ export class LoginComponent implements OnDestroy {
 
 
   // ── UI state ───────────────────────────────────────────
-  errorMessage = '';
-  isLoading    = false;
+  errorMessage        = '';
+  isLoading           = false;
+  showForgotPassword  = false;
 
 
   // ── Dev roles (shown only in dev mode) ────────────────

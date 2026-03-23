@@ -295,15 +295,15 @@
 .login-form-panel {
   flex: 1;
   display: flex;
-  align-items: flex-start;     /* ✅ changed from center → flex-start */
+  align-items: center;
   justify-content: center;
   background:
     radial-gradient(ellipse at 70% 30%, rgba(37,99,235,0.06) 0%, transparent 55%),
     #f1f5f9;
-  padding: 40px 24px;          /* ✅ increased top padding from 24px → 40px */
+  padding: 24px 20px;
   overflow-y: auto;
-  min-height: 100vh;           /* ✅ ensures panel fills full height */
-  box-sizing: border-box;      /* ✅ padding included in height calculation */
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 
@@ -314,9 +314,9 @@
 .login-card {
   background: #ffffff;
   border-radius: 20px;
-  padding: 36px 32px;
+  padding: 24px 28px;
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   box-shadow:
     0 1px 0 rgba(255,255,255,0.9) inset,
     0 12px 40px rgba(0,0,0,0.10),
@@ -324,7 +324,7 @@
   border: 1px solid rgba(226,232,240,0.80);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   animation: cardSlideUp 0.40s cubic-bezier(0.16,1,0.3,1) both;
 }
 
@@ -349,7 +349,7 @@
   padding: 0;
 
   img.kb-logo-sm {
-    width: 180px;
+    width: 140px;
     height: auto;
     object-fit: contain;
     /* No filter — original green + dark text looks correct on white card */
@@ -366,16 +366,16 @@
  }
 
 .login-header h2 {
-  font-size: 1.55rem;
+  font-size: 1.30rem;
   font-weight: 700;
   color: #0f172a;
-  margin: -30px auto -10px;
+  margin: -20px auto -6px;
   letter-spacing: -0.3px;
 }
 
 .login-header p {
   color: #64748b;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   margin: 0;
 }
 
@@ -422,7 +422,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 9px 12px;
+  padding: 7px 12px;
   border: none;
   border-radius: 8px;
   background: transparent;
@@ -457,12 +457,11 @@
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
+  gap: 5px;
+  margin-bottom: 10px;
 }
 
-/* Remove bottom margin from last form-group before submit button */
-.form-group:last-of-type { margin-bottom: 16px; }
+.form-group:last-of-type { margin-bottom: 10px; }
 
 .form-group label {
   font-size: 0.83rem;
@@ -487,6 +486,11 @@
   font-weight: 500;
   color: #2563eb;
   text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: 'Segoe UI', sans-serif;
   transition: color 0.2s;
 }
 
@@ -673,7 +677,7 @@
 ── */
 .btn-login {
   width: 100%;
-  padding: 13px;
+  padding: 10px;
   background: linear-gradient(135deg, #2563eb, #4f46e5);
   color: #fff;
   border: none;
@@ -756,7 +760,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 11px 16px;
+  padding: 9px 14px;
   border-radius: 10px;
   font-size: 0.88rem;
   font-weight: 600;
