@@ -6,7 +6,7 @@
 
 :host {
   display: block;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
   margin: 0;
   padding: 0;
@@ -17,7 +17,7 @@
 ===================================================== */
 
 .cashier-container {
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #f8fafc 0%, #e8ecf1 100%);
@@ -29,7 +29,7 @@
 }
 
 .cashier-page {
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -906,13 +906,18 @@ textarea.form-control { resize: vertical; font-family: inherit; }
    RESPONSIVE
 ===================================================== */
 
+/* ── Wide desktop (≤1200px) ── */
 @media (max-width: 1200px) {
   .sidebar-panel { width: 270px; }
 }
 
+/* ── Tablet landscape / small desktop (≤1000px) ──
+   Body stacks vertically: menu on top, sidebar on bottom.
+   Sidebar splits order-sidebar (left) | cart (right) in a row.
+   Height 340px — enough for tabs + stats + header + summary + footer.
+────────────────────────────────────────────────── */
 @media (max-width: 1000px) {
   .body-row { flex-direction: column; }
-
   .left-column { flex: 1; min-height: 0; }
 
   .shortcuts-bar {
@@ -922,19 +927,23 @@ textarea.form-control { resize: vertical; font-family: inherit; }
 
   .sidebar-panel {
     width: 100%;
-    height: 220px;
+    height: 340px;           /* was 220px — caused overflow with empty cart */
     flex-direction: row;
     border-left: none;
     border-top: 1px solid #e2e8f0;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
   }
 
+  /* order-sidebar: fixed width, scrolls internally if needed */
   .sidebar-panel app-order-sidebar {
-    flex: 1;
+    flex: 0 0 200px;
+    width: 200px;
     border-right: 1px solid #e2e8f0;
+    overflow-y: auto;
   }
 
-  .sidebar-panel app-cart-panel { flex: 1; }
+  /* cart-panel: fills remaining width */
+  .sidebar-panel app-cart-panel { flex: 1; min-width: 0; }
 
   .bottom-bar {
     flex-wrap: wrap;
@@ -944,16 +953,38 @@ textarea.form-control { resize: vertical; font-family: inherit; }
   }
 
   .left-actions,
-  .right-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
+  .right-actions { width: 100%; justify-content: space-between; }
 }
 
+/* ── Tablet portrait (≤768px) ──
+   iPad Mini portrait = 768×1024: 48vh ≈ 491px.
+   Uses viewport-height so taller devices get more cart space.
+   min-height 420px ensures usability on shorter devices.
+────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .center-panel { padding: 6px; }
-
   .shortcuts-bar { gap: 6px; padding: 0 8px; }
+
+  .sidebar-panel {
+    height: 48vh;            /* 491px on iPad Mini 1024px tall */
+    min-height: 420px;       /* floor for shorter devices */
+    flex-direction: column;  /* stack order-sidebar above cart */
+  }
+
+  /* order-sidebar: auto height (tabs + stats only, no overflow) */
+  .sidebar-panel app-order-sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    overflow-y: hidden;
+  }
+
+  /* cart-panel: fills all remaining sidebar height */
+  .sidebar-panel app-cart-panel {
+    flex: 1;
+    min-height: 0;
+  }
 
   .cashier-header { flex-direction: column; gap: 10px; padding: 10px 12px; }
   .header-left, .header-right { width: 100%; justify-content: space-between; }
@@ -965,28 +996,40 @@ textarea.form-control { resize: vertical; font-family: inherit; }
   .pay-btn .amount  { display: inline; }
 
   .toast-container {
-    left: 10px;
-    right: 10px;
-    top: auto;
-    bottom: 66px;
+    left: 10px; right: 10px;
+    top: auto; bottom: 66px;
     width: calc(100% - 20px);
   }
-
   .toast-notification { min-width: 100%; }
+  .notifications-panel { left: 10px; right: 10px; width: calc(100% - 20px); }
+}
 
-  .notifications-panel {
-    left: 10px;
-    right: 10px;
-    width: calc(100% - 20px);
+/* ── Large phone / small tablet (≤600px) ──
+   Shorter devices: reduce vh so menu area stays usable.
+────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .sidebar-panel {
+    height: 46vh;
+    min-height: 380px;
   }
 }
 
+/* ── Mobile (≤480px) ──
+   Small phones: sidebar covers ~45vh; menu area gets the rest.
+────────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .order-info    { display: none; }
   .header-right  { gap: 4px; }
   .header-btn    { padding: 8px; }
   .pay-btn       { min-width: unset; }
   .shortcut-hint { display: none; }
+
+  .sidebar-panel {
+    height: 45vh;
+    min-height: 360px;
+  }
+
+  .center-panel { padding: 4px; }
 }
 
 /* =====================================================

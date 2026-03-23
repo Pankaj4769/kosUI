@@ -1,3 +1,102 @@
 :root {
   --pos-green: #4f7c3a;
 }
+
+/* =====================================================
+   QUICK ACTION MENU — global mat-menu panel override
+===================================================== */
+
+.quick-action-menu.mat-mdc-menu-panel {
+  min-width: 220px !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08) !important;
+  border: 1px solid #e2e8f0;
+  padding: 6px 0 !important;
+}
+
+.quick-action-menu .mat-mdc-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px !important;
+  height: 44px;
+  min-height: 44px !important;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+  border-radius: 0;
+  transition: background 0.12s ease;
+}
+
+.quick-action-menu .mat-mdc-menu-item:hover {
+  background: #f1f5f9 !important;
+}
+
+.quick-action-menu .mat-mdc-menu-item .mdc-list-item__primary-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Icons */
+.quick-action-menu .menu-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.quick-action-menu .refresh-icon   { color: #0284c7; }
+.quick-action-menu .held-icon      { color: #7c3aed; }
+.quick-action-menu .new-order-icon { color: #2e7d32; }
+.quick-action-menu .danger-icon    { color: #dc2626; }
+
+/* Label stretches to push kbd to the right */
+.quick-action-menu .menu-label {
+  flex: 1;
+}
+
+/* Keyboard shortcut badge */
+.quick-action-menu .menu-kbd {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.quick-action-menu .danger-kbd {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+/* Danger row hover */
+.quick-action-menu .mat-mdc-menu-item.danger-item:hover {
+  background: #fef2f2 !important;
+}
+
+/* New Order row hover */
+.quick-action-menu .mat-mdc-menu-item.new-order-item:hover {
+  background: #f0fdf4 !important;
+}
+
+/* Divider */
+.quick-action-menu .menu-divider {
+  margin: 4px 0 !important;
+  border-color: #f1f5f9 !important;
+}
+
+/* Disabled state */
+.quick-action-menu .mat-mdc-menu-item:disabled {
+  opacity: 0.4;
+}
