@@ -1,0 +1,388 @@
+<div class="waiter-shell">
+
+  <!-- ══════════════════════════════════════════
+       TOAST
+  ══════════════════════════════════════════ -->
+  <div class="w-toast" *ngIf="toast" [class]="'w-toast--' + toast.type">
+    <mat-icon>{{ toast.type === 'success' ? 'check_circle' : toast.type === 'error' ? 'error' : 'info' }}</mat-icon>
+    {{ toast.msg }}
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       VIEW 1 — TABLES DASHBOARD
+  ══════════════════════════════════════════ -->
+  <ng-container *ngIf="view === 'tables'">
+
+    <!-- Header -->
+    <header class="w-header">
+      <div class="w-header__left">
+        <div class="w-header__icon">
+          <mat-icon>room_service</mat-icon>
+        </div>
+        <div>
+          <h1>Waiter Mode</h1>
+          <p>Select a table to take order</p>
+        </div>
+      </div>
+      <div class="w-header__right">
+        <div class="w-time">{{ currentTime }}</div>
+      </div>
+    </header>
+
+    <!-- Stats strip -->
+    <div class="w-stats">
+      <div class="w-stat">
+        <span class="w-stat__value">{{ tableStats.total }}</span>
+        <span class="w-stat__label">Total</span>
+      </div>
+      <div class="w-stat w-stat--green" (click)="setTableFilter('available')" [class.active]="tableFilter === 'available'">
+        <span class="w-stat__value">{{ tableStats.available }}</span>
+        <span class="w-stat__label">Free</span>
+      </div>
+      <div class="w-stat w-stat--red" (click)="setTableFilter('occupied')" [class.active]="tableFilter === 'occupied'">
+        <span class="w-stat__value">{{ tableStats.occupied }}</span>
+        <span class="w-stat__label">Occupied</span>
+      </div>
+      <div class="w-stat w-stat--amber" (click)="setTableFilter('reserved')" [class.active]="tableFilter === 'reserved'">
+        <span class="w-stat__value">{{ tableStats.reserved }}</span>
+        <span class="w-stat__label">Reserved</span>
+      </div>
+    </div>
+
+    <!-- Filter + Search bar -->
+    <div class="w-toolbar">
+      <div class="w-filter-tabs">
+        <button [class.active]="tableFilter === 'all'"       (click)="setTableFilter('all')">All</button>
+        <button [class.active]="tableFilter === 'available'" (click)="setTableFilter('available')">Free</button>
+        <button [class.active]="tableFilter === 'occupied'"  (click)="setTableFilter('occupied')">Occupied</button>
+        <button [class.active]="tableFilter === 'reserved'"  (click)="setTableFilter('reserved')">Reserved</button>
+      </div>
+      <div class="w-search-box">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          [(ngModel)]="tableSearch"
+          (ngModelChange)="applyTableFilter()"
+          placeholder="Search table or section..." />
+      </div>
+    </div>
+
+    <!-- Tables grid -->
+    <div class="w-tables-grid">
+      <div
+        class="w-table-card"
+        *ngFor="let t of filteredTables; trackBy: trackTable"
+        [class]="'w-table-card--' + t.status"
+        [class.priority]="t.isPriority"
+        (click)="selectTable(t)">
+
+        <!-- Status dot -->
+        <div class="w-table-card__dot"></div>
+
+        <!-- Priority badge -->
+        <div class="w-table-card__priority" *ngIf="t.isPriority">
+          <mat-icon>priority_high</mat-icon>
+        </div>
+
+        <!-- Table number -->
+        <div class="w-table-card__number">T{{ t.number }}</div>
+
+        <!-- Capacity -->
+        <div class="w-table-card__cap">
+          <mat-icon>people</mat-icon>
+          {{ t.capacity }}
+        </div>
+
+        <!-- Section -->
+        <div class="w-table-card__section">{{ t.section }}</div>
+
+        <!-- Status label -->
+        <div class="w-table-card__status">
+          {{ t.status | titlecase }}
+        </div>
+
+        <!-- Occupied info -->
+        <ng-container *ngIf="t.status === 'occupied'">
+          <div class="w-table-card__time" [class.urgent]="isUrgent(t)">
+            <mat-icon>schedule</mat-icon>
+            {{ getElapsed(t) }}
+          </div>
+          <div class="w-table-card__amount" *ngIf="t.amount">
+            ₹{{ t.amount }}
+          </div>
+        </ng-container>
+
+        <!-- Action hint -->
+        <div class="w-table-card__action">
+          <mat-icon>{{ t.status === 'available' ? 'add_circle' : t.status === 'occupied' ? 'edit_note' : 'info' }}</mat-icon>
+          {{ t.status === 'available' ? 'New Order' : t.status === 'occupied' ? 'Add / View' : 'Details' }}
+        </div>
+
+      </div>
+
+      <!-- Empty state -->
+      <div class="w-empty" *ngIf="filteredTables.length === 0">
+        <mat-icon>search_off</mat-icon>
+        <p>No tables match your filter</p>
+        <button (click)="setTableFilter('all'); tableSearch = ''">Clear filters</button>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ══════════════════════════════════════════
+       VIEW 2 — ORDER TAKING
+  ══════════════════════════════════════════ -->
+  <ng-container *ngIf="view === 'ordering' && selectedTable">
+
+    <!-- Order header -->
+    <header class="w-order-header">
+      <button class="w-back-btn" (click)="backToTables()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="w-order-header__info">
+        <h2>Table {{ selectedTable.number }}</h2>
+        <span class="w-order-header__section">{{ selectedTable.section }} · {{ selectedTable.capacity }} seats</span>
+      </div>
+      <div class="w-order-header__badges">
+        <span class="w-badge" [class]="'w-badge--' + selectedTable.status">
+          {{ selectedTable.status | titlecase }}
+        </span>
+        <span class="w-badge w-badge--items" *ngIf="hasItems">
+          <mat-icon>shopping_cart</mat-icon>
+          {{ orderItemCount }}
+        </span>
+      </div>
+      <!-- Mobile tab switcher -->
+      <div class="w-mobile-tabs">
+        <button [class.active]="mobileTab === 'menu'"  (click)="mobileTab = 'menu'">
+          <mat-icon>restaurant_menu</mat-icon>
+          Menu
+        </button>
+        <button [class.active]="mobileTab === 'order'" (click)="mobileTab = 'order'">
+          <mat-icon>receipt_long</mat-icon>
+          Order
+          <span class="tab-badge" *ngIf="hasItems">{{ orderItemCount }}</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Split layout -->
+    <div class="w-order-body">
+
+      <!-- ── LEFT: MENU PANEL ── -->
+      <div class="w-menu-panel" [class.mobile-hidden]="mobileTab === 'order'">
+
+        <!-- Menu toolbar -->
+        <div class="w-menu-toolbar">
+          <div class="w-menu-search">
+            <mat-icon>search</mat-icon>
+            <input
+              type="text"
+              [(ngModel)]="menuSearch"
+              (ngModelChange)="applyMenuFilter()"
+              placeholder="Search dishes..." />
+            <button class="clear-search" *ngIf="menuSearch" (click)="menuSearch = ''; applyMenuFilter()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          <button
+            class="w-veg-toggle"
+            [class.active]="vegOnly"
+            (click)="vegOnly = !vegOnly; applyMenuFilter()"
+            matTooltip="Veg only">
+            <span class="veg-dot"></span>
+            Veg
+          </button>
+        </div>
+
+        <!-- Category tabs -->
+        <div class="w-categories">
+          <button
+            *ngFor="let cat of categories"
+            [class.active]="activeCategory === cat"
+            (click)="setCategory(cat)">
+            {{ cat }}
+          </button>
+        </div>
+
+        <!-- Menu items grid -->
+        <div class="w-menu-grid">
+          <div
+            class="w-menu-item"
+            *ngFor="let item of filteredMenu; trackBy: trackMenu"
+            [class.has-qty]="getItemQty(item.id) > 0">
+
+            <!-- Veg/Non-veg dot -->
+            <div class="w-menu-item__dot" [class.non-veg]="item.group === 'Non-Veg'"></div>
+
+            <!-- Popular badge -->
+            <div class="w-menu-item__popular" *ngIf="item.popular">
+              <mat-icon>local_fire_department</mat-icon>
+            </div>
+
+            <div class="w-menu-item__body">
+              <div class="w-menu-item__name">{{ item.name }}</div>
+              <div class="w-menu-item__desc">{{ item.description }}</div>
+              <div class="w-menu-item__price">₹{{ item.price }}</div>
+            </div>
+
+            <!-- Quantity controls -->
+            <div class="w-menu-item__controls">
+              <ng-container *ngIf="getItemQty(item.id) === 0; else hasQtyTpl">
+                <button class="w-add-btn" (click)="addItem(item)">
+                  <mat-icon>add</mat-icon>
+                  Add
+                </button>
+              </ng-container>
+              <ng-template #hasQtyTpl>
+                <div class="w-qty-row">
+                  <button class="w-qty-btn" (click)="removeItem(item.id)">
+                    <mat-icon>remove</mat-icon>
+                  </button>
+                  <span class="w-qty-val">{{ getItemQty(item.id) }}</span>
+                  <button class="w-qty-btn" (click)="addItem(item)">
+                    <mat-icon>add</mat-icon>
+                  </button>
+                </div>
+              </ng-template>
+            </div>
+
+          </div>
+
+          <!-- Empty search result -->
+          <div class="w-menu-empty" *ngIf="filteredMenu.length === 0">
+            <mat-icon>search_off</mat-icon>
+            <p>No items found</p>
+            <button (click)="menuSearch = ''; activeCategory = 'All'; vegOnly = false; applyMenuFilter()">
+              Reset filters
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── RIGHT: ORDER PANEL ── -->
+      <div class="w-order-panel" [class.mobile-hidden]="mobileTab === 'menu'">
+
+        <!-- Order header -->
+        <div class="w-order-panel__header">
+          <div class="w-order-panel__title">
+            <mat-icon>receipt_long</mat-icon>
+            Current Order
+          </div>
+          <button
+            class="w-clear-btn"
+            *ngIf="hasItems"
+            (click)="clearOrder()"
+            matTooltip="Clear all">
+            <mat-icon>delete_sweep</mat-icon>
+          </button>
+        </div>
+
+        <!-- Empty state -->
+        <div class="w-order-empty" *ngIf="!hasItems">
+          <mat-icon>add_shopping_cart</mat-icon>
+          <p>No items added yet</p>
+          <span>Tap items in the menu to add them</span>
+        </div>
+
+        <!-- Order items list -->
+        <div class="w-order-items" *ngIf="hasItems">
+          <div
+            class="w-order-item"
+            *ngFor="let item of orderItems; trackBy: trackOrder">
+
+            <div class="w-order-item__veg" [class.non-veg]="item.group === 'Non-Veg'"></div>
+
+            <div class="w-order-item__info">
+              <div class="w-order-item__name">{{ item.name }}</div>
+              <div class="w-order-item__price">₹{{ item.price }} × {{ item.qty }}</div>
+
+              <!-- Inline note -->
+              <div class="w-order-item__note-row" *ngIf="expandedNoteItemId === item.menuItemId">
+                <input
+                  type="text"
+                  class="w-note-input"
+                  [value]="item.note"
+                  (blur)="saveItemNote(selectedTable!.id, item.menuItemId, $any($event.target).value)"
+                  placeholder="e.g. less spicy, no onion..." />
+              </div>
+              <div class="w-order-item__note-display"
+                   *ngIf="item.note && expandedNoteItemId !== item.menuItemId">
+                <mat-icon>note</mat-icon>{{ item.note }}
+              </div>
+            </div>
+
+            <div class="w-order-item__right">
+              <span class="w-order-item__subtotal">₹{{ item.price * item.qty }}</span>
+              <div class="w-order-item__actions">
+                <button (click)="toggleItemNote(item.menuItemId)" matTooltip="Add note">
+                  <mat-icon>{{ item.note ? 'edit_note' : 'note_add' }}</mat-icon>
+                </button>
+                <div class="w-mini-qty">
+                  <button (click)="removeItem(item.menuItemId)"><mat-icon>remove</mat-icon></button>
+                  <span>{{ item.qty }}</span>
+                  <button (click)="addItem({ id: item.menuItemId, name: item.name, price: item.price, category: item.category, group: item.group, description: '', available: true })">
+                    <mat-icon>add</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Order note -->
+        <div class="w-order-note" *ngIf="hasItems">
+          <mat-icon>edit_note</mat-icon>
+          <input
+            type="text"
+            [(ngModel)]="orderNote"
+            placeholder="Order-level note (e.g. birthday celebration)..." />
+        </div>
+
+        <!-- Summary -->
+        <div class="w-order-summary" *ngIf="hasItems">
+          <div class="w-summary-row">
+            <span>Items</span>
+            <span>{{ orderItemCount }}</span>
+          </div>
+          <div class="w-summary-row">
+            <span>Subtotal</span>
+            <span>₹{{ orderTotal }}</span>
+          </div>
+          <div class="w-summary-row">
+            <span>Tax (5%)</span>
+            <span>₹{{ (orderTotal * 0.05) | number: '1.0-0' }}</span>
+          </div>
+          <div class="w-summary-row total">
+            <span>Total</span>
+            <span>₹{{ (orderTotal * 1.05) | number: '1.0-0' }}</span>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="w-order-actions">
+          <button
+            class="w-action-btn w-action-btn--kot"
+            [disabled]="!hasItems || kotSent"
+            (click)="sendKOT()">
+            <mat-icon>print</mat-icon>
+            <span>{{ kotSent ? 'KOT Sent ✓' : 'Send KOT' }}</span>
+          </button>
+          <button
+            class="w-action-btn w-action-btn--hold"
+            [disabled]="!hasItems"
+            (click)="holdOrder()">
+            <mat-icon>pause_circle</mat-icon>
+            <span>Hold</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </ng-container>
+
+</div>

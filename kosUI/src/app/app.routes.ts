@@ -26,6 +26,7 @@ import { ProductFeatureComponent } from '../Admin/pages/product-feature/product-
 import { AiSmartControlComponent } from '../Admin/pages/AI-Smart-Control/ai-smart-control.component';
 import { ConfigManagementComponent } from '../Admin/pages/configure-management/config-management.component';
 import { SignupComponent } from './core/component/sign-up/signup.component';
+import { WaiterComponent } from './domains/waiter/pages/waiter/waiter.component';
 
 export const routes: Routes = [
 
@@ -96,6 +97,9 @@ export const routes: Routes = [
         ], canActivate: [AuthGuard]
       },
 
+
+      // ✅ WAITER MODULE
+      { path: 'waiter', component: WaiterComponent, canActivate: [AuthGuard] },
 
       // ✅ SYSTEM MODULE (future)
       // { path: 'settings', component: RoleManagementComponent },
