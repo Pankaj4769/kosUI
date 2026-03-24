@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-import { SubscriptionPlan, SubscriptionPlanDetail } from '../../../core/auth/auth.model';
+import { PaymentResponse, SubscriptionPlan, SubscriptionPlanDetail } from '../../../core/auth/auth.model';
+import { SubscriptionServiceService } from '../services/subscription-service.service';
 
 @Component({
   selector: 'app-subscription',
@@ -232,7 +233,11 @@ export class SubscriptionComponent {
     }
   ];
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    private subscriptioService: SubscriptionServiceService
+  ) {}
 
   selectPlan(plan: SubscriptionPlan): void { this.selectedPlan = plan; }
 
@@ -258,12 +263,25 @@ export class SubscriptionComponent {
   }
 
   submitContact(): void {
-    if (!this.contact.name || !this.contact.email || !this.contact.phone) return;
+    if (!this.contact.name || !this.contact.email || !this.contact.phone || !this.contact.restaurantName) return;
     this.isLoading = true;
     setTimeout(() => {
-      this.auth.updateOnboardingStatus('PENDING_APPROVAL', this.selectedPlan!);
-      this.isLoading = false;
-      this.router.navigate(['/onboarding/pending']);
+      this.subscriptioService.doPayment(this.contact, this.selectedPlan).subscribe(res=>{
+        console.log(res);
+        let paymentResp = res as PaymentResponse;
+
+        const user = this.auth.currentUser; // gets the object from localStorage
+        if (user) {
+          user.subscriptionPlan = paymentResp.activePlan as SubscriptionPlan;
+
+          // Save back using the same key your getter reads from
+          localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
+
+          this.isLoading = false;
+          this.router.navigate(['/onboarding/setup']);
+        }
+      });
+      
     }, 1000);
   }
 

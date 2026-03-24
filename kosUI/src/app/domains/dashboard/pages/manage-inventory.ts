@@ -9,6 +9,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../common-popup/pages/confirm-dialog.component';
+import { AuthService } from '../../../core/auth/auth.service';
 
 type Category = 'Breakfast' | 'Lunch' | 'Snacks' | 'Dinner';
 type Group = 'Veg' | 'Non-Veg';
@@ -33,10 +34,12 @@ export class ManageInventoryComponent {
   constructor(
     private inventoryService: InventoryService,
     private cdr: ChangeDetectorRef,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    this.inventoryService.populateItems([]);
     this.inventoryService.getItemlist().subscribe(res=>{
       let itemList: Item[] = res;
       itemList.sort((a, b) => {
@@ -45,8 +48,9 @@ export class ManageInventoryComponent {
         return Number(b.id) - Number(a.id);
       });
       this.inventoryService.populateItems(itemList);
-      this.cdr.detectChanges();
       this.loading = false;
+      this.cdr.detectChanges();
+      
   });
   }
 
@@ -218,7 +222,8 @@ export class ManageInventoryComponent {
         qty: this.qty!,
         from: this.from,
         to: this.to,
-        image: this.selectedImage || undefined
+        image: this.selectedImage || undefined,
+        restaurantId: this.authService.currentUser?.restaurantId ?? ''
       };
       this.loading = true;
       this.inventoryService.updateItem(updated).subscribe(res=>{
@@ -245,6 +250,7 @@ export class ManageInventoryComponent {
         from: this.from,
         to: this.to,
         image: this.selectedImage || undefined,
+        restaurantId: this.authService.currentUser?.restaurantId ?? ''
       };
       this.loading = true;
       this.inventoryService.addItem(newItem).subscribe(response=>{

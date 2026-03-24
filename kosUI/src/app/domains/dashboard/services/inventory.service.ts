@@ -3,6 +3,7 @@ import { Item } from '../models/item.model';
 import { HttpClient } from '@angular/common/http';
 import { MessageResponse } from '../models/message.model';
 import { BASE_URL } from "../../../apiUrls";
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,8 @@ export class InventoryService {
     private items: Item[] = [];
 
   constructor(
-    private readonly httpclient: HttpClient
+    private readonly httpclient: HttpClient,
+    private authService: AuthService
   ) {}
 
   getAllItems(): Item[] {
@@ -28,8 +30,7 @@ export class InventoryService {
   }
 
   getItemlist(){
-      console.log(1);
-     return this.httpclient.get<Item[]>(this.baseUrl+'/getAllItems');
+     return this.httpclient.get<Item[]>(this.baseUrl+'/getAllItems/'+this.authService.currentUser?.restaurantId);
   }
   addItem(item: Item) {
 
