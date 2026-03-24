@@ -1,0 +1,199 @@
+<div class="rpt-shell">
+
+  <!-- Header -->
+  <div class="rpt-header">
+    <div class="rpt-header__icon" style="background:#eff6ff">
+      <mat-icon style="color:#0284c7">local_shipping</mat-icon>
+    </div>
+    <div>
+      <h1>Delivery Report</h1>
+      <p>Online orders &amp; delivery performance</p>
+    </div>
+    <div class="rpt-date-tabs">
+      <button *ngFor="let r of ranges" [class.active]="activeRange===r" (click)="activeRange=r">{{r}}</button>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="rpt-insights">
+    <div class="insight-card" [ngClass]="'insight-'+i.type" *ngFor="let i of insights">
+      <mat-icon>{{i.icon}}</mat-icon>
+      {{i.text}}
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="rpt-stats">
+    <div class="rpt-stat" [ngClass]="'rpt-stat--'+s.color" *ngFor="let s of stats">
+      <span class="rpt-stat__value">{{s.value}}</span>
+      <span class="rpt-stat__label">{{s.label}}</span>
+      <span class="rpt-stat__delta" [class.delta-up]="s.up" [class.delta-down]="!s.up">{{s.delta}}</span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="rpt-toolbar">
+    <div class="rpt-search-box">
+      <mat-icon>search</mat-icon>
+      <input placeholder="Search deliveries..." [(ngModel)]="searchText" (ngModelChange)="page=1">
+    </div>
+    <app-report-filter [filters]="filterConfig" (filterChange)="onFilterChange($event)"></app-report-filter>
+    <div class="rpt-toolbar-spacer"></div>
+    <button class="rpt-export-btn" (click)="exportCSV()">
+      <mat-icon>download</mat-icon> Export CSV
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="rpt-body">
+    <div class="two-col">
+
+      <!-- Donut: Platform revenue split -->
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>pie_chart</mat-icon>Platform Revenue Split</span>
+        </div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 120 120" class="donut-svg">
+            <circle cx="60" cy="60" r="45" fill="none" stroke="#f1f5f9" stroke-width="18"/>
+            <circle *ngFor="let seg of donutData" cx="60" cy="60" r="45" fill="none"
+              [attr.stroke]="seg.color" stroke-width="18"
+              [attr.stroke-dasharray]="(seg.pct * 2.827) + ' 282.7'"
+              [attr.stroke-dashoffset]="'-' + (seg.offset * 2.827)"
+              transform="rotate(-90 60 60)" style="transition:stroke-dasharray 0.5s"/>
+            <text x="60" y="57" text-anchor="middle" font-size="12" font-weight="800" fill="#0f172a">{{donutTotal}}</text>
+            <text x="60" y="69" text-anchor="middle" font-size="8" fill="#94a3b8">REVENUE</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="donut-legend-item" *ngFor="let seg of donutData">
+              <div class="donut-dot" [style.background]="seg.color"></div>
+              <span>{{seg.label}}</span>
+              <span>{{seg.pct | number:'1.0-0'}}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rpt-card__header" style="border-top:1px solid #f1f5f9">
+          <span class="rpt-card__title"><mat-icon>show_chart</mat-icon>Deliveries per Day</span>
+        </div>
+        <div class="line-chart-wrap">
+          <svg viewBox="0 0 200 80" class="line-svg" preserveAspectRatio="none">
+            <line x1="0" y1="20" x2="200" y2="20" stroke="#f1f5f9" stroke-width="0.5"/>
+            <line x1="0" y1="40" x2="200" y2="40" stroke="#f1f5f9" stroke-width="0.5"/>
+            <line x1="0" y1="60" x2="200" y2="60" stroke="#f1f5f9" stroke-width="0.5"/>
+            <path [attr.d]="lineAreaPath" fill="rgba(2,132,199,0.08)"/>
+            <polyline [attr.points]="linePoints" fill="none" stroke="#0284c7" stroke-width="2" stroke-linejoin="round"/>
+            <circle *ngFor="let p of lineData" [attr.cx]="p.x" [attr.cy]="p.y" r="3" fill="#0284c7"/>
+          </svg>
+          <div class="line-labels">
+            <span class="line-label" *ngFor="let p of lineData">{{p.label}}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform Performance -->
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>speed</mat-icon>Platform Performance</span>
+        </div>
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Platform</th>
+              <th>Orders</th>
+              <th>Avg Time</th>
+              <th>Rating</th>
+              <th>Revenue</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of platforms">
+              <td style="font-weight:600">{{row.name}}</td>
+              <td>{{row.orders}}</td>
+              <td>{{row.avgTime}}</td>
+              <td style="color:#d97706;font-weight:700">{{row.rating}}</td>
+              <td style="font-weight:700;color:#1e3a5f">{{row.revenue}}</td>
+              <td><span class="badge" [ngClass]="row.statusClass">{{row.status}}</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="rpt-card__header" style="border-top:1px solid #f1f5f9;margin-top:4px">
+          <span class="rpt-card__title"><mat-icon>bar_chart</mat-icon>Revenue by Platform</span>
+        </div>
+        <div class="bar-chart">
+          <div class="bar-row" *ngFor="let b of platformBars">
+            <span class="bar-label">{{b.label}}</span>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width.%]="b.pct" [style.background]="b.color"></div>
+            </div>
+            <span class="bar-val">{{b.value}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Deliveries Table -->
+    <div class="rpt-card">
+      <div class="rpt-card__header">
+        <span class="rpt-card__title"><mat-icon>receipt_long</mat-icon>Recent Deliveries</span>
+      </div>
+      <table class="rpt-table">
+        <thead>
+          <tr>
+            <th>
+              <button class="sort-btn"
+                [class.asc]="sortCol==='orderId'&&sortDir==='asc'"
+                [class.desc]="sortCol==='orderId'&&sortDir==='desc'"
+                (click)="sort('orderId')">Order ID<mat-icon>unfold_more</mat-icon></button>
+            </th>
+            <th>
+              <button class="sort-btn"
+                [class.asc]="sortCol==='platform'&&sortDir==='asc'"
+                [class.desc]="sortCol==='platform'&&sortDir==='desc'"
+                (click)="sort('platform')">Platform<mat-icon>unfold_more</mat-icon></button>
+            </th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Time</th>
+            <th>Amount</th>
+            <th>
+              <button class="sort-btn"
+                [class.asc]="sortCol==='status'&&sortDir==='asc'"
+                [class.desc]="sortCol==='status'&&sortDir==='desc'"
+                (click)="sort('status')">Status<mat-icon>unfold_more</mat-icon></button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of pagedDeliveries">
+            <td style="font-weight:600;color:#1e3a5f">{{d.orderId}}</td>
+            <td><span class="badge badge-blue">{{d.platform}}</span></td>
+            <td>{{d.customer}}</td>
+            <td style="color:#64748b;font-size:11px">{{d.items}}</td>
+            <td>{{d.time}}</td>
+            <td style="font-weight:700;color:#1e3a5f">{{d.amount}}</td>
+            <td><span class="badge" [ngClass]="d.statusClass">{{d.status}}</span></td>
+          </tr>
+          <tr *ngIf="pagedDeliveries.length===0">
+            <td colspan="7">
+              <div class="rpt-empty">
+                <mat-icon>search_off</mat-icon>
+                <p>No deliveries found</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="rpt-pagination">
+        <span>Showing {{(page-1)*pageSize+1}}–{{minVal(page*pageSize, filteredDeliveries.length)}} of {{filteredDeliveries.length}}</span>
+        <div class="rpt-page-btns">
+          <button (click)="page=page-1" [disabled]="page===1">&#8249;</button>
+          <button *ngFor="let p of pages" [class.active]="p===page" (click)="page=p">{{p}}</button>
+          <button (click)="page=page+1" [disabled]="page===totalPages">&#8250;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

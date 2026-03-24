@@ -267,7 +267,7 @@
   </div>
 
   <!-- ===== FOOTER ===== -->
-  <div class="cart-footer" *ngIf="hasItems">
+  <div class="cart-footer">
 
     <!-- Pay Now + Close Table row -->
     <div class="footer-pay-row">
@@ -342,8 +342,8 @@
   <!-- ✅ CSS positions it as full absolute overlay via app-hold-orders selector -->
   <app-hold-orders
     *ngIf="showHoldOrders"
-    (orderRecalled)="recallOrder($event)"
-    (closed)="showHoldOrders = false">
+    (recallOrder)="recallOrder($event)"
+    (close)="showHoldOrders = false">
   </app-hold-orders>
 
   <!-- ===== PAYMENT POPUP ===== -->
@@ -354,8 +354,8 @@
     [total]="total"
     [orderType]="orderType"
     [tableNumber]="tableNumber"
-    (paymentComplete)="onPaymentComplete($event)"
-    (paymentCancel)="onPaymentCancel()">
+    (complete)="onPaymentComplete($event)"
+    (close)="onPaymentCancel()">
   </app-payment-popup>
 
   <!-- ===== CUSTOMER INFO OVERLAY ===== -->

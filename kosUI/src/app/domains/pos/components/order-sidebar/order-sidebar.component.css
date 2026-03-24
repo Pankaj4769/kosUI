@@ -14,14 +14,14 @@
 }
 
 /* =====================================================
-   ORDER TYPE SECTION — Flush Strip
+   ORDER TYPE SECTION
 ===================================================== */
 
 .order-type-section {
   flex-shrink: 0;
   padding: 0;
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .section-title {
@@ -38,24 +38,26 @@
 .order-type-btn {
   flex: 1;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 9px 5px;
+  gap: 3px;
+  padding: 7px 5px 5px;
   border-radius: 0;
   border: none;
   border-right: 1px solid #e2e8f0;
-  background: #ffffff;
+  border-bottom: 3px solid transparent;
+  background: #f8fafc;
   font-size: 9px;
   font-weight: 700;
-  color: #64748b;
+  color: #94a3b8;
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
   white-space: nowrap;
   font-family: inherit;
+  position: relative;
 }
 
 .order-type-btn:last-child {
@@ -63,35 +65,49 @@
 }
 
 .order-type-btn mat-icon {
-  font-size: 13px;
-  width: 13px;
-  height: 13px;
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
-  color: #64748b;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #94a3b8;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .order-type-btn:hover:not(.active) {
-  background: rgba(46, 125, 50, 0.05);
-  color: #2e7d32;
+  background: #ffffff;
+  color: #475569;
 }
 
 .order-type-btn:hover:not(.active) mat-icon {
+  color: #475569;
+}
+
+/* Dine-In active */
+.order-type-btn.active:nth-child(1) {
+  background: #ffffff;
   color: #2e7d32;
+  border-bottom-color: #2e7d32;
 }
+.order-type-btn.active:nth-child(1) mat-icon { color: #2e7d32; }
 
-.order-type-btn.active {
-  background: linear-gradient(135deg, #2e7d32, #1b5e20) !important;
-  color: #ffffff !important;
-  border-right-color: #1b5e20 !important;
+/* Takeaway active */
+.order-type-btn.active:nth-child(2) {
+  background: #ffffff;
+  color: #e65100;
+  border-bottom-color: #ff9800;
 }
+.order-type-btn.active:nth-child(2) mat-icon { color: #e65100; }
 
-.order-type-btn.active mat-icon {
-  color: #ffffff !important;
+/* Delivery active */
+.order-type-btn.active:nth-child(3) {
+  background: #ffffff;
+  color: #1565c0;
+  border-bottom-color: #1976d2;
 }
+.order-type-btn.active:nth-child(3) mat-icon { color: #1565c0; }
 
 /* =====================================================
-   STATS SECTION — Flush Strip
+   STATS SECTION
 ===================================================== */
 
 .stats-section {
@@ -99,98 +115,106 @@
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  gap: 0;
-  padding: 0;
-  background: #ffffff;
+  padding: 4px 6px;
+  background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
+  gap: 4px;
 }
 
 .stat-card {
   flex: 1;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 7px 5px;
-  border-radius: 0;
-  border: none;
-  border-right: 1px solid #e2e8f0;
-  background: #f8fafc;
+  gap: 1px;
+  padding: 4px 4px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.stat-card:last-child {
-  border-right: none;
+  min-width: 0;
 }
 
 .stat-card:hover {
-  filter: brightness(0.97);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.stat-card.clickable {
+  cursor: pointer;
+}
+
+.stat-card.clickable:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .stat-card mat-icon {
-  font-size: 13px;
-  width: 13px;
-  height: 13px;
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
 }
 
 .stat-content {
-  display: contents;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.stat-value {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .stat-label {
   font-size: 8px;
-  font-weight: 700;
-  color: #64748b;
+  font-weight: 600;
+  color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
   line-height: 1;
-  flex-shrink: 0;
-}
-
-.stat-value {
-  font-size: 12px;
-  font-weight: 800;
-  color: #1e293b;
-  line-height: 1;
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .stat-percentage {
   font-size: 8px;
   color: #94a3b8;
   line-height: 1;
-  flex-shrink: 0;
   white-space: nowrap;
 }
 
+/* Occupied — amber */
 .stat-card.occupied {
-  background: linear-gradient(135deg, #fff3e0, #ffe4cc);
+  background: linear-gradient(150deg, #fffbf5, #fff3e0);
+  border-color: #ffe0b2;
 }
-.stat-card.occupied mat-icon { color: #ff9800; }
+.stat-card.occupied mat-icon { color: #f57c00; }
+.stat-card.occupied .stat-value { color: #e65100; }
+.stat-card.occupied:hover { border-color: #ff9800; }
 
+/* Available — green */
 .stat-card.available {
-  background: linear-gradient(135deg, #e8f5e9, #d4edda);
+  background: linear-gradient(150deg, #f6fff6, #e8f5e9);
+  border-color: #c8e6c9;
 }
-.stat-card.available mat-icon { color: #4caf50; }
+.stat-card.available mat-icon { color: #388e3c; }
+.stat-card.available .stat-value { color: #2e7d32; }
+.stat-card.available:hover { border-color: #4caf50; }
 
+/* Revenue — blue */
 .stat-card.revenue {
-  background: linear-gradient(135deg, #e3f2fd, #d1e7fd);
+  background: linear-gradient(150deg, #f5f9ff, #e3f2fd);
+  border-color: #bbdefb;
 }
-.stat-card.revenue mat-icon { color: #1565c0; }
+.stat-card.revenue mat-icon { color: #1976d2; }
+.stat-card.revenue .stat-value { color: #1565c0; }
+.stat-card.revenue:hover { border-color: #2196f3; }
 
-/* =====================================================
-   COMPACT TABLE SELECTOR SECTION
-===================================================== */
-
-.table-selector-section-compact {
-  flex-shrink: 0;
-  padding: 10px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-}
 
 .table-selector-card {
   background: #ffffff;
@@ -339,35 +363,6 @@
   height: 14px;
 }
 
-.view-table-map-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 7px 10px;
-  font-size: 10px;
-  font-weight: 700;
-  color: #2e7d32;
-  cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  text-decoration: none;
-  border-radius: 0;
-  background: #ffffff;
-  width: 100%;
-  box-sizing: border-box;
-  letter-spacing: 0.2px;
-}
-
-.view-table-map-link:hover {
-  color: #1b5e20;
-  background: rgba(46, 125, 50, 0.05);
-}
-
-.view-table-map-link mat-icon {
-  font-size: 13px;
-  width: 13px;
-  height: 13px;
-}
 
 /* =====================================================
    OLD TABLE SELECTION SECTION
@@ -1955,7 +1950,60 @@
    RESPONSIVE
 ===================================================== */
 
+/* ── Tablet landscape (≤1000px): sidebar is 340px tall, row layout ──
+   Limit table-selection height so cart panel always has scroll room.
+────────────────────────────────────────────────── */
+@media (max-width: 1000px) {
+  .order-sidebar-container {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Cap the inline table selector so it doesn't overflow the 340px sidebar */
+  .table-selection-section {
+    max-height: 200px;
+  }
+}
+
+/* ── Tablet portrait (≤768px): order-sidebar auto-height above cart ──
+   Goal: keep tabs + stats as short as possible to maximise cart space.
+   Target: order-sidebar total height ≤ 85px (tabs ~35px + stats ~50px).
+────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  /* Hide inline table list — user taps OCC/AVAIL cards to open popup */
+  .table-selection-section { display: none; }
+
+  /* Compact order-type tabs: tighter padding + smaller icon */
+  .order-type-btn {
+    padding: 5px 4px 4px;
+    gap: 2px;
+    font-size: 8px;
+  }
+  .order-type-btn mat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Compact stats strip */
+  .stats-section {
+    padding: 3px 4px;
+    gap: 3px;
+  }
+  .stat-card {
+    padding: 3px 3px;
+    gap: 1px;
+    border-radius: 6px;
+  }
+  .stat-card mat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+  }
+  .stat-value { font-size: 12px; }
+  .stat-label { font-size: 7px; }
+  .stat-percentage { font-size: 7px; }
+
   .table-popup-container {
     width: 95%;
     max-height: 90vh;

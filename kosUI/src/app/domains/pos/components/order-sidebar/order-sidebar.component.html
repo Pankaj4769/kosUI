@@ -18,7 +18,10 @@
   <!-- ===== TABLE STATISTICS (Dine-In Only) ===== -->
   <section class="stats-section" *ngIf="orderType === 'Dine-In'">
 
-    <div class="stat-card occupied">
+    <div class="stat-card occupied clickable"
+         (click)="openTableSelectorPopup()"
+         matTooltip="View table map"
+         matTooltipPosition="below">
       <mat-icon>event_seat</mat-icon>
       <div class="stat-content">
         <span class="stat-label">OCC</span>
@@ -27,7 +30,10 @@
       </div>
     </div>
 
-    <div class="stat-card available">
+    <div class="stat-card available clickable"
+         (click)="openTableSelectorPopup()"
+         matTooltip="View table map"
+         matTooltipPosition="below">
       <mat-icon>chair</mat-icon>
       <div class="stat-content">
         <span class="stat-label">AVAIL</span>
@@ -43,68 +49,6 @@
         <span class="stat-percentage">Today</span>
       </div>
     </div>
-
-  </section>
-
-  <!-- ===== COMPACT TABLE SELECTOR (Dine-In + useCompactDesign) ===== -->
-  <section class="table-selector-section-compact"
-    *ngIf="orderType === 'Dine-In' && useCompactDesign">
-
-    <!-- <div class="table-selector-card" (click)="openTableSelectorPopup()">
-
-      <div class="table-selector-header">
-        <div class="selector-title">
-          <mat-icon>chair</mat-icon>
-          <span>Select Table</span>
-        </div>
-        <mat-icon class="dropdown-icon">expand_more</mat-icon>
-      </div>
-
-      <!-- Table Selected State -->
-      <!-- <div class="selected-table-display" *ngIf="selectedTable">
-        <p class="table-info-text">Table #{{ selectedTable }}</p>
-        <div class="table-details-text">
-          <ng-container *ngIf="getSelectedTableObject() as table">
-            <span>👥 {{ table.capacity }} seats</span>
-            <span
-              class="table-status-indicator"
-              [class.available]="table.status === 'available'"
-              [class.occupied]="table.status === 'occupied'">
-              <span class="status-dot"></span>
-              {{ table.status | titlecase }}
-            </span>
-          </ng-container>
-        </div>
-        <div class="table-details-text" *ngIf="getSelectedTableObject() as table">
-          <ng-container *ngIf="table.status === 'occupied'">
-            <span>🍽 {{ table.itemCount }} items</span>
-            <span>₹{{ table.totalAmount }}</span>
-            <span *ngIf="table.timeOccupied">• {{ getFormattedTime(table.timeOccupied) }}</span>
-          </ng-container>
-        </div>
-      </div> -->
-
-      <!-- No Table Selected State -->
-      <!-- <div class="no-table-selected-compact" *ngIf="!selectedTable">
-        <p>No table selected</p>
-        <p class="helper-text">Click to select a table</p>
-      </div> -->
-
-      <!-- Change / Select Button -->
-      <!-- <button
-        class="change-table-btn"
-        (click)="openTableSelectorPopup(); $event.stopPropagation()"
-        type="button">
-        <mat-icon>{{ selectedTable ? 'sync' : 'add' }}</mat-icon>
-        <span>{{ selectedTable ? 'Change Table' : 'Select Table' }}</span>
-      </button>
-
-    </div> --> 
-
-    <a class="view-table-map-link" (click)="openTableSelectorPopup()">
-      <mat-icon>map</mat-icon>
-      <span>View table map</span>
-    </a>
 
   </section>
 

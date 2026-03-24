@@ -42,13 +42,13 @@
 }
 
 .header-logo {
-  height: 40px;
+  height: 52px;
   width: auto;
-  max-width: 150px;
+  max-width: 200px;
   object-fit: contain;
   flex-shrink: 0;
   display: block;
-  filter: brightness(1.4) saturate(1.3) drop-shadow(0 0 6px rgba(34,197,94,0.4));
+  filter: brightness(1.4) saturate(1.3) drop-shadow(0 0 8px rgba(34,197,94,0.45));
 }
 
 /* ── Divider between logo and page title ── */
@@ -272,7 +272,8 @@
   gap: 6px;
   justify-content: flex-end;  /* ✅ pushes content to right edge */
   min-width: 0;
-  padding-right: 16px; 
+  padding-right: 16px;
+  grid-column: 3;             /* ✅ always stay in column 3, even when center is empty */
 }
 
 /* ── Icon buttons ── */
@@ -551,7 +552,7 @@
   }
 
   .header-center            { display: none; }
-  .header-logo              { height: 28px; }
+  .header-logo              { height: 38px; }
   .header-logo-divider      { display: none; }
   .page-title               { display: none; }
   .restaurant-btn .restaurant-branch { display: none; }
@@ -563,7 +564,7 @@
 }
 
 @media (max-width: 480px) {
-  .header-logo              { height: 24px; }
+  .header-logo              { height: 32px; }
   .restaurant-btn           { padding: 4px 7px; }
   .restaurant-name          { max-width: 60px; }
 }

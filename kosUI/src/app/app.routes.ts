@@ -26,6 +26,18 @@ import { ProductFeatureComponent } from '../Admin/pages/product-feature/product-
 import { AiSmartControlComponent } from '../Admin/pages/AI-Smart-Control/ai-smart-control.component';
 import { ConfigManagementComponent } from '../Admin/pages/configure-management/config-management.component';
 import { SignupComponent } from './core/component/sign-up/signup.component';
+import { WaiterComponent } from './domains/waiter/pages/waiter/waiter.component';
+import { SalesReportComponent } from './domains/reports/pages/sales-report/sales-report.component';
+import { InventoryReportComponent } from './domains/reports/pages/inventory-report/inventory-report.component';
+import { CustomerReportComponent } from './domains/reports/pages/customer-report/customer-report.component';
+import { StaffReportComponent } from './domains/reports/pages/staff-report/staff-report.component';
+import { FinancialReportComponent } from './domains/reports/pages/financial-report/financial-report.component';
+import { KitchenReportComponent } from './domains/reports/pages/kitchen-report/kitchen-report.component';
+import { DeliveryReportComponent } from './domains/reports/pages/delivery-report/delivery-report.component';
+import { BranchReportComponent } from './domains/reports/pages/branch-report/branch-report.component';
+import { QrCodesComponent } from './domains/qr-codes/pages/qr-codes.component';
+import { CustomerOrderComponent } from './domains/qr-codes/customer-order/customer-order.component';
+import { MyProfileComponent } from './domains/profile/pages/my-profile.component';
 
 export const routes: Routes = [
 
@@ -34,33 +46,32 @@ export const routes: Routes = [
     path: '',
     component: AppLayoutComponent,
     children: [
-      { path: 'login', component: LoginComponent },
-      { path: 'signup', component: SignupComponent },
-      { path: 'onboarding/subscription', component: SubscriptionComponent },
-      { path: 'onboarding/pending',      component: PendingApprovalComponent },
-      { path: 'onboarding/setup',        component: RestaurantSetupComponent },
+      { path: 'login',  title: 'Login | Kitchen Book',  component: LoginComponent },
+      { path: 'signup', title: 'Sign Up | Kitchen Book', component: SignupComponent },
+      { path: 'onboarding/subscription', title: 'Subscription | Kitchen Book', component: SubscriptionComponent },
+      { path: 'onboarding/pending',      title: 'Pending Approval | Kitchen Book', component: PendingApprovalComponent },
+      { path: 'onboarding/setup',        title: 'Restaurant Setup | Kitchen Book', component: RestaurantSetupComponent },
       { path: '',                     redirectTo: 'login', pathMatch: 'full' },
 
-      { path: 'admin', component: AdminDashboardComponent},
-      { path: 'admin/users', component: UserTenantManagementComponent},
-      { path: 'admin/subscriptions', component: SubscriptionRevenueComponent},
-      { path: 'admin/rbac', component: RbacEngineComponent},
-      { path: 'admin/security', component: SecurityComplianceComponent},
-      { path: 'admin/notifications', component: NotificationsComponent},
-      { path: 'admin/products', component: ProductFeatureComponent},
-      { path: 'admin/configuration', component: ConfigManagementComponent},
-      { path: 'admin/ai-control', component: AiSmartControlComponent},
+      { path: 'admin',                title: 'Admin Dashboard | Kitchen Book',  component: AdminDashboardComponent },
+      { path: 'admin/users',          title: 'User Management | Kitchen Book',  component: UserTenantManagementComponent },
+      { path: 'admin/subscriptions',  title: 'Subscriptions | Kitchen Book',    component: SubscriptionRevenueComponent },
+      { path: 'admin/rbac',           title: 'RBAC Engine | Kitchen Book',      component: RbacEngineComponent },
+      { path: 'admin/security',       title: 'Security | Kitchen Book',         component: SecurityComplianceComponent },
+      { path: 'admin/notifications',  title: 'Notifications | Kitchen Book',    component: NotificationsComponent },
+      { path: 'admin/products',       title: 'Products | Kitchen Book',         component: ProductFeatureComponent },
+      { path: 'admin/configuration',  title: 'Configuration | Kitchen Book',    component: ConfigManagementComponent },
+      { path: 'admin/ai-control',     title: 'AI Control | Kitchen Book',       component: AiSmartControlComponent },
 
-      
       // ✅ DASHBOARD
-      { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
+      { path: 'dashboard', title: 'Dashboard | Kitchen Book', component: DashboardComponent, canActivate: [AuthGuard] },
 
       // ✅ INVENTORY MODULE
       {
         path: 'inventory',
         children: [
-          { path: 'dashboard', component: DashboardComponent },
-          { path: 'manage', component: ManageInventoryComponent },
+          { path: 'dashboard', title: 'Inventory Dashboard | Kitchen Book', component: DashboardComponent },
+          { path: 'manage',    title: 'Manage Inventory | Kitchen Book',    component: ManageInventoryComponent },
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ], canActivate: [AuthGuard]
       },
@@ -69,8 +80,8 @@ export const routes: Routes = [
       {
         path: 'orders',
         children: [
-          { path: 'live', component: LiveOrdersComponent },
-          { path: 'history', component: OrderHistoryComponent }, 
+          { path: 'live',    title: 'Live Orders | Kitchen Book',    component: LiveOrdersComponent },
+          { path: 'history', title: 'Order History | Kitchen Book',  component: OrderHistoryComponent },
           { path: '', redirectTo: 'live', pathMatch: 'full' }
         ], canActivate: [AuthGuard]
       },
@@ -86,26 +97,49 @@ export const routes: Routes = [
       {
         path: 'staff',
         children: [
-          { path: 'directory', component: StaffDirectoryComponent },
-          { path: 'attendance', component: AttendanceComponent },
-          { path: 'leave', component: LeaveManagementComponent },
-          { path: 'salary', component: PayrollComponent },
-          { path: 'shifts', component: ShiftManagementComponent },
-          { path: 'roles', component: RoleManagementComponent },
+          { path: 'directory', title: 'Staff Directory | Kitchen Book',    component: StaffDirectoryComponent },
+          { path: 'attendance', title: 'Attendance | Kitchen Book',        component: AttendanceComponent },
+          { path: 'leave',     title: 'Leave Management | Kitchen Book',   component: LeaveManagementComponent },
+          { path: 'salary',    title: 'Salary Management | Kitchen Book',  component: PayrollComponent },
+          { path: 'shifts',    title: 'Shift Management | Kitchen Book',   component: ShiftManagementComponent },
+          { path: 'roles',     title: 'Role Management | Kitchen Book',    component: RoleManagementComponent },
           { path: '', redirectTo: 'directory', pathMatch: 'full' }
         ], canActivate: [AuthGuard]
       },
 
+      // ✅ WAITER MODULE
+      { path: 'waiter', title: 'Waiter | Kitchen Book', component: WaiterComponent, canActivate: [AuthGuard] },
 
-      // ✅ SYSTEM MODULE (future)
-      // { path: 'settings', component: RoleManagementComponent },
-      // { path: 'qr', loadComponent: () => import('./system/qr/qr.component').then(m => m.QrComponent) },
+      // ✅ REPORTS MODULE
+      {
+        path: 'reports',
+        children: [
+          { path: 'sales',      title: 'Sales Report | Kitchen Book',            component: SalesReportComponent },
+          { path: 'inventory',  title: 'Inventory Report | Kitchen Book',         component: InventoryReportComponent },
+          { path: 'customer',   title: 'Customer Report | Kitchen Book',          component: CustomerReportComponent },
+          { path: 'staff',      title: 'Staff Report | Kitchen Book',             component: StaffReportComponent },
+          { path: 'financial',  title: 'Financial Report | Kitchen Book',         component: FinancialReportComponent },
+          { path: 'kitchen',    title: 'Kitchen & Order Report | Kitchen Book',   component: KitchenReportComponent },
+          { path: 'delivery',   title: 'Online & Delivery Report | Kitchen Book', component: DeliveryReportComponent },
+          { path: 'branches',   title: 'Multiple Branch Report | Kitchen Book',   component: BranchReportComponent },
+          { path: '', redirectTo: 'sales', pathMatch: 'full' }
+        ], canActivate: [AuthGuard]
+      },
+
+      // ✅ PROFILE
+      { path: 'profile', title: 'My Profile | Kitchen Book', component: MyProfileComponent, canActivate: [AuthGuard] },
+
+      // ✅ SYSTEM MODULE
+      { path: 'qr', title: 'QR Codes | Kitchen Book', component: QrCodesComponent, canActivate: [AuthGuard] },
       // { path: 'settings', loadComponent: () => import('./system/settings/settings.component').then(m => m.SettingsComponent) },
 
       // ✅ DEFAULT
       { path: '', redirectTo: 'login', pathMatch: 'full' }
     ]
   },
+
+  // ✅ CUSTOMER ORDERING (no admin layout — standalone mobile page)
+  { path: 'customer/order', title: 'Order | Kitchen Book', component: CustomerOrderComponent },
 
   // ✅ FALLBACK
   { path: '**', redirectTo: 'login' }

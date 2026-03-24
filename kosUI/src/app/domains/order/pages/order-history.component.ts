@@ -8,6 +8,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from '../../common-popup/pages/confirm-dialog.component';
 
 // ✅ CHANGE 1: Update service import
 import { OrderManagementService } from '../services/order-management.service';
@@ -21,7 +23,7 @@ interface DateRange {
 @Component({
   selector: 'app-order-history',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatDialogModule],
   templateUrl: './order-history.component.html',
   styleUrls: ['./order-history.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -66,7 +68,8 @@ export class OrderHistoryComponent implements OnInit, OnDestroy {
   // ✅ CHANGE 3: Update constructor to use OrderManagementService
   constructor(
     private orderManagementService: OrderManagementService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -334,8 +337,19 @@ export class OrderHistoryComponent implements OnInit, OnDestroy {
 
   // ✅ OPTIONAL ADDITION: Delete order (if you add delete functionality later)
   deleteOrder(orderId: number): void {
-    if (confirm('Are you sure you want to delete this order?')) {
-      this.orderManagementService.deleteOrder(orderId);
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Order',
+        message: 'Are you sure you want to delete this order? This action cannot be undone.',
+        confirmText: 'Delete',
+        confirmColor: 'warn'
+      }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.orderManagementService.deleteOrder(orderId);
+      }
+    });
   }
 }

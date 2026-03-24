@@ -67,6 +67,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: 'Menu',    icon: 'restaurant_menu', route: '/pos/menu'  },
       ]
     },
+    { label: 'Waiter', icon: 'room_service', route: '/waiter' },
     {
       label: 'Orders', icon: 'shopping_cart',
       expanded: false,

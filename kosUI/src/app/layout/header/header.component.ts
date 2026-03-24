@@ -166,6 +166,11 @@ const ROUTE_TITLES: Record<string, RouteConfig> = {
   '/settings': {
     title: 'Settings', icon: 'settings',
     centerConfig: { type: 'none' }
+  },
+
+  '/profile': {
+    title: 'My Profile', icon: 'account_circle',
+    centerConfig: { type: 'none' }
   }
 };
 

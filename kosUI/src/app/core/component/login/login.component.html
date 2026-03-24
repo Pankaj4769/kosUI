@@ -130,7 +130,7 @@
         <div class="form-group">
           <div class="label-row">
             <label for="password">Password</label>
-            <a class="forgot-link" routerLink="/forgot-password">Forgot password?</a>
+            <button type="button" class="forgot-link" (click)="showForgotPassword = true">Forgot password?</button>
           </div>
           <div class="input-wrapper">
             <span class="material-icons input-icon">lock</span>
@@ -267,3 +267,9 @@
     </div>
   </div>
 </div>
+
+<!-- ══ Forgot Password Popup ══ -->
+<app-forgot-password
+  *ngIf="showForgotPassword"
+  (close)="showForgotPassword = false">
+</app-forgot-password>

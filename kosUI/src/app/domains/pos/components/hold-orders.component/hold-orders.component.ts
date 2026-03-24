@@ -1,13 +1,15 @@
-import { 
-  Component, 
-  Output, 
-  EventEmitter, 
+import {
+  Component,
+  Output,
+  EventEmitter,
   OnInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from '../../../common-popup/pages/confirm-dialog.component';
 
 // Material Imports
 import { MatIconModule } from '@angular/material/icon';
@@ -54,7 +56,8 @@ export interface HeldOrder {
     MatTooltipModule,
     MatBadgeModule,
     MatMenuModule,
-    MatChipsModule
+    MatChipsModule,
+    MatDialogModule
   ],
   templateUrl: './hold-orders.component.html',
   styleUrls: ['./hold-orders.component.css'],
@@ -86,7 +89,7 @@ export class HoldOrdersComponent implements OnInit {
 
   /* ================= CONSTRUCTOR ================= */
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private cdr: ChangeDetectorRef, private dialog: MatDialog) {}
 
   /* ================= LIFECYCLE ================= */
 
@@ -403,24 +406,40 @@ export class HoldOrdersComponent implements OnInit {
   /* ================= ORDER ACTIONS ================= */
 
   onRecallOrder(order: HeldOrder): void {
-    if (confirm(`Recall order ${order.orderNumber}?`)) {
-      this.recallOrder.emit(order);
-    }
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Recall Order',
+        message: `Recall order ${order.orderNumber}?`,
+        confirmText: 'Yes, Recall',
+        confirmColor: 'primary'
+      }
+    }).afterClosed().subscribe(result => {
+      if (result) {
+        this.recallOrder.emit(order);
+      }
+    });
   }
 
   onDeleteOrder(orderId: string, orderNumber: string): void {
-    if (confirm(`Delete held order ${orderNumber}? This action cannot be undone.`)) {
-      this.deleteOrder.emit(orderId);
-      
-      // Remove from local state
-      this.heldOrders = this.heldOrders.filter(o => o.id !== orderId);
-      
-      if (this.selectedOrderId === orderId) {
-        this.closeDetailsPanel();
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Held Order',
+        message: `Delete held order ${orderNumber}? This action cannot be undone.`,
+        confirmText: 'Delete',
+        confirmColor: 'warn'
       }
-      
-      this.applyFilters();
-    }
+    }).afterClosed().subscribe(result => {
+      if (result) {
+        this.deleteOrder.emit(orderId);
+        this.heldOrders = this.heldOrders.filter(o => o.id !== orderId);
+        if (this.selectedOrderId === orderId) {
+          this.closeDetailsPanel();
+        }
+        this.applyFilters();
+      }
+    });
   }
 
   /* ================= TIME HELPERS ================= */

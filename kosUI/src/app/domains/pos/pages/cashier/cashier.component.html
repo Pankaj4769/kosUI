@@ -16,23 +16,26 @@
           <mat-icon>menu</mat-icon>
         </button>
 
-        <mat-menu #quickMenu="matMenu">
+        <mat-menu #quickMenu="matMenu" panelClass="quick-action-menu">
           <button mat-menu-item (click)="refreshData()">
-            <mat-icon>refresh</mat-icon>
-            <span>Refresh (F5)</span>
+            <mat-icon class="menu-icon refresh-icon">refresh</mat-icon>
+            <span class="menu-label">Refresh</span>
+            <kbd class="menu-kbd">F5</kbd>
           </button>
           <button mat-menu-item (click)="showHeldOrders()">
-            <mat-icon>pending_actions</mat-icon>
-            <span>View Held Orders</span>
+            <mat-icon class="menu-icon held-icon">pending_actions</mat-icon>
+            <span class="menu-label">View Held Orders</span>
           </button>
-          <mat-divider></mat-divider>
-          <button mat-menu-item (click)="clearCart()" [disabled]="!hasItems">
-            <mat-icon>delete_sweep</mat-icon>
-            <span>Clear Cart (Ctrl+Del)</span>
+          <mat-divider class="menu-divider"></mat-divider>
+          <button mat-menu-item (click)="clearCart()" [disabled]="!hasItems" class="danger-item">
+            <mat-icon class="menu-icon danger-icon">delete_sweep</mat-icon>
+            <span class="menu-label">Clear Cart</span>
+            <kbd class="menu-kbd danger-kbd">Ctrl+Del</kbd>
           </button>
-          <button mat-menu-item (click)="resetOrder()">
-            <mat-icon>restart_alt</mat-icon>
-            <span>New Order (Ctrl+N)</span>
+          <button mat-menu-item (click)="resetOrder()" class="new-order-item">
+            <mat-icon class="menu-icon new-order-icon">restart_alt</mat-icon>
+            <span class="menu-label">New Order</span>
+            <kbd class="menu-kbd">Ctrl+N</kbd>
           </button>
         </mat-menu>
 
