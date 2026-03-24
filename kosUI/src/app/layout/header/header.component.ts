@@ -13,6 +13,7 @@ import { Subject, takeUntil, filter } from 'rxjs';
 import { CashierContext, CashierContextService } from '../../domains/pos/services/cashier-context.service';
 import { LayoutService } from '../../core/services/layout.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { AuthUser } from '../../core/auth/auth.model';
 
 /* ── Models ── */
 export interface Restaurant {
@@ -199,9 +200,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   get showSpacer():      boolean { return this.centerConfig.type === 'none';                                                  }
 
   /* ── User ── */
-  userName    = 'Admin';
-  userRole    = 'ADMIN';
-  userInitial = 'A';
+  userName    = 'Unknown';
+  userRole    = 'Unknown';
+  userInitial = '';
   userAvatar  = '';
 
   /* ── Role helpers ── */
@@ -249,6 +250,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
      LIFECYCLE
   ═══════════════════════════════════════════ */
   ngOnInit(): void {
+
+    const user = this.authService.currentUser;
+    console.log(user);
+    if (user) {
+      this.userName = user.username;
+      this.userRole = user.role;
+      this.userInitial = user.name.slice(0, 1);
+    }
 
     // ✅ Restore dark mode from localStorage on every page load
     const saved = localStorage.getItem('darkMode');

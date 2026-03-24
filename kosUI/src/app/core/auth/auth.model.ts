@@ -5,7 +5,7 @@ export type UserRole =
 export type SubscriptionPlan = 'STARTER' | 'GROWTH' | 'PRO' | 'ENTERPRISE';
 
 export type OnboardingStatus =
-  'NEW' | 'SUBSCRIPTION_SELECTED' | 'PENDING_APPROVAL' | 'APPROVED' | 'SETUP_COMPLETE';
+  'NEW'  | 'PENDING' | 'COMPLETED' | 'SETUP_COMPLETE';
 
 export type LoginMethod = 'PASSWORD' | 'MOBILE_OTP' | 'GOOGLE' | 'ZOHO';
 
@@ -59,3 +59,28 @@ export interface RestaurantSetup {
   email: string;
   staff: StaffSetup[];
 }
+
+export interface PaymentRequest{
+  name: string;
+  email: string; 
+  phone: string; 
+  restaurantName: string;
+  message: string;
+  plan?: string | null;
+}
+
+export interface PaymentResponse{
+  paymentStatus: boolean;
+  activePlan: string;
+
+}
+
+
+export interface CompleteSetup{
+  plan: SubscriptionPlan;
+  onboardingStatus: string;
+  restaurentId: string;
+  restaurant: RestaurantSetup;
+}
+
+

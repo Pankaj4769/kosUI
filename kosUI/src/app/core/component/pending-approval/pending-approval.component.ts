@@ -26,7 +26,7 @@ export class PendingApprovalComponent implements OnInit, OnDestroy {
 
   checkStatus(): void {
     const user = this.auth.currentUser;
-    if (user?.onboardingStatus === 'APPROVED') {
+    if (user?.onboardingStatus === 'COMPLETED') {
       clearInterval(this.pollInterval);
       this.router.navigate(['/onboarding/setup']);
     }

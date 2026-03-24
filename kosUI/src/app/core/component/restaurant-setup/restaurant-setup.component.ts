@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-import { RestaurantSetup, StaffSetup, UserRole, SubscriptionPlan } from '../../../core/auth/auth.model';
+import { RestaurantSetup, StaffSetup, UserRole, SubscriptionPlan, OnboardingStatus } from '../../../core/auth/auth.model';
+import { MessageResponse } from '../../../domains/dashboard/models/message.model';
 
 @Component({
   selector: 'app-restaurant-setup',
@@ -18,8 +19,18 @@ export class RestaurantSetupComponent {
   isLoading = false;
 
   restaurant: RestaurantSetup = {
-    restaurantName: '', address: '', phone: '', email: '', staff: []
+    restaurantName: '',
+    address: '', 
+    phone: '', 
+    email: '', 
+    staff: []
   };
+
+  ngOnInit(){
+    const user = this.auth.currentUser;
+    this.restaurant.phone = user?.mobile ?? '';
+    this.restaurant.email = user?.email?? '';
+  }
 
   staffLimitMap: Record<SubscriptionPlan, number> = {
     STARTER: 1, GROWTH: 3, PRO: 10, ENTERPRISE: 15
@@ -58,9 +69,18 @@ export class RestaurantSetupComponent {
     this.isLoading = true;
     setTimeout(() => {
       // In real app → POST restaurant + staff details to API
-      this.auth.updateOnboardingStatus('SETUP_COMPLETE');
-      this.isLoading = false;
-      this.router.navigate(['/dashboard']);
+      this.auth.updateOnboardingStatus('SETUP_COMPLETE',  this.restaurant, this.auth.currentUser?.subscriptionPlan)?.subscribe(res=>{
+        console.log(res);
+        const user = this.auth.currentUser;
+        let r = res as MessageResponse;
+        if (r.status && user) {
+          user.onboardingStatus = 'SETUP_COMPLETE' as OnboardingStatus;
+          localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
+          this.isLoading = false;
+          this.router.navigate(['/dashboard']);
+        }
+        this.isLoading = false;
+      });
     }, 1000);
   }
 

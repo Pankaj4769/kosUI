@@ -20,7 +20,7 @@ export interface Item {
   qty: number;
   // UI related
   image?: string;
-
+  restaurantId: string;
   enabled: boolean;
   addedToCartStatus?: boolean;
 }

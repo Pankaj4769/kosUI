@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthUser, LoginRequest, OnboardingStatus, SubscriptionPlan, UserRole } from './auth.model';
+import { AuthUser, CompleteSetup, LoginRequest, OnboardingStatus, RestaurantSetup, SubscriptionPlan, UserRole } from './auth.model';
 import { HttpClient } from '@angular/common/http';
-import { map, Observable, of, switchMap, tap } from 'rxjs';
+import { EMPTY, map, Observable, of, switchMap, tap } from 'rxjs';
 import { BASE_URL } from '../../apiUrls';
 import { SignupForm } from '../component/sign-up/signup.component';
 
@@ -20,7 +20,7 @@ interface SignUpResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  private readonly STORAGE_KEY = 'kos_user';
+  readonly STORAGE_KEY = 'kos_user';
 
   private mockUsers: AuthUser[] = [
     {
@@ -129,12 +129,12 @@ export class AuthService {
       this.router.navigate(['/onboarding/subscription']);
       return;
     }
-    if (user.onboardingStatus === 'SUBSCRIPTION_SELECTED' ||
-        user.onboardingStatus === 'PENDING_APPROVAL') {
+    if (
+        user.onboardingStatus === 'PENDING') {
       this.router.navigate(['/onboarding/pending']);
       return;
     }
-    if (user.onboardingStatus === 'APPROVED') {
+    if (user.onboardingStatus === 'COMPLETED') {
       this.router.navigate(['/onboarding/setup']);
       return;
     }
@@ -143,12 +143,22 @@ export class AuthService {
   }
 
   // ── Update Onboarding Status ─────────────────────────────
-  updateOnboardingStatus(status: OnboardingStatus, plan?: SubscriptionPlan): void {
+  updateOnboardingStatus(status: OnboardingStatus,restaurent: RestaurantSetup, plan?: SubscriptionPlan) {
     const user = this.currentUser;
-    if (!user) return;
+    if (!user) 
+      return EMPTY;
     user.onboardingStatus = status;
-    if (plan) user.subscriptionPlan = plan;
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+    if (plan) {
+      let setup:  CompleteSetup  = {
+        plan: plan,
+        onboardingStatus: status,
+        restaurentId: user.restaurantId ?? '',
+        restaurant: restaurent
+      };
+      user.subscriptionPlan = plan;
+      return this.http.patch(this.baseUrl+'/api/subscription/completeSetup', setup);
+    }
+    return EMPTY;
   }
 
   logout(): void {
