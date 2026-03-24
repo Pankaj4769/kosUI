@@ -272,7 +272,8 @@
   gap: 6px;
   justify-content: flex-end;  /* ✅ pushes content to right edge */
   min-width: 0;
-  padding-right: 16px; 
+  padding-right: 16px;
+  grid-column: 3;             /* ✅ always stay in column 3, even when center is empty */
 }
 
 /* ── Icon buttons ── */

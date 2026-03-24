@@ -37,6 +37,7 @@ import { DeliveryReportComponent } from './domains/reports/pages/delivery-report
 import { BranchReportComponent } from './domains/reports/pages/branch-report/branch-report.component';
 import { QrCodesComponent } from './domains/qr-codes/pages/qr-codes.component';
 import { CustomerOrderComponent } from './domains/qr-codes/customer-order/customer-order.component';
+import { MyProfileComponent } from './domains/profile/pages/my-profile.component';
 
 export const routes: Routes = [
 
@@ -124,6 +125,9 @@ export const routes: Routes = [
           { path: '', redirectTo: 'sales', pathMatch: 'full' }
         ], canActivate: [AuthGuard]
       },
+
+      // ✅ PROFILE
+      { path: 'profile', title: 'My Profile | Kitchen Book', component: MyProfileComponent, canActivate: [AuthGuard] },
 
       // ✅ SYSTEM MODULE
       { path: 'qr', title: 'QR Codes | Kitchen Book', component: QrCodesComponent, canActivate: [AuthGuard] },

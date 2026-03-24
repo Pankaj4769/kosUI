@@ -7,6 +7,8 @@ import { Item } from '../../dashboard/models/item.model';
 import { MatSelect, MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from '../../common-popup/pages/confirm-dialog.component';
 
 type Category = 'Breakfast' | 'Lunch' | 'Snacks' | 'Dinner';
 type Group = 'Veg' | 'Non-Veg';
@@ -20,7 +22,8 @@ type StockView = 'ALL' | 'LOW' | 'SOLD' | 'DISABLED';
     FormsModule,
     MatSelectModule,
     MatCheckboxModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatDialogModule
   ],
   templateUrl: './manage-inventory.html',
   styleUrls: ['./manage-inventory.css']
@@ -29,7 +32,8 @@ export class ManageInventoryComponent {
 
   constructor(
     private inventoryService: InventoryService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -289,20 +293,30 @@ export class ManageInventoryComponent {
   /* ---------- DELETE ITEM ---------- */
 
   deleteItem(id: number | null) {
-    const ok = confirm('Delete this item?');
-    if (ok) {
-      this.loading =true;
-      this.inventoryService.deleteItem(id).subscribe(res=>{
-        let message = res;
-        if(message.status){
-          this.inventoryService.getItemlist().subscribe(res=>{
-            this.inventoryService.populateItems(res as Item[]);
-            this.cdr.detectChanges();
-            this.loading = false;
-          });;
-        }
-      });;
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Item',
+        message: 'Are you sure you want to delete this item? This action cannot be undone.',
+        confirmText: 'Delete',
+        confirmColor: 'warn'
+      }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loading = true;
+        this.inventoryService.deleteItem(id).subscribe(res => {
+          let message = res;
+          if (message.status) {
+            this.inventoryService.getItemlist().subscribe(res => {
+              this.inventoryService.populateItems(res as Item[]);
+              this.cdr.detectChanges();
+              this.loading = false;
+            });
+          }
+        });
+      }
+    });
   }
 
   /* ---------- TOGGLE STATUS ---------- */
