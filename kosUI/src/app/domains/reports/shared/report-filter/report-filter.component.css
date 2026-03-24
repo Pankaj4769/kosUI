@@ -1,0 +1,20 @@
+.rf-wrapper { position: relative; }
+.rf-trigger { display:flex; align-items:center; gap:6px; padding:6px 14px; background:#fff; border:1.5px solid #e2e8f0; border-radius:8px; font-size:12px; font-weight:600; color:#475569; cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap; }
+.rf-trigger:hover { border-color:#3b82f6; color:#1d4ed8; }
+.rf-trigger mat-icon { font-size:16px; }
+.rf-badge { background:#dc2626; color:#fff; font-size:9px; font-weight:800; padding:1px 5px; border-radius:10px; line-height:1.4; }
+.rf-chevron { font-size:16px; transition:transform 0.2s; }
+.rf-chevron.open { transform:rotate(180deg); }
+.rf-panel { position:absolute; top:calc(100% + 6px); left:0; z-index:1000; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.12); padding:0; min-width:280px; max-height:80vh; overflow-y:auto; animation:rfIn 0.15s ease both; }
+@keyframes rfIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.rf-panel__header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #f1f5f9; font-size:13px; font-weight:700; color:#0f172a; }
+.rf-reset { background:none; border:none; font-size:11px; color:#dc2626; cursor:pointer; font-weight:600; font-family:inherit; }
+.rf-group { padding:10px 16px 0; }
+.rf-label { display:block; font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
+.rf-date-row { display:flex; align-items:center; gap:6px; }
+.rf-date-sep { font-size:12px; color:#94a3b8; flex-shrink:0; }
+.rf-input, .rf-select { width:100%; padding:6px 10px; border:1.5px solid #e2e8f0; border-radius:7px; font-size:12px; color:#1e293b; background:#f8fafc; outline:none; font-family:inherit; }
+.rf-date-row .rf-input { width:auto; flex:1; }
+.rf-input:focus, .rf-select:focus { border-color:#3b82f6; background:#fff; }
+.rf-actions { padding:12px 16px; }
+.rf-btn-apply { width:100%; padding:9px; background:linear-gradient(135deg,#1e3a5f,#1e40af); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }

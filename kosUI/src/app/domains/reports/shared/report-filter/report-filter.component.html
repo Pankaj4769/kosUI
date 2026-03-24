@@ -1,0 +1,64 @@
+<div class="rf-wrapper">
+  <button class="rf-trigger" (click)="toggle()">
+    <mat-icon>tune</mat-icon>
+    <span>Filters</span>
+    <span class="rf-badge" *ngIf="activeCount > 0">{{ activeCount }}</span>
+    <mat-icon class="rf-chevron" [class.open]="isOpen">expand_more</mat-icon>
+  </button>
+
+  <div class="rf-panel" *ngIf="isOpen">
+    <div class="rf-panel__header">
+      <span>Advanced Filters</span>
+      <button class="rf-reset" (click)="reset()">Reset all</button>
+    </div>
+
+    <!-- Date range -->
+    <div class="rf-group">
+      <label class="rf-label">Date Range</label>
+      <div class="rf-date-row">
+        <input type="date" class="rf-input" [(ngModel)]="startDate" placeholder="From">
+        <span class="rf-date-sep">→</span>
+        <input type="date" class="rf-input" [(ngModel)]="endDate" placeholder="To">
+      </div>
+    </div>
+
+    <div class="rf-group" *ngIf="filters.showBranch">
+      <label class="rf-label">Branch</label>
+      <select class="rf-select" [(ngModel)]="selectedBranch">
+        <option *ngFor="let b of branches">{{ b }}</option>
+      </select>
+    </div>
+
+    <div class="rf-group" *ngIf="filters.showCategory">
+      <label class="rf-label">Category</label>
+      <select class="rf-select" [(ngModel)]="selectedCategory">
+        <option *ngFor="let c of categories">{{ c }}</option>
+      </select>
+    </div>
+
+    <div class="rf-group" *ngIf="filters.showStaff">
+      <label class="rf-label">Staff</label>
+      <select class="rf-select" [(ngModel)]="selectedStaff">
+        <option *ngFor="let s of staffList">{{ s }}</option>
+      </select>
+    </div>
+
+    <div class="rf-group" *ngIf="filters.showStatus">
+      <label class="rf-label">Order Status</label>
+      <select class="rf-select" [(ngModel)]="selectedStatus">
+        <option *ngFor="let s of statuses">{{ s }}</option>
+      </select>
+    </div>
+
+    <div class="rf-group" *ngIf="filters.showPayment">
+      <label class="rf-label">Payment Method</label>
+      <select class="rf-select" [(ngModel)]="selectedPayment">
+        <option *ngFor="let p of payments">{{ p }}</option>
+      </select>
+    </div>
+
+    <div class="rf-actions">
+      <button class="rf-btn-apply" (click)="apply()">Apply Filters</button>
+    </div>
+  </div>
+</div>

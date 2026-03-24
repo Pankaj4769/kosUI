@@ -27,6 +27,14 @@ import { AiSmartControlComponent } from '../Admin/pages/AI-Smart-Control/ai-smar
 import { ConfigManagementComponent } from '../Admin/pages/configure-management/config-management.component';
 import { SignupComponent } from './core/component/sign-up/signup.component';
 import { WaiterComponent } from './domains/waiter/pages/waiter/waiter.component';
+import { SalesReportComponent } from './domains/reports/pages/sales-report/sales-report.component';
+import { InventoryReportComponent } from './domains/reports/pages/inventory-report/inventory-report.component';
+import { CustomerReportComponent } from './domains/reports/pages/customer-report/customer-report.component';
+import { StaffReportComponent } from './domains/reports/pages/staff-report/staff-report.component';
+import { FinancialReportComponent } from './domains/reports/pages/financial-report/financial-report.component';
+import { KitchenReportComponent } from './domains/reports/pages/kitchen-report/kitchen-report.component';
+import { DeliveryReportComponent } from './domains/reports/pages/delivery-report/delivery-report.component';
+import { BranchReportComponent } from './domains/reports/pages/branch-report/branch-report.component';
 
 export const routes: Routes = [
 
@@ -98,6 +106,22 @@ export const routes: Routes = [
 
       // ✅ WAITER MODULE
       { path: 'waiter', title: 'Waiter | Kitchen Book', component: WaiterComponent, canActivate: [AuthGuard] },
+
+      // ✅ REPORTS MODULE
+      {
+        path: 'reports',
+        children: [
+          { path: 'sales',      title: 'Sales Report | Kitchen Book',            component: SalesReportComponent },
+          { path: 'inventory',  title: 'Inventory Report | Kitchen Book',         component: InventoryReportComponent },
+          { path: 'customer',   title: 'Customer Report | Kitchen Book',          component: CustomerReportComponent },
+          { path: 'staff',      title: 'Staff Report | Kitchen Book',             component: StaffReportComponent },
+          { path: 'financial',  title: 'Financial Report | Kitchen Book',         component: FinancialReportComponent },
+          { path: 'kitchen',    title: 'Kitchen & Order Report | Kitchen Book',   component: KitchenReportComponent },
+          { path: 'delivery',   title: 'Online & Delivery Report | Kitchen Book', component: DeliveryReportComponent },
+          { path: 'branches',   title: 'Multiple Branch Report | Kitchen Book',   component: BranchReportComponent },
+          { path: '', redirectTo: 'sales', pathMatch: 'full' }
+        ], canActivate: [AuthGuard]
+      },
 
       // ✅ SYSTEM MODULE (future)
       // { path: 'settings', component: RoleManagementComponent },
