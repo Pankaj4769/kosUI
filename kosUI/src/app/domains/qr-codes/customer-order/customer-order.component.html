@@ -1,0 +1,397 @@
+<!-- ══════════════════════════════════════
+     Customer Order Page  (mobile-first)
+     ══════════════════════════════════════ -->
+<div class="customer-app">
+
+  <!-- ════════════════════════════
+       STEP 1 – GUEST LOGIN
+       ════════════════════════════ -->
+  <div class="step-login" *ngIf="step === 'login'">
+    <div class="login-card">
+      <div class="brand">
+        <span class="brand-icon">🍽️</span>
+        <h1 class="brand-name">Kitchen Book</h1>
+        <p class="brand-sub">Digital Dining Experience</p>
+      </div>
+
+      <div class="table-chip">
+        <span class="material-icons">table_restaurant</span>
+        {{ tableName }}
+      </div>
+
+      <h2 class="login-heading">Welcome!</h2>
+      <p class="login-sub">Enter your details to browse the menu and place your order.</p>
+
+      <div class="form-group">
+        <label class="form-label">Your Name</label>
+        <div class="input-wrap">
+          <span class="material-icons input-icon">person</span>
+          <input
+            type="text"
+            class="form-input"
+            placeholder="e.g. Rahul Sharma"
+            [(ngModel)]="guestName"
+            (keyup.enter)="submitLogin()"
+            maxlength="60"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <div class="input-wrap">
+          <span class="material-icons input-icon">phone</span>
+          <input
+            type="tel"
+            class="form-input"
+            placeholder="e.g. 9876543210"
+            [(ngModel)]="guestPhone"
+            (keyup.enter)="submitLogin()"
+            maxlength="15"
+          />
+        </div>
+      </div>
+
+      <p class="login-error" *ngIf="loginError">
+        <span class="material-icons">error_outline</span>
+        {{ loginError }}
+      </p>
+
+      <button class="btn-primary btn-full" (click)="submitLogin()">
+        <span class="material-icons">restaurant_menu</span>
+        View Menu
+      </button>
+
+      <p class="login-note">Your details are only used for this order.</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════
+       STEP 2 – MENU
+       ════════════════════════════ -->
+  <div class="step-menu" *ngIf="step === 'menu'">
+
+    <!-- Top bar -->
+    <header class="menu-header">
+      <div class="header-left">
+        <span class="material-icons header-icon">restaurant_menu</span>
+        <div>
+          <h1 class="header-title">Our Menu</h1>
+          <span class="header-table">{{ tableName }}</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <!-- Call Waiter -->
+        <button
+          class="waiter-btn"
+          [class.waiter-sent]="waiterCallSent"
+          (click)="callWaiter()"
+          title="Call Waiter"
+        >
+          <span class="material-icons">room_service</span>
+        </button>
+        <!-- Cart -->
+        <button class="cart-btn" (click)="showCartPreview = !showCartPreview">
+          <span class="material-icons">shopping_cart</span>
+          <span class="cart-badge" *ngIf="cartCount > 0">{{ cartCount }}</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Search bar -->
+    <div class="search-bar">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search dishes..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="applyMenuFilters()"
+      />
+    </div>
+
+    <!-- Category tabs -->
+    <div class="category-tabs">
+      <button
+        *ngFor="let cat of categories"
+        class="cat-tab"
+        [class.active]="activeCategory === cat"
+        (click)="setCategory(cat)"
+      >{{ cat }}</button>
+    </div>
+
+    <!-- Veg toggle -->
+    <div class="veg-toggle-bar">
+      <label class="veg-toggle">
+        <input type="checkbox" [(ngModel)]="vegOnly" (ngModelChange)="applyMenuFilters()" />
+        <span class="veg-slider"></span>
+        <span class="veg-label">Veg Only</span>
+      </label>
+      <span class="item-count">{{ filteredItems.length }} item{{ filteredItems.length !== 1 ? 's' : '' }}</span>
+    </div>
+
+    <!-- Loading -->
+    <div class="menu-loading" *ngIf="menuLoading">
+      <div class="spinner"></div>
+      <p>Loading menu…</p>
+    </div>
+
+    <!-- Error -->
+    <div class="menu-error" *ngIf="menuError && !menuLoading">
+      <span class="material-icons">wifi_off</span>
+      <p>{{ menuError }}</p>
+      <button class="btn-outline" (click)="submitLogin()">Retry</button>
+    </div>
+
+    <!-- Menu grid -->
+    <div class="menu-grid" *ngIf="!menuLoading && !menuError">
+      <div
+        *ngFor="let item of filteredItems; trackBy: trackItem"
+        class="menu-card"
+        [class.veg]="item.group === 'Veg'"
+      >
+        <!-- Image / placeholder -->
+        <div class="item-image-wrap">
+          <img *ngIf="item.image" [src]="item.image" [alt]="item.name" class="item-image" />
+          <div class="item-image-placeholder" *ngIf="!item.image">
+            <span class="material-icons">fastfood</span>
+          </div>
+          <span class="veg-dot" [class.non-veg]="item.group === 'Non-Veg'"></span>
+        </div>
+
+        <!-- Details -->
+        <div class="item-details">
+          <h3 class="item-name">{{ item.name }}</h3>
+          <span class="item-cat">{{ item.category[0] }}</span>
+          <div class="item-bottom">
+            <span class="item-price">₹{{ item.price }}</span>
+            <!-- Qty control -->
+            <div class="qty-control" *ngIf="getQty(item.id) > 0; else addBtn">
+              <button class="qty-btn minus" (click)="removeFromCart(item.id)">
+                <span class="material-icons">remove</span>
+              </button>
+              <span class="qty-value">{{ getQty(item.id) }}</span>
+              <button class="qty-btn plus" (click)="addToCart(item)">
+                <span class="material-icons">add</span>
+              </button>
+            </div>
+            <ng-template #addBtn>
+              <button class="add-btn" (click)="addToCart(item)">
+                <span class="material-icons">add</span>
+                Add
+              </button>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="menu-empty" *ngIf="filteredItems.length === 0">
+        <span class="material-icons">search_off</span>
+        <p>No items found</p>
+      </div>
+    </div>
+
+    <!-- Cart bottom bar -->
+    <div class="cart-bar" *ngIf="cartCount > 0 && !showCartPreview">
+      <div class="cart-bar-info">
+        <span class="cart-bar-count">{{ cartCount }} item{{ cartCount !== 1 ? 's' : '' }}</span>
+        <span class="cart-bar-total">₹{{ cartSubtotal }}</span>
+      </div>
+      <button class="btn-cart-bar" (click)="goToReview()">
+        View Order
+        <span class="material-icons">arrow_forward</span>
+      </button>
+    </div>
+
+    <!-- Cart preview sheet -->
+    <div class="cart-sheet" *ngIf="showCartPreview" (click)="showCartPreview = false">
+      <div class="cart-sheet-content" (click)="$event.stopPropagation()">
+        <div class="cart-sheet-header">
+          <h3>Your Cart</h3>
+          <button class="close-sheet" (click)="showCartPreview = false">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="cart-sheet-body">
+          <div
+            *ngFor="let item of cart; trackBy: trackCart"
+            class="cart-row"
+          >
+            <span class="cart-row-name">{{ item.name }}</span>
+            <div class="cart-row-qty">
+              <button (click)="removeFromCart(item.id)"><span class="material-icons">remove</span></button>
+              <span>{{ item.qty }}</span>
+              <button (click)="incrementCartItem(item.id)">
+                <span class="material-icons">add</span>
+              </button>
+            </div>
+            <span class="cart-row-price">₹{{ item.price * item.qty }}</span>
+          </div>
+        </div>
+        <div class="cart-sheet-footer">
+          <div class="cart-totals">
+            <span>Subtotal</span><span>₹{{ cartSubtotal }}</span>
+            <span>Tax (5%)</span><span>₹{{ cartTax }}</span>
+            <span class="total-row"><strong>Total</strong></span><span><strong>₹{{ cartTotal }}</strong></span>
+          </div>
+          <button class="btn-primary btn-full" (click)="goToReview()">
+            Proceed to Review
+            <span class="material-icons">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════
+       STEP 3 – REVIEW ORDER
+       ════════════════════════════ -->
+  <div class="step-review" *ngIf="step === 'review'">
+    <header class="review-header">
+      <button class="back-btn" (click)="backToMenu()">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <h1>Review Order</h1>
+      <span class="review-table">{{ tableName }}</span>
+    </header>
+
+    <!-- Guest info -->
+    <div class="review-section">
+      <div class="guest-info-bar">
+        <span class="material-icons">person</span>
+        <span>{{ guestName }}</span>
+        <span class="divider">·</span>
+        <span class="material-icons">phone</span>
+        <span>{{ guestPhone }}</span>
+      </div>
+    </div>
+
+    <!-- Order items -->
+    <div class="review-section">
+      <h3 class="section-title">
+        <span class="material-icons">receipt_long</span>
+        Order Items
+      </h3>
+      <div class="review-items">
+        <div *ngFor="let item of cart; trackBy: trackCart" class="review-item">
+          <span class="veg-dot-sm" [class.non-veg]="item.group === 'Non-Veg'"></span>
+          <span class="review-item-name">{{ item.name }}</span>
+          <span class="review-item-qty">× {{ item.qty }}</span>
+          <span class="review-item-price">₹{{ item.price * item.qty }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Special note -->
+    <div class="review-section">
+      <h3 class="section-title">
+        <span class="material-icons">edit_note</span>
+        Special Instructions <span class="optional">(optional)</span>
+      </h3>
+      <textarea
+        class="note-input"
+        placeholder="E.g. Less spicy, no onions…"
+        [(ngModel)]="orderNote"
+        rows="3"
+        maxlength="200"
+      ></textarea>
+    </div>
+
+    <!-- Bill summary -->
+    <div class="review-section bill-section">
+      <h3 class="section-title">
+        <span class="material-icons">calculate</span>
+        Bill Summary
+      </h3>
+      <div class="bill-rows">
+        <div class="bill-row"><span>Subtotal</span><span>₹{{ cartSubtotal }}</span></div>
+        <div class="bill-row"><span>GST (5%)</span><span>₹{{ cartTax }}</span></div>
+        <div class="bill-row total"><span>Total</span><span>₹{{ cartTotal }}</span></div>
+      </div>
+    </div>
+
+    <!-- Place order -->
+    <div class="review-cta">
+      <button
+        class="btn-primary btn-full btn-place"
+        (click)="placeOrder()"
+        [disabled]="submitting"
+      >
+        <span *ngIf="!submitting" class="material-icons">check_circle</span>
+        <span *ngIf="submitting" class="spinner-sm"></span>
+        {{ submitting ? 'Placing Order…' : 'Place Order' }}
+      </button>
+      <!-- Call waiter from review too -->
+      <button
+        class="btn-waiter-review"
+        [class.sent]="waiterCallSent"
+        (click)="callWaiter()"
+      >
+        <span class="material-icons">room_service</span>
+        {{ waiterCallSent ? 'Waiter Called!' : 'Call Waiter' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════
+       STEP 4 – ORDER PLACED
+       ════════════════════════════ -->
+  <div class="step-done" *ngIf="step === 'done'">
+    <div class="done-card">
+      <div class="done-icon">✅</div>
+      <h1 class="done-title">Order Placed!</h1>
+      <p class="done-sub">Your order has been sent to the kitchen.</p>
+
+      <div class="done-details">
+        <div class="done-row">
+          <span class="material-icons">tag</span>
+          <span>Order <strong>{{ orderNumber }}</strong></span>
+        </div>
+        <div class="done-row">
+          <span class="material-icons">table_restaurant</span>
+          <span>{{ tableName }}</span>
+        </div>
+        <div class="done-row">
+          <span class="material-icons">schedule</span>
+          <span>Ready in approx. <strong>{{ estimatedMins }} min</strong></span>
+        </div>
+        <div class="done-row">
+          <span class="material-icons">payments</span>
+          <span>Total <strong>₹{{ cartTotal }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Add more items -->
+      <button class="btn-add-more" (click)="addMoreItems()">
+        <span class="material-icons">add_shopping_cart</span>
+        Add More Items
+      </button>
+
+      <!-- Call waiter from done screen -->
+      <button
+        class="btn-waiter-done"
+        [class.sent]="waiterCallSent"
+        (click)="callWaiter()"
+      >
+        <span class="material-icons">room_service</span>
+        {{ waiterCallSent ? 'Waiter is on the way!' : 'Call Waiter' }}
+      </button>
+
+      <p class="done-note">
+        Sit back and relax. A waiter will serve your order shortly.<br/>
+        For help, tap <strong>Call Waiter</strong> above.
+      </p>
+    </div>
+  </div>
+
+</div><!-- /customer-app -->
+
+<!-- ── Toast ── -->
+<div class="cust-toast" *ngIf="toast" [class]="'toast-' + toast.type">
+  <span class="material-icons">
+    {{ toast.type === 'success' ? 'check_circle' : toast.type === 'error' ? 'error' : 'info' }}
+  </span>
+  {{ toast.msg }}
+</div>

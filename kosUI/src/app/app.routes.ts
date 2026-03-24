@@ -35,6 +35,8 @@ import { FinancialReportComponent } from './domains/reports/pages/financial-repo
 import { KitchenReportComponent } from './domains/reports/pages/kitchen-report/kitchen-report.component';
 import { DeliveryReportComponent } from './domains/reports/pages/delivery-report/delivery-report.component';
 import { BranchReportComponent } from './domains/reports/pages/branch-report/branch-report.component';
+import { QrCodesComponent } from './domains/qr-codes/pages/qr-codes.component';
+import { CustomerOrderComponent } from './domains/qr-codes/customer-order/customer-order.component';
 
 export const routes: Routes = [
 
@@ -123,15 +125,17 @@ export const routes: Routes = [
         ], canActivate: [AuthGuard]
       },
 
-      // ✅ SYSTEM MODULE (future)
-      // { path: 'settings', component: RoleManagementComponent },
-      // { path: 'qr', loadComponent: () => import('./system/qr/qr.component').then(m => m.QrComponent) },
+      // ✅ SYSTEM MODULE
+      { path: 'qr', title: 'QR Codes | Kitchen Book', component: QrCodesComponent, canActivate: [AuthGuard] },
       // { path: 'settings', loadComponent: () => import('./system/settings/settings.component').then(m => m.SettingsComponent) },
 
       // ✅ DEFAULT
       { path: '', redirectTo: 'login', pathMatch: 'full' }
     ]
   },
+
+  // ✅ CUSTOMER ORDERING (no admin layout — standalone mobile page)
+  { path: 'customer/order', title: 'Order | Kitchen Book', component: CustomerOrderComponent },
 
   // ✅ FALLBACK
   { path: '**', redirectTo: 'login' }

@@ -261,7 +261,7 @@ export class ShiftManagementComponent implements OnInit, OnChanges {
     
     if(!sheet) return;
 
-    sheet.eachRow((row, rowNumber) => {
+    sheet.eachRow((row: ExcelJS.Row, rowNumber: number) => {
       if (rowNumber === 1) return; // Skip header
 
       const empId = row.getCell(2).text; // Col B
