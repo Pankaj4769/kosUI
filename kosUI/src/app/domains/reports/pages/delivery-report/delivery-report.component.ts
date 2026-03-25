@@ -6,11 +6,13 @@ import { Subject, takeUntil } from 'rxjs';
 import { OrderManagementService } from '../../../order/services/order-management.service';
 import { Order, OrderStatus, OrderType } from '../../../order/models/order.model';
 import { ReportFilterComponent } from '../../shared/report-filter/report-filter.component';
+import { ExportButtonComponent } from '../../shared/export-button/export-button.component';
+import { ReportExportConfig } from '../../shared/report-export.service';
 
 @Component({
   selector: 'app-delivery-report',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent],
+  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent, ExportButtonComponent],
   templateUrl: './delivery-report.component.html',
   styleUrls: ['./delivery-report.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -265,14 +267,32 @@ export class DeliveryReportComponent implements OnInit, OnDestroy {
 
   onFilterChange(f: any) { console.log('Filter:', f); }
 
-  exportCSV() {
-    const rows = [['Platform', 'Orders', 'Avg Time', 'Rating', 'Revenue', 'Status']];
-    this.platforms.forEach(p => rows.push([p.name, String(p.orders), p.avgTime, p.rating, p.revenue, p.status]));
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'delivery-report.csv';
-    a.click();
+  get exportConfig(): ReportExportConfig {
+    const today = new Date().toLocaleDateString('en-IN');
+    return {
+      reportName: 'Online & Delivery Report',
+      restaurant: 'My Restaurant',
+      branch: 'All Branches',
+      dateRange: { from: '01 Mar 2026', to: today },
+      generatedBy: 'Admin',
+      stats: this.stats.map(s => ({ metric: s.label, value: s.value, change: s.delta, positive: s.up })),
+      insights: this.insights.map(i => i.text),
+      alerts: this.alerts.map(a => a.text),
+      tables: [
+        {
+          sheetName: 'Platform Performance',
+          title: 'Performance by Platform',
+          headers: ['Platform', 'Orders', 'Revenue', 'Avg Time', 'Rating'],
+          rows: this.platforms.map(p => [p.name, p.orders, p.revenue, p.avgTime, p.rating])
+        },
+        {
+          sheetName: 'Deliveries',
+          title: 'Delivery Orders',
+          headers: ['Order ID', 'Customer', 'Amount', 'Status', 'Platform'],
+          rows: this.deliveries.map(d => [d.orderId, d.customer, d.amount, d.status, d.platform])
+        }
+      ]
+    };
   }
 
   ngOnDestroy() {

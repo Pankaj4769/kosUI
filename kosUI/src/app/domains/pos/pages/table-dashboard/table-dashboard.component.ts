@@ -88,7 +88,7 @@ export class TableDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private tableService: TableService,
-    private router: Router,
+    public router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 

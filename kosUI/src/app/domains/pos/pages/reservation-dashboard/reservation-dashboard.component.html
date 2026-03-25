@@ -1,0 +1,512 @@
+<div class="res-dashboard">
+
+  <!-- ══════════════════ TOP BAR ══════════════════ -->
+  <header class="res-topbar">
+    <div class="topbar-left">
+      <button class="btn-back" (click)="goToTableDashboard()">← Tables</button>
+      <div class="topbar-title">
+        <span class="title-icon">📅</span>
+        <h1>Reservation Dashboard</h1>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <!-- View Toggle -->
+      <div class="view-toggle">
+        <button [class.active]="viewMode === 'list'"     (click)="setViewMode('list')">
+          ☰ List
+        </button>
+        <button [class.active]="viewMode === 'calendar'" (click)="setViewMode('calendar')">
+          📅 Calendar
+        </button>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button class="btn-create" (click)="openCreateModal()">
+        <span>+</span> New Reservation
+      </button>
+    </div>
+  </header>
+
+  <!-- ══════════════════ FILTER BAR ══════════════════ -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <span class="filter-icon">🔍</span>
+      <input class="filter-input" type="text" placeholder="Search by name or phone…"
+             [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" />
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-icon">📆</span>
+      <input class="filter-input" type="date" [(ngModel)]="filterDate" (ngModelChange)="onFilterChange()" />
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-icon">🏷</span>
+      <select class="filter-select" [(ngModel)]="filterStatus" (ngModelChange)="onFilterChange()">
+        <option value="all">All Statuses</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="pending">Pending</option>
+        <option value="arrived">Arrived</option>
+        <option value="no-show">No-Show</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+
+    <button class="btn-clear-filter" *ngIf="activeFilterCount > 0" (click)="clearFilters()">
+      ✕ Clear ({{ activeFilterCount }})
+    </button>
+
+    <span class="filter-result-count">{{ filteredReservations.length }} result{{ filteredReservations.length !== 1 ? 's' : '' }}</span>
+  </div>
+
+  <!-- ══════════════════ BODY ══════════════════ -->
+  <div class="res-body">
+
+    <!-- ── LEFT: CALENDAR or LIST ── -->
+    <div class="res-main">
+
+      <!-- ════ CALENDAR VIEW ════ -->
+      <div class="calendar-view" *ngIf="viewMode === 'calendar'">
+        <div class="calendar-nav">
+          <button class="cal-nav-btn" (click)="prevMonth()">‹</button>
+          <span class="cal-month-label">{{ calendarMonthLabel }}</span>
+          <button class="cal-nav-btn" (click)="nextMonth()">›</button>
+        </div>
+
+        <div class="calendar-grid">
+          <div class="cal-weekday" *ngFor="let d of WEEKDAYS">{{ d }}</div>
+
+          <div *ngFor="let day of calendarDays; trackBy: trackByDate"
+               class="cal-day"
+               [class.other-month]="!day.isCurrentMonth"
+               [class.today]="day.isToday"
+               [class.selected]="day.isSelected"
+               [class.has-res]="day.reservations.length > 0"
+               (click)="selectDay(day)">
+            <span class="cal-day-num">{{ day.dayNum }}</span>
+            <div class="cal-count-badge" *ngIf="day.reservations.length > 0">
+              {{ day.reservations.length }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Day Detail -->
+        <div class="cal-day-detail" *ngIf="filteredReservations.length > 0">
+          <h3 class="day-detail-title">{{ calendarSelectedDateLabel }} — {{ filteredReservations.length }} reservation{{ filteredReservations.length !== 1 ? 's' : '' }}</h3>
+          <div class="detail-list">
+            <div class="detail-card" *ngFor="let res of filteredReservations; trackBy: trackById"
+                 [class]="getStatusClass(res.status)">
+              <div class="detail-time">{{ res.time }}</div>
+              <div class="detail-info">
+                <span class="detail-name">{{ res.customerName }}</span>
+                <span class="detail-meta">{{ res.guests }} guests · T{{ res.tableNumber }}</span>
+              </div>
+              <span class="detail-badge" [class]="getStatusClass(res.status)">{{ getStatusLabel(res.status) }}</span>
+              <div class="detail-actions">
+                <button class="act-btn green" *ngIf="res.status === 'confirmed'" (click)="arrivedRes(res)" title="Mark Arrived">✓</button>
+                <button class="act-btn blue"  (click)="openEditModal(res)" title="Edit">✏</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cal-empty" *ngIf="filteredReservations.length === 0">
+          <span>📭</span>
+          <p>No reservations on {{ calendarSelectedDateLabel }}</p>
+          <button class="btn-add-here" (click)="form.date = selectedDate; openCreateModal()">+ Add Reservation</button>
+        </div>
+      </div>
+
+      <!-- ════ LIST VIEW ════ -->
+      <div class="list-view" *ngIf="viewMode === 'list'">
+
+        <!-- Empty State -->
+        <div class="list-empty" *ngIf="filteredReservations.length === 0">
+          <div class="empty-icon">📭</div>
+          <p>No reservations found</p>
+          <button class="btn-empty-create" (click)="openCreateModal()">+ Create Reservation</button>
+        </div>
+
+        <!-- Reservation Table -->
+        <div class="list-table-wrap" *ngIf="filteredReservations.length > 0">
+          <table class="res-table">
+            <thead>
+              <tr>
+                <th>Time / Date</th>
+                <th>Customer</th>
+                <th>Guests</th>
+                <th>Table</th>
+                <th>Source</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let res of filteredReservations; trackBy: trackById"
+                  [class]="'row-' + getStatusClass(res.status)">
+
+                <td class="td-time">
+                  <span class="res-time">{{ res.time }}</span>
+                  <span class="res-date-label">{{ formatDate(res.date) }}</span>
+                </td>
+
+                <td class="td-customer">
+                  <div class="customer-name">{{ res.customerName }}</div>
+                  <div class="customer-phone" *ngIf="res.phoneNumber">{{ res.phoneNumber }}</div>
+                  <div class="special-req" *ngIf="res.specialRequests">
+                    💬 {{ res.specialRequests }}
+                  </div>
+                </td>
+
+                <td class="td-guests">
+                  <span class="guests-badge">👥 {{ res.guests }}</span>
+                </td>
+
+                <td class="td-table">T{{ res.tableNumber }}</td>
+
+                <td class="td-source">
+                  <span class="source-tag" [attr.data-source]="res.source">
+                    {{ getSourceIcon(res.source) }} {{ res.source || '—' }}
+                  </span>
+                </td>
+
+                <td class="td-status">
+                  <span class="status-pill" [class]="getStatusClass(res.status)">
+                    {{ getStatusLabel(res.status) }}
+                  </span>
+                  <span class="reminder-dot" *ngIf="res.reminderSent" title="Reminder sent">✉️</span>
+                </td>
+
+                <td class="td-actions">
+                  <!-- Confirm -->
+                  <button class="act-btn blue" *ngIf="res.status === 'pending'"
+                          (click)="confirmRes(res)" title="Confirm">✓</button>
+                  <!-- Mark Arrived -->
+                  <button class="act-btn green" *ngIf="res.status === 'confirmed'"
+                          (click)="arrivedRes(res)" title="Mark Arrived">✓ Arrived</button>
+                  <!-- No-Show -->
+                  <button class="act-btn orange" *ngIf="res.status === 'confirmed' || res.status === 'pending'"
+                          (click)="noShowRes(res)" title="No-Show">✗</button>
+                  <!-- Send Reminder -->
+                  <button class="act-btn gray" *ngIf="!res.reminderSent && (res.status === 'confirmed' || res.status === 'pending')"
+                          (click)="sendReminder(res)" title="Send Reminder">📣</button>
+                  <!-- Edit -->
+                  <button class="act-btn edit" (click)="openEditModal(res)" title="Edit">✏</button>
+                  <!-- Cancel -->
+                  <button class="act-btn red" *ngIf="res.status !== 'cancelled' && res.status !== 'arrived'"
+                          (click)="cancelRes(res)" title="Cancel">🗑</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT PANEL ── -->
+    <aside class="res-sidebar">
+
+      <!-- Panel Toggle -->
+      <div class="panel-tabs">
+        <button [class.active]="activePanel === 'stats'"    (click)="activePanel = 'stats'">📊 Reports</button>
+        <button [class.active]="activePanel === 'waitlist'" (click)="activePanel = 'waitlist'">
+          🕐 Waitlist
+          <span class="wl-badge" *ngIf="waitlistEntries.length > 0">{{ waitlistEntries.length }}</span>
+        </button>
+      </div>
+
+      <!-- ══ STATS PANEL ══ -->
+      <div class="panel-body" *ngIf="activePanel === 'stats'">
+
+        <!-- Today Quick Stats -->
+        <div class="stat-section">
+          <div class="stat-section-title">Today's Overview</div>
+          <div class="quick-stats-grid">
+            <div class="qs-card total">
+              <div class="qs-num">{{ todayStats.total }}</div>
+              <div class="qs-label">Total</div>
+            </div>
+            <div class="qs-card confirmed">
+              <div class="qs-num">{{ todayStats.confirmed }}</div>
+              <div class="qs-label">Confirmed</div>
+            </div>
+            <div class="qs-card arrived">
+              <div class="qs-num">{{ todayStats.arrived }}</div>
+              <div class="qs-label">Arrived</div>
+            </div>
+            <div class="qs-card noshow">
+              <div class="qs-num">{{ todayStats.noShow }}</div>
+              <div class="qs-label">No-Show</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Period Stats -->
+        <div class="stat-section">
+          <div class="stat-section-title">Reservation Volume</div>
+          <div class="period-stats">
+            <div class="period-row">
+              <span class="period-label">This week</span>
+              <span class="period-val">{{ weekTotal }}</span>
+            </div>
+            <div class="period-row">
+              <span class="period-label">This month</span>
+              <span class="period-val">{{ monthTotal }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- No-Show Rate -->
+        <div class="stat-section">
+          <div class="stat-section-title">No-Show Rate <span class="period-tag">30 days</span></div>
+          <div class="nsr-gauge">
+            <div class="nsr-bar-bg">
+              <div class="nsr-bar-fill"
+                   [style.width.%]="noShowRate"
+                   [class.nsr-low]="noShowRate < 10"
+                   [class.nsr-mid]="noShowRate >= 10 && noShowRate < 25"
+                   [class.nsr-high]="noShowRate >= 25">
+              </div>
+            </div>
+            <span class="nsr-pct" [class.nsr-high]="noShowRate >= 25">{{ noShowRate }}%</span>
+          </div>
+          <div class="nsr-legend">
+            <span class="nsr-note" *ngIf="noShowRate < 10">Excellent — keep it up!</span>
+            <span class="nsr-note warn" *ngIf="noShowRate >= 10 && noShowRate < 25">Moderate — consider reminders.</span>
+            <span class="nsr-note danger" *ngIf="noShowRate >= 25">High — review booking policy.</span>
+          </div>
+        </div>
+
+        <!-- Peak Time Slots -->
+        <div class="stat-section">
+          <div class="stat-section-title">Peak Time Slots</div>
+          <div class="peak-chart">
+            <div class="peak-row" *ngFor="let slot of peakSlots">
+              <span class="peak-label">{{ slot.hour }}</span>
+              <div class="peak-bar-bg">
+                <div class="peak-bar-fill" [style.width.%]="slot.pct"></div>
+              </div>
+              <span class="peak-count">{{ slot.count }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Breakdown -->
+        <div class="stat-section">
+          <div class="stat-section-title">Today Status Breakdown</div>
+          <div class="breakdown-list">
+            <div class="bd-row">
+              <span class="bd-dot confirmed"></span>
+              <span class="bd-label">Confirmed</span>
+              <span class="bd-val">{{ todayStats.confirmed }}</span>
+            </div>
+            <div class="bd-row">
+              <span class="bd-dot pending"></span>
+              <span class="bd-label">Pending</span>
+              <span class="bd-val">{{ todayStats.pending }}</span>
+            </div>
+            <div class="bd-row">
+              <span class="bd-dot arrived"></span>
+              <span class="bd-label">Arrived</span>
+              <span class="bd-val">{{ todayStats.arrived }}</span>
+            </div>
+            <div class="bd-row">
+              <span class="bd-dot noshow"></span>
+              <span class="bd-label">No-Show</span>
+              <span class="bd-val">{{ todayStats.noShow }}</span>
+            </div>
+            <div class="bd-row">
+              <span class="bd-dot cancelled"></span>
+              <span class="bd-label">Cancelled</span>
+              <span class="bd-val">{{ todayStats.cancelled }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ WAITLIST PANEL ══ -->
+      <div class="panel-body" *ngIf="activePanel === 'waitlist'">
+
+        <div class="waitlist-header">
+          <span class="wl-count">{{ waitlistEntries.length }} waiting</span>
+          <button class="btn-add-wl" (click)="showWaitlistForm = !showWaitlistForm">
+            {{ showWaitlistForm ? '✕ Cancel' : '+ Add' }}
+          </button>
+        </div>
+
+        <!-- Add Waitlist Form -->
+        <div class="wl-form" *ngIf="showWaitlistForm">
+          <input class="wl-input" type="text" placeholder="Customer name *"
+                 [(ngModel)]="wlForm.customerName" />
+          <input class="wl-input" type="tel" placeholder="Phone number"
+                 [(ngModel)]="wlForm.phoneNumber" />
+          <div class="guest-stepper">
+            <button (click)="adjustWlGuests(-1)">−</button>
+            <span>{{ wlForm.guests }} guests</span>
+            <button (click)="adjustWlGuests(1)">+</button>
+          </div>
+          <button class="btn-wl-save" (click)="addToWaitlist()">Add to Waitlist</button>
+        </div>
+
+        <!-- Waitlist Entries -->
+        <div class="wl-empty" *ngIf="waitlistEntries.length === 0 && !showWaitlistForm">
+          <span>🎉</span>
+          <p>No one waiting!</p>
+        </div>
+
+        <div class="wl-list">
+          <div class="wl-card" *ngFor="let entry of waitlistEntries; trackBy: trackById">
+            <div class="wl-top">
+              <div class="wl-name">{{ entry.customerName }}</div>
+              <span class="wl-guests-badge">👥 {{ entry.guests }}</span>
+            </div>
+            <div class="wl-meta">
+              <span class="wl-wait">⏱ {{ formatWaitTime(entry.addedAt) }}</span>
+              <span class="wl-est" *ngIf="entry.estimatedWait">~{{ entry.estimatedWait }}m estimated</span>
+            </div>
+            <div class="wl-phone" *ngIf="entry.phoneNumber">📞 {{ entry.phoneNumber }}</div>
+            <div class="wl-actions">
+              <button class="wl-btn seat" (click)="seatWaitlist(entry)">✓ Seat Now</button>
+              <button class="wl-btn remove" (click)="removeWaitlist(entry)">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ══════════════════ CREATE / EDIT MODAL ══════════════════ -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <div class="modal-head">
+      <h2>{{ editingReservation ? 'Edit Reservation' : 'New Reservation' }}</h2>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-cols">
+
+        <!-- ── Left Column ── -->
+        <div class="modal-col">
+          <div class="form-row">
+            <label>Customer Name *</label>
+            <input type="text" [(ngModel)]="form.customerName" placeholder="Full name" />
+          </div>
+          <div class="form-row">
+            <label>Phone Number</label>
+            <input type="tel" [(ngModel)]="form.phoneNumber" placeholder="+91-XXXXXXXXXX" />
+          </div>
+          <div class="form-row">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="form.email" placeholder="email@example.com" />
+          </div>
+          <div class="form-row">
+            <label>Guests</label>
+            <div class="guest-stepper">
+              <button (click)="adjustGuests(-1)">−</button>
+              <span class="guest-count">{{ form.guests }}</span>
+              <button (click)="adjustGuests(1)">+</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Date</label>
+            <input type="date" [(ngModel)]="form.date" (ngModelChange)="onDateOrTimeChange()" />
+          </div>
+          <div class="form-row">
+            <label>Source</label>
+            <select [(ngModel)]="form.source">
+              <option value="phone">📞 Phone</option>
+              <option value="online">🌐 Online</option>
+              <option value="whatsapp">💬 WhatsApp</option>
+              <option value="walk-in">🚶 Walk-in</option>
+            </select>
+          </div>
+          <div class="form-row" *ngIf="editingReservation">
+            <label>Status</label>
+            <select [(ngModel)]="form.status">
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="arrived">Arrived</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="no-show">No-Show</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Special Requests</label>
+            <textarea [(ngModel)]="form.specialRequests" rows="2" placeholder="Any special requests…"></textarea>
+          </div>
+
+          <!-- Notification toggles -->
+          <div class="notif-row">
+            <label class="toggle-label">
+              <input type="checkbox" [(ngModel)]="form.sendSMS" />
+              <span>📱 Send SMS confirmation</span>
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" [(ngModel)]="form.sendWhatsApp" />
+              <span>💬 Send WhatsApp confirmation</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- ── Right Column: Time Slot Picker ── -->
+        <div class="modal-col">
+          <div class="slot-section-title">Select Time Slot</div>
+
+          <!-- Overbooking warning -->
+          <div class="overbook-warn" *ngIf="isOverbooking">
+            ⚠️ High demand at this time — consider overbooking limits.
+          </div>
+
+          <div class="time-slot-grid">
+            <button *ngFor="let slot of timeSlots"
+                    class="time-slot"
+                    [class.selected]="form.time === slot.time"
+                    [class.busy]="!slot.available"
+                    (click)="selectTimeSlot(slot)"
+                    [title]="slot.count + ' reservations'">
+              <span class="slot-time">{{ slot.label }}</span>
+              <span class="slot-dot" [class.busy]="!slot.available"></span>
+            </button>
+          </div>
+
+          <!-- Auto Table Suggestion -->
+          <div class="table-suggestion" *ngIf="suggestedTable">
+            <div class="suggest-label">💡 Suggested Table</div>
+            <div class="suggest-card">
+              <span class="suggest-num">T{{ suggestedTable.number }}</span>
+              <span class="suggest-cap">👥 {{ suggestedTable.capacity }} seats</span>
+              <span class="suggest-area">{{ suggestedTable.area || 'Main Hall' }}</span>
+            </div>
+          </div>
+          <div class="no-table-warn" *ngIf="!suggestedTable">
+            ⚠️ No tables available for {{ form.guests }} guests.
+          </div>
+
+          <!-- QR Check-in Preview -->
+          <div class="qr-section">
+            <div class="qr-label">QR Check-in Preview</div>
+            <div class="qr-mock">
+              <div class="qr-grid">
+                <ng-container *ngFor="let cell of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]">
+                  <div class="qr-cell" [class.filled]="cell % 3 !== 0 || cell % 5 === 0"></div>
+                </ng-container>
+              </div>
+              <span class="qr-hint">Scan to confirm arrival</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-modal-cancel" (click)="closeModal()">Cancel</button>
+      <button class="btn-modal-save" (click)="saveReservation()" [disabled]="!form.customerName.trim()">
+        {{ editingReservation ? 'Save Changes' : '+ Create Reservation' }}
+      </button>
+    </div>
+  </div>
+</div>

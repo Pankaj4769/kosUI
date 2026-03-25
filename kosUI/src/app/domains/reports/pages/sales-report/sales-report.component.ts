@@ -6,11 +6,13 @@ import { Subject, takeUntil } from 'rxjs';
 import { OrderManagementService } from '../../../order/services/order-management.service';
 import { Order, OrderType, OrderStatus } from '../../../order/models/order.model';
 import { ReportFilterComponent } from '../../shared/report-filter/report-filter.component';
+import { ExportButtonComponent } from '../../shared/export-button/export-button.component';
+import { ReportExportConfig } from '../../shared/report-export.service';
 
 @Component({
   selector: 'app-sales-report',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent],
+  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent, ExportButtonComponent],
   templateUrl: './sales-report.component.html',
   styleUrls: ['./sales-report.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -214,14 +216,32 @@ export class SalesReportComponent implements OnInit, OnDestroy {
 
   onFilterChange(f: any) { console.log('Filter:', f); }
 
-  exportCSV() {
-    const rows = [['Rank', 'Item', 'Category', 'Qty', 'Revenue']];
-    this.topItems.forEach(i => rows.push([i.rank, i.item, i.category, i.qty, i.revenue]));
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'sales-report.csv';
-    a.click();
+  get exportConfig(): ReportExportConfig {
+    const today = new Date().toLocaleDateString('en-IN');
+    return {
+      reportName: 'Sales Report',
+      restaurant: 'My Restaurant',
+      branch: 'All Branches',
+      dateRange: { from: '01 Mar 2026', to: today },
+      generatedBy: 'Admin',
+      stats: this.stats.map(s => ({ metric: s.label, value: s.value, change: s.delta, positive: s.up })),
+      insights: this.insights.map(i => i.text),
+      alerts: this.alerts.map(a => a.text),
+      tables: [
+        {
+          sheetName: 'Top Items',
+          title: 'Top Selling Items',
+          headers: ['Rank', 'Item', 'Category', 'Qty Sold', 'Revenue', 'Trend'],
+          rows: this.topItems.map(i => [i.rank, i.item, i.category, i.qty, i.revenue, i.trend])
+        },
+        {
+          sheetName: 'Revenue by Type',
+          title: 'Revenue by Order Type',
+          headers: ['Order Type', 'Revenue', 'Share %'],
+          rows: this.orderTypeBars.map(b => [b.label, b.value, b.pct + '%'])
+        }
+      ]
+    };
   }
 
   ngOnDestroy() {

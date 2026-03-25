@@ -7,11 +7,13 @@ import { OrderManagementService } from '../../../order/services/order-management
 import { TableService } from '../../../pos/services/table.service';
 import { Order, OrderStatus } from '../../../order/models/order.model';
 import { ReportFilterComponent } from '../../shared/report-filter/report-filter.component';
+import { ExportButtonComponent } from '../../shared/export-button/export-button.component';
+import { ReportExportConfig } from '../../shared/report-export.service';
 
 @Component({
   selector: 'app-branch-report',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent],
+  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent, ExportButtonComponent],
   templateUrl: './branch-report.component.html',
   styleUrls: ['./branch-report.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -261,14 +263,32 @@ export class BranchReportComponent implements OnInit, OnDestroy {
 
   onFilterChange(f: any) { console.log('Filter:', f); }
 
-  exportCSV() {
-    const rows = [['Area', 'Revenue', 'Orders', 'Occupancy', 'Top Item', 'Status']];
-    this.branches.forEach(b => rows.push([b.name, b.revenue, String(b.orders), b.occupancy, b.topItem, b.status]));
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'branch-report.csv';
-    a.click();
+  get exportConfig(): ReportExportConfig {
+    const today = new Date().toLocaleDateString('en-IN');
+    return {
+      reportName: 'Multiple Branch Report',
+      restaurant: 'My Restaurant',
+      branch: 'All Branches',
+      dateRange: { from: '01 Mar 2026', to: today },
+      generatedBy: 'Admin',
+      stats: this.stats.map(s => ({ metric: s.label, value: s.value, change: s.delta, positive: s.up })),
+      insights: this.insights.map(i => i.text),
+      alerts: this.alerts.map(a => a.text),
+      tables: [
+        {
+          sheetName: 'Branch Performance',
+          title: 'Performance by Branch',
+          headers: ['Branch', 'Orders', 'Revenue', 'Occupancy', 'Tables'],
+          rows: this.branches.map(b => [b.name, b.orders, b.revenue, b.occupancy, b.tableCount])
+        },
+        {
+          sheetName: 'Revenue Share',
+          title: 'Revenue by Branch',
+          headers: ['Branch', 'Revenue Share %'],
+          rows: this.donutData.map(d => [d.label, Math.round(d.pct) + '%'])
+        }
+      ]
+    };
   }
 
   ngOnDestroy() {

@@ -6,11 +6,13 @@ import { Subject, takeUntil } from 'rxjs';
 import { OrderManagementService } from '../../../order/services/order-management.service';
 import { Order, OrderStatus } from '../../../order/models/order.model';
 import { ReportFilterComponent } from '../../shared/report-filter/report-filter.component';
+import { ExportButtonComponent } from '../../shared/export-button/export-button.component';
+import { ReportExportConfig } from '../../shared/report-export.service';
 
 @Component({
   selector: 'app-kitchen-report',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent],
+  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent, ExportButtonComponent],
   templateUrl: './kitchen-report.component.html',
   styleUrls: ['./kitchen-report.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -258,14 +260,32 @@ export class KitchenReportComponent implements OnInit, OnDestroy {
 
   onFilterChange(f: any) { console.log('Filter:', f); }
 
-  exportCSV() {
-    const rows = [['Status', 'Count', 'Avg Time', 'Percentage', 'Trend']];
-    this.orderStatus.forEach(s => rows.push([s.status, String(s.count), s.avgTime, s.pct, s.trend]));
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'kitchen-report.csv';
-    a.click();
+  get exportConfig(): ReportExportConfig {
+    const today = new Date().toLocaleDateString('en-IN');
+    return {
+      reportName: 'Kitchen & Order Report',
+      restaurant: 'My Restaurant',
+      branch: 'All Branches',
+      dateRange: { from: '01 Mar 2026', to: today },
+      generatedBy: 'Admin',
+      stats: this.stats.map(s => ({ metric: s.label, value: s.value, change: s.delta, positive: s.up })),
+      insights: this.insights.map(i => i.text),
+      alerts: this.alerts.map(a => a.text),
+      tables: [
+        {
+          sheetName: 'Order Status',
+          title: 'Orders by Status',
+          headers: ['Status', 'Count', 'Avg Prep Time', 'Share %'],
+          rows: this.orderStatus.map(r => [r.status, r.count, r.avgTime, r.pct])
+        },
+        {
+          sheetName: 'Category Breakdown',
+          title: 'Orders by Category',
+          headers: ['Category', 'Orders', 'Share %'],
+          rows: this.categoryBars.map(b => [b.label, b.value, b.pct + '%'])
+        }
+      ]
+    };
   }
 
   ngOnDestroy() {

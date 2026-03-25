@@ -1,0 +1,73 @@
+.eb-wrapper { position: relative; }
+
+.eb-trigger {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: #1e3a5f;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.eb-trigger:hover { background: #1e40af; }
+.eb-trigger mat-icon { font-size: 16px; }
+.eb-chevron { font-size: 16px; transition: transform 0.2s; }
+.eb-chevron.open { transform: rotate(180deg); }
+
+.eb-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 300;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+  padding: 6px;
+  min-width: 230px;
+  animation: ebIn 0.15s ease both;
+}
+@keyframes ebIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.eb-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.12s;
+}
+.eb-item:hover { background: #f8fafc; }
+
+.eb-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.eb-icon mat-icon { font-size: 18px; }
+.eb-icon--pdf   { background: #fef2f2; color: #dc2626; }
+.eb-icon--excel { background: #f0fdf4; color: #16a34a; }
+
+.eb-info { display: flex; flex-direction: column; gap: 1px; }
+.eb-title { font-size: 12px; font-weight: 700; color: #0f172a; }
+.eb-desc  { font-size: 10px; color: #94a3b8; }

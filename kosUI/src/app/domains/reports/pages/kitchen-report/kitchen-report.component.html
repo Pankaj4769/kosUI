@@ -47,9 +47,7 @@
     </div>
     <app-report-filter [filters]="filterConfig" (filterChange)="onFilterChange($event)"></app-report-filter>
     <div class="rpt-toolbar-spacer"></div>
-    <button class="rpt-export-btn" (click)="exportCSV()">
-      <mat-icon>download</mat-icon> Export CSV
-    </button>
+    <app-export-button [config]="exportConfig"></app-export-button>
   </div>
 
   <!-- Body -->

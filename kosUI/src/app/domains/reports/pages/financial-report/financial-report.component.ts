@@ -6,11 +6,13 @@ import { Subject, takeUntil } from 'rxjs';
 import { OrderManagementService } from '../../../order/services/order-management.service';
 import { Order, OrderStatus, OrderType } from '../../../order/models/order.model';
 import { ReportFilterComponent } from '../../shared/report-filter/report-filter.component';
+import { ExportButtonComponent } from '../../shared/export-button/export-button.component';
+import { ReportExportConfig } from '../../shared/report-export.service';
 
 @Component({
   selector: 'app-financial-report',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent],
+  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent, ExportButtonComponent],
   templateUrl: './financial-report.component.html',
   styleUrls: ['./financial-report.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -200,14 +202,32 @@ export class FinancialReportComponent implements OnInit, OnDestroy {
 
   onFilterChange(f: any) { console.log('Filter:', f); }
 
-  exportCSV() {
-    const rows = [['Date', 'Description', 'Type', 'Amount', 'Method', 'Status']];
-    this.transactions.forEach(t => rows.push([t.date, t.description, t.type, t.amount, t.method, t.status]));
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'financial-report.csv';
-    a.click();
+  get exportConfig(): ReportExportConfig {
+    const today = new Date().toLocaleDateString('en-IN');
+    return {
+      reportName: 'Financial Report',
+      restaurant: 'My Restaurant',
+      branch: 'All Branches',
+      dateRange: { from: '01 Mar 2026', to: today },
+      generatedBy: 'Admin',
+      stats: this.stats.map(s => ({ metric: s.label, value: s.value, change: s.delta, positive: s.up })),
+      insights: this.insights.map(i => i.text),
+      alerts: this.alerts.map(a => a.text),
+      tables: [
+        {
+          sheetName: 'Transactions',
+          title: 'Transaction Details',
+          headers: ['Date', 'Description', 'Type', 'Amount', 'Method', 'Status'],
+          rows: this.transactions.map(t => [t.date, t.description, t.type, t.amount, t.method, t.status])
+        },
+        {
+          sheetName: 'Expense Breakdown',
+          title: 'Expense Breakdown',
+          headers: ['Category', 'Amount', 'Share %'],
+          rows: this.expenseBars.map(e => [e.label, e.value, e.pct + '%'])
+        }
+      ]
+    };
   }
 
   ngOnDestroy() {
