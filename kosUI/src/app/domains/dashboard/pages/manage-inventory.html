@@ -19,49 +19,54 @@
 
     <!-- HEADER -->
     <header class="top">
-      <h2>Manage Inventory</h2>
+      <div>
+        <h2 class="page-title">Manage Inventory</h2>
+        <p class="page-subtitle">Track stock, pricing and availability of all items</p>
+      </div>
     </header>
 
     <!-- KPI BAR -->
     <section class="kpi-bar">
 
       <div class="kpi kpi-total">
-        <div class="icon">📦</div>
-        <div>
-          <span>Total Items</span>
-          <h3>{{ totalItems }}</h3>
+        <div class="kpi-icon-box kpi-icon-blue">📦</div>
+        <div class="kpi-body">
+          <span class="kpi-label">Total Items</span>
+          <h3 class="kpi-value-text">{{ totalItems }}</h3>
         </div>
       </div>
 
       <div class="kpi kpi-value" (click)="stockView='ALL'">
-        <div class="icon">💰</div>
-        <div>
-          <span>Available Items</span>
-          <h3>₹ {{ inventoryValue }}</h3>
+        <div class="kpi-icon-box kpi-icon-indigo">✅</div>
+        <div class="kpi-body">
+          <span class="kpi-label">Available</span>
+          <h3 class="kpi-value-text">₹ {{ inventoryValue }}</h3>
         </div>
       </div>
 
       <div class="kpi kpi-low" (click)="stockView='LOW'">
-        <div class="icon">⚠️</div>
-        <div>
-          <span>Low Stock</span>
-          <h3>{{ lowStock }}</h3>
+        <div class="kpi-icon-box kpi-icon-orange">⚠️</div>
+        <div class="kpi-body">
+          <span class="kpi-label">Low Stock</span>
+          <h3 class="kpi-value-text">{{ lowStock }}</h3>
         </div>
+        <span class="kpi-hint" *ngIf="lowStock > 0">Needs restock</span>
       </div>
 
       <div class="kpi kpi-sold" (click)="stockView='SOLD'">
-        <div class="icon">🔴</div>
-        <div>
-          <span>Sold Out</span>
-          <h3>{{ soldOut }}</h3>
+        <div class="kpi-icon-box kpi-icon-red">🛑</div>
+        <div class="kpi-body">
+          <span class="kpi-label">Sold Out</span>
+          <h3 class="kpi-value-text">{{ soldOut }}</h3>
         </div>
+        <span class="kpi-hint kpi-hint-red" *ngIf="soldOut > 0">Action needed</span>
       </div>
 
       <div class="kpi kpi-disabled" (click)="stockView='DISABLED'">
-        <div class="icon">🚫</div>
-        <div>
-          <span>Disabled</span>
-          <h3>{{ disabled }}</h3>
+        <div class="kpi-icon-box kpi-icon-slate">🚫</div>
+        <div class="kpi-body">
+          <span class="kpi-label">Disabled</span>
+          <h3 class="kpi-value-text">{{ disabled }}</h3>
         </div>
       </div>
 
@@ -72,33 +77,35 @@
 
       <div class="left-actions">
 
-        <input class="search-box"
-               placeholder="🔍 Search items..."
-               [(ngModel)]="search">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input class="search-box"
+                 placeholder="Search items..."
+                 [(ngModel)]="search">
+        </div>
 
-        <select [(ngModel)]="categoryFilter">
+        <select class="filter-select" [(ngModel)]="categoryFilter">
           <option value="ALL">All Categories</option>
           <option *ngFor="let c of categories">{{ c }}</option>
         </select>
 
-        <select [(ngModel)]="groupFilter">
+        <select class="filter-select" [(ngModel)]="groupFilter">
           <option value="ALL">All Groups</option>
           <option>Veg</option>
           <option>Non-Veg</option>
         </select>
 
+        <button class="clear-btn" *ngIf="groupFilter!=='ALL' || categoryFilter!=='ALL' || search"
+                (click)="groupFilter='ALL'; categoryFilter='ALL'; search=''">
+          ✕ Clear
+        </button>
+
       </div>
 
       <div class="right-actions">
-
-        <button class="ghost" (click)="groupFilter='ALL';categoryFilter= 'ALL'">
-          Clear Filters
+        <button class="add-btn" (click)="openDrawer()">
+          <span class="add-btn-icon">＋</span> Add Item
         </button>
-
-        <button class="primary" (click)="openDrawer()">
-          + Add Item
-        </button>
-
       </div>
 
     </section>
@@ -157,30 +164,19 @@
       <thead>
         <tr class="sortable-header">
 
-          <th (click)="sortBy='NAME'; sortOrder = sortOrder==='ASC'?'DESC':'ASC'">
-            Item
-            <span *ngIf="sortBy==='NAME'">
-              {{ sortOrder==='ASC' ? '⬆️' : '⬇️' }}
-            </span>
+          <th class="th-item" (click)="sortBy='NAME'; sortOrder = sortOrder==='ASC'?'DESC':'ASC'">
+            Item <span class="sort-arrow" *ngIf="sortBy==='NAME'">{{ sortOrder==='ASC' ? '↑' : '↓' }}</span>
           </th>
-
           <th (click)="sortBy='CATEGORY'; sortOrder = sortOrder==='ASC'?'DESC':'ASC'">
-            Category
-            <span *ngIf="sortBy==='CATEGORY'">
-              {{ sortOrder==='ASC' ? '⬆️' : '⬇️' }}
-            </span>
+            Category <span class="sort-arrow" *ngIf="sortBy==='CATEGORY'">{{ sortOrder==='ASC' ? '↑' : '↓' }}</span>
           </th>
-
           <th>Group</th>
-
           <th (click)="sortBy='STOCK'; sortOrder = sortOrder==='ASC'?'DESC':'ASC'">
-            Stock
+            Stock <span class="sort-arrow" *ngIf="sortBy==='STOCK'">{{ sortOrder==='ASC' ? '↑' : '↓' }}</span>
           </th>
-
           <th (click)="sortBy='PRICE'; sortOrder = sortOrder==='ASC'?'DESC':'ASC'">
-            Price
+            Price <span class="sort-arrow" *ngIf="sortBy==='PRICE'">{{ sortOrder==='ASC' ? '↑' : '↓' }}</span>
           </th>
-
           <th>Actions</th>
 
         </tr>
@@ -215,7 +211,11 @@
             </div>
           </td>
 
-          <td>{{ i.category }}</td>
+          <td>
+            <div class="category-tag-list">
+              <span class="category-tag" *ngFor="let c of i.category">{{ c }}</span>
+            </div>
+          </td>
 
           <td>
             <span class="group-chip"
@@ -296,105 +296,182 @@
  <div class="drawer modern" *ngIf="drawerOpen">
 
   <div class="drawer-header">
-    <h3>{{ editingItem ? '✏️ Edit Item' : '➕ Add New Item' }}</h3>
-    <button class="close-btn" (click)="closeDrawer()">✖</button>
+    <div class="drawer-header-left">
+      <div class="drawer-header-icon">
+        {{ editingItem ? '✏️' : '✦' }}
+      </div>
+      <div>
+        <p class="drawer-header-sub">Inventory</p>
+        <h3 class="drawer-header-title">{{ editingItem ? 'Edit Item' : 'Add New Item' }}</h3>
+      </div>
+    </div>
+    <button class="close-btn" (click)="closeDrawer()" title="Close">✕</button>
   </div>
 
   <!-- MODE SWITCHER -->
-  <div class="add-mode-switch">
-
-    <button (click)="activeAddMode='SINGLE'"
-            [class.active]="activeAddMode==='SINGLE'">
-      ➕ Single Item
-    </button>
-
-    <button (click)="activeAddMode='BULK'"
-            [class.active]="activeAddMode==='BULK'">
-      📤 Bulk Upload
-    </button>
-
+  <div class="mode-toggle-wrap">
+    <div class="mode-toggle-track">
+      <button class="mode-toggle-btn" [class.active]="activeAddMode==='SINGLE'"
+              (click)="activeAddMode='SINGLE'">
+        <span class="mode-icon">＋</span> Single Item
+      </button>
+      <button class="mode-toggle-btn" [class.active]="activeAddMode==='BULK'"
+              (click)="activeAddMode='BULK'">
+        <span class="mode-icon">⬆</span> Bulk Upload
+      </button>
+    </div>
   </div>
 
   <!-- ============ SINGLE ITEM FORM ============ -->
   <div *ngIf="activeAddMode==='SINGLE'" class="drawer-body">
 
-    <div class="form-section">
-      <label class="section-title">🖼 Item Image</label>
-
-      <div class="image-upload">
-        <img [src]="selectedImage || 'https://placehold.co/100x100?text=Food'"
-             class="preview">
-
-        <label class="upload-btn">
-          Choose Image
-          <input type="file" hidden (change)="onImageSelect($event)">
+    <!-- IMAGE HERO BANNER -->
+    <div class="form-image-hero compact-hero">
+      <img [src]="selectedImage || 'assets/images/image.png'" class="hero-preview" [alt]="name || 'Item'">
+      <div class="hero-overlay">
+        <label class="hero-upload-btn">
+          📷 Change Photo
+          <input type="file" accept="image/*" hidden (change)="onImageSelect($event)">
         </label>
       </div>
+      <div class="image-error-badge" *ngIf="imageError">⚠️ {{ imageError }}</div>
     </div>
 
-    <div class="form-section">
-      <label class="section-title">📌 Basic Details</label>
+    <!-- ITEM NAME -->
+    <div class="form-field-group">
+      <label class="field-label">Item Name <span class="req">*</span></label>
+      <input class="field-input"
+             placeholder="e.g. Masala Dosa"
+             [(ngModel)]="name"
+             [class.field-error]="formErrors.name">
+      <span class="error-hint" *ngIf="formErrors.name">{{ formErrors.name }}</span>
+    </div>
 
-      <input class="input-box"
-             placeholder="Item Name *"
-             [(ngModel)]="name">
+    <!-- CATEGORY + GROUP -->
+    <div class="form-row-2">
 
-      <div class="row">
-        <div class="input-box">
-          <mat-label>Categories</mat-label>
-          <mat-select [(value)]="selectedCategories">
-            <mat-option *ngFor="let c of categories">
-              <mat-checkbox [checked]="selectedCategories.includes(c)" (change)="toggleCategory(c, $event)" (click)="$event.stopPropagation()">
-                {{ c }}
-              </mat-checkbox>
-            </mat-option>
-          </mat-select>
+      <!-- CATEGORY CUSTOM DROPDOWN -->
+      <div class="form-field-group" style="position:relative;">
+        <label class="field-label">Category <span class="req">*</span></label>
+        <button type="button" class="custom-select-trigger"
+                (click)="categoryDropdownOpen=!categoryDropdownOpen; groupDropdownOpen=false">
+          <span *ngIf="selectedCategories.length === 0" class="placeholder-text">Select…</span>
+          <span *ngIf="selectedCategories.length > 0" class="selected-count">
+            {{ selectedCategories.length }} selected
+          </span>
+          <span class="chevron" [class.open]="categoryDropdownOpen">▾</span>
+        </button>
+
+        <div class="custom-dropdown-panel" *ngIf="categoryDropdownOpen">
+          <label class="custom-option" *ngFor="let c of categories"
+                 [class.checked]="selectedCategories.includes(c)"
+                 (click)="toggleCategory(c, !selectedCategories.includes(c))">
+            <span class="option-checkbox">
+              <span class="checkmark" *ngIf="selectedCategories.includes(c)">✓</span>
+            </span>
+            <span class="option-icon">
+              {{ c === 'Breakfast' ? '🌅' : c === 'Lunch' ? '☀️' : c === 'Snacks' ? '🍿' : '🌙' }}
+            </span>
+            <span class="option-label">{{ c }}</span>
+            <span class="option-time" *ngIf="categoryTimePresets[c]">
+              {{ formatTime(categoryTimePresets[c].from) }} – {{ formatTime(categoryTimePresets[c].to) }}
+            </span>
+          </label>
         </div>
-        <div class="input-box">
-          <mat-label>Type</mat-label>
-          <mat-select [(value)]="group">
-            <mat-option *ngFor="let t of types" [value]="t">
-              
-                {{ t }}
-             
-            </mat-option>
-          </mat-select>
+
+        <div class="category-chips" *ngIf="selectedCategories.length > 0">
+          <span class="cat-chip" *ngFor="let c of selectedCategories"
+                (click)="toggleCategory(c, false)">
+            {{ c }} ✕
+          </span>
+        </div>
       </div>
+
+      <!-- TYPE CUSTOM DROPDOWN -->
+      <div class="form-field-group" style="position:relative;">
+        <label class="field-label">Type <span class="req">*</span></label>
+        <button type="button" class="custom-select-trigger"
+                (click)="groupDropdownOpen=!groupDropdownOpen; categoryDropdownOpen=false">
+          <span *ngIf="!group" class="placeholder-text">Select…</span>
+          <span *ngIf="group" class="group-inline-chip"
+                [class.veg]="group==='Veg'"
+                [class.nonveg]="group==='Non-Veg'">
+            {{ group === 'Veg' ? '🌿' : '🍖' }} {{ group }}
+          </span>
+          <span class="chevron" [class.open]="groupDropdownOpen">▾</span>
+        </button>
+
+        <div class="custom-dropdown-panel panel-right" *ngIf="groupDropdownOpen">
+          <label class="custom-option type-option"
+                 *ngFor="let t of types"
+                 [class.checked]="group === t"
+                 (click)="group = t; groupDropdownOpen = false">
+            <span class="type-radio">
+              <span class="radio-dot" *ngIf="group === t"></span>
+            </span>
+            <span class="option-icon">{{ t === 'Veg' ? '🌿' : '🍖' }}</span>
+            <span class="option-label">{{ t }}</span>
+            <span class="type-badge" [class.veg]="t==='Veg'" [class.nonveg]="t==='Non-Veg'">
+              {{ t === 'Veg' ? 'Vegetarian' : 'Non-Vegetarian' }}
+            </span>
+          </label>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PRICE + STOCK -->
+    <div class="form-row-2">
+      <div class="form-field-group">
+        <label class="field-label">Price <span class="req">*</span></label>
+        <div class="field-input-icon-wrap">
+          <span class="input-prefix">₹</span>
+          <input type="number"
+                 class="field-input with-prefix"
+                 placeholder="0.00"
+                 [(ngModel)]="price"
+                 [class.field-error]="formErrors.price">
+        </div>
+        <span class="error-hint" *ngIf="formErrors.price">{{ formErrors.price }}</span>
+      </div>
+
+      <div class="form-field-group">
+        <label class="field-label">Stock <span class="req">*</span></label>
+        <div class="field-input-icon-wrap">
+          <span class="input-prefix">📦</span>
+          <input type="number"
+                 class="field-input with-prefix"
+                 placeholder="0"
+                 [(ngModel)]="qty"
+                 [class.field-error]="formErrors.qty">
+        </div>
+        <span class="error-hint" *ngIf="formErrors.qty">{{ formErrors.qty }}</span>
       </div>
     </div>
 
-    <div class="form-section">
-      <label class="section-title">💵 Pricing & Stock</label>
-
-      <div class="row">
-        <input type="number"
-               class="input-box"
-               placeholder="Price *"
-               [(ngModel)]="price">
-
-        <input type="number"
-               class="input-box"
-               placeholder="Stock *"
-               [(ngModel)]="qty">
+    <!-- AVAILABILITY TIME -->
+    <div class="form-field-group">
+      <label class="field-label">⏰ Availability Time</label>
+      <div class="time-range-row">
+        <div class="time-slot">
+          <span class="time-label">From</span>
+          <input type="time" class="field-input time-input" [(ngModel)]="from">
+        </div>
+        <div class="time-arrow">→</div>
+        <div class="time-slot">
+          <span class="time-label">To</span>
+          <input type="time" class="field-input time-input" [(ngModel)]="to">
+        </div>
       </div>
-    </div>
-
-    <div class="form-section">
-      <label class="section-title">⏰ Availability Time</label>
-
-      <div class="row">
-        <input type="time" class="input-box" [(ngModel)]="from">
-        <input type="time" class="input-box" [(ngModel)]="to">
-      </div>
+      <span class="error-hint" *ngIf="formErrors.time">{{ formErrors.time }}</span>
     </div>
 
     <div class="drawer-footer">
       <button class="ghost" (click)="closeDrawer()">Cancel</button>
-
-      <button class="primary"
+      <button class="primary save-btn"
               [disabled]="!name || !price || !qty"
               (click)="saveItem()">
-        {{ editingItem ? 'Update Item' : 'Save Item' }}
+        {{ editingItem ? '✅ Update Item' : '💾 Save Item' }}
       </button>
     </div>
 
@@ -408,20 +485,76 @@
       <h4>📦 Upload Items in Bulk</h4>
 
       <p class="bulk-info">
-        Upload an Excel file to add multiple items at once.
-        Supported categories: Breakfast, Lunch, Snacks, Dinner
+        Upload an Excel file to add multiple items at once.<br>
+        Columns: <strong>name, category, group, price, qty, from, to</strong><br>
+        Categories: Breakfast, Lunch, Snacks, Dinner &nbsp;|&nbsp; Group: Veg / Non-Veg
       </p>
+
+      <div class="template-info" style="margin-bottom:12px;">
+        <span>Need the format?</span>
+        <button class="ghost" (click)="downloadTemplate()">⬇ Download Template</button>
+      </div>
 
       <div class="excel-drop">
         <label class="excel-btn-large">
-          📂 Choose Excel File
-          <input type="file" hidden (change)="uploadExcel($event)">
+          📂 {{ excelFileName || 'Choose Excel File' }}
+          <input type="file" accept=".xlsx,.xls" hidden (change)="uploadExcel($event)">
         </label>
       </div>
 
-      <div class="template-info">
-        <span>Download Sample Template:</span>
-        <button class="ghost">⬇ Download Template</button>
+      <!-- ERRORS -->
+      <div *ngIf="bulkErrors.length > 0" class="bulk-errors">
+        <strong>⚠️ Fix these errors before saving:</strong>
+        <ul>
+          <li *ngFor="let e of bulkErrors">{{ e }}</li>
+        </ul>
+      </div>
+
+      <!-- PREVIEW TABLE -->
+      <div *ngIf="bulkPreview.length > 0" class="bulk-preview">
+        <div class="bulk-preview-header">
+          <strong>✅ {{ bulkPreview.length }} rows ready to import</strong>
+        </div>
+        <div class="bulk-table-wrap">
+          <table class="bulk-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Group</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>From</th>
+                <th>To</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of bulkPreview; let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>{{ row.name }}</td>
+                <td>{{ row.category.join(', ') }}</td>
+                <td>
+                  <span class="group-chip" [class.veg]="row.group==='Veg'" [class.nonveg]="row.group==='Non-Veg'">
+                    {{ row.group }}
+                  </span>
+                </td>
+                <td>₹{{ row.price }}</td>
+                <td>{{ row.qty }}</td>
+                <td>{{ formatTime(row.from) }}</td>
+                <td>{{ formatTime(row.to) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="drawer-footer" style="margin-top:12px; padding:0;">
+          <button class="ghost" (click)="bulkPreview=[]; excelFileName=''">Clear</button>
+          <button class="primary" [disabled]="bulkSaving" (click)="saveBulkItems()">
+            <span *ngIf="!bulkSaving">💾 Save {{ bulkPreview.length }} Items</span>
+            <span *ngIf="bulkSaving">Saving...</span>
+          </button>
+        </div>
       </div>
 
     </div>

@@ -38,6 +38,7 @@ import { BranchReportComponent } from './domains/reports/pages/branch-report/bra
 import { QrCodesComponent } from './domains/qr-codes/pages/qr-codes.component';
 import { CustomerOrderComponent } from './domains/qr-codes/customer-order/customer-order.component';
 import { MyProfileComponent } from './domains/profile/pages/my-profile.component';
+import { ReservationDashboardComponent } from './domains/pos/pages/reservation-dashboard/reservation-dashboard.component';
 
 export const routes: Routes = [
 
@@ -127,7 +128,10 @@ export const routes: Routes = [
       },
 
       // ✅ PROFILE
-      { path: 'profile', title: 'My Profile | Kitchen Book', component: MyProfileComponent, canActivate: [AuthGuard] },
+      { path: 'profile',       title: 'My Profile | Kitchen Book',           component: MyProfileComponent,            canActivate: [AuthGuard] },
+
+      // ✅ RESERVATIONS
+      { path: 'reservations',  title: 'Reservations | Kitchen Book',          component: ReservationDashboardComponent, canActivate: [AuthGuard] },
 
       // ✅ SYSTEM MODULE
       { path: 'qr', title: 'QR Codes | Kitchen Book', component: QrCodesComponent, canActivate: [AuthGuard] },
