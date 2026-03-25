@@ -1,12 +1,14 @@
-import { 
-  Component, 
-  Input, 
-  Output, 
-  EventEmitter, 
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
   OnInit,
+  OnDestroy,
   ChangeDetectionStrategy,
   ChangeDetectorRef
 } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -24,7 +26,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../../common-popup/pages/confirm-dialog.component';
 
 // Models
-import { Table, TableStatus } from '../../models/table.model';
+import { Table } from '../../models/table.model';
+import { TableService } from '../../services/table.service';
 
 
 /* ================= TYPES ================= */
@@ -63,7 +66,7 @@ export interface CustomerInfo {
   styleUrls: ['./order-sidebar.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class OrderSidebarComponent implements OnInit {
+export class OrderSidebarComponent implements OnInit, OnDestroy {
 
 
   /* ================= INPUTS ================= */
@@ -131,13 +134,15 @@ export class OrderSidebarComponent implements OnInit {
   inlineError: string | null = null;
   inlineSuccess: string | null = null;
 
+  private destroy$ = new Subject<void>();
+
 
   /* ================= CONSTRUCTOR ================= */
 
-  // 🔴 CHANGE 8: Added MatDialog to constructor
   constructor(
     private cdr: ChangeDetectorRef,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private tableService: TableService
   ) {}
 
 
@@ -146,6 +151,11 @@ export class OrderSidebarComponent implements OnInit {
   ngOnInit(): void {
     this.loadTables();
     this.initializeCustomerInfo();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
 
@@ -180,68 +190,18 @@ export class OrderSidebarComponent implements OnInit {
   /* ================= INITIALIZATION ================= */
 
   private loadTables(): void {
-    this.loading = true;
-    this.error = null;
-
-    try {
-      this.tables = this.getMockTables();
-      this.applyFilters();
-      this.calculateTotalBill();
-    } catch (err) {
-      this.error = 'Failed to load tables';
-      console.error('Error loading tables:', err);
-    } finally {
-      this.loading = false;
-      this.cdr.markForCheck();
-    }
+    this.tableService.tables$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(tables => {
+        this.tables = tables;
+        this.applyFilters();
+        this.calculateTotalBill();
+        this.loading = false;
+        this.error = null;
+        this.cdr.markForCheck();
+      });
   }
 
-  private getMockTables(): Table[] {
-    const now = new Date();
-
-    return [
-      { id: 1,  number: 1,  name: 'Table 1',  status: 'available' as TableStatus, capacity: 4 },
-      {
-        id: 2, number: 2, name: 'Table 2', status: 'occupied' as TableStatus, capacity: 2,
-        currentOrder: 'ORD-001', waiter: 'John',
-        timeOccupied: new Date(now.getTime() - 30 * 60000),
-        amount: 450, itemCount: 3, totalAmount: 450
-      },
-      { id: 3,  number: 3,  name: 'Table 3',  status: 'available' as TableStatus, capacity: 4 },
-      { id: 4,  number: 4,  name: 'Table 4',  status: 'available' as TableStatus, capacity: 6 },
-      { id: 5,  number: 5,  name: 'Table 5',  status: 'available' as TableStatus, capacity: 4 },
-      {
-        id: 6, number: 6, name: 'Table 6', status: 'occupied' as TableStatus, capacity: 2,
-        currentOrder: 'ORD-002', waiter: 'Sarah',
-        timeOccupied: new Date(now.getTime() - 15 * 60000),
-        amount: 280, itemCount: 2, totalAmount: 280
-      },
-      { id: 7,  number: 7,  name: 'Table 7',  status: 'available'  as TableStatus, capacity: 4 },
-      { id: 8,  number: 8,  name: 'Table 8',  status: 'cleaning'   as TableStatus, capacity: 8 },
-      { id: 9,  number: 9,  name: 'Table 9',  status: 'available'  as TableStatus, capacity: 2 },
-      { id: 10, number: 10, name: 'Table 10', status: 'available'  as TableStatus, capacity: 4 },
-      {
-        id: 11, number: 11, name: 'Table 11', status: 'occupied' as TableStatus, capacity: 6,
-        currentOrder: 'ORD-003', waiter: 'Mike',
-        timeOccupied: new Date(now.getTime() - 45 * 60000),
-        amount: 720, itemCount: 5, totalAmount: 720
-      },
-      { id: 12, number: 12, name: 'Table 12', status: 'available' as TableStatus, capacity: 4 },
-      { id: 13, number: 13, name: 'Table 13', status: 'available' as TableStatus, capacity: 6 },
-      { id: 14, number: 14, name: 'Table 14', status: 'reserved'  as TableStatus, capacity: 4 },
-      { id: 15, number: 15, name: 'Table 15', status: 'available' as TableStatus, capacity: 4 },
-      { id: 16, number: 16, name: 'Table 16', status: 'available' as TableStatus, capacity: 6 },
-      {
-        id: 17, number: 17, name: 'Table 17', status: 'occupied' as TableStatus, capacity: 4,
-        currentOrder: 'ORD-004', waiter: 'Emma',
-        timeOccupied: new Date(now.getTime() - 20 * 60000),
-        amount: 340, itemCount: 4, totalAmount: 340
-      },
-      { id: 18, number: 18, name: 'Table 18', status: 'available' as TableStatus, capacity: 2 },
-      { id: 19, number: 19, name: 'Table 19', status: 'available' as TableStatus, capacity: 4 },
-      { id: 20, number: 20, name: 'Table 20', status: 'available' as TableStatus, capacity: 8 }
-    ];
-  }
 
   private initializeCustomerInfo(): void {
     if (this.customerInfo) {

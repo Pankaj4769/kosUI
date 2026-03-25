@@ -3,13 +3,14 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { 
-  Table, 
-  TableStatus, 
-  TableBooking, 
+import {
+  Table,
+  TableStatus,
+  TableBooking,
   TableStats,
   AreaType,
   Reservation,
+  WaitlistEntry,
   LayoutPosition,
   ExtendedTableStats,
   TableHelpers
@@ -671,31 +672,37 @@ export class TableService {
 
   // ✨ NEW: Initialize reservations
   private initializeReservations(): void {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const tomorrow  = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const dayAfter  = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0];
+    const nextWeek  = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+
     const mockReservations: Reservation[] = [
-      {
-        id: 1,
-        tableNumber: 12,
-        tableId: 12,
-        customerName: 'Robert Fox',
-        phoneNumber: '+91-9876543210',
-        guests: 4,
-        date: new Date().toISOString().split('T')[0],
-        time: '19:30',
-        status: 'confirmed',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 2,
-        tableNumber: 3,
-        tableId: 3,
-        customerName: 'Jane Cooper',
-        phoneNumber: '+91-9876543211',
-        guests: 2,
-        date: new Date().toISOString().split('T')[0],
-        time: '20:00',
-        status: 'confirmed',
-        createdAt: new Date().toISOString()
-      }
+      // ── Today ──
+      { id: 1,  tableNumber: 12, tableId: 12, customerName: 'Robert Fox',      phoneNumber: '+91-9876543210', guests: 4, date: today,     time: '12:30', status: 'arrived',   createdAt: new Date().toISOString(), source: 'phone',    reminderSent: true  },
+      { id: 2,  tableNumber: 3,  tableId: 3,  customerName: 'Jane Cooper',     phoneNumber: '+91-9876543211', guests: 2, date: today,     time: '13:00', status: 'arrived',   createdAt: new Date().toISOString(), source: 'online',   reminderSent: true  },
+      { id: 3,  tableNumber: 7,  tableId: 7,  customerName: 'Arjun Mehta',     phoneNumber: '+91-9845001122', guests: 6, date: today,     time: '19:00', status: 'confirmed', createdAt: new Date().toISOString(), source: 'whatsapp', reminderSent: true,  specialRequests: 'Window seat preferred' },
+      { id: 4,  tableNumber: 15, tableId: 15, customerName: 'Sneha Patil',     phoneNumber: '+91-9845003344', guests: 3, date: today,     time: '19:30', status: 'confirmed', createdAt: new Date().toISOString(), source: 'phone',    reminderSent: false },
+      { id: 5,  tableNumber: 20, tableId: 20, customerName: 'Vikram Rao',      phoneNumber: '+91-9845005566', guests: 8, date: today,     time: '20:00', status: 'pending',   createdAt: new Date().toISOString(), source: 'online',   specialRequests: 'Birthday celebration, need cake' },
+      { id: 6,  tableNumber: 4,  tableId: 4,  customerName: 'Deepa Iyer',      phoneNumber: '+91-9845007788', guests: 2, date: today,     time: '20:30', status: 'pending',   createdAt: new Date().toISOString(), source: 'walk-in'   },
+      { id: 7,  tableNumber: 9,  tableId: 9,  customerName: 'Rahul Gupta',     phoneNumber: '+91-9845009900', guests: 4, date: today,     time: '14:00', status: 'no-show',   createdAt: new Date().toISOString(), source: 'phone'     },
+      // ── Yesterday ──
+      { id: 8,  tableNumber: 5,  tableId: 5,  customerName: 'Meena Das',       phoneNumber: '+91-9811001122', guests: 3, date: yesterday, time: '19:00', status: 'arrived',   createdAt: new Date().toISOString(), source: 'online'    },
+      { id: 9,  tableNumber: 11, tableId: 11, customerName: 'Suresh Nair',     phoneNumber: '+91-9811003344', guests: 5, date: yesterday, time: '20:00', status: 'arrived',   createdAt: new Date().toISOString(), source: 'phone'     },
+      { id: 10, tableNumber: 6,  tableId: 6,  customerName: 'Kavya Reddy',     phoneNumber: '+91-9811005566', guests: 2, date: yesterday, time: '21:00', status: 'no-show',   createdAt: new Date().toISOString(), source: 'online'    },
+      { id: 11, tableNumber: 13, tableId: 13, customerName: 'Mohan Singh',     phoneNumber: '+91-9811007788', guests: 4, date: yesterday, time: '13:00', status: 'cancelled', createdAt: new Date().toISOString(), source: 'walk-in'   },
+      // ── Tomorrow ──
+      { id: 12, tableNumber: 23, tableId: 23, customerName: 'Priya Sharma',    phoneNumber: '+91-9822001122', guests: 6, date: tomorrow,  time: '19:00', status: 'confirmed', createdAt: new Date().toISOString(), source: 'whatsapp', reminderSent: false, specialRequests: 'Vegetarian menu only' },
+      { id: 13, tableNumber: 16, tableId: 16, customerName: 'Kiran Joshi',     phoneNumber: '+91-9822003344', guests: 4, date: tomorrow,  time: '19:30', status: 'confirmed', createdAt: new Date().toISOString(), source: 'online',   reminderSent: false },
+      { id: 14, tableNumber: 10, tableId: 10, customerName: 'Anika Bose',      phoneNumber: '+91-9822005566', guests: 2, date: tomorrow,  time: '20:00', status: 'pending',   createdAt: new Date().toISOString(), source: 'phone'     },
+      { id: 15, tableNumber: 24, tableId: 24, customerName: 'Dev Kapoor',      phoneNumber: '+91-9822007788', guests: 10,date: tomorrow,  time: '20:30', status: 'confirmed', createdAt: new Date().toISOString(), source: 'online',   specialRequests: 'Anniversary dinner' },
+      // ── Day after ──
+      { id: 16, tableNumber: 19, tableId: 19, customerName: 'Fatima Sheikh',   phoneNumber: '+91-9833001122', guests: 4, date: dayAfter,  time: '18:30', status: 'confirmed', createdAt: new Date().toISOString(), source: 'whatsapp'  },
+      { id: 17, tableNumber: 8,  tableId: 8,  customerName: 'Ajay Verma',      phoneNumber: '+91-9833003344', guests: 3, date: dayAfter,  time: '19:00', status: 'pending',   createdAt: new Date().toISOString(), source: 'phone'     },
+      // ── Next week ──
+      { id: 18, tableNumber: 27, tableId: 27, customerName: 'Ramesh Pillai',   phoneNumber: '+91-9844001122', guests: 6, date: nextWeek,  time: '19:00', status: 'confirmed', createdAt: new Date().toISOString(), source: 'online'    },
+      { id: 19, tableNumber: 28, tableId: 28, customerName: 'Anita Kulkarni',  phoneNumber: '+91-9844003344', guests: 8, date: nextWeek,  time: '20:00', status: 'pending',   createdAt: new Date().toISOString(), source: 'whatsapp', specialRequests: 'Rooftop table if available' },
     ];
 
     this.reservationsSubject.next(mockReservations);
@@ -884,5 +891,80 @@ export class TableService {
     } catch (e) {
       console.error('Failed to import table data', e);
     }
+  }
+
+  /* ================= RESERVATION EXTENDED METHODS ================= */
+
+  // Confirm a pending reservation
+  confirmReservation(reservationId: number): void {
+    this.patchReservation(reservationId, { status: 'confirmed' });
+  }
+
+  // Mark reservation as no-show
+  markNoShow(reservationId: number): void {
+    const reservations = this.reservationsSubject.value;
+    const idx = reservations.findIndex(r => r.id === reservationId);
+    if (idx !== -1) {
+      const updated = [...reservations];
+      const tableId = updated[idx].tableId;
+      updated[idx] = { ...updated[idx], status: 'no-show' };
+      this.reservationsSubject.next(updated);
+      this.updateTableStatus(tableId, 'available');
+    }
+  }
+
+  // Update any reservation fields
+  updateReservation(reservationId: number, changes: Partial<Reservation>): void {
+    this.patchReservation(reservationId, changes);
+  }
+
+  private patchReservation(id: number, changes: Partial<Reservation>): void {
+    const reservations = this.reservationsSubject.value;
+    const idx = reservations.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      const updated = [...reservations];
+      updated[idx] = { ...updated[idx], ...changes };
+      this.reservationsSubject.next(updated);
+    }
+  }
+
+  /* ================= WAITLIST ================= */
+
+  private waitlistSubject = new BehaviorSubject<WaitlistEntry[]>([
+    { id: 1, customerName: 'Amit Sharma',  phoneNumber: '+91-9800001111', guests: 3, addedAt: new Date(Date.now() - 12 * 60000), estimatedWait: 15, status: 'waiting' },
+    { id: 2, customerName: 'Priya Nair',   phoneNumber: '+91-9800002222', guests: 2, addedAt: new Date(Date.now() - 25 * 60000), estimatedWait: 10, status: 'waiting' },
+    { id: 3, customerName: 'Ravi Kumar',   phoneNumber: '+91-9800003333', guests: 5, addedAt: new Date(Date.now() -  5 * 60000), estimatedWait: 25, status: 'waiting' },
+  ]);
+  public waitlist$ = this.waitlistSubject.asObservable();
+
+  getWaitlist(): Observable<WaitlistEntry[]> {
+    return this.waitlist$;
+  }
+
+  addToWaitlist(entry: Omit<WaitlistEntry, 'id' | 'addedAt' | 'status'>): void {
+    const list = this.waitlistSubject.value;
+    const maxId = list.length > 0 ? Math.max(...list.map(e => e.id)) : 0;
+    this.waitlistSubject.next([...list, {
+      ...entry,
+      id: maxId + 1,
+      addedAt: new Date(),
+      status: 'waiting'
+    }]);
+  }
+
+  seatWaitlistEntry(entryId: number): void {
+    const list = this.waitlistSubject.value;
+    const idx = list.findIndex(e => e.id === entryId);
+    if (idx !== -1) {
+      const updated = [...list];
+      updated[idx] = { ...updated[idx], status: 'seated' };
+      this.waitlistSubject.next(updated);
+    }
+  }
+
+  removeWaitlistEntry(entryId: number): void {
+    this.waitlistSubject.next(
+      this.waitlistSubject.value.filter(e => e.id !== entryId)
+    );
   }
 }

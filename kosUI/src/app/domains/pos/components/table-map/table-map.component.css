@@ -1,4 +1,106 @@
 /* =====================================================
+   CONTAINER
+===================================================== */
+
+.table-map {
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  background: #f8fafc;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+/* =====================================================
+   TABLE GRID
+===================================================== */
+
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+/* =====================================================
+   TABLE CARDS
+===================================================== */
+
+.table-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1.5px solid #e2e8f0;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  min-height: 100px;
+}
+
+.table-card:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+/* Status variants */
+.table-free     { border-left: 4px solid #22c55e; }
+.table-open     { border-left: 4px solid #ef4444; background: #fff8f8; }
+.table-hold     { border-left: 4px solid #f59e0b; background: #fffbf0; }
+.table-cleaning { border-left: 4px solid #94a3b8; background: #f8fafc; }
+
+/* =====================================================
+   CARD HEADER
+===================================================== */
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.table-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.status-badge.available { background: #dcfce7; color: #166534; }
+.status-badge.occupied  { background: #fee2e2; color: #991b1b; }
+.status-badge.reserved  { background: #fef3c7; color: #92400e; }
+.status-badge.cleaning  { background: #f1f5f9; color: #475569; }
+
+/* =====================================================
+   CARD BODY
+===================================================== */
+
+.table-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.row {
+  font-size: 13px;
+  color: #475569;
+}
+
+.amount { color: #16a34a; font-weight: 600; }
+
+.pending {
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* =====================================================
    INFO BUTTON (ON TABLE CARD)
 ===================================================== */
 

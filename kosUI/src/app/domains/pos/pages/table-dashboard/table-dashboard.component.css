@@ -121,42 +121,227 @@
   transition: width 0.3s ease;
 }
 
+/* Reservation Count Badge */
+.res-count-row {
+  margin-bottom: 8px;
+}
+
+.res-count-badge {
+  display: inline-block;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid #bfdbfe;
+}
+
 /* Reservations List */
 .reservations-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: calc(100vh - 300px);
+  max-height: calc(100vh - 340px);
   overflow-y: auto;
 }
 
+/* Reservation Card */
 .reservation-card {
-  background: #3b82f6;
-  color: white;
-  border-radius: 8px;
+  background: white;
+  border-radius: 10px;
   padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #3b82f6;
   transition: all 0.2s;
 }
 
 .reservation-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
 }
 
-.res-header {
-  font-weight: 700;
-  font-size: 13px;
+.reservation-card.res-confirmed {
+  border-left-color: #22c55e;
+  background: #f0fdf4;
+}
+
+.reservation-card.res-pending {
+  border-left-color: #f59e0b;
+  background: #fffbf0;
+}
+
+/* Time Strip */
+.res-time-strip {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #64748b;
 }
 
-.res-details {
+.res-time-icon { font-size: 12px; }
+
+.res-time-val {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 12px;
+}
+
+.res-date-val {
+  color: #94a3b8;
+  font-size: 10px;
+  margin-left: 2px;
+}
+
+.res-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.res-status-dot.dot-confirmed { background: #22c55e; }
+.res-status-dot.dot-pending   { background: #f59e0b; }
+
+/* Guest Row */
+.res-guest-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.res-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.res-guests-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #f1f5f9;
+  color: #475569;
   font-size: 11px;
-  opacity: 0.9;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+/* Meta Row */
+.res-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.res-table-tag {
+  font-size: 11px;
+  color: #475569;
+  background: #f8fafc;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.res-phone {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* Special Requests */
+.res-special {
+  font-size: 11px;
+  color: #64748b;
+  font-style: italic;
+  background: #fef9c3;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border-left: 2px solid #fbbf24;
+}
+
+/* Arrive Button */
+.res-arrive-btn {
+  width: 100%;
+  height: 28px;
+  padding: 0 10px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  letter-spacing: 0.2px;
+  margin-top: 2px;
+}
+
+.res-arrive-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(59,130,246,0.35);
+}
+
+.res-confirmed .res-arrive-btn {
+  background: #16a34a;
+}
+
+.res-confirmed .res-arrive-btn:hover {
+  background: #15803d;
+}
+
+/* Empty Reservations State */
+.empty-reservations {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 8px;
+  text-align: center;
+}
+
+.empty-res-icon {
+  font-size: 28px;
+  opacity: 0.6;
+}
+
+.empty-reservations p {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.empty-add-btn {
+  background: none;
+  border: 1px dashed #94a3b8;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.empty-add-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
 }
 
 /* ================= MAIN CONTENT ================= */
@@ -304,14 +489,13 @@
 .table-card {
   background: white;
   border-radius: 12px;
-  padding: 14px;
+  padding: 12px 14px;
   border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   position: relative;
   transition: all 0.2s;
-  min-height: 165px;
   cursor: default;
 }
 
@@ -424,16 +608,15 @@
 
 /* Card Body */
 .card-body {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 
 .status-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex: 1;
+  gap: 6px;
 }
 
 /* Info Rows */
@@ -492,75 +675,90 @@
 /* ✨ ALWAYS VISIBLE ACTION BUTTONS */
 .visible-action {
   width: 100%;
-  padding: 9px;
+  padding: 0 12px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   border: none;
-  margin-top: auto;
-  transition: all 0.2s;
+  margin-top: 4px;
+  transition: all 0.18s;
+  height: 30px;
+  letter-spacing: 0.2px;
 }
 
 .visible-actions {
   display: flex;
-  gap: 8px;
-  margin-top: auto;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .btn-card-primary {
   background: #3b82f6;
   color: white;
   border: none;
-  flex: 1;
-  padding: 9px 12px;
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s;
+  letter-spacing: 0.2px;
 }
 
 .btn-card-primary:hover {
   background: #2563eb;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
 }
 
 .btn-card-outline {
   background: white;
-  border: 1px solid #e2e8f0;
-  color: #1e293b;
-  flex: 1;
-  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  color: #374151;
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s;
+  letter-spacing: 0.2px;
+}
+
+/* Inside horizontal row, share space equally */
+.visible-actions .btn-card-primary,
+.visible-actions .btn-card-outline {
+  flex: 1;
+  width: auto;
 }
 
 .btn-card-outline:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: #f1f5f9;
+  border-color: #94a3b8;
   transform: translateY(-1px);
 }
 
 .btn-card-dark {
-  background: #1e293b;
+  background: #334155;
   color: white;
   border: none;
   width: 100%;
-  padding: 9px;
+  height: 30px;
+  padding: 0 10px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s;
+  letter-spacing: 0.2px;
 }
 
 .btn-card-dark:hover {
-  background: #0f172a;
+  background: #1e293b;
   transform: translateY(-1px);
 }
 

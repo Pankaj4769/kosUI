@@ -46,25 +46,63 @@
     <div class="sidebar-section">
       <div class="section-header">
         <h3>Upcoming Reservations</h3>
-        <button class="add-res-btn-small" (click)="openAddReservationModal()">+</button>
-      </div>
-
-      <div class="reservations-list" *ngIf="upcomingReservations.length > 0">
-        <div *ngFor="let res of upcomingReservations; trackBy: trackReservationById" 
-             class="reservation-card"
-             (click)="markReservationArrived(res)">
-          <div class="res-header">
-            <span>Table {{ res.tableNumber }}</span>
-            <span>{{ res.guests }} Guests</span>
-          </div>
-          <div class="res-details">
-            <div>{{ res.time }} • {{ res.customerName }}</div>
-          </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="add-res-btn-small" (click)="openAddReservationModal()" title="Add Reservation">+</button>
+          <button class="add-res-btn-small view-all-btn" (click)="router.navigate(['/reservations'])" title="View All Reservations" style="font-size:12px;color:#3b82f6;font-weight:700;">All →</button>
         </div>
       </div>
 
+      <!-- Reservation Count Badge -->
+      <div class="res-count-row" *ngIf="upcomingReservations.length > 0">
+        <span class="res-count-badge">{{ upcomingReservations.length }} scheduled</span>
+      </div>
+
+      <div class="reservations-list" *ngIf="upcomingReservations.length > 0">
+        <div *ngFor="let res of upcomingReservations; trackBy: trackReservationById"
+             class="reservation-card"
+             [class.res-confirmed]="res.status === 'confirmed'"
+             [class.res-pending]="res.status === 'pending'">
+
+          <!-- Time Strip -->
+          <div class="res-time-strip">
+            <span class="res-time-icon">🕐</span>
+            <span class="res-time-val">{{ res.time }}</span>
+            <span class="res-date-val">{{ res.date }}</span>
+            <span class="res-status-dot" [class.dot-confirmed]="res.status === 'confirmed'" [class.dot-pending]="res.status === 'pending'"></span>
+          </div>
+
+          <!-- Guest Info -->
+          <div class="res-guest-row">
+            <span class="res-name">{{ res.customerName }}</span>
+            <span class="res-guests-badge">
+              <span>👥</span> {{ res.guests }}
+            </span>
+          </div>
+
+          <!-- Table + Phone -->
+          <div class="res-meta-row">
+            <span class="res-table-tag">🪑 Table {{ res.tableNumber }}</span>
+            <span class="res-phone" *ngIf="res.phoneNumber">📞 {{ res.phoneNumber }}</span>
+          </div>
+
+          <!-- Special Requests -->
+          <div class="res-special" *ngIf="res.specialRequests">
+            <span>💬 {{ res.specialRequests }}</span>
+          </div>
+
+          <!-- Action -->
+          <button class="res-arrive-btn" (click)="markReservationArrived(res)">
+            ✓ Mark Arrived
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Empty State -->
       <div *ngIf="upcomingReservations.length === 0" class="empty-reservations">
-        <p style="font-size: 12px; color: #94a3b8; text-align: center;">No upcoming reservations</p>
+        <div class="empty-res-icon">📅</div>
+        <p>No upcoming reservations</p>
+        <button class="empty-add-btn" (click)="openAddReservationModal()">+ Add Reservation</button>
       </div>
     </div>
 

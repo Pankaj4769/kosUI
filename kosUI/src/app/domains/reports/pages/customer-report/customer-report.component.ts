@@ -7,11 +7,13 @@ import { OrderManagementService } from '../../../order/services/order-management
 import { TableService } from '../../../pos/services/table.service';
 import { Order, OrderStatus } from '../../../order/models/order.model';
 import { ReportFilterComponent } from '../../shared/report-filter/report-filter.component';
+import { ExportButtonComponent } from '../../shared/export-button/export-button.component';
+import { ReportExportConfig } from '../../shared/report-export.service';
 
 @Component({
   selector: 'app-customer-report',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent],
+  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent, ExportButtonComponent],
   templateUrl: './customer-report.component.html',
   styleUrls: ['./customer-report.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -259,14 +261,32 @@ export class CustomerReportComponent implements OnInit, OnDestroy {
 
   onFilterChange(f: any) { console.log('Filter:', f); }
 
-  exportCSV() {
-    const rows = [['Name', 'Visits', 'Total Spent', 'Avg Order', 'Last Visit', 'Type']];
-    this.topCustomers.forEach(c => rows.push([c.name, String(c.visits), c.totalSpent, c.avgOrder, c.lastVisit, c.type]));
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'customer-report.csv';
-    a.click();
+  get exportConfig(): ReportExportConfig {
+    const today = new Date().toLocaleDateString('en-IN');
+    return {
+      reportName: 'Customer Report',
+      restaurant: 'My Restaurant',
+      branch: 'All Branches',
+      dateRange: { from: '01 Mar 2026', to: today },
+      generatedBy: 'Admin',
+      stats: this.stats.map(s => ({ metric: s.label, value: s.value, change: s.delta, positive: s.up })),
+      insights: this.insights.map(i => i.text),
+      alerts: this.alerts.map(a => a.text),
+      tables: [
+        {
+          sheetName: 'Top Customers',
+          title: 'Top Customers by Visits',
+          headers: ['Customer', 'Visits', 'Total Spent', 'Avg Order', 'Last Visit', 'Type'],
+          rows: this.topCustomers.map(c => [c.name, c.visits, c.totalSpent, c.avgOrder, c.lastVisit, c.type])
+        },
+        {
+          sheetName: 'Visits by Day',
+          title: 'Visits by Day of Week',
+          headers: ['Day', 'Visits'],
+          rows: this.visitBars.map(b => [b.label, b.value])
+        }
+      ]
+    };
   }
 
   ngOnDestroy() {

@@ -2,15 +2,17 @@ import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, catchError, of } from 'rxjs';
 import { InventoryService } from '../../../dashboard/services/inventory.service';
 import { Item } from '../../../dashboard/models/item.model';
 import { ReportFilterComponent } from '../../shared/report-filter/report-filter.component';
+import { ExportButtonComponent } from '../../shared/export-button/export-button.component';
+import { ReportExportConfig } from '../../shared/report-export.service';
 
 @Component({
   selector: 'app-inventory-report',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent],
+  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent, ExportButtonComponent],
   templateUrl: './inventory-report.component.html',
   styleUrls: ['./inventory-report.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -41,11 +43,26 @@ export class InventoryReportComponent implements OnInit, OnDestroy {
   constructor(private invSvc: InventoryService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    this.invSvc.getItemlist().pipe(takeUntil(this.destroy$)).subscribe(items => {
-      this.invSvc.populateItems(items);
-      this.compute(items);
+    // Try cached items first (already loaded elsewhere in the app)
+    const cached = this.invSvc.getAllItems();
+    if (cached.length) {
+      this.compute(cached);
       this.cdr.markForCheck();
-    });
+    }
+
+    // Then fetch fresh from backend (may fail if offline)
+    this.invSvc.getItemlist()
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(() => of(cached.length ? cached : []))
+      )
+      .subscribe(items => {
+        if (items.length) {
+          this.invSvc.populateItems(items);
+          this.compute(items);
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   private compute(items: Item[]) {
@@ -163,14 +180,32 @@ export class InventoryReportComponent implements OnInit, OnDestroy {
 
   onFilterChange(f: any) { console.log('Filter:', f); }
 
-  exportCSV() {
-    const rows = [['Item', 'Category', 'Current Qty', 'Status']];
-    this.lowStockItems.forEach(i => rows.push([i.name, i.category, i.current, i.status]));
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'inventory-report.csv';
-    a.click();
+  get exportConfig(): ReportExportConfig {
+    const today = new Date().toLocaleDateString('en-IN');
+    return {
+      reportName: 'Inventory Report',
+      restaurant: 'My Restaurant',
+      branch: 'All Branches',
+      dateRange: { from: '01 Mar 2026', to: today },
+      generatedBy: 'Admin',
+      stats: this.stats.map(s => ({ metric: s.label, value: s.value, change: s.delta, positive: s.up })),
+      insights: this.insights.map(i => i.text),
+      alerts: this.alerts.map(a => a.text),
+      tables: [
+        {
+          sheetName: 'Low Stock Items',
+          title: 'Low Stock Alert',
+          headers: ['Item', 'Category', 'Current Stock', 'Min Level', 'Status'],
+          rows: this.lowStockItems.map(i => [i.name, i.category, i.current, i.min, i.status])
+        },
+        {
+          sheetName: 'Category Breakdown',
+          title: 'Stock by Category',
+          headers: ['Category', 'Item Count', 'Coverage %'],
+          rows: this.categoryBars.map(b => [b.label, b.value, b.pct + '%'])
+        }
+      ]
+    };
   }
 
   ngOnDestroy() {

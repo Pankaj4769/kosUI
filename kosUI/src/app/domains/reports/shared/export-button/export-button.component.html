@@ -1,0 +1,25 @@
+<div class="eb-wrapper">
+  <button class="eb-trigger" (click)="toggle()">
+    <mat-icon>file_download</mat-icon>
+    <span>Export</span>
+    <mat-icon class="eb-chevron" [class.open]="isOpen">expand_more</mat-icon>
+  </button>
+
+  <div class="eb-panel" *ngIf="isOpen">
+    <button class="eb-item" (click)="exportPDF()">
+      <div class="eb-icon eb-icon--pdf"><mat-icon>picture_as_pdf</mat-icon></div>
+      <div class="eb-info">
+        <span class="eb-title">Export PDF</span>
+        <span class="eb-desc">Formatted report with KPIs &amp; tables</span>
+      </div>
+    </button>
+
+    <button class="eb-item" (click)="exportExcel()">
+      <div class="eb-icon eb-icon--excel"><mat-icon>table_view</mat-icon></div>
+      <div class="eb-info">
+        <span class="eb-title">Export Excel</span>
+        <span class="eb-desc">Multi-sheet workbook (.xlsx)</span>
+      </div>
+    </button>
+  </div>
+</div>

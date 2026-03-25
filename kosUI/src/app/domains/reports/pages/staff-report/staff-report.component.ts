@@ -7,11 +7,13 @@ import { StaffService, StaffMember } from '../../../staff/services/staff.service
 import { AttendanceService } from '../../../staff/services/attendance.service';
 import { PayrollService } from '../../../staff/services/payroll.service';
 import { ReportFilterComponent } from '../../shared/report-filter/report-filter.component';
+import { ExportButtonComponent } from '../../shared/export-button/export-button.component';
+import { ReportExportConfig } from '../../shared/report-export.service';
 
 @Component({
   selector: 'app-staff-report',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent],
+  imports: [CommonModule, MatIconModule, FormsModule, ReportFilterComponent, ExportButtonComponent],
   templateUrl: './staff-report.component.html',
   styleUrls: ['./staff-report.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -211,14 +213,32 @@ export class StaffReportComponent implements OnInit, OnDestroy {
 
   onFilterChange(f: any) { console.log('Filter:', f); }
 
-  exportCSV() {
-    const rows = [['Name', 'Role', 'Orders', 'Revenue', 'Rating', 'Status']];
-    this.topPerformers.forEach(s => rows.push([s.name, s.role, String(s.orders), s.revenue, s.rating, s.status]));
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'staff-report.csv';
-    a.click();
+  get exportConfig(): ReportExportConfig {
+    const today = new Date().toLocaleDateString('en-IN');
+    return {
+      reportName: 'Staff Report',
+      restaurant: 'My Restaurant',
+      branch: 'All Branches',
+      dateRange: { from: '01 Mar 2026', to: today },
+      generatedBy: 'Admin',
+      stats: this.stats.map(s => ({ metric: s.label, value: s.value, change: s.delta, positive: s.up })),
+      insights: this.insights.map(i => i.text),
+      alerts: this.alerts.map(a => a.text),
+      tables: [
+        {
+          sheetName: 'Staff Attendance',
+          title: 'Staff Attendance \u2013 Today',
+          headers: ['Staff', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Hours'],
+          rows: this.attendance.map(r => [r.name, r.mon, r.tue, r.wed, r.thu, r.fri, r.sat, r.hours])
+        },
+        {
+          sheetName: 'Attendance Summary',
+          title: 'Attendance Summary',
+          headers: ['Status', 'Count'],
+          rows: this.donutData.map(d => [d.label, Math.round(d.pct) + '%'])
+        }
+      ]
+    };
   }
 
   ngOnDestroy() {

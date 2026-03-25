@@ -9,19 +9,22 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TableService } from '../../services/table.service';
 import { Table, TableStatus } from '../../models/table.model';
 import { TableCardComponent } from '../table-card/table-card.component';
+import { ConfirmDialogComponent } from '../../../common-popup/pages/confirm-dialog.component';
 
 @Component({
   selector: 'app-table-map',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     TableCardComponent,
     MatIconModule,
     MatButtonModule,
-    MatDividerModule
+    MatDividerModule,
+    MatDialogModule
   ],
   templateUrl: './table-map.component.html',
   styleUrls: ['./table-map.component.css'],
@@ -41,7 +44,8 @@ export class TableMapComponent implements OnInit, OnDestroy {
   constructor(
     private tableService: TableService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -96,12 +100,20 @@ export class TableMapComponent implements OnInit, OnDestroy {
     const table = this.tables.find(t => t.id === tableId);
     if (!table) return;
 
-    const confirm = window.confirm(`Close Table ${table.number} and clear order?`);
-    if (confirm) {
-      // Call service to release table
-      this.tableService.releaseTable(tableId);
-      this.closeTableDetails();
-    }
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Close Table',
+        message: `Close Table ${table.number} and clear its current order? This cannot be undone.`,
+        confirmText: 'Yes, Close',
+        confirmColor: 'warn'
+      }
+    }).afterClosed().subscribe(result => {
+      if (result) {
+        this.tableService.releaseTable(tableId);
+        this.closeTableDetails();
+      }
+    });
   }
 
   onTransferTable(tableId: number): void {

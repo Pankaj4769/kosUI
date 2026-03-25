@@ -89,8 +89,22 @@ export interface Reservation {
   date: string;
   time: string;
   specialRequests?: string;
-  status: 'pending' | 'confirmed' | 'arrived' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'arrived' | 'cancelled' | 'no-show';
   createdAt: Date | string;
+  source?: 'walk-in' | 'phone' | 'online' | 'whatsapp';
+  reminderSent?: boolean;
+  qrToken?: string;
+}
+
+// ✨ NEW: Waitlist entry interface
+export interface WaitlistEntry {
+  id: number;
+  customerName: string;
+  phoneNumber?: string;
+  guests: number;
+  addedAt: Date | string;
+  estimatedWait?: number; // minutes
+  status: 'waiting' | 'seated' | 'left';
 }
 
 // ✨ NEW: Extended TableStats for enhanced features
