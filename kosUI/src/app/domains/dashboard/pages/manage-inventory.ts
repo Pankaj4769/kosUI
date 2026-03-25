@@ -1,10 +1,10 @@
-import { ChangeDetectorRef, Component, HostListener, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { InventoryService } from '../../dashboard/services/inventory.service';
 import { Item } from '../../dashboard/models/item.model';
-import { MatSelect, MatSelectModule } from '@angular/material/select';
+import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -54,12 +54,12 @@ export class ManageInventoryComponent {
   });
   }
 
-  @ViewChild('categorySelect') categorySelect!: MatSelect;
-
-  @HostListener('document:click')
-  onOutsideClick() {
-    if (this.categorySelect) {
-      this.categorySelect.close();
+  @HostListener('document:click', ['$event'])
+  onOutsideClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.form-field-group')) {
+      this.categoryDropdownOpen = false;
+      this.groupDropdownOpen    = false;
     }
   }
 
@@ -67,6 +67,7 @@ export class ManageInventoryComponent {
   bulkPreview: any[] = [];
   bulkErrors: string[] = [];
   excelFileName: string = '';
+  bulkSaving = false;
 
   /* ---------- UI State ---------- */
   sidebarCollapsed = false;
@@ -78,7 +79,17 @@ export class ManageInventoryComponent {
   saveSuccess: boolean = false;
 
   categories: Category[] = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
-  types:Group[]= ['Veg', 'Non-Veg'];
+  types: Group[] = ['Veg', 'Non-Veg'];
+
+  categoryTimePresets: Record<string, { from: string; to: string }> = {
+    'Breakfast': { from: '08:00', to: '11:00' },
+    'Lunch':     { from: '12:30', to: '16:00' },
+    'Snacks':    { from: '16:00', to: '18:00' },
+    'Dinner':    { from: '19:00', to: '22:00' }
+  };
+
+  categoryDropdownOpen = false;
+  groupDropdownOpen    = false;
 
   /* ---------- Filters ---------- */
   search = '';
@@ -197,13 +208,27 @@ export class ManageInventoryComponent {
     }
   }
 
-  toggleCategory(category: string, event: any) {
-    if (event.checked) {
+  toggleCategory(category: string, checked: boolean) {
+    if (checked) {
       this.selectedCategories.push(category);
     } else {
-      this.selectedCategories =
-        this.selectedCategories.filter(c => c !== category);
+      this.selectedCategories = this.selectedCategories.filter(c => c !== category);
     }
+    this.applyTimePreset();
+  }
+
+  private applyTimePreset() {
+    if (this.selectedCategories.length === 0) return;
+
+    // Use earliest "from" and latest "to" across all selected categories
+    const times = this.selectedCategories
+      .map(c => this.categoryTimePresets[c])
+      .filter(Boolean);
+
+    if (times.length === 0) return;
+
+    this.from = times.reduce((min, t) => t.from < min ? t.from : min, times[0].from);
+    this.to   = times.reduce((max, t) => t.to   > max ? t.to   : max, times[0].to);
   }
 
   saveItem() {
@@ -285,7 +310,7 @@ export class ManageInventoryComponent {
     this.editingItem = item;
 
     this.name = item.name;
-    this.selectedCategories= item.category;
+    this.selectedCategories = [...item.category];
     this.group = item.group as Group;
     this.price = item.price;
     this.qty = item.qty;
@@ -357,32 +382,181 @@ export class ManageInventoryComponent {
   return `${formattedHour}:${minute.toString().padStart(2, '0')} ${period}`;
 }
 
-  /* ---------- BULK UPLOAD (Future Ready) ---------- */
+  /* ---------- BULK UPLOAD ---------- */
+
+  downloadTemplate() {
+    const headers = ['name', 'category', 'group', 'price', 'qty', 'from', 'to'];
+    const sample = ['Masala Dosa', 'Breakfast,Lunch', 'Veg', 60, 50, '06:00', '11:00'];
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, sample]);
+
+    // Column widths
+    ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length + 4, 16) }));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Items');
+    XLSX.writeFile(wb, 'inventory_bulk_template.xlsx');
+  }
 
   uploadExcel(event: Event) {
     const input = event.target as HTMLInputElement;
-
     if (!input.files || input.files.length === 0) return;
 
     const file = input.files[0];
-    console.log('Excel uploaded:', file.name);
+    this.excelFileName = file.name;
+    this.bulkPreview = [];
+    this.bulkErrors = [];
 
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      if (rows.length < 2) {
+        this.bulkErrors = ['File is empty or missing data rows.'];
+        return;
+      }
+
+      const validCategories = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
+      const validGroups = ['Veg', 'Non-Veg'];
+      const parsed: any[] = [];
+      const errors: string[] = [];
+
+      rows.slice(1).forEach((row, idx) => {
+        const rowNum = idx + 2;
+        const [name, categoryRaw, group, price, qty, from, to] = row;
+
+        const rowErrors: string[] = [];
+
+        if (!name || String(name).trim().length < 3)
+          rowErrors.push(`Row ${rowNum}: Name must be at least 3 characters`);
+
+        const categories = String(categoryRaw || '').split(',').map(c => c.trim()).filter(Boolean);
+        const invalidCats = categories.filter(c => !validCategories.includes(c));
+        if (categories.length === 0)
+          rowErrors.push(`Row ${rowNum}: Category is required`);
+        else if (invalidCats.length > 0)
+          rowErrors.push(`Row ${rowNum}: Invalid categories: ${invalidCats.join(', ')}`);
+
+        if (!validGroups.includes(String(group).trim()))
+          rowErrors.push(`Row ${rowNum}: Group must be 'Veg' or 'Non-Veg'`);
+
+        if (isNaN(Number(price)) || Number(price) <= 0)
+          rowErrors.push(`Row ${rowNum}: Price must be > 0`);
+
+        if (isNaN(Number(qty)) || Number(qty) < 0)
+          rowErrors.push(`Row ${rowNum}: Qty cannot be negative`);
+
+        if (!from) rowErrors.push(`Row ${rowNum}: 'from' time is required`);
+        if (!to)   rowErrors.push(`Row ${rowNum}: 'to' time is required`);
+
+        if (rowErrors.length > 0) {
+          errors.push(...rowErrors);
+        } else {
+          parsed.push({
+            id: null,
+            name: String(name).trim(),
+            category: categories,
+            group: String(group).trim(),
+            price: Number(price),
+            qty: Number(qty),
+            from: String(from),
+            to: String(to),
+            enabled: true,
+            restaurantId: this.authService.currentUser?.restaurantId ?? ''
+          });
+        }
+      });
+
+      this.bulkPreview = parsed;
+      this.bulkErrors = errors;
+    };
+
+    reader.readAsArrayBuffer(file);
     input.value = '';
+  }
+
+  saveBulkItems() {
+    if (this.bulkPreview.length === 0) return;
+    this.bulkSaving = true;
+    this.inventoryService.bulkAddItems(this.bulkPreview).subscribe({
+      next: () => {
+        this.inventoryService.getItemlist().subscribe(res => {
+          this.inventoryService.populateItems(res as Item[]);
+          this.cdr.detectChanges();
+          this.bulkSaving = false;
+          this.bulkPreview = [];
+          this.excelFileName = '';
+          this.showSuccessToast();
+          this.closeDrawer();
+        });
+      },
+      error: () => {
+        this.bulkSaving = false;
+        this.bulkErrors = ['Server error while saving items. Please try again.'];
+      }
+    });
   }
 
   /* ---------- IMAGE UPLOAD ---------- */
 
+  imageError: string = '';
+
+  private readonly MAX_FILE_MB = 5;
+  private readonly MAX_DIMENSION = 400;   // px – max width or height after resize
+  private readonly JPEG_QUALITY  = 0.75;  // 0–1
+
   onImageSelect(event: any) {
-    const file = event.target.files[0];
+    const file: File = event.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
+    this.imageError = '';
 
-    reader.onload = () => {
-      this.selectedImage = reader.result as string;
+    // 1. Reject files larger than MAX_FILE_MB
+    if (file.size > this.MAX_FILE_MB * 1024 * 1024) {
+      this.imageError = `Image must be under ${this.MAX_FILE_MB} MB`;
+      event.target.value = '';
+      return;
+    }
+
+    // 2. Accept only images
+    if (!file.type.startsWith('image/')) {
+      this.imageError = 'Only image files are allowed';
+      event.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const img = new Image();
+      img.onload = () => {
+        // 3. Calculate new dimensions, preserving aspect ratio
+        let { width, height } = img;
+        if (width > this.MAX_DIMENSION || height > this.MAX_DIMENSION) {
+          if (width > height) {
+            height = Math.round((height * this.MAX_DIMENSION) / width);
+            width  = this.MAX_DIMENSION;
+          } else {
+            width  = Math.round((width  * this.MAX_DIMENSION) / height);
+            height = this.MAX_DIMENSION;
+          }
+        }
+
+        // 4. Draw onto canvas and export as compressed JPEG
+        const canvas = document.createElement('canvas');
+        canvas.width  = width;
+        canvas.height = height;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+        this.selectedImage = canvas.toDataURL('image/jpeg', this.JPEG_QUALITY);
+        this.cdr.detectChanges();
+      };
+      img.src = e.target.result;
     };
 
     reader.readAsDataURL(file);
+    event.target.value = '';
   }
 
   /* ---------- RESET FORM ---------- */

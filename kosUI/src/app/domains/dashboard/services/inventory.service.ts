@@ -46,6 +46,10 @@ export class InventoryService {
     return this.httpclient.delete<MessageResponse>(this.baseUrl+'/deleteItemById/'+id);
   }
 
+  bulkAddItems(items: Item[]) {
+    return this.httpclient.post<Item[]>(this.baseUrl+'/bulkAddItems', items);
+  }
+
   toggleItemStatus(id: number|null, status:boolean) {
     this.httpclient.patch<Item>(this.baseUrl+'/updateItemStatus/'+id+'/'+status,null).subscribe(res=>{
       let itm = res;
@@ -105,7 +109,7 @@ export class InventoryService {
         !i.name.toLowerCase().includes(search.toLowerCase()))
         return false;
 
-      if (category !== 'ALL' && i.category.includes (category))
+      if (category !== 'ALL' && !i.category.includes(category))
         return false;
 
       if (group !== 'ALL' && i.group !== group)
