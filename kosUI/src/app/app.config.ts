@@ -11,16 +11,13 @@ import { authInterceptor } from './interceptors/auth.interceptor';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
 
     // Angular Material / Animations
     provideAnimations(),
     provideAnimationsAsync(),
 
     // Layout module (router-outlet fix)
-    importProvidersFrom(LayoutModule),
-      provideHttpClient(
-        withInterceptors([authInterceptor])
-    )
+    importProvidersFrom(LayoutModule)
   ]
 };

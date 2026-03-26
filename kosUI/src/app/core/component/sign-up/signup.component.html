@@ -116,22 +116,112 @@
 
         <!-- Email -->
         <div class="form-group">
-          <div class="float-label">
+          <div class="float-label" [class.input-error]="emailTouched && !isEmailValid && form.email"
+                                   [class.input-success]="emailOtpVerified || (emailTouched && isEmailValid && form.email && !emailOtpSent)">
             <span class="material-icons input-icon">email</span>
             <input type="email" [(ngModel)]="form.email" name="email"
-                   placeholder=" " autocomplete="email" required />
+                   placeholder=" " autocomplete="email" required
+                   [disabled]="emailOtpVerified"
+                   (ngModelChange)="onEmailChange()" (blur)="emailTouched = true" />
             <span class="label-text">Work Email</span>
+            <span class="material-icons verified-inline" *ngIf="emailOtpVerified">verified</span>
           </div>
+          <span class="match-hint error" *ngIf="emailError">
+            <span class="material-icons" style="font-size:14px">close</span>
+            {{ emailError }}
+          </span>
+
+          <!-- Send / Resend OTP -->
+          <div class="otp-action" *ngIf="isEmailValid && form.email && !emailOtpVerified">
+            <button class="btn-send-otp" (click)="sendEmailOtp()"
+                    [disabled]="emailOtpLoading || emailResendTimer > 0">
+              <span class="material-icons btn-spin" *ngIf="emailOtpLoading">autorenew</span>
+              <span class="material-icons" *ngIf="!emailOtpLoading">mark_email_unread</span>
+              <span *ngIf="!emailOtpSent">Send OTP</span>
+              <span *ngIf="emailOtpSent && emailResendTimer > 0">Resend in {{ emailResendTimer }}s</span>
+              <span *ngIf="emailOtpSent && emailResendTimer === 0">Resend OTP</span>
+            </button>
+          </div>
+
+          <!-- OTP Entry -->
+          <div class="otp-entry" *ngIf="emailOtpSent && !emailOtpVerified">
+            <p class="otp-info">
+              <span class="material-icons" style="font-size:14px;vertical-align:middle">info</span>
+              OTP sent to <strong>{{ form.email }}</strong>
+            </p>
+            <div class="otp-row">
+              <input type="text" [(ngModel)]="emailOtp" name="emailOtp"
+                     maxlength="6" placeholder="Enter 6-digit OTP"
+                     class="otp-input" inputmode="numeric"
+                     (input)="onOtpInput('email')" (keyup.enter)="verifyEmailOtp()" />
+              <button class="btn-verify" (click)="verifyEmailOtp()">Verify</button>
+            </div>
+            <span class="match-hint error" *ngIf="emailOtpError">
+              <span class="material-icons" style="font-size:14px">close</span>
+              {{ emailOtpError }}
+            </span>
+          </div>
+
+          <!-- Verified badge -->
+          <span class="match-hint success verified-row" *ngIf="emailOtpVerified">
+            <span class="material-icons" style="font-size:14px">verified</span>
+            Email verified successfully
+          </span>
         </div>
 
         <!-- Mobile -->
         <div class="form-group">
-          <div class="float-label">
+          <div class="float-label" [class.input-error]="mobileTouched && !isMobileValid && form.mobile"
+                                   [class.input-success]="mobileOtpVerified || (mobileTouched && isMobileValid && !mobileOtpSent)">
             <span class="material-icons input-icon">smartphone</span>
             <input type="tel" [(ngModel)]="form.mobile" name="mobile"
-                   placeholder=" " maxlength="10" autocomplete="tel" required />
+                   placeholder=" " maxlength="10" autocomplete="tel" required
+                   [disabled]="mobileOtpVerified"
+                   (input)="onMobileInput()" (blur)="mobileTouched = true" />
             <span class="label-text">Mobile Number</span>
+            <span class="material-icons verified-inline" *ngIf="mobileOtpVerified">verified</span>
           </div>
+          <span class="match-hint error" *ngIf="mobileError">
+            <span class="material-icons" style="font-size:14px">close</span>
+            {{ mobileError }}
+          </span>
+
+          <!-- Send / Resend OTP -->
+          <div class="otp-action" *ngIf="isMobileValid && !mobileOtpVerified">
+            <button class="btn-send-otp" (click)="sendMobileOtp()"
+                    [disabled]="mobileOtpLoading || mobileResendTimer > 0">
+              <span class="material-icons btn-spin" *ngIf="mobileOtpLoading">autorenew</span>
+              <span class="material-icons" *ngIf="!mobileOtpLoading">sms</span>
+              <span *ngIf="!mobileOtpSent">Send OTP</span>
+              <span *ngIf="mobileOtpSent && mobileResendTimer > 0">Resend in {{ mobileResendTimer }}s</span>
+              <span *ngIf="mobileOtpSent && mobileResendTimer === 0">Resend OTP</span>
+            </button>
+          </div>
+
+          <!-- OTP Entry -->
+          <div class="otp-entry" *ngIf="mobileOtpSent && !mobileOtpVerified">
+            <p class="otp-info">
+              <span class="material-icons" style="font-size:14px;vertical-align:middle">info</span>
+              OTP sent to <strong>+91 {{ form.mobile }}</strong>
+            </p>
+            <div class="otp-row">
+              <input type="text" [(ngModel)]="mobileOtp" name="mobileOtp"
+                     maxlength="6" placeholder="Enter 6-digit OTP"
+                     class="otp-input" inputmode="numeric"
+                     (input)="onOtpInput('mobile')" (keyup.enter)="verifyMobileOtp()" />
+              <button class="btn-verify" (click)="verifyMobileOtp()">Verify</button>
+            </div>
+            <span class="match-hint error" *ngIf="mobileOtpError">
+              <span class="material-icons" style="font-size:14px">close</span>
+              {{ mobileOtpError }}
+            </span>
+          </div>
+
+          <!-- Verified badge -->
+          <span class="match-hint success verified-row" *ngIf="mobileOtpVerified">
+            <span class="material-icons" style="font-size:14px">verified</span>
+            Mobile number verified
+          </span>
         </div>
 
         <button class="btn-next" (click)="nextStep()">
@@ -148,12 +238,37 @@
 
         <!-- Username -->
         <div class="form-group">
-          <div class="float-label">
+          <div class="float-label"
+               [class.input-error]="(usernameTouched && !isUsernameValid && form.username) || usernameAvailable === false || usernameCheckError"
+               [class.input-success]="usernameAvailable === true && !usernameCheckError"
+               [class.input-checking]="usernameChecking">
             <span class="material-icons input-icon">manage_accounts</span>
             <input type="text" [(ngModel)]="form.username" name="username"
-                   placeholder=" " autocomplete="username" required />
+                   placeholder=" " autocomplete="username" required
+                   (input)="onUsernameInput()" (blur)="usernameTouched = true" />
             <span class="label-text">Username</span>
+            <span class="material-icons btn-spin input-spinner" *ngIf="usernameChecking">autorenew</span>
           </div>
+          <span class="match-hint error" *ngIf="usernameError">
+            <span class="material-icons" style="font-size:14px">close</span>
+            {{ usernameError }}
+          </span>
+          <span class="match-hint" style="color:#64748b" *ngIf="usernameChecking && !usernameError">
+            <span class="material-icons btn-spin" style="font-size:14px">autorenew</span>
+            Checking availability...
+          </span>
+          <span class="match-hint success" *ngIf="usernameAvailable === true && !usernameChecking && !usernameError">
+            <span class="material-icons" style="font-size:14px">check_circle</span>
+            Username is available
+          </span>
+          <span class="match-hint error" *ngIf="usernameAvailable === false && !usernameChecking">
+            <span class="material-icons" style="font-size:14px">cancel</span>
+            Username is already taken. Please choose another.
+          </span>
+          <span class="match-hint error" *ngIf="usernameCheckError && !usernameChecking">
+            <span class="material-icons" style="font-size:14px">wifi_off</span>
+            Could not verify username — server unreachable. Try again.
+          </span>
         </div>
 
         <!-- Password -->
@@ -234,6 +349,25 @@
 
       </div>
 
+    </div>
+  </div>
+
+  <!-- ══ Success Modal Overlay ══ -->
+  <div class="success-overlay" *ngIf="showSuccessModal">
+    <div class="success-modal">
+      <div class="success-icon-ring">
+        <span class="material-icons success-check">check_circle</span>
+      </div>
+      <h2 class="success-title">Account Created!</h2>
+      <p class="success-name">Welcome, <strong>{{ form.fullName.split(' ')[0] }}</strong> 🎉</p>
+      <p class="success-sub">Your Kitchen Book account is ready.</p>
+      <div class="success-redirect">
+        <span class="material-icons" style="font-size:16px;vertical-align:middle">login</span>
+        Redirecting to login in <strong>{{ redirectCountdown }}</strong>s…
+      </div>
+      <button class="btn-go-login" (click)="goToLogin()">
+        Go to Login Now
+      </button>
     </div>
   </div>
 </div>

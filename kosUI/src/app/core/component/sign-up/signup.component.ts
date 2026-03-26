@@ -1,7 +1,10 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, takeUntil, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 
 
@@ -51,6 +54,37 @@ export class SignupComponent implements OnDestroy {
   successMessage      = '';
   currentStep         = 1;
   readonly totalSteps = 2;
+  showSuccessModal    = false;
+  redirectCountdown   = 3;
+
+  // ── Field Touched Flags ────────────────────────────────
+  emailTouched    = false;
+  mobileTouched   = false;
+  usernameTouched = false;
+
+  // ── Mobile OTP ─────────────────────────────────────────
+  mobileOtpSent     = false;
+  mobileOtpVerified = false;
+  mobileOtp         = '';
+  mobileOtpError    = '';
+  mobileOtpLoading  = false;
+  mobileResendTimer = 0;
+
+  // ── Email OTP ──────────────────────────────────────────
+  emailOtpSent     = false;
+  emailOtpVerified = false;
+  emailOtp         = '';
+  emailOtpError    = '';
+  emailOtpLoading  = false;
+  emailResendTimer  = 0;
+
+  // ── Username Availability ──────────────────────────────
+  usernameChecking   = false;
+  usernameAvailable: boolean | null = null;
+  usernameCheckError = false;
+
+  private usernameInput$ = new Subject<string>();
+  private destroy$       = new Subject<void>();
 
 
   // ── Password Strength ──────────────────────────────────
@@ -58,12 +92,56 @@ export class SignupComponent implements OnDestroy {
   passwordStrengthLabel = '';
 
 
-  constructor(private auth: AuthService, private router: Router) {
+  constructor(private auth: AuthService, private router: Router, private cdr: ChangeDetectorRef) {
     if (this.auth.isLoggedIn) this.auth.handlePostLogin(this.auth.currentUser!);
+
+    // Username availability check with debounce
+    this.usernameInput$.pipe(
+      debounceTime(600),
+      distinctUntilChanged(),
+      switchMap(username => {
+        if (!this.isUsernameValid) {
+          this.usernameAvailable  = null;
+          this.usernameCheckError = false;
+          this.cdr.detectChanges();
+          return of(null);
+        }
+        this.usernameChecking   = true;
+        this.usernameAvailable  = null;
+        this.usernameCheckError = false;
+        this.cdr.detectChanges();
+        return this.auth.checkUsername(username).pipe(
+          catchError((err) => {
+            if (err.status === 404) {
+              // 404 = username not found → available to use
+              this.usernameChecking   = false;
+              this.usernameAvailable  = true;
+              this.usernameCheckError = false;
+            } else {
+              this.usernameCheckError = true;
+              this.usernameChecking   = false;
+              this.usernameAvailable  = null;
+            }
+            this.cdr.detectChanges();
+            return of(null);
+          })
+        );
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
+      if (result === null) return;
+      // 200 with status=true means username exists → taken → not available
+      this.usernameChecking  = false;
+      this.usernameAvailable = !result.status;
+      this.cdr.detectChanges();
+    });
   }
 
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
 
   // ── Navigation ─────────────────────────────────────────
@@ -95,14 +173,29 @@ export class SignupComponent implements OnDestroy {
       if (!this.form.email.trim() || !this.isValidEmail(this.form.email)) {
         this.errorMessage = 'Enter a valid email address.'; return false;
       }
-      if (!this.form.mobile || this.form.mobile.length < 10) {
+      if (!this.emailOtpVerified) {
+        this.errorMessage = 'Please verify your email address with OTP.'; return false;
+      }
+      if (!this.form.mobile || !this.isMobileValid) {
         this.errorMessage = 'Enter a valid 10-digit mobile number.'; return false;
+      }
+      if (!this.mobileOtpVerified) {
+        this.errorMessage = 'Please verify your mobile number with OTP.'; return false;
       }
     }
 
     if (step === 2) {
       if (!this.form.username.trim()) {
         this.errorMessage = 'Username is required.'; return false;
+      }
+      if (this.usernameChecking) {
+        this.errorMessage = 'Checking username availability, please wait.'; return false;
+      }
+      if (this.usernameCheckError) {
+        this.errorMessage = 'Could not verify username. Please check your connection and try again.'; return false;
+      }
+      if (this.usernameAvailable !== true) {
+        this.errorMessage = 'Please choose an available username.'; return false;
       }
       if (!this.form.password || this.form.password.length < 6) {
         this.errorMessage = 'Password must be at least 6 characters.'; return false;
@@ -142,10 +235,20 @@ export class SignupComponent implements OnDestroy {
 
       this.auth.signUp(this.form).subscribe(res =>{
         if(res.status){
-          this.successMessage = `Account created! Welcome, ${this.form.fullName.split(' ')[0]}.`;
           this.isLoading = false;
-          setTimeout(() => this.router.navigate(['/login']), 2000);
+          this.showSuccessModal = true;
+          this.redirectCountdown = 3;
+          this.cdr.detectChanges();
+          const interval = setInterval(() => {
+            this.redirectCountdown--;
+            this.cdr.detectChanges();
+            if (this.redirectCountdown <= 0) {
+              clearInterval(interval);
+              this.router.navigate(['/login']);
+            }
+          }, 1000);
         }else{
+          this.isLoading = false;
           this.errorMessage = `Sign up failed for some reason.Try in some time.`;
         }
       });      
@@ -156,9 +259,134 @@ export class SignupComponent implements OnDestroy {
   // ── Helpers ────────────────────────────────────────────
   togglePassword():        void { this.showPassword        = !this.showPassword; }
   toggleConfirmPassword(): void { this.showConfirmPassword = !this.showConfirmPassword; }
+  goToLogin():             void { this.router.navigate(['/login']); }
+
+  // ── Field Validation Getters ───────────────────────────
+  get isEmailValid(): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(this.form.email.trim());
+  }
+
+  get emailError(): string {
+    if (!this.emailTouched || !this.form.email) return '';
+    return this.isEmailValid ? '' : 'Enter a valid email address (e.g. name@domain.com)';
+  }
+
+  get isMobileValid(): boolean {
+    return /^[6-9]\d{9}$/.test(this.form.mobile);
+  }
+
+  get mobileError(): string {
+    if (!this.mobileTouched || !this.form.mobile) return '';
+    if (!/^\d+$/.test(this.form.mobile)) return 'Mobile number must contain digits only';
+    if (!/^[6-9]/.test(this.form.mobile))  return 'Mobile number must start with 6, 7, 8, or 9';
+    if (this.form.mobile.length < 10)       return 'Mobile number must be exactly 10 digits';
+    return '';
+  }
+
+  get isUsernameValid(): boolean {
+    return /^[a-zA-Z][a-zA-Z0-9_]{2,19}$/.test(this.form.username.trim());
+  }
+
+  get usernameError(): string {
+    if (!this.usernameTouched || !this.form.username) return '';
+    if (!/^[a-zA-Z]/.test(this.form.username))         return 'Username must start with a letter';
+    if (/[^a-zA-Z0-9_]/.test(this.form.username))      return 'Only letters, numbers and underscores allowed';
+    if (this.form.username.length < 3)                  return 'Username must be at least 3 characters';
+    if (this.form.username.length > 20)                 return 'Username must be at most 20 characters';
+    return '';
+  }
+
+  // ── Mobile OTP ─────────────────────────────────────────
+  sendMobileOtp(): void {
+    this.mobileOtpLoading = true;
+    this.mobileOtpError   = '';
+    setTimeout(() => {
+      this.mobileOtpSent    = true;
+      this.mobileOtpLoading = false;
+      this.mobileOtp        = '';
+      this.startResendTimer('mobile');
+    }, 800);
+  }
+
+  verifyMobileOtp(): void {
+    if (!this.mobileOtp.trim()) { this.mobileOtpError = 'Please enter the OTP.'; return; }
+    if (this.mobileOtp === '123456') {
+      this.mobileOtpVerified = true;
+      this.mobileOtpError    = '';
+    } else {
+      this.mobileOtpError = 'Invalid OTP. Please try again.';
+    }
+  }
+
+  // ── Email OTP ──────────────────────────────────────────
+  sendEmailOtp(): void {
+    this.emailOtpLoading = true;
+    this.emailOtpError   = '';
+    setTimeout(() => {
+      this.emailOtpSent    = true;
+      this.emailOtpLoading = false;
+      this.emailOtp        = '';
+      this.startResendTimer('email');
+    }, 800);
+  }
+
+  verifyEmailOtp(): void {
+    if (!this.emailOtp.trim()) { this.emailOtpError = 'Please enter the OTP.'; return; }
+    if (this.emailOtp === '123456') {
+      this.emailOtpVerified = true;
+      this.emailOtpError    = '';
+    } else {
+      this.emailOtpError = 'Invalid OTP. Please try again.';
+    }
+  }
+
+  // ── OTP only digits ───────────────────────────────────
+  onOtpInput(field: 'mobile' | 'email'): void {
+    if (field === 'mobile') this.mobileOtp = this.mobileOtp.replace(/\D/g, '');
+    else                    this.emailOtp  = this.emailOtp.replace(/\D/g, '');
+  }
+
+  // ── Resend cooldown (30s) ─────────────────────────────
+  private startResendTimer(field: 'mobile' | 'email'): void {
+    if (field === 'mobile') this.mobileResendTimer = 30;
+    else                    this.emailResendTimer  = 30;
+    const tick = setInterval(() => {
+      if (field === 'mobile') { this.mobileResendTimer--; if (this.mobileResendTimer <= 0) clearInterval(tick); }
+      else                    { this.emailResendTimer--;  if (this.emailResendTimer  <= 0) clearInterval(tick); }
+      this.cdr.detectChanges();
+    }, 1000);
+  }
+
+  // ── Mobile: allow digits only, reset OTP if changed ───
+  onMobileInput(): void {
+    this.form.mobile = this.form.mobile.replace(/\D/g, '');
+    this.mobileTouched = true;
+    if (this.mobileOtpSent || this.mobileOtpVerified) {
+      this.mobileOtpSent = false; this.mobileOtpVerified = false;
+      this.mobileOtp = ''; this.mobileOtpError = '';
+    }
+  }
+
+  // ── Email: reset OTP if changed ────────────────────────
+  onEmailChange(): void {
+    this.emailTouched = true;
+    if (this.emailOtpSent || this.emailOtpVerified) {
+      this.emailOtpSent = false; this.emailOtpVerified = false;
+      this.emailOtp = ''; this.emailOtpError = '';
+    }
+  }
+
+  // ── Username: strip spaces, trigger availability check ─
+  onUsernameInput(): void {
+    this.form.username      = this.form.username.replace(/\s/g, '');
+    this.usernameTouched    = true;
+    this.usernameAvailable  = null;
+    this.usernameCheckError = false;
+    this.usernameInput$.next(this.form.username);
+  }
 
   private isValidEmail(email: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
   }
 
 
@@ -170,12 +398,16 @@ export class SignupComponent implements OnDestroy {
       email:          'owner@kos.demo',
       mobile:         '9876543210',
       username:       'demoowner',
-      password:       'kos123',
-      confirmPassword:'kos123',
+      password:       'Demo@1234',
+      confirmPassword:'Demo@1234',
       acceptTerms:    true
     };
-    this.currentStep          = 1;
-    this.passwordStrength     = 1;
-    this.passwordStrengthLabel = 'Weak';
+    this.currentStep           = 1;
+    this.passwordStrength      = 3;
+    this.passwordStrengthLabel = 'Good';
+    // Pre-verify OTP fields for dev convenience
+    this.emailTouched      = true;  this.emailOtpSent      = true;  this.emailOtpVerified  = true;
+    this.mobileTouched     = true;  this.mobileOtpSent     = true;  this.mobileOtpVerified = true;
+    this.usernameTouched   = true;  this.usernameAvailable = true;
   }
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthUser, CompleteSetup, LoginRequest, OnboardingStatus, RestaurantSetup, SubscriptionPlan, UserRole } from './auth.model';
 import { HttpClient } from '@angular/common/http';
-import { EMPTY, map, Observable, of, switchMap, tap } from 'rxjs';
+import { EMPTY, map, Observable, of, switchMap, tap, catchError } from 'rxjs';
 import { BASE_URL } from '../../apiUrls';
 import { SignupForm } from '../component/sign-up/signup.component';
 
@@ -15,6 +15,11 @@ interface LoginResponse {
 interface SignUpResponse {
   message: string,
   status: boolean
+}
+
+interface MessageResponse {
+  message: string;
+  status: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -63,10 +68,20 @@ export class AuthService {
     }
   
     return this.preLogin(req).pipe(
-      switchMap((res :LoginResponse)=> {
+      catchError((err) => {
+        const msg = err.status === 401
+          ? 'Incorrect username, password, or role.'
+          : 'Login failed. Please try again.';
+        return of({ success: false, message: msg });
+      }),
+      switchMap((res: LoginResponse | { success: boolean; message: string }) => {
+        if ('success' in res) {
+          return of(res as { success: boolean; message: string });
+        }
+        const loginRes = res as LoginResponse;
         let user: AuthUser | undefined;
-    
-        if (!res.accessToken) {
+
+        if (!loginRes.accessToken) {
           return of({ success: false, message: 'Invalid credentials. Please try again.' });
         }
         if (req.method === 'PASSWORD') {
@@ -189,6 +204,14 @@ export class AuthService {
 
   signUp(form: SignupForm): Observable<SignUpResponse>{
     return this.http.post<SignUpResponse>(`${this.baseUrl}/auth/signUp`, form);
+  }
+
+  checkUsername(username: string): Observable<MessageResponse> {
+    return this.http.get<MessageResponse>(`${this.baseUrl}/auth/checkUsername/${username}`);
+  }
+
+  forgotPassword(username: string, newPassword: string): Observable<MessageResponse> {
+    return this.http.put<MessageResponse>(`${this.baseUrl}/auth/forgotPassword`, { username, newPassword });
   }
 
 }
