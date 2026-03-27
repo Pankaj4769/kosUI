@@ -182,56 +182,56 @@ export class SubscriptionRevenueComponent implements OnInit, OnDestroy {
   // ── Plans ─────────────────────────────────────────
   plans: SubscriptionPlan[] = [
     {
-      id: 1, name: 'Basic', tagline: 'Perfect for small cafes',
-      status: 'active', billingCycle: 'Monthly', price: 299, currency: '₹',
-      trialDays: 14, maxStaff: 5, maxOrders: 500, storageGB: 1,
+      id: 1, name: 'STARTER', tagline: 'Perfect for small cafes',
+      status: 'active', billingCycle: 'Monthly', price: 999, currency: '₹',
+      trialDays: 7, maxStaff: 5, maxOrders: 500, storageGB: 1,
       features: ['POS', 'Menu Management', 'Basic Reports', 'Email Support'],
-      activeSubscribers: 342, mrr: 102258, usageBilling: false,
+      activeSubscribers: 342, mrr: 341658, usageBilling: false,
       regionalPricing: [
-        { region: 'IN', currency: '₹', price: 299 },
-        { region: 'US', currency: '$', price: 5   },
-        { region: 'EU', currency: '€', price: 4   },
+        { region: 'IN', currency: '₹', price: 999 },
+        { region: 'US', currency: '$', price: 12  },
+        { region: 'EU', currency: '€', price: 11  },
       ],
       color: '#475569'
     },
     {
-      id: 2, name: 'Basic+', tagline: 'For growing restaurants',
-      status: 'active', billingCycle: 'Monthly', price: 999, currency: '₹',
-      trialDays: 14, maxStaff: 15, maxOrders: 2000, storageGB: 5,
-      features: ['POS', 'Menu Management', 'Advanced Reports', 'KDS', 'Table Management', 'Phone Support'],
-      activeSubscribers: 289, mrr: 288711, usageBilling: false,
+      id: 2, name: 'GROWTH', tagline: 'For growing restaurants',
+      status: 'active', billingCycle: 'Monthly', price: 1999, currency: '₹',
+      trialDays: 7, maxStaff: 15, maxOrders: 2000, storageGB: 5,
+      features: ['All STARTER', 'Inventory Management', 'Billing', 'Table Management', 'KDS', 'Phone Support'],
+      activeSubscribers: 289, mrr: 577711, usageBilling: false,
       regionalPricing: [
-        { region: 'IN', currency: '₹', price: 999  },
-        { region: 'US', currency: '$', price: 15   },
-        { region: 'EU', currency: '€', price: 13   },
+        { region: 'IN', currency: '₹', price: 1999 },
+        { region: 'US', currency: '$', price: 25   },
+        { region: 'EU', currency: '€', price: 22   },
       ],
       color: '#16A34A'
     },
     {
-      id: 3, name: 'Premium', tagline: 'For established chains',
-      status: 'active', billingCycle: 'Monthly', price: 1499, currency: '₹',
-      trialDays: 30, maxStaff: 50, maxOrders: 10000, storageGB: 20,
-      features: ['All Basic+', 'Multi-branch', 'Analytics Dashboard', 'API Access', 'Priority Support', 'Custom Branding'],
-      activeSubscribers: 342, mrr: 512658, usageBilling: true,
+      id: 3, name: 'PRO', tagline: 'For high-volume kitchens',
+      status: 'active', billingCycle: 'Monthly', price: 3499, currency: '₹',
+      trialDays: 7, maxStaff: 50, maxOrders: 10000, storageGB: 20,
+      features: ['All GROWTH', 'Multi-branch', 'Advanced Analytics', 'Role Management', 'SSE Live Orders', 'Priority Support'],
+      activeSubscribers: 342, mrr: 1196658, usageBilling: true,
       regionalPricing: [
-        { region: 'IN', currency: '₹', price: 1499 },
-        { region: 'US', currency: '$', price: 25   },
-        { region: 'EU', currency: '€', price: 22   },
-        { region: 'SEA', currency: '$', price: 18  },
+        { region: 'IN', currency: '₹', price: 3499 },
+        { region: 'US', currency: '$', price: 45   },
+        { region: 'EU', currency: '€', price: 40   },
+        { region: 'SEA', currency: '$', price: 35  },
       ],
       color: '#2563EB'
     },
     {
-      id: 4, name: 'Ultra', tagline: 'Enterprise + Custom',
-      status: 'active', billingCycle: 'Yearly', price: 36000, currency: '₹',
-      trialDays: 30, maxStaff: 200, maxOrders: 999999, storageGB: 100,
-      features: ['All Premium', 'Dedicated Server', 'Custom Integrations', 'White-label', 'SLA 99.99%', '24/7 Support', 'Data Migration'],
-      activeSubscribers: 174, mrr: 522000, usageBilling: true,
+      id: 4, name: 'ENTERPRISE', tagline: 'For multi-branch chains',
+      status: 'active', billingCycle: 'Yearly', price: 5999, currency: '₹',
+      trialDays: 7, maxStaff: 999, maxOrders: 999999, storageGB: 100,
+      features: ['All PRO', 'Custom Integrations', 'White-label', 'API Access', 'SLA 99.99%', '24/7 Support', 'Data Migration'],
+      activeSubscribers: 174, mrr: 1043826, usageBilling: true,
       regionalPricing: [
-        { region: 'IN', currency: '₹', price: 36000 },
-        { region: 'US', currency: '$', price: 499   },
-        { region: 'EU', currency: '€', price: 449   },
-        { region: 'SEA', currency: '$', price: 349  },
+        { region: 'IN', currency: '₹', price: 5999 },
+        { region: 'US', currency: '$', price: 75   },
+        { region: 'EU', currency: '€', price: 69   },
+        { region: 'SEA', currency: '$', price: 59  },
       ],
       color: '#7C3AED'
     },
@@ -242,76 +242,76 @@ export class SubscriptionRevenueComponent implements OnInit, OnDestroy {
     {
       id: 1, code: 'LAUNCH50', type: 'percent', value: 50,
       usedCount: 142, maxUses: 200, expiryDate: '2026-03-31',
-      status: 'active', applicablePlans: ['Basic', 'Basic+']
+      status: 'active', applicablePlans: ['STARTER', 'GROWTH']
     },
     {
       id: 2, code: 'FLAT500', type: 'flat', value: 500,
       usedCount: 89, maxUses: 100, expiryDate: '2026-02-28',
-      status: 'active', applicablePlans: ['Premium', 'Ultra']
+      status: 'active', applicablePlans: ['PRO', 'ENTERPRISE']
     },
     {
       id: 3, code: 'DIWALI30', type: 'percent', value: 30,
       usedCount: 300, maxUses: 300, expiryDate: '2025-11-15',
-      status: 'exhausted', applicablePlans: ['Basic', 'Basic+', 'Premium']
+      status: 'exhausted', applicablePlans: ['STARTER', 'GROWTH', 'PRO']
     },
     {
       id: 4, code: 'NEWYEAR25', type: 'percent', value: 25,
       usedCount: 67, maxUses: 500, expiryDate: '2026-01-15',
-      status: 'expired', applicablePlans: ['Basic', 'Basic+', 'Premium', 'Ultra']
+      status: 'expired', applicablePlans: ['STARTER', 'GROWTH', 'PRO', 'ENTERPRISE']
     },
   ];
 
   // ── Expiry Tracking ───────────────────────────────
   expiryAlerts = [
-    { tenantName: 'Cafe Bliss',         plan: 'Basic',   expiresIn: 3,  renewalAmt: '₹299'  },
-    { tenantName: 'Zaiqa Biryani',      plan: 'Basic+',  expiresIn: 5,  renewalAmt: '₹999'  },
-    { tenantName: 'Masala Junction',    plan: 'Premium',  expiresIn: 7,  renewalAmt: '₹1,499'},
-    { tenantName: 'The Rice Bowl',      plan: 'Basic',   expiresIn: 12, renewalAmt: '₹299'  },
-    { tenantName: 'Burger Factory',     plan: 'Basic+',  expiresIn: 14, renewalAmt: '₹999'  },
+    { tenantName: 'Cafe Bliss',         plan: 'STARTER',    expiresIn: 3,  renewalAmt: '₹999'  },
+    { tenantName: 'Zaiqa Biryani',      plan: 'GROWTH',     expiresIn: 5,  renewalAmt: '₹1,999'},
+    { tenantName: 'Masala Junction',    plan: 'PRO',        expiresIn: 7,  renewalAmt: '₹3,499'},
+    { tenantName: 'The Rice Bowl',      plan: 'STARTER',    expiresIn: 12, renewalAmt: '₹999'  },
+    { tenantName: 'Burger Factory',     plan: 'GROWTH',     expiresIn: 14, renewalAmt: '₹1,999'},
   ];
 
   // ── Payment Logs ──────────────────────────────────
   paymentLogs: PaymentLog[] = [
     {
       id: 1, tenantName: 'Rajesh Kumar', restaurantName: 'Spice Bloom',
-      plan: 'Premium', amount: '₹1,499', status: 'success',
+      plan: 'PRO', amount: '₹3,499', status: 'success',
       date: '2026-02-20 09:41', invoiceId: 'INV-2026-0841'
     },
     {
       id: 2, tenantName: 'Priya Sharma', restaurantName: 'The Tandoori House',
-      plan: 'Ultra', amount: '₹3,000', status: 'success',
+      plan: 'ENTERPRISE', amount: '₹5,999', status: 'success',
       date: '2026-02-20 08:15', invoiceId: 'INV-2026-0840'
     },
     {
       id: 3, tenantName: 'Mohammed Iqbal', restaurantName: 'Zaiqa Biryani',
-      plan: 'Basic+', amount: '₹999', status: 'failed',
+      plan: 'GROWTH', amount: '₹1,999', status: 'failed',
       date: '2026-02-19 22:30', failureReason: 'Insufficient funds',
       invoiceId: 'INV-2026-0839'
     },
     {
       id: 4, tenantName: 'Sunita Reddy', restaurantName: 'Cafe Bliss',
-      plan: 'Basic', amount: '₹299', status: 'pending',
+      plan: 'STARTER', amount: '₹999', status: 'pending',
       date: '2026-02-19 18:00', invoiceId: 'INV-2026-0838'
     },
     {
       id: 5, tenantName: 'Arjun Nair', restaurantName: 'Salt & Pepper',
-      plan: 'Premium', amount: '₹1,499', status: 'refunded',
+      plan: 'PRO', amount: '₹3,499', status: 'refunded',
       date: '2026-02-18 14:22', invoiceId: 'INV-2026-0831'
     },
     {
       id: 6, tenantName: 'Divya Menon', restaurantName: 'Green Bowl',
-      plan: 'Basic', amount: '₹299', status: 'failed',
+      plan: 'STARTER', amount: '₹999', status: 'failed',
       date: '2026-02-17 11:10', failureReason: 'Card expired',
       invoiceId: 'INV-2026-0825'
     },
     {
       id: 7, tenantName: 'Karthik Raj', restaurantName: 'Dosa Corner',
-      plan: 'Basic+', amount: '₹999', status: 'success',
+      plan: 'GROWTH', amount: '₹1,999', status: 'success',
       date: '2026-02-17 10:05', invoiceId: 'INV-2026-0824'
     },
     {
       id: 8, tenantName: 'Meera Pillai', restaurantName: 'Kerala Kitchen',
-      plan: 'Premium', amount: '₹1,499', status: 'success',
+      plan: 'PRO', amount: '₹3,499', status: 'success',
       date: '2026-02-16 16:45', invoiceId: 'INV-2026-0820'
     },
   ];
@@ -319,17 +319,17 @@ export class SubscriptionRevenueComponent implements OnInit, OnDestroy {
   // ── Refund Requests ───────────────────────────────
   refundRequests: RefundRequest[] = [
     {
-      id: 1, tenantName: 'Arjun Nair', plan: 'Premium', amount: '₹1,499',
+      id: 1, tenantName: 'Arjun Nair', plan: 'PRO', amount: '₹3,499',
       requestDate: '2026-02-18', reason: 'Duplicate payment charged twice',
       status: 'approved', invoiceId: 'INV-2026-0831'
     },
     {
-      id: 2, tenantName: 'Santosh Gupta', plan: 'Basic+', amount: '₹999',
+      id: 2, tenantName: 'Santosh Gupta', plan: 'GROWTH', amount: '₹1,999',
       requestDate: '2026-02-15', reason: 'Cancelled within trial window',
       status: 'pending', invoiceId: 'INV-2026-0810'
     },
     {
-      id: 3, tenantName: 'Leela Das', plan: 'Basic', amount: '₹299',
+      id: 3, tenantName: 'Leela Das', plan: 'STARTER', amount: '₹999',
       requestDate: '2026-02-10', reason: 'Accidental subscription',
       status: 'rejected', invoiceId: 'INV-2026-0795'
     },
@@ -353,7 +353,7 @@ export class SubscriptionRevenueComponent implements OnInit, OnDestroy {
   // ── Promo Form ────────────────────────────────────
   newPromo = {
     code: '', type: 'percent' as 'percent' | 'flat', value: 0,
-    maxUses: 100, expiryDate: '', applicablePlans: 'Basic'
+    maxUses: 100, expiryDate: '', applicablePlans: 'STARTER'
   };
 
   // ── Revenue chart data (simplified bar values) ────
@@ -373,10 +373,10 @@ export class SubscriptionRevenueComponent implements OnInit, OnDestroy {
   }
 
   planDistribution = [
-    { name: 'Basic',   count: 342, color: '#94A3B8' },
-    { name: 'Basic+',  count: 289, color: '#16A34A'  },
-    { name: 'Premium', count: 342, color: '#2563EB'  },
-    { name: 'Ultra',   count: 174, color: '#7C3AED'  },
+    { name: 'STARTER',    count: 342, color: '#94A3B8' },
+    { name: 'GROWTH',     count: 289, color: '#16A34A' },
+    { name: 'PRO',        count: 342, color: '#2563EB' },
+    { name: 'ENTERPRISE', count: 174, color: '#7C3AED' },
   ];
   get totalSubscribers(): number { return this.planDistribution.reduce((a, b) => a + b.count, 0); }
   planBarWidth(count: number): number { return Math.round((count / this.totalSubscribers) * 100); }
@@ -527,8 +527,8 @@ export class SubscriptionRevenueComponent implements OnInit, OnDestroy {
 
   getPlanBadgeClass(name: string): string {
     const m: Record<string, string> = {
-      'Basic': 'plan-basic', 'Basic+': 'plan-basic-plus',
-      'Premium': 'plan-premium', 'Ultra': 'plan-ultra'
+      'STARTER': 'plan-starter', 'GROWTH': 'plan-growth',
+      'PRO': 'plan-pro', 'ENTERPRISE': 'plan-enterprise'
     };
     return m[name] || '';
   }

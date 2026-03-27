@@ -6,7 +6,6 @@ import { InventoryService } from '../../dashboard/services/inventory.service';
 import { Item } from '../../dashboard/models/item.model';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../common-popup/pages/confirm-dialog.component';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -23,8 +22,7 @@ type StockView = 'ALL' | 'LOW' | 'SOLD' | 'DISABLED';
     FormsModule,
     MatSelectModule,
     MatCheckboxModule,
-    MatProgressSpinnerModule,
-    MatDialogModule
+    MatDialogModule,
   ],
   templateUrl: './manage-inventory.html',
   styleUrls: ['./manage-inventory.css']
@@ -48,7 +46,6 @@ export class ManageInventoryComponent {
         return Number(b.id) - Number(a.id);
       });
       this.inventoryService.populateItems(itemList);
-      this.loading = false;
       this.cdr.detectChanges();
       
   });
@@ -63,7 +60,6 @@ export class ManageInventoryComponent {
     }
   }
 
-  loading = true;
   bulkPreview: any[] = [];
   bulkErrors: string[] = [];
   excelFileName: string = '';
@@ -250,14 +246,12 @@ export class ManageInventoryComponent {
         image: this.selectedImage || undefined,
         restaurantId: this.authService.currentUser?.restaurantId ?? ''
       };
-      this.loading = true;
       this.inventoryService.updateItem(updated).subscribe(res=>{
         let newItem= res;
         if(newItem.id != null && newItem.id > 0){
           this.inventoryService.getItemlist().subscribe(res=>{
             this.inventoryService.populateItems(res as Item[]);
             this.cdr.detectChanges();
-            this.loading = false;
           });
         }
       });
@@ -277,17 +271,15 @@ export class ManageInventoryComponent {
         image: this.selectedImage || undefined,
         restaurantId: this.authService.currentUser?.restaurantId ?? ''
       };
-      this.loading = true;
       this.inventoryService.addItem(newItem).subscribe(response=>{
         let newItem= response;
         if(newItem.id != null && newItem.id > 0){
           this.inventoryService.getItemlist().subscribe(res=>{
             this.inventoryService.populateItems(res as Item[]);
             this.cdr.detectChanges();
-            this.loading = false;
           });
         }
-      });;
+      });
     }
 
     this.showSuccessToast();
@@ -335,14 +327,12 @@ export class ManageInventoryComponent {
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.loading = true;
         this.inventoryService.deleteItem(id).subscribe(res => {
           let message = res;
           if (message.status) {
             this.inventoryService.getItemlist().subscribe(res => {
               this.inventoryService.populateItems(res as Item[]);
               this.cdr.detectChanges();
-              this.loading = false;
             });
           }
         });

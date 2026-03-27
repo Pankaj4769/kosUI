@@ -154,6 +154,11 @@ export class AuthService {
       return;
     }
     // SETUP_COMPLETE → normal role-based redirect
+    // If subscriptionPlan is missing (backend didn't return it), send to subscription page
+    if (!user.subscriptionPlan) {
+      this.router.navigate(['/onboarding/subscription']);
+      return;
+    }
     this.redirectByRole(user.role);
   }
 

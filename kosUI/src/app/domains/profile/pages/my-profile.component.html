@@ -118,6 +118,54 @@
       </div>
     </div>
 
+    <!-- Subscription Plan -->
+    <div class="card subscription-card">
+      <div class="card-header">
+        <mat-icon>workspace_premium</mat-icon>
+        <span>Subscription Plan</span>
+      </div>
+      <div class="card-body">
+        <div class="plans-grid">
+
+          <div class="plan-card"
+               *ngFor="let plan of plans"
+               [class.plan-current]="isPlanCurrent(plan.key)"
+               [class.plan-lower]="isPlanLower(plan.key)">
+            <div class="plan-top">
+              <div class="plan-name">{{ plan.label }}</div>
+              <div class="plan-price">
+                <span class="price-amount">{{ plan.price }}</span>
+                <span class="price-per" *ngIf="plan.per">{{ plan.per }}</span>
+              </div>
+              <span class="current-badge" *ngIf="isPlanCurrent(plan.key)">Current Plan</span>
+            </div>
+            <ul class="plan-features">
+              <li *ngFor="let f of plan.features">
+                <mat-icon>{{ isPlanLower(plan.key) ? 'remove' : 'check' }}</mat-icon>
+                {{ f }}
+              </li>
+            </ul>
+            <div class="plan-action">
+              <button *ngIf="isPlanHigher(plan.key)"
+                      mat-raised-button
+                      class="upgrade-btn"
+                      (click)="upgradePlan(plan.key)">
+                <mat-icon>arrow_upward</mat-icon> Upgrade
+              </button>
+              <button *ngIf="isPlanCurrent(plan.key)"
+                      mat-stroked-button
+                      class="current-btn"
+                      disabled>
+                <mat-icon>check_circle</mat-icon> Active
+              </button>
+              <span *ngIf="isPlanLower(plan.key)" class="downgrade-note">Lower tier</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <!-- Security -->
     <div class="card security-card">
       <div class="card-header">

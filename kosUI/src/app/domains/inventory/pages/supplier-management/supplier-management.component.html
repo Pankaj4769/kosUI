@@ -1,0 +1,365 @@
+<div class="rpt-shell">
+
+  <!-- Header -->
+  <div class="rpt-header">
+    <div class="rpt-header__icon" style="background:#dbeafe;">
+      <mat-icon style="color:#1d4ed8;font-size:20px;">local_shipping</mat-icon>
+    </div>
+    <div style="flex:1;">
+      <h1>Supplier Management</h1>
+      <p>Manage suppliers, track performance and handle transactions</p>
+    </div>
+    <button class="info-btn" (click)="showInfo=true" title="How to use">
+      <mat-icon>info_outline</mat-icon>
+    </button>
+  </div>
+
+  <!-- Info Panel Overlay -->
+  <div class="info-overlay" *ngIf="showInfo" (click)="showInfo=false"></div>
+  <div class="info-panel" [class.open]="showInfo">
+    <div class="info-panel__header">
+      <span><mat-icon>info_outline</mat-icon> How to use Supplier Management</span>
+      <button class="info-close" (click)="showInfo=false"><mat-icon>close</mat-icon></button>
+    </div>
+    <div class="info-panel__body">
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#dbeafe;color:#1d4ed8;">
+          <mat-icon>list_alt</mat-icon>
+        </div>
+        <div>
+          <h4>Supplier List</h4>
+          <p>View all registered suppliers with their contact details, status and star rating. Filter by <strong>Active / Inactive / Pending</strong> or search by name. Click a row to view full details.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#dcfce7;color:#15803d;">
+          <mat-icon>person_add</mat-icon>
+        </div>
+        <div>
+          <h4>Add / Edit Supplier</h4>
+          <p>Fill in the supplier form (name, contact, email, category, payment terms) and click <strong>Save Supplier</strong> to register a new one. To edit, select an existing supplier from the list first — the form pre-fills automatically.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#f3e8ff;color:#7c3aed;">
+          <mat-icon>insights</mat-icon>
+        </div>
+        <div>
+          <h4>Supplier Performance</h4>
+          <p>Compare suppliers by on-time delivery %, quality rating and average delivery days. Use this to identify your most reliable vendors and renegotiate terms with under-performers.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#fef3c7;color:#d97706;">
+          <mat-icon>receipt_long</mat-icon>
+        </div>
+        <div>
+          <h4>Transactions History</h4>
+          <p>Full invoice and payment history per supplier. Status badges show <span style="color:#15803d;font-weight:700;">Paid</span>, <span style="color:#d97706;font-weight:700;">Pending</span> or <span style="color:#dc2626;font-weight:700;">Overdue</span>. Use this for reconciliation and payment follow-ups.</p>
+        </div>
+      </div>
+
+      <div class="info-tip">
+        <mat-icon>lightbulb</mat-icon>
+        <span><strong>Tip:</strong> Regularly review the Performance tab — suppliers with on-time delivery below 80% should be flagged for review to prevent stockouts.</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-row">
+    <button class="tab-btn" [class.active]="activeTab==='list'" (click)="activeTab='list'">
+      <mat-icon>list_alt</mat-icon> Supplier List
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='add-edit'" (click)="activeTab='add-edit'">
+      <mat-icon>person_add</mat-icon> Add / Edit Supplier
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='performance'" (click)="activeTab='performance'">
+      <mat-icon>leaderboard</mat-icon> Performance
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='transactions'" (click)="activeTab='transactions'">
+      <mat-icon>receipt_long</mat-icon> Transactions
+    </button>
+  </div>
+
+  <!-- ─── SUPPLIER LIST TAB ─── -->
+  <ng-container *ngIf="activeTab==='list'">
+    <div class="rpt-stats">
+      <div class="rpt-stat rpt-stat--blue">
+        <span class="rpt-stat__value">18</span>
+        <span class="rpt-stat__label">Total Suppliers</span>
+      </div>
+      <div class="rpt-stat rpt-stat--green">
+        <span class="rpt-stat__value">14</span>
+        <span class="rpt-stat__label">Active</span>
+      </div>
+      <div class="rpt-stat rpt-stat--amber">
+        <span class="rpt-stat__value">2</span>
+        <span class="rpt-stat__label">Pending</span>
+      </div>
+      <div class="rpt-stat rpt-stat--red">
+        <span class="rpt-stat__value">2</span>
+        <span class="rpt-stat__label">Inactive</span>
+      </div>
+    </div>
+
+    <div class="rpt-toolbar">
+      <div class="rpt-search-box">
+        <mat-icon>search</mat-icon>
+        <input type="text" placeholder="Search suppliers..." [(ngModel)]="searchText" />
+      </div>
+      <select class="filter-select" [(ngModel)]="filterStatus">
+        <option value="">All Status</option>
+        <option>Active</option>
+        <option>Inactive</option>
+        <option>Pending</option>
+      </select>
+      <button class="btn-primary" (click)="selectedSupplier=null; activeTab='add-edit'">
+        <mat-icon style="font-size:15px;vertical-align:middle;">add</mat-icon> Add Supplier
+      </button>
+    </div>
+
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>local_shipping</mat-icon> Suppliers</span>
+          <span class="badge badge-blue">{{ filteredSuppliers.length }} suppliers</span>
+        </div>
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Supplier</th>
+              <th>Contact</th>
+              <th>Category</th>
+              <th>Orders</th>
+              <th>Rating</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of filteredSuppliers">
+              <td>
+                <div style="font-weight:700;font-size:12px;color:#0f172a;">{{ s.name }}</div>
+                <div style="font-size:10px;color:#94a3b8;">{{ s.email }}</div>
+              </td>
+              <td>
+                <div>{{ s.contact }}</div>
+                <div style="font-size:10px;color:#94a3b8;">{{ s.phone }}</div>
+              </td>
+              <td>{{ s.category }}</td>
+              <td>{{ s.orders }}</td>
+              <td>
+                <span style="color:#f59e0b;font-weight:700;">★</span>
+                <span style="font-size:12px;font-weight:700;">{{ s.rating }}</span>
+              </td>
+              <td><span class="badge" [ngClass]="getStatusBadge(s.status)">{{ s.status }}</span></td>
+              <td>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn-sm btn-view" (click)="editSupplier(s)">Edit</button>
+                  <button class="btn-sm btn-approve" (click)="editSupplier(s)">View</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── ADD / EDIT SUPPLIER TAB ─── -->
+  <ng-container *ngIf="activeTab==='add-edit'">
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title">
+            <mat-icon>{{ selectedSupplier ? 'edit' : 'person_add' }}</mat-icon>
+            {{ selectedSupplier ? 'Edit Supplier: ' + selectedSupplier.name : 'Add New Supplier' }}
+          </span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Supplier Name</label>
+            <input type="text" [(ngModel)]="supplierForm.name" placeholder="Enter supplier name" />
+          </div>
+          <div class="form-group">
+            <label>Contact Person</label>
+            <input type="text" [(ngModel)]="supplierForm.contact" placeholder="Enter contact name" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="supplierForm.email" placeholder="email@supplier.com" />
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" [(ngModel)]="supplierForm.phone" placeholder="10-digit phone number" />
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select [(ngModel)]="supplierForm.category">
+              <option value="">Select category</option>
+              <option>Vegetables</option>
+              <option>Dairy</option>
+              <option>Meat</option>
+              <option>Grains</option>
+              <option>Beverages</option>
+              <option>Spices</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Payment Terms</label>
+            <select [(ngModel)]="supplierForm.paymentTerms">
+              <option value="">Select terms</option>
+              <option>Net 30</option>
+              <option>Net 60</option>
+              <option>Immediate</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Credit Limit (₹)</label>
+            <input type="number" [(ngModel)]="supplierForm.creditLimit" placeholder="0" min="0" />
+          </div>
+          <div class="form-group full">
+            <label>Address</label>
+            <textarea [(ngModel)]="supplierForm.address" placeholder="Full supplier address"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" (click)="saveSupplier()">
+            <mat-icon style="font-size:15px;vertical-align:middle;">save</mat-icon>
+            {{ selectedSupplier ? 'Update Supplier' : 'Save Supplier' }}
+          </button>
+          <button class="btn-secondary" (click)="cancelForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── PERFORMANCE TAB ─── -->
+  <ng-container *ngIf="activeTab==='performance'">
+    <div class="rpt-stats">
+      <div class="rpt-stat rpt-stat--blue">
+        <span class="rpt-stat__value">2.3d</span>
+        <span class="rpt-stat__label">Avg Delivery Time</span>
+      </div>
+      <div class="rpt-stat rpt-stat--green">
+        <span class="rpt-stat__value">94%</span>
+        <span class="rpt-stat__label">On-Time Rate</span>
+      </div>
+      <div class="rpt-stat rpt-stat--amber">
+        <span class="rpt-stat__value">4.2/5</span>
+        <span class="rpt-stat__label">Quality Score</span>
+      </div>
+      <div class="rpt-stat rpt-stat--red">
+        <span class="rpt-stat__value">1.2%</span>
+        <span class="rpt-stat__label">Return Rate</span>
+      </div>
+    </div>
+
+    <div class="rpt-body">
+      <div class="two-col">
+        <div class="rpt-card">
+          <div class="rpt-card__header">
+            <span class="rpt-card__title"><mat-icon>bar_chart</mat-icon> Delivery Performance</span>
+          </div>
+          <div class="bar-chart">
+            <div class="bar-row" *ngFor="let p of performanceRows">
+              <span class="bar-label">{{ p.supplier }}</span>
+              <div class="bar-track">
+                <div class="bar-fill" [style.width.%]="p.pct" [style.background]="getBarColor(p.pct)"></div>
+              </div>
+              <span class="bar-val">{{ p.pct }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rpt-card">
+          <div class="rpt-card__header">
+            <span class="rpt-card__title"><mat-icon>table_chart</mat-icon> Supplier Scorecard</span>
+          </div>
+          <table class="rpt-table">
+            <thead>
+              <tr>
+                <th>Supplier</th>
+                <th>Orders</th>
+                <th>On Time</th>
+                <th>Quality</th>
+                <th>Avg Days</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of performanceRows">
+                <td>{{ p.supplier }}</td>
+                <td>{{ p.orders }}</td>
+                <td>{{ p.onTime }}</td>
+                <td>★ {{ p.quality }}</td>
+                <td>{{ p.avgDays }}d</td>
+                <td>
+                  <span class="badge"
+                    [ngClass]="p.score>=90 ? 'badge-green' : p.score>=75 ? 'badge-amber' : 'badge-red'">
+                    {{ p.score }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── TRANSACTIONS TAB ─── -->
+  <ng-container *ngIf="activeTab==='transactions'">
+    <div class="rpt-toolbar">
+      <div class="date-tabs">
+        <button *ngFor="let r of dateRanges"
+          [class.active]="activeDateRange===r"
+          (click)="activeDateRange=r">{{ r }}</button>
+      </div>
+      <div class="rpt-search-box">
+        <mat-icon>search</mat-icon>
+        <input type="text" placeholder="Search transactions..." [(ngModel)]="searchText" />
+      </div>
+    </div>
+
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>receipt_long</mat-icon> Supplier Transactions</span>
+          <span class="badge badge-blue">{{ transactions.length }} transactions</span>
+        </div>
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Supplier</th>
+              <th>Invoice No</th>
+              <th>Items</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Payment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of transactions">
+              <td>{{ t.date }}</td>
+              <td><strong>{{ t.supplier }}</strong></td>
+              <td><span style="font-family:monospace;font-size:11px;">{{ t.invoiceNo }}</span></td>
+              <td>{{ t.items }}</td>
+              <td><strong>₹{{ t.amount | number }}</strong></td>
+              <td><span class="badge" [ngClass]="getTxBadge(t.status)">{{ t.status }}</span></td>
+              <td>{{ t.payment }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+</div>

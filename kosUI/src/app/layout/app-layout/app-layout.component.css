@@ -26,7 +26,7 @@
   flex-shrink: 0;
   position: relative;    /* anchor for absolute-positioned sidebar on hover */
   transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  z-index: 100;
+  z-index: 201;          /* must be above header's z-index: 200 */
 }
 
 .sidebar-wrapper.collapsed {

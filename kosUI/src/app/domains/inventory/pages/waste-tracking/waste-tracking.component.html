@@ -1,0 +1,348 @@
+<div class="rpt-shell">
+
+  <!-- Header -->
+  <div class="rpt-header">
+    <div class="rpt-header__icon" style="background:#fef3c7;">
+      <mat-icon style="color:#d97706;font-size:20px;">delete_sweep</mat-icon>
+    </div>
+    <div style="flex:1;">
+      <h1>Waste Tracking</h1>
+      <p>Record, analyse and reduce food & material waste across your kitchen</p>
+    </div>
+    <button class="info-btn" (click)="showInfo=true" title="How to use">
+      <mat-icon>info_outline</mat-icon>
+    </button>
+  </div>
+
+  <!-- Info Panel Overlay -->
+  <div class="info-overlay" *ngIf="showInfo" (click)="showInfo=false"></div>
+  <div class="info-panel" [class.open]="showInfo">
+    <div class="info-panel__header">
+      <span><mat-icon>info_outline</mat-icon> How to use Waste Tracking</span>
+      <button class="info-close" (click)="showInfo=false"><mat-icon>close</mat-icon></button>
+    </div>
+    <div class="info-panel__body">
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#fef3c7;color:#d97706;">
+          <mat-icon>add_circle_outline</mat-icon>
+        </div>
+        <div>
+          <h4>Waste Entry</h4>
+          <p>Log every waste incident in real-time. Fill in the item name, category, quantity, reason and estimated cost, then click <strong>Record Waste</strong>. Recent entries appear in the table below the form.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#dbeafe;color:#1d4ed8;">
+          <mat-icon>list_alt</mat-icon>
+        </div>
+        <div>
+          <h4>Reports</h4>
+          <p>View the complete waste log filtered by <strong>Today / Week / Month / Year</strong>. Each record shows date, item, category, quantity, reason and cost — useful for audits and kitchen reviews.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#f3e8ff;color:#7c3aed;">
+          <mat-icon>bar_chart</mat-icon>
+        </div>
+        <div>
+          <h4>Analytics</h4>
+          <p>Bar charts break waste down by <strong>Category</strong> (Food, Beverage, Packaging) and <strong>Reason</strong> (Expired, Overcooked, Damaged…). Use this to identify the biggest loss drivers and take corrective action.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#dcfce7;color:#15803d;">
+          <mat-icon>trending_down</mat-icon>
+        </div>
+        <div>
+          <h4>Trends</h4>
+          <p>The weekly summary table compares each week's total waste cost against the previous week (<span style="color:#15803d;font-weight:700;">green = reduction ✓</span>, <span style="color:#dc2626;font-weight:700;">red = increase ✗</span>). The daily line chart shows this week's cost curve at a glance.</p>
+        </div>
+      </div>
+
+      <div class="info-tip">
+        <mat-icon>lightbulb</mat-icon>
+        <span><strong>Tip:</strong> Record waste immediately after it occurs for the most accurate cost tracking. Even small entries add up — consistent logging helps reduce weekly waste by up to 20%.</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="rpt-stats">
+    <div class="rpt-stat rpt-stat--red">
+      <span class="rpt-stat__value">₹12,800</span>
+      <span class="rpt-stat__label">This Week Cost</span>
+    </div>
+    <div class="rpt-stat rpt-stat--amber">
+      <span class="rpt-stat__value">28.4 kg</span>
+      <span class="rpt-stat__label">Total Waste</span>
+    </div>
+    <div class="rpt-stat rpt-stat--blue">
+      <span class="rpt-stat__value">15</span>
+      <span class="rpt-stat__label">Entries</span>
+    </div>
+    <div class="rpt-stat" style="color:#ea580c;">
+      <span class="rpt-stat__value" style="color:#ea580c;">-8%</span>
+      <span class="rpt-stat__label">vs Last Week</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-row">
+    <button class="tab-btn" [class.active]="activeTab==='entry'" (click)="activeTab='entry'">
+      <mat-icon>add_circle_outline</mat-icon> Waste Entry
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='reports'" (click)="activeTab='reports'">
+      <mat-icon>list_alt</mat-icon> Reports
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='analytics'" (click)="activeTab='analytics'">
+      <mat-icon>bar_chart</mat-icon> Analytics
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='trends'" (click)="activeTab='trends'">
+      <mat-icon>trending_down</mat-icon> Trends
+    </button>
+  </div>
+
+  <!-- ─── WASTE ENTRY TAB ─── -->
+  <ng-container *ngIf="activeTab==='entry'">
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>add_circle_outline</mat-icon> Record Waste</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Item Name</label>
+            <input type="text" [(ngModel)]="wasteForm.item" placeholder="e.g. Tomatoes" />
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select [(ngModel)]="wasteForm.category">
+              <option value="">Select category</option>
+              <option>Food</option>
+              <option>Beverage</option>
+              <option>Packaging</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" [(ngModel)]="wasteForm.quantity" min="0" placeholder="0" />
+          </div>
+          <div class="form-group">
+            <label>Unit</label>
+            <select [(ngModel)]="wasteForm.unit">
+              <option>kg</option>
+              <option>L</option>
+              <option>pcs</option>
+              <option>g</option>
+              <option>ml</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Reason</label>
+            <select [(ngModel)]="wasteForm.reason">
+              <option value="">Select reason</option>
+              <option>Expired</option>
+              <option>Overcooked</option>
+              <option>Damaged</option>
+              <option>Spillage</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Estimated Cost (₹)</label>
+            <input type="number" [(ngModel)]="wasteForm.cost" min="0" placeholder="0" />
+          </div>
+          <div class="form-group full">
+            <label>Notes (optional)</label>
+            <textarea [(ngModel)]="wasteForm.notes" placeholder="Additional details..."></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" (click)="submitWaste()">
+            <mat-icon style="font-size:15px;vertical-align:middle;">save</mat-icon> Record Waste
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent entries -->
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>history</mat-icon> Recent Entries</span>
+          <span class="badge badge-amber">{{ wasteEntries.length }} entries</span>
+        </div>
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Quantity</th>
+              <th>Reason</th>
+              <th>Cost</th>
+              <th>Recorded By</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of wasteEntries">
+              <td>{{ e.date }}</td>
+              <td><strong>{{ e.item }}</strong></td>
+              <td>{{ e.category }}</td>
+              <td>{{ e.quantity }} {{ e.unit }}</td>
+              <td><span class="badge" [ngClass]="getReasonBadge(e.reason)">{{ e.reason }}</span></td>
+              <td>₹{{ e.cost }}</td>
+              <td>{{ e.recordedBy }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── REPORTS TAB ─── -->
+  <ng-container *ngIf="activeTab==='reports'">
+    <div class="rpt-toolbar">
+      <span style="font-size:12px;font-weight:600;color:#64748b;">Period:</span>
+      <button *ngFor="let r of dateRanges" class="tab-btn" style="padding:5px 12px;"
+        [class.active]="activeDateRange===r" (click)="activeDateRange=r">{{ r }}</button>
+    </div>
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>list_alt</mat-icon> Waste Log</span>
+          <span class="badge badge-blue">{{ allWasteEntries.length }} records</span>
+        </div>
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Quantity</th>
+              <th>Reason</th>
+              <th>Cost (₹)</th>
+              <th>Recorded By</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of allWasteEntries">
+              <td>{{ e.date }}</td>
+              <td><strong>{{ e.item }}</strong></td>
+              <td>{{ e.category }}</td>
+              <td>{{ e.quantity }} {{ e.unit }}</td>
+              <td><span class="badge" [ngClass]="getReasonBadge(e.reason)">{{ e.reason }}</span></td>
+              <td>{{ e.cost }}</td>
+              <td>{{ e.recordedBy }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── ANALYTICS TAB ─── -->
+  <ng-container *ngIf="activeTab==='analytics'">
+    <div class="rpt-body">
+      <div class="two-col">
+
+        <!-- Category Breakdown -->
+        <div class="rpt-card">
+          <div class="rpt-card__header">
+            <span class="rpt-card__title"><mat-icon>category</mat-icon> By Category</span>
+          </div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+            <div *ngFor="let c of categoryBars" class="bar-row">
+              <div class="bar-label">
+                <span>{{ c.label }}</span>
+                <span style="font-weight:700;">₹{{ c.amount }}</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" [style.width.%]="c.pct" [style.background]="c.color"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reason Breakdown -->
+        <div class="rpt-card">
+          <div class="rpt-card__header">
+            <span class="rpt-card__title"><mat-icon>help_outline</mat-icon> By Reason</span>
+          </div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+            <div *ngFor="let r of reasonBars" class="bar-row">
+              <div class="bar-label">
+                <span>{{ r.label }}</span>
+                <span style="font-weight:700;">{{ r.count }} cases</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" [style.width.%]="r.pct" [style.background]="r.color"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── TRENDS TAB ─── -->
+  <ng-container *ngIf="activeTab==='trends'">
+    <div class="rpt-body">
+
+      <!-- Weekly summaries -->
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>date_range</mat-icon> Weekly Summary</span>
+        </div>
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Week</th>
+              <th>Total Waste</th>
+              <th>Cost (₹)</th>
+              <th>vs Previous</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let w of weekSummaries">
+              <td>{{ w.week }}</td>
+              <td>{{ w.totalWaste }}</td>
+              <td>₹{{ w.cost }}</td>
+              <td>
+                <span [ngClass]="w.vsLastWeek < 0 ? 'badge badge-green' : 'badge badge-red'">
+                  {{ w.vsLastWeek > 0 ? '+' : '' }}{{ w.vsLastWeek }}%
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Line Chart -->
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>show_chart</mat-icon> This Week — Daily Waste Cost (₹)</span>
+        </div>
+        <div style="padding:16px 20px;">
+          <svg viewBox="0 0 420 80" style="width:100%;overflow:visible;">
+            <!-- Area fill -->
+            <path [attr.d]="lineAreaPath" fill="#fef3c7" opacity="0.6" />
+            <!-- Line -->
+            <polyline [attr.points]="linePoints" fill="none" stroke="#d97706" stroke-width="2" stroke-linejoin="round" />
+            <!-- Day labels -->
+            <text *ngFor="let d of dayLabels; let i = index"
+              [attr.x]="10 + i * (380/6)" y="76"
+              text-anchor="middle" font-size="9" fill="#94a3b8">{{ d }}</text>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+
+</div>
