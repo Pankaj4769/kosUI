@@ -1,0 +1,326 @@
+/* ── Shell ── */
+.upgrade-dialog {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  width: 480px;
+  max-width: 100%;
+}
+
+/* ── Header ── */
+.dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 24px 0;
+  gap: 12px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-icon {
+  font-size: 28px;
+  height: 28px;
+  width: 28px;
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.header-sub {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.close-btn {
+  color: #9ca3af !important;
+  flex-shrink: 0;
+  margin-top: -4px;
+}
+
+/* ── Plan Strip ── */
+.plan-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #f5f3ff;
+  border: 1px solid #e0e7ff;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 16px 24px;
+}
+
+.strip-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.strip-feature {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #4338ca;
+  font-weight: 500;
+}
+
+.strip-feature mat-icon {
+  font-size: 14px;
+  height: 14px;
+  width: 14px;
+  color: #6366f1;
+}
+
+.strip-price {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.per {
+  font-size: 13px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+/* ── Tabs ── */
+.tab-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 24px;
+  margin-bottom: 4px;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tab-btn mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+}
+
+.tab-btn.active {
+  border-color: #6366f1;
+  color: #6366f1;
+  background: #eef2ff;
+}
+
+/* ── Form ── */
+.form-body {
+  padding: 12px 24px;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+}
+
+.input-icon-wrap {
+  position: relative;
+}
+
+.input-icon-wrap .field-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.input-icon-wrap input {
+  padding-left: 36px;
+}
+
+.upi-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 8px;
+}
+
+/* ── Footer ── */
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 8px;
+}
+
+.cancel-btn {
+  color: #6b7280 !important;
+  font-weight: 600;
+}
+
+.pay-btn {
+  background: #6366f1 !important;
+  color: #fff !important;
+  font-weight: 700;
+  padding: 0 24px;
+  height: 42px;
+}
+
+.pay-btn mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  margin-right: 4px;
+}
+
+.pay-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── State Screens ── */
+.state-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px 36px;
+  gap: 10px;
+  text-align: center;
+}
+
+.state-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.state-sub {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Spinner */
+.spinner-ring {
+  width: 56px;
+  height: 56px;
+  border: 4px solid #e0e7ff;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Success */
+.success-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #d1fae5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.success-circle mat-icon {
+  font-size: 36px;
+  height: 36px;
+  width: 36px;
+  color: #059669;
+}
+
+/* Error */
+.error-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.error-circle mat-icon {
+  font-size: 36px;
+  height: 36px;
+  width: 36px;
+  color: #dc2626;
+}
+
+.success-state .pay-btn {
+  margin-top: 12px;
+  background: #059669 !important;
+}

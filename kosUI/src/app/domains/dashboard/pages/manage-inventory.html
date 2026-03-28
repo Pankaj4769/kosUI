@@ -183,9 +183,6 @@
       </thead>
 
       <tbody>
-        <div class="spinner-container" *ngIf="loading">
-          <mat-spinner></mat-spinner>
-        </div>
         <tr *ngFor="let i of viewItems"
             [class.low-stock]="i.qty > 0 && i.qty <= 5"
             [class.sold-stock]="i.qty === 0">

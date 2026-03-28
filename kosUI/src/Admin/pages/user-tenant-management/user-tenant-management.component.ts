@@ -2,15 +2,19 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { BASE_URL } from '../../../app/apiUrls';
 
 // ── Interfaces ──────────────────────────────────────────
 export type UserStatus    = 'active' | 'suspended' | 'pending' | 'deleted';
 export type UserRole      = 'OWNER' | 'MANAGER' | 'CASHIER' | 'CHEF' | 'WAITER' | 'BILLING_ASSISTANT';
-export type PlanType      = 'Basic' | 'Basic+' | 'Premium' | 'Ultra';
+export type PlanType      = 'STARTER' | 'GROWTH' | 'PRO' | 'ENTERPRISE';
 export type ActivityLevel = 'normal' | 'suspicious' | 'blocked';
 
 export interface Tenant {
   id: number;
+  username: string;
+  restaurantId: number;
   name: string;
   email: string;
   phone: string;
@@ -108,18 +112,19 @@ export class UserTenantManagementComponent implements OnInit, OnDestroy {
 
   // ── Filters ───────────────────────────────────────
   statusFilters = ['ALL', 'active', 'suspended', 'pending', 'deleted'];
-  planFilters   = ['ALL', 'Basic', 'Basic+', 'Premium', 'Ultra'];
+  planFilters   = ['ALL', 'STARTER', 'GROWTH', 'PRO', 'ENTERPRISE'];
+  planOptions: PlanType[] = ['STARTER', 'GROWTH', 'PRO', 'ENTERPRISE'];
   roleOptions: UserRole[] = ['OWNER', 'MANAGER', 'CASHIER', 'CHEF', 'WAITER', 'BILLING_ASSISTANT'];
 
   // ── Tenant Data ───────────────────────────────────
   allTenants: Tenant[] = [
     {
-      id: 1,
+      id: 1, username: 'rajesh_owner', restaurantId: 101,
       name: 'Rajesh Kumar',
       email: 'rajesh.kumar@spicebloom.in',
       phone: '+91 98765 43210',
       restaurantName: 'Spice Bloom Restaurant',
-      plan: 'Premium',
+      plan: 'PRO',
       status: 'active',
       role: 'OWNER',
       joinDate: '2025-04-12',
@@ -141,15 +146,15 @@ export class UserTenantManagementComponent implements OnInit, OnDestroy {
         { id: 2, timestamp: '2026-02-20 09:15', action: 'Order Created', ip: '103.21.58.11', device: 'Chrome / Windows', status: 'success' },
         { id: 3, timestamp: '2026-02-19 18:33', action: 'Staff Added',   ip: '103.21.58.11', device: 'Mobile / Android', status: 'success' },
       ],
-      subscription: { plan: 'Premium', billingCycle: 'Yearly', startDate: '2025-04-12', nextRenewal: '2026-04-12', amount: '₹18,000/yr', status: 'active' }
+      subscription: { plan: 'PRO', billingCycle: 'Yearly', startDate: '2025-04-12', nextRenewal: '2026-04-12', amount: '₹18,000/yr', status: 'active' }
     },
     {
-      id: 2,
+      id: 2, username: 'priya_owner', restaurantId: 102,
       name: 'Priya Sharma',
       email: 'priya@thetandoori.com',
       phone: '+91 87654 32109',
       restaurantName: 'The Tandoori House',
-      plan: 'Ultra',
+      plan: 'ENTERPRISE',
       status: 'active',
       role: 'OWNER',
       joinDate: '2024-11-03',
@@ -170,15 +175,15 @@ export class UserTenantManagementComponent implements OnInit, OnDestroy {
         { id: 1, timestamp: '2026-02-20 08:55', action: 'Login',           ip: '49.36.102.4',  device: 'Safari / MacOS',  status: 'success' },
         { id: 2, timestamp: '2026-02-19 22:10', action: 'Report Exported', ip: '49.36.102.4',  device: 'Safari / MacOS',  status: 'success' },
       ],
-      subscription: { plan: 'Ultra', billingCycle: 'Yearly', startDate: '2024-11-03', nextRenewal: '2025-11-03', amount: '₹36,000/yr', status: 'active' }
+      subscription: { plan: 'ENTERPRISE', billingCycle: 'Yearly', startDate: '2024-11-03', nextRenewal: '2025-11-03', amount: '₹36,000/yr', status: 'active' }
     },
     {
-      id: 3,
+      id: 3, username: 'miqbal', restaurantId: 103,
       name: 'Mohammed Iqbal',
       email: 'miqbal@zaiqa.in',
       phone: '+91 76543 21098',
       restaurantName: 'Zaiqa Biryani',
-      plan: 'Basic+',
+      plan: 'GROWTH',
       status: 'suspended',
       role: 'OWNER',
       joinDate: '2025-07-22',
@@ -200,15 +205,15 @@ export class UserTenantManagementComponent implements OnInit, OnDestroy {
         { id: 2, timestamp: '2026-02-14 13:55', action: 'Failed Login x5',   ip: '192.168.1.254', device: 'Unknown',       status: 'failed'   },
         { id: 3, timestamp: '2026-02-13 11:10', action: 'Mass Data Export',  ip: '45.89.192.12',  device: 'Chrome / Linux', status: 'failed'  },
       ],
-      subscription: { plan: 'Basic+', billingCycle: 'Monthly', startDate: '2025-07-22', nextRenewal: '2026-03-22', amount: '₹999/mo', status: 'active' }
+      subscription: { plan: 'GROWTH', billingCycle: 'Monthly', startDate: '2025-07-22', nextRenewal: '2026-03-22', amount: '₹999/mo', status: 'active' }
     },
     {
-      id: 4,
+      id: 4, username: 'sunita_bliss', restaurantId: 104,
       name: 'Sunita Reddy',
       email: 'sunita@cafebliss.in',
       phone: '+91 65432 10987',
       restaurantName: 'Cafe Bliss',
-      plan: 'Basic',
+      plan: 'STARTER',
       status: 'pending',
       role: 'OWNER',
       joinDate: '2026-02-18',
@@ -228,15 +233,15 @@ export class UserTenantManagementComponent implements OnInit, OnDestroy {
       activityHistory: [
         { id: 1, timestamp: '2026-02-18 16:45', action: 'Registration',   ip: '122.167.4.88', device: 'Chrome / Windows', status: 'success' },
       ],
-      subscription: { plan: 'Basic', billingCycle: 'Monthly', startDate: '2026-02-18', nextRenewal: '2026-03-18', amount: '₹299/mo', status: 'trial' }
+      subscription: { plan: 'STARTER', billingCycle: 'Monthly', startDate: '2026-02-18', nextRenewal: '2026-03-18', amount: '₹299/mo', status: 'trial' }
     },
     {
-      id: 5,
+      id: 5, username: 'arjun_nair', restaurantId: 105,
       name: 'Arjun Nair',
       email: 'arjun@saltpepper.in',
       phone: '+91 54321 09876',
       restaurantName: 'Salt & Pepper',
-      plan: 'Premium',
+      plan: 'PRO',
       status: 'active',
       role: 'OWNER',
       joinDate: '2025-01-15',
@@ -258,15 +263,15 @@ export class UserTenantManagementComponent implements OnInit, OnDestroy {
         { id: 2, timestamp: '2026-02-20 11:09', action: 'API Spike Detected', ip: '117.55.2.44', device: 'Automated Bot?', status: 'failed'  },
         { id: 3, timestamp: '2026-02-19 23:55', action: 'After-hours Access', ip: '117.55.2.44', device: 'Chrome / Windows', status: 'success' },
       ],
-      subscription: { plan: 'Premium', billingCycle: 'Monthly', startDate: '2025-01-15', nextRenewal: '2026-03-15', amount: '₹1,499/mo', status: 'active' }
+      subscription: { plan: 'PRO', billingCycle: 'Monthly', startDate: '2025-01-15', nextRenewal: '2026-03-15', amount: '₹1,499/mo', status: 'active' }
     },
     {
-      id: 6,
+      id: 6, username: 'divya_menon', restaurantId: 106,
       name: 'Divya Menon',
       email: 'divya@greenbowl.in',
       phone: '+91 43210 98765',
       restaurantName: 'Green Bowl Kitchen',
-      plan: 'Basic',
+      plan: 'STARTER',
       status: 'active',
       role: 'MANAGER',
       joinDate: '2025-09-08',
@@ -287,7 +292,7 @@ export class UserTenantManagementComponent implements OnInit, OnDestroy {
         { id: 1, timestamp: '2026-02-19 20:14', action: 'Login',            ip: '59.88.14.7',   device: 'Firefox / Windows', status: 'success' },
         { id: 2, timestamp: '2026-02-19 12:30', action: 'Menu Updated',     ip: '59.88.14.7',   device: 'Firefox / Windows', status: 'success' },
       ],
-      subscription: { plan: 'Basic', billingCycle: 'Monthly', startDate: '2025-09-08', nextRenewal: '2026-03-08', amount: '₹299/mo', status: 'active' }
+      subscription: { plan: 'STARTER', billingCycle: 'Monthly', startDate: '2025-09-08', nextRenewal: '2026-03-08', amount: '₹299/mo', status: 'active' }
     },
   ];
 
@@ -423,8 +428,8 @@ export class UserTenantManagementComponent implements OnInit, OnDestroy {
 
   getPlanClass(plan: string): string {
     const m: Record<string, string> = {
-      'Basic': 'plan-basic', 'Basic+': 'plan-basic-plus',
-      'Premium': 'plan-premium', 'Ultra': 'plan-ultra'
+      'STARTER': 'plan-starter', 'GROWTH': 'plan-growth',
+      'PRO': 'plan-pro', 'ENTERPRISE': 'plan-enterprise'
     };
     return m[plan] || '';
   }

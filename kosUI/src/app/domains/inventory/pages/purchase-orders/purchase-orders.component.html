@@ -1,0 +1,387 @@
+<div class="rpt-shell">
+
+  <!-- Header -->
+  <div class="rpt-header">
+    <div class="rpt-header__icon" style="background:#dcfce7;">
+      <mat-icon style="color:#16a34a;font-size:20px;">shopping_cart</mat-icon>
+    </div>
+    <div style="flex:1;">
+      <h1>Purchase Orders</h1>
+      <p>Create and manage purchase orders, approvals and invoice mapping</p>
+    </div>
+    <button class="info-btn" (click)="showInfo=true" title="How to use">
+      <mat-icon>info_outline</mat-icon>
+    </button>
+  </div>
+
+  <!-- Info Panel Overlay -->
+  <div class="info-overlay" *ngIf="showInfo" (click)="showInfo=false"></div>
+  <div class="info-panel" [class.open]="showInfo">
+    <div class="info-panel__header">
+      <span><mat-icon>info_outline</mat-icon> How to use Purchase Orders</span>
+      <button class="info-close" (click)="showInfo=false"><mat-icon>close</mat-icon></button>
+    </div>
+    <div class="info-panel__body">
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#dcfce7;color:#15803d;">
+          <mat-icon>list_alt</mat-icon>
+        </div>
+        <div>
+          <h4>PO List</h4>
+          <p>View all purchase orders with their status (Draft, Pending, Approved, Rejected, Delivered). Filter by status or search by PO number / supplier name. Each row shows items count, total value and priority.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#dbeafe;color:#1d4ed8;">
+          <mat-icon>add_shopping_cart</mat-icon>
+        </div>
+        <div>
+          <h4>Create PO</h4>
+          <p>Select a supplier, set priority (Normal / High / Urgent), add line items with quantity and unit price. The total is calculated automatically. Use <strong>Save as Draft</strong> to save for later or <strong>Submit for Approval</strong> to send it to the approver.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#fef3c7;color:#d97706;">
+          <mat-icon>rule</mat-icon>
+        </div>
+        <div>
+          <h4>Approvals</h4>
+          <p>Lists all POs pending your approval. Review the supplier, value and priority, then click <strong>Approve</strong> or <strong>Reject</strong>. Approved POs move to the active procurement pipeline.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#f3e8ff;color:#7c3aed;">
+          <mat-icon>receipt</mat-icon>
+        </div>
+        <div>
+          <h4>Invoice Mapping</h4>
+          <p>Match received supplier invoices to their corresponding POs. Auto-matched invoices are highlighted in green. Use <strong>Match Manually</strong> for unmatched invoices to reconcile your payables accurately.</p>
+        </div>
+      </div>
+
+      <div class="info-tip">
+        <mat-icon>lightbulb</mat-icon>
+        <span><strong>Tip:</strong> Set priority to <strong>Urgent</strong> only for critical stockouts — it helps approvers triage faster and avoids approval queue bottlenecks.</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-row">
+    <button class="tab-btn" [class.active]="activeTab==='po-list'" (click)="activeTab='po-list'">
+      <mat-icon>list_alt</mat-icon> PO List
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='create-po'" (click)="activeTab='create-po'">
+      <mat-icon>add_shopping_cart</mat-icon> Create PO
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='approvals'" (click)="activeTab='approvals'">
+      <mat-icon>approval</mat-icon> Approvals
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='invoice-mapping'" (click)="activeTab='invoice-mapping'">
+      <mat-icon>receipt</mat-icon> Invoice Mapping
+    </button>
+  </div>
+
+  <!-- ─── PO LIST TAB ─── -->
+  <ng-container *ngIf="activeTab==='po-list'">
+    <div class="rpt-stats">
+      <div class="rpt-stat rpt-stat--blue">
+        <span class="rpt-stat__value">45</span>
+        <span class="rpt-stat__label">Total POs</span>
+      </div>
+      <div class="rpt-stat rpt-stat--amber">
+        <span class="rpt-stat__value">8</span>
+        <span class="rpt-stat__label">Pending</span>
+      </div>
+      <div class="rpt-stat rpt-stat--green">
+        <span class="rpt-stat__value">32</span>
+        <span class="rpt-stat__label">Approved</span>
+      </div>
+      <div class="rpt-stat rpt-stat--red">
+        <span class="rpt-stat__value">5</span>
+        <span class="rpt-stat__label">Rejected</span>
+      </div>
+    </div>
+
+    <div class="rpt-toolbar">
+      <div class="rpt-search-box">
+        <mat-icon>search</mat-icon>
+        <input type="text" placeholder="Search PO number or supplier..." [(ngModel)]="searchText" />
+      </div>
+      <select class="filter-select" [(ngModel)]="filterStatus">
+        <option value="">All Status</option>
+        <option>Draft</option>
+        <option>Pending</option>
+        <option>Approved</option>
+        <option>Rejected</option>
+        <option>Delivered</option>
+      </select>
+      <button class="btn-primary" (click)="activeTab='create-po'">
+        <mat-icon style="font-size:15px;vertical-align:middle;">add</mat-icon> New PO
+      </button>
+    </div>
+
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>shopping_cart</mat-icon> Purchase Orders</span>
+          <span class="badge badge-blue">{{ filteredPOs.length }} orders</span>
+        </div>
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>PO No</th>
+              <th>Supplier</th>
+              <th>Date</th>
+              <th>Items</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let po of filteredPOs">
+              <td><span style="font-family:monospace;font-weight:700;font-size:12px;">{{ po.poNo }}</span></td>
+              <td>{{ po.supplier }}</td>
+              <td>{{ po.date }}</td>
+              <td>{{ po.items }}</td>
+              <td><strong>₹{{ po.total | number }}</strong></td>
+              <td><span class="badge" [ngClass]="getStatusBadge(po.status)">{{ po.status }}</span></td>
+              <td>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn-sm btn-view">View</button>
+                  <button class="btn-sm btn-approve" *ngIf="po.status==='Pending'">Approve</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── CREATE PO TAB ─── -->
+  <ng-container *ngIf="activeTab==='create-po'">
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>add_shopping_cart</mat-icon> Create Purchase Order</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Supplier</label>
+            <select [(ngModel)]="poForm.supplier">
+              <option value="">Select supplier</option>
+              <option>Fresh Farms</option>
+              <option>Spice Route</option>
+              <option>Dairy Direct</option>
+              <option>Meat Masters</option>
+              <option>Grain World</option>
+              <option>Beverage Hub</option>
+              <option>Veggie Fresh</option>
+              <option>Herb Garden</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Expected Delivery Date</label>
+            <input type="date" [(ngModel)]="poForm.deliveryDate" />
+          </div>
+          <div class="form-group">
+            <label>Priority</label>
+            <select [(ngModel)]="poForm.priority">
+              <option value="Normal">Normal</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Add Items Section -->
+        <div class="po-items-section">
+          <div class="po-items-header">
+            <span class="rpt-card__title"><mat-icon>inventory</mat-icon> Order Items</span>
+          </div>
+          <div class="po-item-form">
+            <input type="text" [(ngModel)]="currentItem.name" placeholder="Item name" />
+            <input type="number" [(ngModel)]="currentItem.quantity" placeholder="Qty" min="1" />
+            <select [(ngModel)]="currentItem.unit">
+              <option>kg</option>
+              <option>L</option>
+              <option>pcs</option>
+              <option>box</option>
+              <option>bag</option>
+            </select>
+            <input type="number" [(ngModel)]="currentItem.unitPrice" placeholder="Unit price ₹" min="0" />
+            <button class="btn-primary" (click)="addPOItem()">
+              <mat-icon style="font-size:15px;vertical-align:middle;">add</mat-icon> Add Item
+            </button>
+          </div>
+
+          <table class="rpt-table" *ngIf="poItems.length > 0">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+                <th>Unit Price</th>
+                <th>Amount</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of poItems; let i = index">
+                <td>{{ item.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unit }}</td>
+                <td>₹{{ item.unitPrice }}</td>
+                <td><strong>₹{{ item.quantity * item.unitPrice | number }}</strong></td>
+                <td>
+                  <button class="btn-sm btn-reject" (click)="removePOItem(i)">Remove</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="po-total" *ngIf="poItems.length > 0">
+            <span>Total Order Value:</span>
+            <strong>₹{{ poTotal | number }}</strong>
+          </div>
+        </div>
+
+        <div class="form-grid" style="padding-top:0;">
+          <div class="form-group full">
+            <label>Order Notes</label>
+            <textarea [(ngModel)]="poForm.notes" placeholder="Add any special instructions or notes..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-primary" (click)="submitPO()">
+            <mat-icon style="font-size:15px;vertical-align:middle;">send</mat-icon> Submit PO
+          </button>
+          <button class="btn-secondary" (click)="saveDraft()">
+            <mat-icon style="font-size:15px;vertical-align:middle;">save</mat-icon> Save Draft
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── APPROVALS TAB ─── -->
+  <ng-container *ngIf="activeTab==='approvals'">
+    <div class="rpt-stats">
+      <div class="rpt-stat rpt-stat--amber">
+        <span class="rpt-stat__value">{{ pendingApprovals.length }}</span>
+        <span class="rpt-stat__label">Pending Approval</span>
+      </div>
+      <div class="rpt-stat rpt-stat--green">
+        <span class="rpt-stat__value">5</span>
+        <span class="rpt-stat__label">Approved Today</span>
+      </div>
+      <div class="rpt-stat rpt-stat--blue">
+        <span class="rpt-stat__value">4.2h</span>
+        <span class="rpt-stat__label">Avg Approval Time</span>
+      </div>
+    </div>
+
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>approval</mat-icon> Pending Approvals</span>
+          <span class="badge badge-amber">{{ pendingApprovals.length }} pending</span>
+        </div>
+        <table class="rpt-table" *ngIf="pendingApprovals.length > 0; else noPending">
+          <thead>
+            <tr>
+              <th>PO No</th>
+              <th>Supplier</th>
+              <th>Requested By</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Priority</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let po of pendingApprovals">
+              <td><span style="font-family:monospace;font-weight:700;font-size:12px;">{{ po.poNo }}</span></td>
+              <td>{{ po.supplier }}</td>
+              <td>{{ po.requestedBy }}</td>
+              <td><strong>₹{{ po.total | number }}</strong></td>
+              <td>{{ po.date }}</td>
+              <td>
+                <span class="badge" [ngClass]="getPriorityBadge(po.priority)">{{ po.priority }}</span>
+              </td>
+              <td>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn-sm btn-approve" (click)="approve(po)">Approve</button>
+                  <button class="btn-sm btn-reject" (click)="reject(po)">Reject</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noPending>
+          <div class="empty-state">
+            <mat-icon>check_circle</mat-icon>
+            <p>All purchase orders have been reviewed!</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── INVOICE MAPPING TAB ─── -->
+  <ng-container *ngIf="activeTab==='invoice-mapping'">
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>receipt</mat-icon> Invoice Mapping</span>
+          <span class="badge badge-blue">{{ invoices.length }} invoices</span>
+        </div>
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Invoice No</th>
+              <th>PO No</th>
+              <th>Supplier</th>
+              <th>Invoice Date</th>
+              <th>Amount</th>
+              <th>Matched</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let inv of invoices">
+              <td><span style="font-family:monospace;font-size:11px;">{{ inv.invoiceNo }}</span></td>
+              <td>
+                <span style="font-family:monospace;font-size:11px;" *ngIf="inv.poNo">{{ inv.poNo }}</span>
+                <span style="color:#94a3b8;font-size:11px;" *ngIf="!inv.poNo">—</span>
+              </td>
+              <td>{{ inv.supplier }}</td>
+              <td>{{ inv.invoiceDate }}</td>
+              <td><strong>₹{{ inv.amount | number }}</strong></td>
+              <td>
+                <mat-icon [style.color]="inv.matched ? '#16a34a' : '#dc2626'">
+                  {{ inv.matched ? 'check_circle' : 'cancel' }}
+                </mat-icon>
+              </td>
+              <td><span class="badge" [ngClass]="getInvoiceBadge(inv.status)">{{ inv.status }}</span></td>
+              <td>
+                <button class="btn-sm btn-approve" *ngIf="!inv.matched" (click)="matchInvoice(inv)">Match</button>
+                <button class="btn-sm btn-view" *ngIf="inv.matched">View</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+</div>

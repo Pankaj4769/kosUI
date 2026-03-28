@@ -1,0 +1,282 @@
+<div class="rpt-shell">
+
+  <!-- Header -->
+  <div class="rpt-header">
+    <div class="rpt-header__icon" style="background:#fee2e2;">
+      <mat-icon style="color:#dc2626;font-size:20px;">notifications_active</mat-icon>
+    </div>
+    <div style="flex:1;">
+      <h1>Stock Alerts</h1>
+      <p>Monitor inventory levels, expiry dates and critical stock conditions</p>
+    </div>
+    <button class="info-btn" (click)="showInfo=true" title="How to use">
+      <mat-icon>info_outline</mat-icon>
+    </button>
+  </div>
+
+  <!-- Info Panel Overlay -->
+  <div class="info-overlay" *ngIf="showInfo" (click)="showInfo=false"></div>
+  <div class="info-panel" [class.open]="showInfo">
+    <div class="info-panel__header">
+      <span><mat-icon>info_outline</mat-icon> How to use Stock Alerts</span>
+      <button class="info-close" (click)="showInfo=false"><mat-icon>close</mat-icon></button>
+    </div>
+    <div class="info-panel__body">
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#fee2e2;color:#dc2626;">
+          <mat-icon>dashboard</mat-icon>
+        </div>
+        <div>
+          <h4>Dashboard</h4>
+          <p>Overview of all active alerts — total, critical, low stock and expiring soon. Insight cards highlight the most urgent conditions at a glance.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#fef3c7;color:#d97706;">
+          <mat-icon>inventory_2</mat-icon>
+        </div>
+        <div>
+          <h4>Low Stock</h4>
+          <p>Lists items that have dropped below their minimum threshold. Filter by category or search by name. Click <strong>Reorder</strong> to initiate a purchase order for the item.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#ffedd5;color:#ea580c;">
+          <mat-icon>event_busy</mat-icon>
+        </div>
+        <div>
+          <h4>Expiry Alerts</h4>
+          <p>Shows batches nearing their expiry date. Days remaining are colour-coded: <span style="color:#dc2626;font-weight:700;">red ≤ 3 days</span>, <span style="color:#d97706;font-weight:700;">amber ≤ 7 days</span>, <span style="color:#16a34a;font-weight:700;">green otherwise</span>. Act before items expire to minimise waste.</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__icon" style="background:#dbeafe;color:#1d4ed8;">
+          <mat-icon>tune</mat-icon>
+        </div>
+        <div>
+          <h4>Settings</h4>
+          <p>Configure the thresholds that trigger alerts (low stock units, critical units, expiry warning days) and toggle email or SMS notifications. Click <strong>Save Settings</strong> to apply.</p>
+        </div>
+      </div>
+
+      <div class="info-tip">
+        <mat-icon>lightbulb</mat-icon>
+        <span><strong>Tip:</strong> Set your critical threshold to at least 2× your average daily usage so you have enough lead time to reorder before running out.</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-row">
+    <button class="tab-btn" [class.active]="activeTab==='dashboard'" (click)="activeTab='dashboard'">
+      <mat-icon>dashboard</mat-icon> Dashboard
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='low-stock'" (click)="activeTab='low-stock'">
+      <mat-icon>inventory_2</mat-icon> Low Stock
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='expiry'" (click)="activeTab='expiry'">
+      <mat-icon>event_busy</mat-icon> Expiry Alerts
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='settings'" (click)="activeTab='settings'">
+      <mat-icon>tune</mat-icon> Settings
+    </button>
+  </div>
+
+  <!-- ─── DASHBOARD TAB ─── -->
+  <ng-container *ngIf="activeTab==='dashboard'">
+    <div class="rpt-stats">
+      <div class="rpt-stat rpt-stat--red">
+        <span class="rpt-stat__value">12</span>
+        <span class="rpt-stat__label">Total Alerts</span>
+      </div>
+      <div class="rpt-stat rpt-stat--red">
+        <span class="rpt-stat__value">3</span>
+        <span class="rpt-stat__label">Critical</span>
+      </div>
+      <div class="rpt-stat rpt-stat--amber">
+        <span class="rpt-stat__value">7</span>
+        <span class="rpt-stat__label">Low Stock Items</span>
+      </div>
+      <div class="rpt-stat" style="color:#ea580c;">
+        <span class="rpt-stat__value" style="color:#ea580c;">5</span>
+        <span class="rpt-stat__label">Expiring Soon</span>
+      </div>
+    </div>
+
+    <div class="rpt-insights">
+      <div class="insight-card insight-alert">
+        <mat-icon>warning</mat-icon> 3 items critically low
+      </div>
+      <div class="insight-card insight-warn">
+        <mat-icon>schedule</mat-icon> 5 items expiring within 7 days
+      </div>
+      <div class="insight-card insight-down">
+        <mat-icon>remove_shopping_cart</mat-icon> 2 items out of stock
+      </div>
+    </div>
+
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>warning_amber</mat-icon> Active Alerts</span>
+          <span class="badge badge-red">{{ alertItems.length }} alerts</span>
+        </div>
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Type</th>
+              <th>Severity</th>
+              <th>Stock / Expiry</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of alertItems">
+              <td><strong>{{ a.item }}</strong></td>
+              <td>{{ a.category }}</td>
+              <td>{{ a.type }}</td>
+              <td><span class="badge" [ngClass]="getSeverityBadge(a.severity)">{{ a.severity }}</span></td>
+              <td>{{ a.stockOrExpiry }}</td>
+              <td><button class="btn-sm btn-view">{{ a.action }}</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── LOW STOCK TAB ─── -->
+  <ng-container *ngIf="activeTab==='low-stock'">
+    <div class="rpt-toolbar">
+      <div class="rpt-search-box">
+        <mat-icon>search</mat-icon>
+        <input type="text" placeholder="Search items..." [(ngModel)]="searchText" />
+      </div>
+      <select class="filter-select" [(ngModel)]="filterCategory">
+        <option value="">All Categories</option>
+        <option>Grains</option>
+        <option>Vegetables</option>
+        <option>Dairy</option>
+        <option>Meat</option>
+        <option>Condiments</option>
+        <option>Spices</option>
+      </select>
+    </div>
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>inventory_2</mat-icon> Low Stock Items</span>
+          <span class="badge badge-amber">{{ filteredLowStock.length }} items</span>
+        </div>
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Current Stock</th>
+              <th>Min Threshold</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of filteredLowStock">
+              <td><strong>{{ s.item }}</strong></td>
+              <td>{{ s.category }}</td>
+              <td>{{ s.currentStock }} {{ s.unit }}</td>
+              <td>{{ s.minThreshold }} {{ s.unit }}</td>
+              <td><span class="badge" [ngClass]="getLowStockBadge(s.status)">{{ s.status }}</span></td>
+              <td><button class="btn-sm btn-approve">Reorder</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── EXPIRY ALERTS TAB ─── -->
+  <ng-container *ngIf="activeTab==='expiry'">
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>event_busy</mat-icon> Expiry Alerts</span>
+          <span class="badge badge-red">{{ expiryItems.length }} items</span>
+        </div>
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Batch No</th>
+              <th>Quantity</th>
+              <th>Expiry Date</th>
+              <th>Days Left</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of expiryItems">
+              <td><strong>{{ e.item }}</strong></td>
+              <td><span style="font-family:monospace;font-size:11px;">{{ e.batchNo }}</span></td>
+              <td>{{ e.quantity }}</td>
+              <td>{{ e.expiryDate }}</td>
+              <td>
+                <span [style.color]="e.daysLeft <= 3 ? '#dc2626' : e.daysLeft <= 7 ? '#d97706' : '#16a34a'">
+                  <strong>{{ e.daysLeft }}d</strong>
+                </span>
+              </td>
+              <td><span class="badge" [ngClass]="getExpiryBadge(e.status)">{{ e.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ─── SETTINGS TAB ─── -->
+  <ng-container *ngIf="activeTab==='settings'">
+    <div class="rpt-body">
+      <div class="rpt-card">
+        <div class="rpt-card__header">
+          <span class="rpt-card__title"><mat-icon>tune</mat-icon> Alert Settings</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Low Stock Threshold (units)</label>
+            <input type="number" [(ngModel)]="settings.lowStockThreshold" min="1" />
+          </div>
+          <div class="form-group">
+            <label>Critical Threshold (units)</label>
+            <input type="number" [(ngModel)]="settings.criticalThreshold" min="1" />
+          </div>
+          <div class="form-group">
+            <label>Expiry Alert Days</label>
+            <input type="number" [(ngModel)]="settings.expiryAlertDays" min="1" />
+          </div>
+          <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:16px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:12px;font-weight:600;color:#334155;">
+              <input type="checkbox" [(ngModel)]="settings.emailNotifications" style="width:auto;padding:0;" />
+              Email Notifications
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:12px;font-weight:600;color:#334155;">
+              <input type="checkbox" [(ngModel)]="settings.smsAlerts" style="width:auto;padding:0;" />
+              SMS Alerts
+            </label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" (click)="saveSettings()">
+            <mat-icon style="font-size:15px;vertical-align:middle;">save</mat-icon> Save Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+</div>

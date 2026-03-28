@@ -1,0 +1,15 @@
+<div class="upgrade-prompt">
+  <div class="up-icon">🔒</div>
+
+  <div class="up-body">
+    <p class="up-title">{{ featureLabel }} is not available on your current plan</p>
+    <p class="up-sub">
+      Upgrade to the <strong>{{ planLabel }}</strong> plan ({{ planPrice }}) to unlock this feature.
+    </p>
+    <p class="up-tagline">{{ planTagline }}</p>
+  </div>
+
+  <button class="up-btn" (click)="upgrade()">
+    Upgrade to {{ planLabel }}
+  </button>
+</div>

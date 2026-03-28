@@ -12,6 +12,7 @@ import { Subject, takeUntil, filter } from 'rxjs';
 import { HeaderComponent }  from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { LayoutService }    from '../../core/services/layout.service';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
 const AUTH_ROUTES = ['/login','/signup', '/register', '/forgot-password', '/reset-password', '/onboarding/subscription', '/onboarding/pending', '/onboarding/payment'];
 
@@ -22,7 +23,8 @@ const AUTH_ROUTES = ['/login','/signup', '/register', '/forgot-password', '/rese
     CommonModule,
     RouterModule,
     HeaderComponent,
-    SidebarComponent
+    SidebarComponent,
+    SpinnerComponent
   ],
   templateUrl: './app-layout.component.html',
   styleUrls: ['./app-layout.component.css'],

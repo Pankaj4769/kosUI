@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-import { RestaurantSetup, StaffSetup, UserRole, SubscriptionPlan, OnboardingStatus } from '../../../core/auth/auth.model';
+import { RestaurantSetup, UserRole, SubscriptionPlan, OnboardingStatus } from '../../../core/auth/auth.model';
 import { MessageResponse } from '../../../domains/dashboard/models/message.model';
 
 @Component({
@@ -17,6 +17,7 @@ export class RestaurantSetupComponent {
 
   step: 'restaurant' | 'staff' = 'restaurant';
   isLoading = false;
+  saveError = '';
 
   restaurant: RestaurantSetup = {
     restaurantName: '',
@@ -28,8 +29,10 @@ export class RestaurantSetupComponent {
 
   ngOnInit(){
     const user = this.auth.currentUser;
+    console.log('[Setup] currentUser:', user);
+    console.log('[Setup] subscriptionPlan:', user?.subscriptionPlan);
     this.restaurant.phone = user?.mobile ?? '';
-    this.restaurant.email = user?.email?? '';
+    this.restaurant.email = user?.email ?? '';
   }
 
   staffLimitMap: Record<SubscriptionPlan, number> = {
@@ -66,20 +69,27 @@ export class RestaurantSetupComponent {
   }
 
   completeSetup(): void {
+    console.log(this.auth.currentUser?.subscriptionPlan+'Hello')
     this.isLoading = true;
     setTimeout(() => {
-      // In real app → POST restaurant + staff details to API
-      this.auth.updateOnboardingStatus('SETUP_COMPLETE',  this.restaurant, this.auth.currentUser?.subscriptionPlan)?.subscribe(res=>{
-        console.log(res);
-        const user = this.auth.currentUser;
+      this.auth.updateOnboardingStatus('SETUP_COMPLETE', this.restaurant, this.auth.currentUser?.subscriptionPlan)?.subscribe({
+        next: (res) => {
+          console.log(res);
+          const user = this.auth.currentUser;
         let r = res as MessageResponse;
-        if (r.status && user) {
-          user.onboardingStatus = 'SETUP_COMPLETE' as OnboardingStatus;
-          localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
+          if (r.status && user) {
+            user.onboardingStatus = 'SETUP_COMPLETE' as OnboardingStatus;
+            localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
+            this.isLoading = false;
+            this.router.navigate(['/dashboard']);
+          }
           this.isLoading = false;
-          this.router.navigate(['/dashboard']);
+        },
+        error: (err: any) => {
+          console.error('[completeSetup] DB save failed:', err);
+          this.saveError = 'Setup could not be saved. Please try again.';
+          this.isLoading = false;
         }
-        this.isLoading = false;
       });
     }, 1000);
   }

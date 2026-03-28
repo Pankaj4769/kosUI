@@ -1,0 +1,59 @@
+.upgrade-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 32px;
+  background: #fffbf5;
+  border: 1.5px dashed #f97316;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 420px;
+  margin: 32px auto;
+}
+
+.up-icon {
+  font-size: 36px;
+}
+
+.up-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.up-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.up-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.up-tagline {
+  margin: 0;
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.up-btn {
+  padding: 10px 24px;
+  background: #f97316;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.up-btn:hover {
+  background: #ea6c0a;
+}

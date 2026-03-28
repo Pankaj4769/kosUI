@@ -1,4 +1,4 @@
-import { Component, OnDestroy, isDevMode } from '@angular/core';
+import { Component, OnDestroy, isDevMode, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -76,7 +76,7 @@ export class LoginComponent implements OnDestroy {
   readonly showDevPanel = isDevMode();
 
 
-  constructor(private auth: AuthService, private router: Router) {
+  constructor(private auth: AuthService, private router: Router, private cdr: ChangeDetectorRef) {
     if (this.auth.isLoggedIn) this.auth.handlePostLogin(this.auth.currentUser!);
   }
 
@@ -157,9 +157,17 @@ export class LoginComponent implements OnDestroy {
     this.isLoading    = true;
     this.errorMessage = '';
     setTimeout(() => {
-      this.auth.login(req).subscribe(res=>{
-        if (!res.success) this.errorMessage = res.message;
-        this.isLoading = false;
+      this.auth.login(req).subscribe({
+        next: res => {
+          this.isLoading = false;
+          if (!res.success) this.errorMessage = res.message;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.isLoading = false;
+          this.errorMessage = 'Login failed. Please try again.';
+          this.cdr.detectChanges();
+        }
       });
     }, 800);
   }

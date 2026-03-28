@@ -90,6 +90,7 @@
         <span class="material-icons" *ngIf="!isLoading">check_circle</span>
       </button>
     </div>
+    <p *ngIf="saveError" style="color:red; text-align:center; margin-top:8px;">{{ saveError }}</p>
   </div>
 
 </div>

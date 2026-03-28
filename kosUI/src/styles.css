@@ -2,6 +2,28 @@
   --pos-green: #4f7c3a;
 }
 
+/* ── Plan-lock global styles ────────────────────────────────────────────────
+   Applied by [appPlanLock] directive when a feature is blocked by plan tier.
+─────────────────────────────────────────────────────────────────────────── */
+.plan-locked {
+  opacity: 0.45;
+  pointer-events: none;
+  cursor: not-allowed !important;
+  user-select: none;
+  filter: grayscale(0.4);
+  position: relative;
+}
+
+.plan-lock-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  margin-left: 4px;
+  vertical-align: middle;
+  cursor: help;
+  position: relative;
+}
+
 /* =====================================================
    QUICK ACTION MENU — global mat-menu panel override
 ===================================================== */

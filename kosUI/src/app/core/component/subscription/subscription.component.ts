@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-import { PaymentResponse, SubscriptionPlan, SubscriptionPlanDetail } from '../../../core/auth/auth.model';
+import { SubscriptionPlan, SubscriptionPlanDetail, PaymentResponse } from '../../../core/auth/auth.model';
 import { SubscriptionServiceService } from '../services/subscription-service.service';
 
 @Component({
@@ -13,7 +13,7 @@ import { SubscriptionServiceService } from '../services/subscription-service.ser
   templateUrl: './subscription.component.html',
   styleUrls: ['./subscription.component.css']
 })
-export class SubscriptionComponent {
+export class SubscriptionComponent implements OnInit {
 
   selectedPlan: SubscriptionPlan | null = null;
   step: 'plan' | 'contact' = 'plan';
@@ -236,8 +236,18 @@ export class SubscriptionComponent {
   constructor(
     private auth: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private subscriptioService: SubscriptionServiceService
   ) {}
+
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      const highlight = params['highlight'] as SubscriptionPlan | undefined;
+      if (highlight) {
+        this.selectedPlan = highlight;
+      }
+    });
+  }
 
   selectPlan(plan: SubscriptionPlan): void { this.selectedPlan = plan; }
 
@@ -254,34 +264,56 @@ export class SubscriptionComponent {
   proceedToContact(): void {
     if (!this.selectedPlan) return;
     const user = this.auth.currentUser;
-    if (user) {
-      this.contact.name  = user.name;
-      this.contact.email = user.email ?? '';
-      this.contact.phone = user.mobile ?? '';
+
+    if (user && user.onboardingStatus === 'SETUP_COMPLETE') {
+      // Existing user — upgrade plan via restaurant-scoped endpoint
+      this.isLoading = true;
+      this.subscriptioService.upgradePlan(user.restaurantId ?? '', this.selectedPlan)
+        .subscribe({
+          next: () => {
+            user.subscriptionPlan = this.selectedPlan!;
+            localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
+            this.isLoading = false;
+            this.router.navigate(['/dashboard']);
+          },
+          error: (err: any) => {
+            console.error('Plan upgrade failed:', err);
+            this.isLoading = false;
+          }
+        });
+    } else {
+      // New user during onboarding — collect contact info first
+      if (user) {
+        this.contact.name  = user.name;
+        this.contact.email = user.email ?? '';
+        this.contact.phone = user.mobile ?? '';
+      }
+      this.step = 'contact';
     }
-    this.step = 'contact';
   }
 
   submitContact(): void {
     if (!this.contact.name || !this.contact.email || !this.contact.phone || !this.contact.restaurantName) return;
     this.isLoading = true;
     setTimeout(() => {
-      this.subscriptioService.doPayment(this.contact, this.selectedPlan).subscribe(res=>{
-        console.log(res);
-        let paymentResp = res as PaymentResponse;
+      this.subscriptioService.doPayment(this.contact, this.selectedPlan).subscribe({
+        next: (res) => {
+          console.log(res);
+          let paymentResp = res as PaymentResponse;
 
-        const user = this.auth.currentUser; // gets the object from localStorage
-        if (user) {
-          user.subscriptionPlan = paymentResp.activePlan as SubscriptionPlan;
-
-          // Save back using the same key your getter reads from
-          localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
-
+          const user = this.auth.currentUser;
+          if (user) {
+            user.subscriptionPlan = paymentResp.activePlan as SubscriptionPlan;
+            localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
+            this.isLoading = false;
+            this.router.navigate(['/onboarding/setup']);
+          }
+        },
+        error: (err: any) => {
+          console.error('Payment failed:', err);
           this.isLoading = false;
-          this.router.navigate(['/onboarding/setup']);
         }
       });
-      
     }, 1000);
   }
 

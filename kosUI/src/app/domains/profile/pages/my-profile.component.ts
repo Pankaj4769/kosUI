@@ -1,13 +1,14 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AuthUser } from '../../../core/auth/auth.model';
 import { ConfirmDialogComponent } from '../../common-popup/pages/confirm-dialog.component';
+import { UpgradePlanDialogComponent } from '../components/upgrade-plan-dialog/upgrade-plan-dialog.component';
 
 @Component({
   selector: 'app-my-profile',
@@ -36,10 +37,10 @@ export class MyProfileComponent implements OnInit {
   confirmPassword = '';
 
   saveSuccess = false;
+  saveSuccessMsg = 'Profile updated successfully.';
 
   constructor(
     private authService: AuthService,
-    private router: Router,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {}
@@ -73,6 +74,68 @@ export class MyProfileComponent implements OnInit {
       STARTER: 'Starter', GROWTH: 'Growth', PRO: 'Pro', ENTERPRISE: 'Enterprise'
     };
     return labels[this.user?.subscriptionPlan ?? ''] ?? '—';
+  }
+
+  readonly planOrder = ['STARTER', 'GROWTH', 'PRO', 'ENTERPRISE'];
+
+  readonly plans = [
+    {
+      key: 'STARTER', label: 'Starter', price: '₹999', per: '/mo',
+      features: ['1 Restaurant', '5 Staff accounts', 'Basic POS', 'Sales reports']
+    },
+    {
+      key: 'GROWTH', label: 'Growth', price: '₹2,499', per: '/mo',
+      features: ['2 Restaurants', '15 Staff accounts', 'Advanced POS', 'Analytics dashboard', 'Email support']
+    },
+    {
+      key: 'PRO', label: 'Pro', price: '₹4,999', per: '/mo',
+      features: ['5 Restaurants', '50 Staff accounts', 'All POS features', 'Priority support', 'Custom reports']
+    },
+    {
+      key: 'ENTERPRISE', label: 'Enterprise', price: 'Custom', per: '',
+      features: ['Unlimited restaurants', 'Unlimited staff', 'Dedicated account manager', 'SLA guarantee', 'API access']
+    }
+  ];
+
+  private get currentPlanIndex(): number {
+    return this.planOrder.indexOf(this.user?.subscriptionPlan ?? '');
+  }
+
+  isPlanCurrent(key: string): boolean {
+    return this.user?.subscriptionPlan === key;
+  }
+
+  isPlanLower(key: string): boolean {
+    const idx = this.planOrder.indexOf(key);
+    return idx !== -1 && idx < this.currentPlanIndex;
+  }
+
+  isPlanHigher(key: string): boolean {
+    const idx = this.planOrder.indexOf(key);
+    return idx !== -1 && idx > this.currentPlanIndex;
+  }
+
+  upgradePlan(plan: string): void {
+    const planDef = this.plans.find(p => p.key === plan);
+    if (!planDef) return;
+
+    this.dialog.open(UpgradePlanDialogComponent, {
+      width: '520px',
+      disableClose: false,
+      data: {
+        planKey:      planDef.key,
+        planLabel:    planDef.label,
+        planPrice:    planDef.price,
+        planFeatures: planDef.features
+      }
+    }).afterClosed().subscribe((upgraded: boolean) => {
+      if (upgraded) {
+        this.user = this.authService.currentUser;
+        this.saveSuccess = true;
+        this.cdr.markForCheck();
+        setTimeout(() => { this.saveSuccess = false; this.cdr.markForCheck(); }, 4000);
+      }
+    });
   }
 
   startEdit(): void {

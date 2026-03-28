@@ -14,7 +14,7 @@ export interface Role {
   providedIn: 'root'
 })
 export class RoleService {
-  private API_BASE_URL = '/api';
+  private API_BASE_URL = 'http://localhost:8080/api';
   private rolesSubject = new BehaviorSubject<Role[]>([]);
   public roles$ = this.rolesSubject.asObservable();
 

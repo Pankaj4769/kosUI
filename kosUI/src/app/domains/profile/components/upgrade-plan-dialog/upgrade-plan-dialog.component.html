@@ -1,0 +1,125 @@
+<div class="upgrade-dialog">
+
+  <!-- ── Header ── -->
+  <div class="dialog-header">
+    <div class="header-left">
+      <mat-icon class="header-icon">workspace_premium</mat-icon>
+      <div>
+        <div class="header-title">Upgrade to {{ data.planLabel }}</div>
+        <div class="header-sub">Complete payment to activate your new plan</div>
+      </div>
+    </div>
+    <button mat-icon-button class="close-btn" (click)="close(false)" *ngIf="step !== 'processing'">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- ── Plan Summary Strip ── -->
+  <div class="plan-strip">
+    <div class="strip-features">
+      <span class="strip-feature" *ngFor="let f of data.planFeatures">
+        <mat-icon>check_circle</mat-icon> {{ f }}
+      </span>
+    </div>
+    <div class="strip-price">{{ data.planPrice }}<span class="per">/mo</span></div>
+  </div>
+
+  <!-- ══════════ STEP: PAYMENT FORM ══════════ -->
+  <ng-container *ngIf="step === 'payment'">
+
+    <!-- Tab Switcher -->
+    <div class="tab-row">
+      <button class="tab-btn" [class.active]="paymentTab === 'card'" (click)="paymentTab = 'card'">
+        <mat-icon>credit_card</mat-icon> Card
+      </button>
+      <button class="tab-btn" [class.active]="paymentTab === 'upi'" (click)="paymentTab = 'upi'">
+        <mat-icon>account_balance</mat-icon> UPI
+      </button>
+    </div>
+
+    <!-- Card Form -->
+    <div class="form-body" *ngIf="paymentTab === 'card'">
+      <div class="form-group">
+        <label>Card Number</label>
+        <div class="input-icon-wrap">
+          <mat-icon class="field-icon">credit_card</mat-icon>
+          <input type="text" [value]="cardNumber"
+                 (input)="formatCardNumber($any($event.target).value)"
+                 placeholder="1234 5678 9012 3456" maxlength="19" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Name on Card</label>
+        <input type="text" [(ngModel)]="cardName" placeholder="Ram Singh" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Expiry</label>
+          <input type="text" [value]="cardExpiry"
+                 (input)="formatExpiry($any($event.target).value)"
+                 placeholder="MM/YY" maxlength="5" />
+        </div>
+        <div class="form-group">
+          <label>CVV</label>
+          <input type="password" [(ngModel)]="cardCvv" placeholder="•••" maxlength="3" />
+        </div>
+      </div>
+    </div>
+
+    <!-- UPI Form -->
+    <div class="form-body" *ngIf="paymentTab === 'upi'">
+      <div class="form-group">
+        <label>UPI ID</label>
+        <div class="input-icon-wrap">
+          <mat-icon class="field-icon">account_balance</mat-icon>
+          <input type="text" [(ngModel)]="upiId" placeholder="yourname@upi" />
+        </div>
+      </div>
+      <p class="upi-hint">Enter your UPI ID and confirm payment in your banking app.</p>
+    </div>
+
+    <!-- Pay Button -->
+    <div class="dialog-footer">
+      <button mat-button class="cancel-btn" (click)="close(false)">Cancel</button>
+      <button mat-raised-button class="pay-btn" [disabled]="!canSubmit" (click)="pay()">
+        <mat-icon>lock</mat-icon>
+        Pay {{ data.planPrice }}
+      </button>
+    </div>
+  </ng-container>
+
+  <!-- ══════════ STEP: PROCESSING ══════════ -->
+  <div class="state-body" *ngIf="step === 'processing'">
+    <div class="spinner-ring"></div>
+    <p class="state-title">Processing Payment…</p>
+    <p class="state-sub">Please don't close this window.</p>
+  </div>
+
+  <!-- ══════════ STEP: SUCCESS ══════════ -->
+  <div class="state-body success-state" *ngIf="step === 'success'">
+    <div class="success-circle">
+      <mat-icon>check_circle</mat-icon>
+    </div>
+    <p class="state-title">Upgrade Successful!</p>
+    <p class="state-sub">You're now on the <strong>{{ data.planLabel }}</strong> plan.</p>
+    <button mat-raised-button class="pay-btn" (click)="close(true)">
+      <mat-icon>done</mat-icon> Continue
+    </button>
+  </div>
+
+  <!-- ══════════ STEP: ERROR ══════════ -->
+  <div class="state-body error-state" *ngIf="step === 'error'">
+    <div class="error-circle">
+      <mat-icon>error</mat-icon>
+    </div>
+    <p class="state-title">Payment Failed</p>
+    <p class="state-sub">{{ errorMessage }}</p>
+    <div class="dialog-footer" style="justify-content: center;">
+      <button mat-button class="cancel-btn" (click)="close(false)">Close</button>
+      <button mat-raised-button class="pay-btn" (click)="retry()">
+        <mat-icon>refresh</mat-icon> Try Again
+      </button>
+    </div>
+  </div>
+
+</div>
