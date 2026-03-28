@@ -2,8 +2,7 @@ import { Component, EventEmitter, Output, ChangeDetectorRef } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
-
-type IdentifierType = 'email' | 'mobile' | 'username';
+import { ForgotPasswordRequest, IdentifierType } from '../../auth/auth.model';
 
 @Component({
   selector: 'app-forgot-password',
@@ -86,13 +85,9 @@ export class ForgotPasswordComponent {
       // Username path: verify username exists first
       this.isLoading = true;
       this.auth.checkUsername(val).subscribe({
-        next: res => {
+        next: () => {
           this.isLoading = false;
-          if (res.status) {
-            this.advanceToOtp();
-          } else {
-            this.errorMsg = 'No account found with that username.';
-          }
+          this.advanceToOtp();
           this.cdr.detectChanges();
         },
         error: (err) => {
@@ -168,7 +163,8 @@ export class ForgotPasswordComponent {
     this.errorMsg  = '';
     this.isLoading = true;
 
-    this.auth.forgotPassword(this.identifier.trim(), this.newPassword).subscribe({
+    const req: ForgotPasswordRequest = { identifier: this.identifier.trim(), identifierType: this.identifierType, newPassword: this.newPassword };
+    this.auth.forgotPassword(req).subscribe({
       next: res => {
         this.isLoading = false;
         if (res.status) {

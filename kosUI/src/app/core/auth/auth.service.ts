@@ -1,25 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthUser, CompleteSetup, LoginRequest, OnboardingStatus, RestaurantSetup, SubscriptionPlan, UserRole } from './auth.model';
+import { AuthUser, CompleteSetup, ForgotPasswordRequest, LoginRequest, OnboardingStatus, RestaurantSetup, SubscriptionPlan, UserRole } from './auth.model';
 import { HttpClient } from '@angular/common/http';
 import { EMPTY, map, Observable, of, switchMap, tap, catchError } from 'rxjs';
 import { BASE_URL } from '../../apiUrls';
 import { SignupForm } from '../component/sign-up/signup.component';
+import { MessageResponse } from '../../domains/dashboard/models/message.model';
 
 
 interface LoginResponse {
   accessToken: string;
-}
-
-
-interface SignUpResponse {
-  message: string,
-  status: boolean
-}
-
-interface MessageResponse {
-  message: string;
-  status: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -207,16 +197,16 @@ export class AuthService {
     this.router.navigate([map[role] ?? '/dashboard']);
   }
 
-  signUp(form: SignupForm): Observable<SignUpResponse>{
-    return this.http.post<SignUpResponse>(`${this.baseUrl}/auth/signUp`, form);
+  signUp(form: SignupForm): Observable<MessageResponse>{
+    return this.http.post<MessageResponse>(`${this.baseUrl}/auth/signUp`, form);
   }
 
-  checkUsername(username: string): Observable<MessageResponse> {
-    return this.http.get<MessageResponse>(`${this.baseUrl}/auth/checkUsername/${username}`);
+  checkUsername(username: string): Observable<AuthUser> {
+    return this.http.get<AuthUser>(`${this.baseUrl}/auth/getUser/${username}`);
   }
 
-  forgotPassword(username: string, newPassword: string): Observable<MessageResponse> {
-    return this.http.put<MessageResponse>(`${this.baseUrl}/auth/forgotPassword`, { username, newPassword });
+  forgotPassword(req: ForgotPasswordRequest): Observable<MessageResponse> {
+    return this.http.put<MessageResponse>(`${this.baseUrl}/auth/forgotPassword`, req);
   }
 
 }
