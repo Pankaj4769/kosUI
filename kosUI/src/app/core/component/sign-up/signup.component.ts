@@ -130,9 +130,9 @@ export class SignupComponent implements OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(result => {
       if (result === null) return;
-      // 200 with status=true means username exists → taken → not available
+      // 200 means username exists → taken → not available
       this.usernameChecking  = false;
-      this.usernameAvailable = !result.status;
+      this.usernameAvailable = false;
       this.cdr.detectChanges();
     });
   }

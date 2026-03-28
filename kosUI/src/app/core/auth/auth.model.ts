@@ -83,4 +83,10 @@ export interface CompleteSetup{
   restaurant: RestaurantSetup;
 }
 
+export type IdentifierType = 'username' | 'email' | 'mobile';
 
+export interface ForgotPasswordRequest {
+  identifier: string;
+  identifierType: IdentifierType;
+  newPassword: string;
+}
