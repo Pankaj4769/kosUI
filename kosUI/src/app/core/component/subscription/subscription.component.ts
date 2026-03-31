@@ -16,13 +16,16 @@ import { SubscriptionServiceService } from '../services/subscription-service.ser
 export class SubscriptionComponent implements OnInit {
 
   selectedPlan: SubscriptionPlan | null = null;
-  step: 'plan' | 'contact' = 'plan';
+  step: 'plan' | 'contact' | 'payment' = 'plan';
   isLoading = false;
+  errorMessage: string | null = null;
   billingCycle: 'monthly' | 'annual' = 'monthly';
   openFaq: number | null = null;
+  touched: Record<string, boolean> = {};
 
   contact = {
-    name: '', email: '', phone: '', restaurantName: '', message: ''
+    name: '', email: '', phone: '', restaurantName: '',
+    city: '', state: '', gstNumber: ''
   };
 
   /* ── Plan Cards ── */
@@ -33,7 +36,7 @@ export class SubscriptionComponent implements OnInit {
       price: '₹999',
       annualPrice: '₹799',
       period: '/month',
-      staffLimit: 5,
+      staffLimit: 1,
       positioning: 'For Small Cafes',
       tagline: 'Essential tools to get started',
       features: [
@@ -49,7 +52,7 @@ export class SubscriptionComponent implements OnInit {
       price: '₹1,999',
       annualPrice: '₹1,599',
       period: '/month',
-      staffLimit: 15,
+      staffLimit: 3,
       positioning: 'For Growing Restaurants',
       tagline: 'Orders & operations unlocked',
       features: [
@@ -65,7 +68,7 @@ export class SubscriptionComponent implements OnInit {
       price: '₹3,499',
       annualPrice: '₹2,799',
       period: '/month',
-      staffLimit: 50,
+      staffLimit: 10,
       popular: true,
       positioning: 'For High-Volume Kitchens',
       tagline: 'Full power, full team',
@@ -82,7 +85,7 @@ export class SubscriptionComponent implements OnInit {
       price: '₹5,999',
       annualPrice: '₹4,799',
       period: '/month',
-      staffLimit: 999,
+      staffLimit: 15,
       positioning: 'For Multi-Branch & Chains',
       tagline: 'Enterprise without limits',
       features: [
@@ -264,62 +267,117 @@ export class SubscriptionComponent implements OnInit {
   proceedToContact(): void {
     if (!this.selectedPlan) return;
     const user = this.auth.currentUser;
-
-    if (user && user.onboardingStatus === 'SETUP_COMPLETE') {
-      // Existing user — upgrade plan via restaurant-scoped endpoint
-      this.isLoading = true;
-      this.subscriptioService.upgradePlan(user.restaurantId ?? '', this.selectedPlan)
-        .subscribe({
-          next: () => {
-            user.subscriptionPlan = this.selectedPlan!;
-            localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
-            this.isLoading = false;
-            this.router.navigate(['/dashboard']);
-          },
-          error: (err: any) => {
-            console.error('Plan upgrade failed:', err);
-            this.isLoading = false;
-          }
-        });
-    } else {
-      // New user during onboarding — collect contact info first
-      if (user) {
-        this.contact.name  = user.name;
-        this.contact.email = user.email ?? '';
-        this.contact.phone = user.mobile ?? '';
-      }
-      this.step = 'contact';
+    if (user) {
+      this.contact.name  = user.name;
+      this.contact.email = user.email ?? '';
+      this.contact.phone = user.mobile ?? '';
     }
+    this.touched = {};
+    this.errorMessage = null;
+    this.step = 'contact';
   }
 
   submitContact(): void {
-    if (!this.contact.name || !this.contact.email || !this.contact.phone || !this.contact.restaurantName) return;
-    this.isLoading = true;
-    setTimeout(() => {
-      this.subscriptioService.doPayment(this.contact, this.selectedPlan).subscribe({
-        next: (res) => {
-          console.log(res);
-          let paymentResp = res as PaymentResponse;
-
-          const user = this.auth.currentUser;
-          if (user) {
-            user.subscriptionPlan = paymentResp.activePlan as SubscriptionPlan;
-            localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
-            this.isLoading = false;
-            this.router.navigate(['/onboarding/setup']);
-          }
-        },
-        error: (err: any) => {
-          console.error('Payment failed:', err);
-          this.isLoading = false;
-        }
-      });
-    }, 1000);
+    const { name, email, phone, restaurantName, city, state } = this.contact;
+    if (!name || !email || !phone || !restaurantName || !city || !state) return;
+    this.errorMessage = null;
+    this.step = 'payment';
   }
 
-  goBack(): void { this.step = 'plan'; }
+  submitPayment(): void {
+    this.isLoading = true;
+    this.errorMessage = null;
+    const payload = {
+      name:           this.contact.name,
+      email:          this.contact.email,
+      phone:          this.contact.phone,
+      restaurantName: this.contact.restaurantName,
+      city:           this.contact.city,
+      state:          this.contact.state,
+      gstNumber:      this.contact.gstNumber || undefined,
+      billingCycle:   this.billingCycle
+    };
+    this.subscriptioService.doPayment(payload, this.selectedPlan).subscribe({
+      next: (res) => {
+        const paymentResp = res as PaymentResponse;
+        const user = this.auth.currentUser;
+        const isUpgrade = user?.onboardingStatus === 'SETUP_COMPLETE';
+        if (user) {
+          user.subscriptionPlan = paymentResp.activePlan as SubscriptionPlan;
+          user.mobile = this.contact.phone;
+          localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
+        }
+        this.isLoading = false;
+        if (isUpgrade) {
+          this.router.navigate(['/dashboard']);
+        } else {
+          localStorage.setItem('kos_onboarding_contact', JSON.stringify({
+            restaurantName: this.contact.restaurantName,
+            email:          this.contact.email,
+            phone:          this.contact.phone,
+            city:           this.contact.city,
+            state:          this.contact.state
+          }));
+          this.router.navigate(['/onboarding/setup']);
+        }
+      },
+      error: (err: any) => {
+        console.error('Payment failed:', err);
+        this.errorMessage = err?.error?.message ?? 'Payment failed. Please try again.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  goBack(): void {
+    this.errorMessage = null;
+    if (this.step === 'payment') {
+      this.step = 'contact';
+    } else {
+      this.touched = {};
+      this.step = 'plan';
+    }
+  }
+
+  get currentPrice(): string {
+    const plan = this.getPlanById(this.selectedPlan!);
+    if (!plan) return '';
+    return this.billingCycle === 'annual' && plan.annualPrice
+      ? plan.annualPrice
+      : plan.price;
+  }
+
+  get totalAmount(): string {
+    const plan = this.getPlanById(this.selectedPlan!);
+    if (!plan) return '';
+    if (this.billingCycle === 'annual' && plan.annualPrice) {
+      const monthly = parseInt(plan.annualPrice.replace(/[₹,]/g, ''), 10);
+      return '₹' + (monthly * 12).toLocaleString('en-IN');
+    }
+    return plan.price;
+  }
 
   getPlanById(id: SubscriptionPlan): SubscriptionPlanDetail | undefined {
     return this.plans.find(p => p.id === id);
+  }
+
+  getAnnualSaving(plan: SubscriptionPlanDetail): string {
+    if (!plan.annualPrice) return '';
+    const monthly = parseInt(plan.price.replace(/[₹,]/g, ''), 10);
+    const annual  = parseInt(plan.annualPrice.replace(/[₹,]/g, ''), 10);
+    const saving  = (monthly - annual) * 12;
+    return '₹' + saving.toLocaleString('en-IN');
+  }
+
+  get maxAnnualSaving(): string {
+    let max = 0;
+    this.plans.forEach(p => {
+      if (p.annualPrice) {
+        const m = parseInt(p.price.replace(/[₹,]/g, ''), 10);
+        const a = parseInt(p.annualPrice.replace(/[₹,]/g, ''), 10);
+        max = Math.max(max, (m - a) * 12);
+      }
+    });
+    return max > 0 ? '₹' + max.toLocaleString('en-IN') : '';
   }
 }

@@ -53,10 +53,14 @@ export class AuthService {
 
   // ── Password Login ───────────────────────────────────────
   login(req: LoginRequest): Observable<{ success: boolean; message: string }> {
+    if (req.method === 'GOOGLE') {
+      return this.loginWithGoogle();
+    }
+
     if (!req.username && !req.password && !req.role) {
       return of({ success: false, message: 'Invalid credentials. Please try again.' });
     }
-  
+
     return this.preLogin(req).pipe(
       catchError((err) => {
         const msg = err.status === 401
@@ -75,36 +79,99 @@ export class AuthService {
           return of({ success: false, message: 'Invalid credentials. Please try again.' });
         }
         if (req.method === 'PASSWORD') {
-          // Call the backend API and return the Observable directly
           return this.http.get<AuthUser>(`${this.baseUrl}/auth/getUser/${req.username}`).pipe(
             map(user => {
               if (!user) {
                 return { success: false, message: 'Invalid credentials. Please try again.' };
               }
-    
               localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
               this.handlePostLogin(user);
-    
               return { success: true, message: '' };
             })
           );
         } else if (req.method === 'MOBILE_OTP') {
           user = this.mockUsers.find(u => u.mobile === req.mobile);
-        } else if (req.method === 'GOOGLE' || req.method === 'ZOHO') {
-          user = this.createSocialUser(req.method);
         }
-    
-        // Handle non-PASSWORD cases synchronously
+
         if (!user) {
           return of({ success: false, message: 'Invalid credentials. Please try again.' });
         }
-    
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
         this.handlePostLogin(user);
-    
         return of({ success: true, message: '' });
       })
     );
+  }
+
+  // ── Google OAuth Login (native GIS) ─────────────────────
+  private loginWithGoogle(): Observable<{ success: boolean; message: string }> {
+    return new Observable(observer => {
+      const google = (window as any).google;
+      if (!google) {
+        observer.next({ success: false, message: 'Google Sign-In not loaded. Please refresh.' });
+        observer.complete();
+        return;
+      }
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: '708877149972-chhn1086ntbko1e6hrg0jfaaci2t8fmr.apps.googleusercontent.com',
+        scope: 'openid email profile',
+        callback: (tokenResponse: any) => {
+          if (tokenResponse.error) {
+            observer.next({ success: false, message: 'Google sign-in was cancelled.' });
+            observer.complete();
+            return;
+          }
+          // Use native fetch to bypass auth interceptor (avoid overwriting Google access token)
+          fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+          })
+          .then(res => res.json())
+          .then(profile => {
+            // Single backend call — returns AuthUser with token embedded
+            this.http.post<any>(`${this.baseUrl}/auth/google`, {
+              email: profile.email,
+              name:  profile.name
+            }).subscribe({
+              next: (res: any) => {
+                const jwt: string = res.token ?? res.accessToken;
+                if (!jwt) {
+                  observer.next({ success: false, message: 'Login error: no token received.' });
+                  observer.complete();
+                  return;
+                }
+                // Build full AuthUser — backend may return partial data, fill gaps from Google profile
+                const user: AuthUser = {
+                  staffId:          res.staffId   ?? '',
+                  name:             res.name       ?? profile.name,
+                  username:         res.username   ?? profile.email,
+                  email:            res.email      ?? profile.email,
+                  role:             res.role       ?? 'OWNER',
+                  token:            jwt,
+                  isFirstTime:      res.isFirstTime ?? res.firstTime ?? true,
+                  onboardingStatus: res.onboardingStatus ?? 'NEW',
+                  subscriptionPlan: res.subscriptionPlan ?? undefined,
+                  restaurantId:     res.restaurantId ?? undefined
+                };
+                localStorage.setItem('token', jwt);
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+                this.handlePostLogin(user);
+                observer.next({ success: true, message: '' });
+                observer.complete();
+              },
+              error: () => {
+                observer.next({ success: false, message: 'Google login failed. Please try again.' });
+                observer.complete();
+              }
+            });
+          })
+          .catch(() => {
+            observer.next({ success: false, message: 'Failed to fetch Google profile.' });
+            observer.complete();
+          });
+        }
+      });
+      client.requestAccessToken();
+    });
   }
   
 
@@ -112,20 +179,6 @@ export class AuthService {
   sendOtp(mobile: string): { success: boolean; message: string } {
     console.log(`OTP sent to ${mobile}: 123456 (mock)`);
     return { success: true, message: 'OTP sent successfully.' };
-  }
-
-  // ── Social Login: Create new OWNER ──────────────────────
-  private createSocialUser(method: 'GOOGLE' | 'ZOHO'): AuthUser {
-    return {
-      staffId: 'S' + Date.now(),
-      name: method === 'GOOGLE' ? 'Google User' : 'Zoho User',
-      username: method.toLowerCase() + '_user',
-      email: method.toLowerCase() + '_user&#64;example.com',
-      role: 'OWNER',
-      token: 'tok_' + Date.now(),
-      isFirstTime: true,
-      onboardingStatus: 'NEW'
-    };
   }
 
   // ── Post Login Routing ───────────────────────────────────
@@ -166,6 +219,7 @@ export class AuthService {
         restaurant: restaurent
       };
       user.subscriptionPlan = plan;
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
       return this.http.patch(this.baseUrl+'/api/subscription/completeSetup', setup);
     }
     return EMPTY;

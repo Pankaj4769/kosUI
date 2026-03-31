@@ -13,10 +13,9 @@ export class SubscriptionServiceService {
   constructor(private readonly httpclient: HttpClient) {}
 
 
-  doPayment(contact: { name: string; email: string; phone: string; restaurantName: string; message: string; }, selectedPlan: string | null){
-    let paymentReq: PaymentRequest = contact;
-    paymentReq.plan = selectedPlan;
-    return this.httpclient.post<PaymentResponse>(this.baseUrl + '/doPayment', paymentReq);
+  doPayment(contact: Omit<PaymentRequest, 'plan'>, selectedPlan: string | null) {
+    const paymentReq: PaymentRequest = { ...contact, plan: selectedPlan };
+    return this.httpclient.patch<PaymentResponse>(this.baseUrl + '/doPayment', paymentReq);
   }
 
   upgradePlan(restaurantId: string, planName: string) {

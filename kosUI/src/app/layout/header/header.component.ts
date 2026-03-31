@@ -13,7 +13,6 @@ import { Subject, takeUntil, filter } from 'rxjs';
 import { CashierContext, CashierContextService } from '../../domains/pos/services/cashier-context.service';
 import { LayoutService } from '../../core/services/layout.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { AuthUser } from '../../core/auth/auth.model';
 
 /* ── Models ── */
 export interface Restaurant {
@@ -261,7 +260,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (user) {
       this.userName = user.username;
       this.userRole = user.role;
-      this.userInitial = user.name.slice(0, 1);
+      this.userInitial = user.name?.slice(0, 1) ?? '';
     }
 
     // ✅ Restore dark mode from localStorage on every page load

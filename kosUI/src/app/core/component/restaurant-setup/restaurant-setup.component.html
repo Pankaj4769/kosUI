@@ -1,96 +1,113 @@
 <div class="setup-wrapper">
 
-  <div class="setup-header">
-    <span class="material-icons">restaurant</span>
-    <h1>KOS Setup</h1>
-    <div class="step-indicator">
-      <div class="step" [class.active]="step === 'restaurant'" [class.done]="step === 'staff'">
-        <span>1</span> Restaurant
+  <!-- ── Header ── -->
+  <header class="setup-header" aria-label="Kitchen Book">
+    <div class="setup-header-brand">
+      <div class="setup-logo-wrap">
+        <img src="assets/images/DarkKitchenbookLogo.png" alt="Kitchen Book" />
       </div>
-      <div class="step-line"></div>
-      <div class="step" [class.active]="step === 'staff'">
-        <span>2</span> Staff
+      <div class="setup-header-text">
+        <span class="brand-name">Kitchen <em>Book</em></span>
+        <span class="brand-tagline">— CLOUD KITCHEN ERP —</span>
       </div>
     </div>
-  </div>
+    <div class="plan-chip" *ngIf="planName">
+      <span class="material-icons">verified</span>
+      {{ planName }} Plan Active
+    </div>
+  </header>
 
-  <!-- ── Step 1: Restaurant Info ── -->
-  <div class="setup-card" *ngIf="step === 'restaurant'">
-    <h2>Restaurant Details</h2>
+  <div class="setup-card">
 
-    <form (ngSubmit)="proceedToStaff()" novalidate>
+    <!-- ── Restaurant Info Banner ── -->
+    <div class="restaurant-banner">
+      <div class="banner-heading">
+        <span class="material-icons">store</span>
+        <h3>Restaurant Details</h3>
+      </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Restaurant Name *</label>
-          <input type="text" [(ngModel)]="restaurant.restaurantName"
+          <label for="r-name">Restaurant Name *</label>
+          <input id="r-name" type="text" [(ngModel)]="restaurant.restaurantName"
                  name="restaurantName" placeholder="e.g. Spice Garden" required />
         </div>
         <div class="form-group">
-          <label>Phone *</label>
-          <input type="tel" [(ngModel)]="restaurant.phone"
+          <label for="r-phone">Phone *</label>
+          <input id="r-phone" type="tel" [(ngModel)]="restaurant.phone"
                  name="phone" placeholder="Contact number" required />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Email</label>
-          <input type="email" [(ngModel)]="restaurant.email"
-                 name="email" placeholder="restaurant&#64;email.com" />
+          <label for="r-email">Email</label>
+          <input id="r-email" type="email" [(ngModel)]="restaurant.email"
+                 name="email" placeholder="restaurant@email.com" />
         </div>
         <div class="form-group">
-          <label>Address</label>
-          <input type="text" [(ngModel)]="restaurant.address"
+          <label for="r-address">Address</label>
+          <input id="r-address" type="text" [(ngModel)]="restaurant.address"
                  name="address" placeholder="Full address" />
         </div>
       </div>
-      <button type="submit" class="btn-next"
-              [disabled]="!restaurant.restaurantName || !restaurant.phone">
-        Next: Add Staff <span class="material-icons">arrow_forward</span>
-      </button>
-    </form>
-  </div>
-
-  <!-- ── Step 2: Staff Setup ── -->
-  <div class="setup-card" *ngIf="step === 'staff'">
-    <div class="staff-header">
-      <h2>Add Staff</h2>
-      <span class="limit-badge">
-        {{ restaurant.staff.length }} / {{ staffLimit === 999 ? '∞' : staffLimit }} staff
-      </span>
+      <div class="banner-location" *ngIf="onboardingContact?.city">
+        <span class="material-icons">location_on</span>
+        {{ onboardingContact?.city }}, {{ onboardingContact?.state }}
+      </div>
     </div>
 
-    <div class="staff-row" *ngFor="let staff of restaurant.staff; let i = index; trackBy: trackByIndex">
-      <div class="staff-num">{{ i + 1 }}</div>
-      <input type="text" [(ngModel)]="staff.name" [name]="'sname'+i"
-             placeholder="Full Name" />
-      <input type="tel" [(ngModel)]="staff.mobile" [name]="'smob'+i"
-             placeholder="Mobile" maxlength="10" />
-      <input type="email" [(ngModel)]="staff.email" [name]="'semail'+i"
-             placeholder="Email (optional)" />
-      <select [(ngModel)]="staff.role" [name]="'srole'+i">
-        <option *ngFor="let role of availableRoles" [value]="role">{{ role }}</option>
-      </select>
-      <button class="btn-remove" (click)="removeStaff(i)" type="button">
-        <span class="material-icons">delete</span>
+    <!-- ── Staff Section ── -->
+    <div class="staff-section">
+      <div class="staff-header">
+        <div class="staff-title-group">
+          <h2>Add Your Team</h2>
+          <p class="staff-subtitle">Add staff members who will use Kitchen Book</p>
+        </div>
+        <span class="limit-badge" [class.limit-warn]="restaurant.staff.length >= staffLimit">
+          {{ restaurant.staff.length }} / {{ staffLimit === 999 ? '∞' : staffLimit }} staff
+        </span>
+      </div>
+
+      <!-- Empty State -->
+      <div class="staff-empty" *ngIf="restaurant.staff.length === 0">
+        <span class="material-icons">group_add</span>
+        <p>No staff added yet. Click below to add your first team member.</p>
+      </div>
+
+      <div class="staff-row" *ngFor="let staff of restaurant.staff; let i = index; trackBy: trackByIndex">
+        <div class="staff-num">{{ i + 1 }}</div>
+        <input type="text"  [(ngModel)]="staff.name"   [name]="'sname'+i"  placeholder="Full Name" />
+        <input type="tel"   [(ngModel)]="staff.mobile" [name]="'smob'+i"   placeholder="Mobile" maxlength="10" />
+        <input type="email" [(ngModel)]="staff.email"  [name]="'semail'+i" placeholder="Email (optional)" />
+        <select [(ngModel)]="staff.role" [name]="'srole'+i">
+          <option *ngFor="let role of availableRoles" [value]="role">{{ roleLabels[role] || role }}</option>
+        </select>
+        <button class="btn-remove" (click)="removeStaff(i)" type="button">
+          <span class="material-icons">delete</span>
+        </button>
+      </div>
+
+      <button class="btn-add-staff" (click)="addStaffRow()" [disabled]="!canAddStaff" type="button">
+        <span class="material-icons">person_add</span>
+        {{ canAddStaff ? 'Add Staff Member' : 'Staff Limit Reached' }}
       </button>
     </div>
 
-    <button class="btn-add-staff" (click)="addStaffRow()" [disabled]="!canAddStaff" type="button">
-      <span class="material-icons">person_add</span>
-      Add Staff {{ !canAddStaff ? '(Limit reached)' : '' }}
-    </button>
+    <!-- ── Error Banner ── -->
+    <div class="error-banner" *ngIf="saveError">
+      <span class="material-icons">error_outline</span>
+      {{ saveError }}
+    </div>
 
+    <!-- ── Actions ── -->
     <div class="setup-actions">
-      <button class="btn-back" (click)="step = 'restaurant'" type="button">
-        <span class="material-icons">arrow_back</span> Back
-      </button>
-      <button class="btn-complete" (click)="completeSetup()" [disabled]="isLoading">
+      <button class="btn-complete" (click)="completeSetup()"
+              [disabled]="isLoading || !restaurant.restaurantName || !restaurant.phone">
         <span class="material-icons spin" *ngIf="isLoading">autorenew</span>
         <span>{{ isLoading ? 'Saving...' : 'Complete Setup' }}</span>
         <span class="material-icons" *ngIf="!isLoading">check_circle</span>
       </button>
     </div>
-    <p *ngIf="saveError" style="color:red; text-align:center; margin-top:8px;">{{ saveError }}</p>
+
   </div>
 
 </div>
