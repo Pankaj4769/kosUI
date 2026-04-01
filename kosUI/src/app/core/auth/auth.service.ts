@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthUser, CompleteSetup, ForgotPasswordRequest, LoginRequest, OnboardingStatus, RestaurantSetup, SubscriptionPlan, UserRole } from './auth.model';
+import { AuthUser, CompleteSetup, ForgotPasswordRequest, IdentifierType, LoginRequest, OnboardingStatus, OtpRequest, OtpVerifyRequest, RestaurantSetup, SubscriptionPlan, UserRole } from './auth.model';
 import { HttpClient } from '@angular/common/http';
 import { EMPTY, map, Observable, of, switchMap, tap, catchError } from 'rxjs';
 import { BASE_URL } from '../../apiUrls';
@@ -175,10 +175,15 @@ export class AuthService {
   }
   
 
-  // ── OTP Send (mock) ──────────────────────────────────────
-  sendOtp(mobile: string): { success: boolean; message: string } {
-    console.log(`OTP sent to ${mobile}: 123456 (mock)`);
-    return { success: true, message: 'OTP sent successfully.' };
+  // ── OTP ──────────────────────────────────────────────────
+  sendOtp(identifier: string, identifierType: IdentifierType): Observable<MessageResponse> {
+    const req: OtpRequest = { identifier, identifierType };
+    return this.http.post<MessageResponse>(`${this.baseUrl}/auth/sendOtp`, req);
+  }
+
+  verifyOtp(identifier: string, identifierType: IdentifierType, otp: string): Observable<MessageResponse> {
+    const req: OtpVerifyRequest = { identifier, identifierType, otp };
+    return this.http.post<MessageResponse>(`${this.baseUrl}/auth/verifyOtp`, req);
   }
 
   // ── Post Login Routing ───────────────────────────────────
@@ -257,6 +262,10 @@ export class AuthService {
 
   checkUsername(username: string): Observable<AuthUser> {
     return this.http.get<AuthUser>(`${this.baseUrl}/auth/getUser/${username}`);
+  }
+
+  checkEmail(email: string): Observable<AuthUser> {
+    return this.http.get<AuthUser>(`${this.baseUrl}/auth/getUserByEmail/${email}`);
   }
 
   forgotPassword(req: ForgotPasswordRequest): Observable<MessageResponse> {

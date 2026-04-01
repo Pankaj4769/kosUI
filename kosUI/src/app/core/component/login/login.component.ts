@@ -127,14 +127,20 @@ export class LoginComponent implements OnDestroy {
     }
     this.mobile       = cleaned;
     this.errorMessage = '';
-    const res = this.auth.sendOtp(this.mobile);
-    if (res.success) {
-      this.otpSent = true;
-      this.otp     = '';
-      this.startTimer(30);
-    } else {
-      this.errorMessage = res.message || 'Failed to send OTP. Try again.';
-    }
+    this.auth.sendOtp(this.mobile, 'mobile').subscribe({
+      next: res => {
+        if (res.status) {
+          this.otpSent = true;
+          this.otp     = '';
+          this.startTimer(30);
+        } else {
+          this.errorMessage = res.message || 'Failed to send OTP. Try again.';
+        }
+      },
+      error: () => {
+        this.errorMessage = 'Failed to send OTP. Try again.';
+      }
+    });
   }
 
 
