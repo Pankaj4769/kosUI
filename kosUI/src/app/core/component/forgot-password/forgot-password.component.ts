@@ -73,32 +73,42 @@ export class ForgotPasswordComponent {
       }
     }
 
-    this.errorMsg = '';
+    this.errorMsg  = '';
+    this.isLoading = true;
 
-    if (this.identifierType === 'email' || this.identifierType === 'mobile') {
-      this.isLoading = true;
-      setTimeout(() => {
+    // Checkpoint: verify account exists before sending OTP
+    const check$ = this.identifierType === 'email'
+      ? this.auth.checkEmail(val)
+      : this.auth.checkUsername(val); // username & mobile both use username check as fallback
+
+    check$.subscribe({
+      next: () => {
+        // Account found — now send OTP
+        this.auth.sendOtp(val, this.identifierType).subscribe({
+          next: res => {
+            this.isLoading = false;
+            if (res.status) {
+              this.advanceToOtp();
+            } else {
+              this.errorMsg = 'Could not send OTP. Please try again.';
+            }
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.isLoading = false;
+            this.errorMsg = 'Could not send OTP. Please check your connection.';
+            this.cdr.detectChanges();
+          }
+        });
+      },
+      error: (err) => {
         this.isLoading = false;
-        this.advanceToOtp();
-      }, 1000);
-    } else {
-      // Username path: verify username exists first
-      this.isLoading = true;
-      this.auth.checkUsername(val).subscribe({
-        next: () => {
-          this.isLoading = false;
-          this.advanceToOtp();
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.errorMsg = err.status === 404
-            ? 'No account found with that username.'
-            : 'Could not verify. Please check your connection.';
-          this.cdr.detectChanges();
-        }
-      });
-    }
+        this.errorMsg = err.status === 404
+          ? 'No account found with this ' + this.identifierLabel + '.'
+          : 'Could not verify. Please check your connection.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private advanceToOtp(): void {
@@ -112,6 +122,7 @@ export class ForgotPasswordComponent {
   resendOtp(): void {
     this.otp      = '';
     this.otpError = '';
+    this.auth.sendOtp(this.identifier.trim(), this.identifierType).subscribe();
     this.startResendTimer();
     this.cdr.detectChanges();
   }
@@ -129,7 +140,7 @@ export class ForgotPasswordComponent {
     }, 1000);
   }
 
-  // Step 2: verify OTP (mock — accepts 123456)
+  // Step 2: verify OTP
   verifyOtp(): void {
     if (!this.otp.trim()) {
       this.otpError = 'Please enter the OTP.';
@@ -138,15 +149,22 @@ export class ForgotPasswordComponent {
     this.otpLoading = true;
     this.otpError   = '';
 
-    setTimeout(() => {
-      this.otpLoading = false;
-      if (this.otp.trim() === '123456') {
-        this.step = 3;
-      } else {
-        this.otpError = 'Invalid OTP. Please try again.';
+    this.auth.verifyOtp(this.identifier.trim(), this.identifierType, this.otp.trim()).subscribe({
+      next: res => {
+        this.otpLoading = false;
+        if (res.status) {
+          this.step = 3;
+        } else {
+          this.otpError = res.message || 'Invalid OTP. Please try again.';
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.otpLoading = false;
+        this.otpError = 'Could not verify OTP. Please try again.';
+        this.cdr.detectChanges();
       }
-      this.cdr.detectChanges();
-    }, 800);
+    });
   }
 
   // Step 3: set new password

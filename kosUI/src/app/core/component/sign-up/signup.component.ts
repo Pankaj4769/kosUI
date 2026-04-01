@@ -322,22 +322,43 @@ export class SignupComponent implements OnDestroy {
   sendEmailOtp(): void {
     this.emailOtpLoading = true;
     this.emailOtpError   = '';
-    setTimeout(() => {
-      this.emailOtpSent    = true;
-      this.emailOtpLoading = false;
-      this.emailOtp        = '';
-      this.startResendTimer('email');
-    }, 800);
+    this.auth.sendOtp(this.form.email.trim(), 'email').subscribe({
+      next: res => {
+        this.emailOtpLoading = false;
+        if (res.status) {
+          this.emailOtpSent = true;
+          this.emailOtp     = '';
+          this.startResendTimer('email');
+        } else {
+          this.emailOtpError = res.message || 'Failed to send OTP. Try again.';
+        }
+      },
+      error: () => {
+        this.emailOtpLoading = false;
+        this.emailOtpError   = 'Failed to send OTP. Check your connection.';
+      }
+    });
   }
 
   verifyEmailOtp(): void {
     if (!this.emailOtp.trim()) { this.emailOtpError = 'Please enter the OTP.'; return; }
-    if (this.emailOtp === '123456') {
-      this.emailOtpVerified = true;
-      this.emailOtpError    = '';
-    } else {
-      this.emailOtpError = 'Invalid OTP. Please try again.';
-    }
+    this.emailOtpLoading = true;
+    this.emailOtpError   = '';
+    this.auth.verifyOtp(this.form.email.trim(), 'email', this.emailOtp.trim()).subscribe({
+      next: res => {
+        this.emailOtpLoading = false;
+        if (res.status) {
+          this.emailOtpVerified = true;
+          this.emailOtpError    = '';
+        } else {
+          this.emailOtpError = res.message || 'Invalid OTP. Please try again.';
+        }
+      },
+      error: () => {
+        this.emailOtpLoading = false;
+        this.emailOtpError   = 'Could not verify OTP. Try again.';
+      }
+    });
   }
 
   // ── OTP only digits ───────────────────────────────────

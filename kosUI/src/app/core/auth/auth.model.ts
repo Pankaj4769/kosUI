@@ -90,3 +90,14 @@ export interface ForgotPasswordRequest {
   identifierType: IdentifierType;
   newPassword: string;
 }
+
+export interface OtpRequest {
+  identifier: string;
+  identifierType: IdentifierType;
+}
+
+export interface OtpVerifyRequest {
+  identifier: string;
+  identifierType: IdentifierType;
+  otp: string;
+}
