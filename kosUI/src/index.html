@@ -30,9 +30,21 @@
         c.width = 64; c.height = 64;
         var ctx = c.getContext('2d');
         var pad = 2;
-        // White background same size as cropped logo
+        var r = 12;
+        // Rounded white background
+        ctx.beginPath();
+        ctx.moveTo(r, 0); ctx.lineTo(64 - r, 0);
+        ctx.quadraticCurveTo(64, 0, 64, r);
+        ctx.lineTo(64, 64 - r);
+        ctx.quadraticCurveTo(64, 64, 64 - r, 64);
+        ctx.lineTo(r, 64);
+        ctx.quadraticCurveTo(0, 64, 0, 64 - r);
+        ctx.lineTo(0, r);
+        ctx.quadraticCurveTo(0, 0, r, 0);
+        ctx.closePath();
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 64, 64);
+        ctx.fill();
+        ctx.clip();
         ctx.drawImage(img, minX - pad, minY - pad,
           (maxX - minX + pad * 2), (maxY - minY + pad * 2),
           0, 0, 64, 64);
@@ -47,6 +59,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 </head>
 <body class="mat-typography">

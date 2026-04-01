@@ -1,95 +1,97 @@
-/* ── Wrapper ── */
+/* ══════════════════════════════════════
+   1. WRAPPER
+══════════════════════════════════════ */
 .setup-wrapper {
   min-height: 100vh;
   background: #f1f5f9;
-  padding: 32px 24px;
+  padding: 28px 24px 64px;
   font-family: 'Segoe UI', sans-serif;
   box-sizing: border-box;
 }
 
-/* ── Header ── */
+
+/* ══════════════════════════════════════
+   2. HEADER
+══════════════════════════════════════ */
 .setup-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  justify-content: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  margin-bottom: 36px;
+  gap: 12px;
+  margin-bottom: 28px;
+  max-width: 780px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.setup-header .material-icons {
-  font-size: 32px;
-  color: #2563eb;
+.setup-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.setup-header h1 {
-  font-size: 1.8rem;
+.setup-logo-wrap {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.setup-logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.setup-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-name {
+  font-size: 1.25rem;
   font-weight: 800;
   color: #1e293b;
-  letter-spacing: 2px;
-  margin: 0;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
 }
 
-/* ── Step Indicator ── */
-.step-indicator {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  margin-left: 24px;
+.brand-name em {
+  color: #16a34a;
+  font-style: normal;
 }
 
-.step {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.88rem;
+.brand-tagline {
+  font-size: 0.58rem;
   font-weight: 600;
   color: #94a3b8;
-  padding: 6px 16px;
-  border-radius: 20px;
-  transition: color 0.2s, background 0.2s;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
 }
 
-.step span {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #e2e8f0;
-  color: #94a3b8;
-  display: flex;
+.plan-chip {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
+  gap: 6px;
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
   font-weight: 700;
-  transition: background 0.2s, color 0.2s;
 }
 
-.step.active {
-  color: #2563eb;
-}
+.plan-chip .material-icons { font-size: 16px; }
 
-.step.active span {
-  background: #2563eb;
-  color: #fff;
-}
 
-.step.done {
-  color: #22c55e;
-}
-
-.step.done span {
-  background: #22c55e;
-  color: #fff;
-}
-
-.step-line {
-  width: 40px;
-  height: 2px;
-  background: #e2e8f0;
-  margin: 0 4px;
-}
-
-/* ── Setup Card ── */
+/* ══════════════════════════════════════
+   3. SETUP CARD
+══════════════════════════════════════ */
 .setup-card {
   background: #fff;
   border-radius: 16px;
@@ -99,14 +101,54 @@
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
 }
 
-.setup-card h2 {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 28px;
+
+/* ══════════════════════════════════════
+   4. RESTAURANT BANNER
+══════════════════════════════════════ */
+.restaurant-banner {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 32px;
 }
 
-/* ── Form Layout ── */
+.banner-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.banner-heading .material-icons {
+  font-size: 18px;
+  color: #2563eb;
+}
+
+.banner-heading h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.banner-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+.banner-location .material-icons { font-size: 15px; color: #94a3b8; }
+
+
+/* ══════════════════════════════════════
+   5. FORM LAYOUT
+══════════════════════════════════════ */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -127,14 +169,13 @@
 }
 
 .form-group input,
-.form-group select,
-.form-group textarea {
+.form-group select {
   padding: 11px 14px;
   border: 1.5px solid #e2e8f0;
   border-radius: 9px;
   font-size: 0.93rem;
   color: #1e293b;
-  background: #f8fafc;
+  background: #fff;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
   font-family: 'Segoe UI', sans-serif;
@@ -146,54 +187,39 @@
 .form-group select:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
-  background: #fff;
 }
 
-/* ── Next Button ── */
-.btn-next {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  padding: 12px 28px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: background 0.2s, transform 0.1s;
+
+/* ══════════════════════════════════════
+   6. STAFF SECTION
+══════════════════════════════════════ */
+.staff-section {
+  margin-bottom: 24px;
 }
 
-.btn-next:hover:not(:disabled) {
-  background: #1d4ed8;
-  transform: translateY(-1px);
-}
-
-.btn-next:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-next .material-icons {
-  font-size: 18px;
-}
-
-/* ── Staff Header ── */
 .staff-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 20px;
+  gap: 12px;
 }
 
-.staff-header h2 {
+.staff-title-group h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+
+.staff-subtitle {
+  font-size: 0.82rem;
+  color: #64748b;
   margin: 0;
 }
 
 .limit-badge {
+  flex-shrink: 0;
   background: #eff6ff;
   color: #2563eb;
   border: 1px solid #bfdbfe;
@@ -201,9 +227,39 @@
   padding: 4px 14px;
   font-size: 0.82rem;
   font-weight: 600;
+  white-space: nowrap;
 }
 
-/* ── Staff Row ── */
+.limit-badge.limit-warn {
+  background: #fff7ed;
+  color: #ea580c;
+  border-color: #fed7aa;
+}
+
+
+/* ══════════════════════════════════════
+   7. STAFF EMPTY STATE
+══════════════════════════════════════ */
+.staff-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  border: 1.5px dashed #e2e8f0;
+  border-radius: 12px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.staff-empty .material-icons { font-size: 32px; }
+.staff-empty p { font-size: 0.88rem; margin: 0; }
+
+
+/* ══════════════════════════════════════
+   8. STAFF ROW
+══════════════════════════════════════ */
 .staff-row {
   display: grid;
   grid-template-columns: 32px 1fr 130px 1fr 140px 40px;
@@ -217,9 +273,7 @@
   transition: border-color 0.2s;
 }
 
-.staff-row:hover {
-  border-color: #93c5fd;
-}
+.staff-row:hover { border-color: #93c5fd; }
 
 .staff-num {
   width: 28px;
@@ -256,7 +310,10 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
 }
 
-/* ── Remove Button ── */
+
+/* ══════════════════════════════════════
+   9. REMOVE BUTTON
+══════════════════════════════════════ */
 .btn-remove {
   background: transparent;
   border: 1.5px solid #fca5a5;
@@ -272,16 +329,13 @@
   flex-shrink: 0;
 }
 
-.btn-remove:hover {
-  background: #fef2f2;
-  color: #dc2626;
-}
+.btn-remove:hover { background: #fef2f2; color: #dc2626; }
+.btn-remove .material-icons { font-size: 18px; }
 
-.btn-remove .material-icons {
-  font-size: 18px;
-}
 
-/* ── Add Staff Button ── */
+/* ══════════════════════════════════════
+   10. ADD STAFF BUTTON
+══════════════════════════════════════ */
 .btn-add-staff {
   display: flex;
   align-items: center;
@@ -296,8 +350,9 @@
   cursor: pointer;
   width: 100%;
   justify-content: center;
-  margin: 4px 0 28px;
+  margin: 4px 0 0;
   transition: background 0.2s, border-color 0.2s;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .btn-add-staff:hover:not(:disabled) {
@@ -311,46 +366,40 @@
   cursor: not-allowed;
 }
 
-.btn-add-staff .material-icons {
-  font-size: 18px;
+.btn-add-staff .material-icons { font-size: 18px; }
+
+
+/* ══════════════════════════════════════
+   11. ERROR BANNER
+══════════════════════════════════════ */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fef2f2;
+  border: 1.5px solid #fca5a5;
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #b91c1c;
+  font-size: 0.88rem;
+  font-weight: 500;
+  margin-top: 20px;
 }
 
-/* ── Setup Actions ── */
+.error-banner .material-icons { font-size: 18px; flex-shrink: 0; color: #ef4444; }
+
+
+/* ══════════════════════════════════════
+   12. ACTIONS
+══════════════════════════════════════ */
 .setup-actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 20px;
+  justify-content: flex-end;
+  padding-top: 24px;
   border-top: 1px solid #e2e8f0;
-  gap: 12px;
+  margin-top: 24px;
 }
 
-/* ── Back Button ── */
-.btn-back {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: 1.5px solid #e2e8f0;
-  color: #475569;
-  border-radius: 9px;
-  padding: 10px 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-.btn-back:hover {
-  background: #f1f5f9;
-  color: #1e293b;
-}
-
-.btn-back .material-icons {
-  font-size: 18px;
-}
-
-/* ── Complete Button ── */
 .btn-complete {
   display: flex;
   align-items: center;
@@ -359,11 +408,12 @@
   color: #fff;
   border: none;
   border-radius: 10px;
-  padding: 12px 28px;
+  padding: 12px 32px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .btn-complete:hover:not(:disabled) {
@@ -377,11 +427,12 @@
   transform: none;
 }
 
-.btn-complete .material-icons {
-  font-size: 18px;
-}
+.btn-complete .material-icons { font-size: 18px; }
 
-/* ── Spinner ── */
+
+/* ══════════════════════════════════════
+   13. SPINNER
+══════════════════════════════════════ */
 .spin {
   animation: spin 0.9s linear infinite;
   font-size: 18px;
@@ -392,15 +443,16 @@
   to   { transform: rotate(360deg); }
 }
 
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .setup-card {
-    padding: 24px 16px;
-  }
 
-  .form-row {
-    grid-template-columns: 1fr;
-  }
+/* ══════════════════════════════════════
+   14. RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 768px) {
+  .setup-card      { padding: 24px 16px; }
+  .form-row        { grid-template-columns: 1fr; }
+  .setup-header    { flex-direction: column; align-items: flex-start; }
+  .setup-actions   { justify-content: stretch; }
+  .btn-complete    { width: 100%; justify-content: center; }
 
   .staff-row {
     grid-template-columns: 32px 1fr 1fr;
@@ -409,33 +461,12 @@
   }
 
   .staff-row input:nth-child(4),
-  .staff-row select {
-    grid-column: span 2;
-  }
+  .staff-row select { grid-column: span 2; }
 
   .btn-remove {
     grid-column: 3;
     grid-row: 1;
     justify-self: end;
-  }
-
-  .setup-header {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .step-indicator {
-    margin-left: 0;
-  }
-
-  .setup-actions {
-    flex-direction: column-reverse;
-  }
-
-  .btn-back,
-  .btn-complete {
-    width: 100%;
-    justify-content: center;
   }
 }
 
@@ -446,22 +477,9 @@
   }
 
   .staff-row input,
-  .staff-row select {
-    grid-column: 1 / -1;
-  }
+  .staff-row select { grid-column: 1 / -1; }
 
-  .staff-num {
-    grid-row: 1;
-    grid-column: 1;
-  }
-
-  .staff-row input:first-of-type {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .btn-remove {
-    grid-column: 3;
-    grid-row: 1;
-  }
+  .staff-num              { grid-row: 1; grid-column: 1; }
+  .staff-row input:first-of-type { grid-column: 2; grid-row: 1; }
+  .btn-remove             { grid-column: 3; grid-row: 1; }
 }

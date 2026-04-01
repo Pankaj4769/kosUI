@@ -60,18 +60,22 @@ export interface RestaurantSetup {
   staff: StaffSetup[];
 }
 
-export interface PaymentRequest{
+export interface PaymentRequest {
   name: string;
-  email: string; 
-  phone: string; 
+  email: string;
+  phone: string;
   restaurantName: string;
-  message: string;
+  city: string;
+  state: string;
+  gstNumber?: string;
+  billingCycle?: 'monthly' | 'annual';
   plan?: string | null;
 }
 
 export interface PaymentResponse{
   paymentStatus: boolean;
   activePlan: string;
+  restaurantId: string;
 
 }
 

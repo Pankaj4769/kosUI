@@ -11,6 +11,31 @@
     </div>
   </header>
 
+  <div class="stepper" *ngIf="step !== 'plan'">
+    <div class="stepper-step stepper-done">
+      <div class="stepper-circle">
+        <span class="material-icons">check</span>
+      </div>
+      <span class="stepper-label">Plan</span>
+    </div>
+    <div class="stepper-line stepper-line-done"></div>
+
+    <div class="stepper-step" [class.stepper-active]="step === 'contact'"
+         [class.stepper-done]="step === 'payment'">
+      <div class="stepper-circle">
+        <span class="material-icons" *ngIf="step === 'payment'">check</span>
+        <span *ngIf="step !== 'payment'">2</span>
+      </div>
+      <span class="stepper-label">Contact</span>
+    </div>
+    <div class="stepper-line" [class.stepper-line-done]="step === 'payment'"></div>
+
+    <div class="stepper-step" [class.stepper-active]="step === 'payment'">
+      <div class="stepper-circle">3</div>
+      <span class="stepper-label">Payment</span>
+    </div>
+  </div>
+
   <!-- ══════════════════════════════
        STEP 1 — PLAN SELECTION
   ══════════════════════════════ -->
@@ -18,37 +43,77 @@
 
     <!-- ── Hero ── -->
     <div class="sub-hero">
+
+      <!-- Background kitchen icons (decorative) -->
+      <div class="hero-bg-deco" aria-hidden="true">
+        <span class="material-icons deco-icon deco-1">restaurant</span>
+        <span class="material-icons deco-icon deco-2">coffee</span>
+        <span class="material-icons deco-icon deco-3">receipt_long</span>
+        <span class="material-icons deco-icon deco-4">inventory_2</span>
+        <span class="material-icons deco-icon deco-5">point_of_sale</span>
+        <span class="material-icons deco-icon deco-6">groups</span>
+        <span class="material-icons deco-icon deco-7">bar_chart</span>
+        <span class="material-icons deco-icon deco-8">local_dining</span>
+        <span class="material-icons deco-icon deco-9">set_meal</span>
+        <span class="material-icons deco-icon deco-10">kitchen</span>
+      </div>
+
+      <div class="hero-eyebrow">SUBSCRIPTION PLANS</div>
       <h1 class="sub-title">Value-packed features</h1>
       <h2 class="sub-title-accent">Wallet-friendly prices</h2>
       <p class="sub-subtitle">
         No hidden fees &nbsp;·&nbsp; No surprise charges &nbsp;·&nbsp; Cancel anytime
       </p>
 
-      <!-- Billing Toggle -->
-      <div class="billing-toggle">
-        <span
-          [class.active]="billingCycle === 'monthly'"
-          (click)="setBilling('monthly')"
-        >Monthly</span>
-
-        <div
-          class="toggle-switch"
-          role="switch"
-          [attr.aria-checked]="billingCycle === 'annual'"
-          tabindex="0"
-          (click)="toggleBilling()"
-          (keydown.enter)="toggleBilling()"
-          (keydown.space)="toggleBilling()"
-        >
-          <div class="toggle-knob" [class.annual]="billingCycle === 'annual'"></div>
+      <!-- Trust Bar -->
+      <div class="trust-bar">
+        <div class="trust-item">
+          <span class="material-icons">store</span>
+          500+ Restaurants
         </div>
+        <div class="trust-divider"></div>
+        <div class="trust-item">
+          <span class="material-icons">star</span>
+          4.9 Rated
+        </div>
+        <div class="trust-divider"></div>
+        <div class="trust-item">
+          <span class="material-icons">bolt</span>
+          Setup in 5 mins
+        </div>
+      </div>
 
-        <span
-          [class.active]="billingCycle === 'annual'"
-          (click)="setBilling('annual')"
-        >
-          Annual <span class="save-badge">Save 20%</span>
-        </span>
+      <!-- Billing Toggle -->
+      <div class="billing-toggle-wrap">
+        <div class="billing-toggle">
+          <span
+            [class.active]="billingCycle === 'monthly'"
+            (click)="setBilling('monthly')"
+          >Monthly</span>
+
+          <div
+            class="toggle-switch"
+            role="switch"
+            [attr.aria-checked]="billingCycle === 'annual'"
+            tabindex="0"
+            (click)="toggleBilling()"
+            (keydown.enter)="toggleBilling()"
+            (keydown.space)="toggleBilling()"
+          >
+            <div class="toggle-knob" [class.annual]="billingCycle === 'annual'"></div>
+          </div>
+
+          <span
+            [class.active]="billingCycle === 'annual'"
+            (click)="setBilling('annual')"
+          >
+            Annual <span class="save-badge">Save 20%</span>
+          </span>
+        </div>
+        <div class="annual-saving-hint" *ngIf="billingCycle === 'annual' && maxAnnualSaving">
+          <span class="material-icons">savings</span>
+          Save up to {{ maxAnnualSaving }} per year
+        </div>
       </div>
     </div>
 
@@ -62,34 +127,36 @@
         [class.popular]="plan.popular"
         (click)="selectPlan(plan.id)"
         [attr.aria-pressed]="selectedPlan === plan.id"
+        [attr.data-plan]="plan.id"
       >
-        <div class="popular-badge" *ngIf="plan.popular">🔥 Most Popular</div>
-
-        <div class="plan-name">{{ plan.name }}</div>
-
-        <div class="plan-positioning" *ngIf="plan.positioning">
-          {{ plan.positioning }}
+        <!-- Coloured header band -->
+        <div class="plan-card-header">
+          <div class="popular-badge" *ngIf="plan.popular">🔥 Most Popular</div>
+          <div class="plan-name">{{ plan.name }}</div>
+          <div class="plan-positioning" *ngIf="plan.positioning">{{ plan.positioning }}</div>
+          <div class="plan-tagline" *ngIf="plan.tagline">{{ plan.tagline }}</div>
         </div>
 
-        <div class="plan-tagline" *ngIf="plan.tagline">
-          {{ plan.tagline }}
+        <!-- Price band -->
+        <div class="plan-price-section">
+          <div class="plan-price">
+            {{ billingCycle === 'annual' && plan.annualPrice ? plan.annualPrice : plan.price }}
+            <span class="plan-period">{{ plan.period }}</span>
+          </div>
+          <div class="plan-billed-note" *ngIf="billingCycle === 'annual'">billed annually</div>
+          <div class="plan-annual-saving" *ngIf="billingCycle === 'annual' && plan.annualPrice">
+            <span class="material-icons">savings</span>
+            Save {{ getAnnualSaving(plan) }}/yr
+          </div>
         </div>
 
-        <div class="plan-price">
-          {{ billingCycle === 'annual' && plan.annualPrice
-              ? plan.annualPrice : plan.price }}
-          <span class="plan-period">{{ plan.period }}</span>
-        </div>
-
-        <div class="plan-billed-note" *ngIf="billingCycle === 'annual'">
-          billed annually
-        </div>
-
+        <!-- Staff pill -->
         <div class="plan-staff">
           <span class="material-icons">people</span>
           {{ plan.staffLimit === 999 ? 'Unlimited' : 'Up to ' + plan.staffLimit }} staff
         </div>
 
+        <!-- Features -->
         <ul class="plan-features">
           <li *ngFor="let feature of plan.features">
             <span class="material-icons check">check_circle</span>
@@ -97,12 +164,10 @@
           </li>
         </ul>
 
-        <div class="plan-select-indicator">
-          <span class="material-icons" *ngIf="selectedPlan === plan.id">
-            radio_button_checked
-          </span>
-          <span class="material-icons" *ngIf="selectedPlan !== plan.id">
-            radio_button_unchecked
+        <!-- CTA -->
+        <div class="plan-cta">
+          <span class="material-icons">
+            {{ selectedPlan === plan.id ? 'check_circle' : 'arrow_forward' }}
           </span>
           {{ selectedPlan === plan.id ? 'Selected' : 'Select Plan' }}
         </div>
@@ -111,13 +176,17 @@
 
     <!-- ── Proceed Button ── -->
     <div class="sub-actions">
+      <div class="error-banner upgrade-error" *ngIf="errorMessage">
+        <span class="material-icons">error_outline</span>
+        {{ errorMessage }}
+      </div>
       <button
         class="btn-proceed"
         [disabled]="!selectedPlan"
         (click)="proceedToContact()"
       >
-        Proceed with
-        {{ selectedPlan ? getPlanById(selectedPlan)?.name : '...' }}
+        Proceed with {{ selectedPlan ? getPlanById(selectedPlan)?.name : '...' }}
+        <span class="btn-price-tag" *ngIf="selectedPlan">&nbsp;·&nbsp;{{ currentPrice }}/mo</span>
         <span class="material-icons">arrow_forward</span>
       </button>
     </div>
@@ -201,6 +270,7 @@
       <h3 class="section-title">Real Restaurants · Real Results</h3>
       <div class="testimonials-grid">
         <div class="testimonial-card" *ngFor="let t of testimonials">
+          <div class="testimonial-stars">★★★★★</div>
           <p class="testimonial-text">"{{ t.text }}"</p>
           <div class="testimonial-author">
             <div class="author-avatar">{{ t.name[0] }}</div>
@@ -236,19 +306,19 @@
 
   </ng-container>
 
-  <!-- ══════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════
        STEP 2 — CONTACT DETAILS
-  ══════════════════════════════ -->
+  ══════════════════════════════════════════════════════════ -->
   <ng-container *ngIf="step === 'contact'">
     <div class="contact-step">
 
-      <button class="btn-back" (click)="goBack()">
+      <button class="btn-back" type="button" (click)="goBack()">
         <span class="material-icons">arrow_back</span> Back
       </button>
 
       <h2 class="sub-title">Contact Details</h2>
       <p class="sub-subtitle">
-        Our team will review and activate your
+        Tell us about your restaurant for the
         <strong>{{ getPlanById(selectedPlan!)?.name }}</strong> plan
       </p>
 
@@ -258,13 +328,19 @@
           <div class="form-group">
             <label for="c-name">Your Name *</label>
             <input id="c-name" type="text" [(ngModel)]="contact.name"
-                   name="name" placeholder="Full name" required />
+                   name="name" placeholder="Full name" required
+                   [class.input-error]="touched['name'] && !contact.name"
+                   (blur)="touched['name'] = true" />
+            <span class="field-error" *ngIf="touched['name'] && !contact.name">Name is required</span>
           </div>
           <div class="form-group">
             <label for="c-restaurant">Restaurant Name *</label>
             <input id="c-restaurant" type="text"
                    [(ngModel)]="contact.restaurantName"
-                   name="restaurantName" placeholder="Restaurant name" required />
+                   name="restaurantName" placeholder="Restaurant name" required
+                   [class.input-error]="touched['restaurantName'] && !contact.restaurantName"
+                   (blur)="touched['restaurantName'] = true" />
+            <span class="field-error" *ngIf="touched['restaurantName'] && !contact.restaurantName">Restaurant name is required</span>
           </div>
         </div>
 
@@ -272,35 +348,151 @@
           <div class="form-group">
             <label for="c-email">Email Address *</label>
             <input id="c-email" type="email" [(ngModel)]="contact.email"
-                   name="email" placeholder="your@email.com" required />
+                   name="email" placeholder="your@email.com" required
+                   [class.input-error]="touched['email'] && !contact.email"
+                   (blur)="touched['email'] = true" />
+            <span class="field-error" *ngIf="touched['email'] && !contact.email">Email is required</span>
           </div>
           <div class="form-group">
             <label for="c-phone">Phone Number *</label>
             <input id="c-phone" type="tel" [(ngModel)]="contact.phone"
                    name="phone" placeholder="10-digit number"
-                   maxlength="10" required />
+                   maxlength="10" required
+                   [class.input-error]="touched['phone'] && !contact.phone"
+                   (blur)="touched['phone'] = true" />
+            <span class="field-error" *ngIf="touched['phone'] && !contact.phone">Phone number is required</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="c-city">City *</label>
+            <input id="c-city" type="text" [(ngModel)]="contact.city"
+                   name="city" placeholder="e.g. Mumbai" required
+                   [class.input-error]="touched['city'] && !contact.city"
+                   (blur)="touched['city'] = true" />
+            <span class="field-error" *ngIf="touched['city'] && !contact.city">City is required</span>
+          </div>
+          <div class="form-group">
+            <label for="c-state">State *</label>
+            <input id="c-state" type="text" [(ngModel)]="contact.state"
+                   name="state" placeholder="e.g. Maharashtra" required
+                   [class.input-error]="touched['state'] && !contact.state"
+                   (blur)="touched['state'] = true" />
+            <span class="field-error" *ngIf="touched['state'] && !contact.state">State is required</span>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="c-msg">Message (Optional)</label>
-          <textarea id="c-msg" [(ngModel)]="contact.message"
-                    name="message" rows="3"
-                    placeholder="Any specific requirements..."></textarea>
+          <label for="c-gst">GST Number <span class="optional-label">(Optional)</span></label>
+          <input id="c-gst" type="text" [(ngModel)]="contact.gstNumber"
+                 name="gstNumber" placeholder="22AAAAA0000A1Z5" maxlength="15" />
         </div>
 
         <button
           type="submit"
           class="btn-proceed"
-          [disabled]="isLoading || !contact.name
-                      || !contact.email || !contact.phone"
+          [disabled]="!contact.name || !contact.email || !contact.phone
+                      || !contact.restaurantName || !contact.city || !contact.state"
         >
-          <span class="material-icons spin" *ngIf="isLoading">autorenew</span>
-          <span>{{ isLoading ? 'Submitting...' : 'Payment' }}</span>
-          <span class="material-icons" *ngIf="!isLoading">send</span>
+          <span>Review &amp; Pay</span>
+          <span class="material-icons">arrow_forward</span>
         </button>
 
       </form>
+    </div>
+  </ng-container>
+
+  <!-- ══════════════════════════════════════════════════════════
+       STEP 3 — PAYMENT
+  ══════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="step === 'payment'">
+    <div class="contact-step">
+
+      <button class="btn-back" type="button" (click)="goBack()">
+        <span class="material-icons">arrow_back</span> Back
+      </button>
+
+      <h2 class="sub-title">Review &amp; Pay</h2>
+      <p class="sub-subtitle">Confirm your order before completing payment</p>
+
+      <div class="payment-summary-card">
+        <div class="summary-section">
+          <h3 class="summary-heading">
+            <span class="material-icons">receipt_long</span> Order Summary
+          </h3>
+          <div class="summary-row">
+            <span class="summary-label">Plan</span>
+            <span class="summary-value summary-plan-name">{{ getPlanById(selectedPlan!)?.name }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Billing Cycle</span>
+            <span class="summary-value">{{ billingCycle === 'annual' ? 'Annual (billed yearly)' : 'Monthly' }}</span>
+          </div>
+          <div class="summary-row summary-price-row">
+            <span class="summary-label">Amount</span>
+            <span class="summary-value summary-price">
+              {{ currentPrice }}<span class="summary-period">/mo</span>
+              <span class="summary-annual-note" *ngIf="billingCycle === 'annual'">billed annually</span>
+            </span>
+          </div>
+          <div class="summary-row summary-total-row" *ngIf="billingCycle === 'annual'">
+            <span class="summary-label">Total Charged</span>
+            <span class="summary-value summary-total">{{ totalAmount }}<span class="summary-period">/year</span></span>
+          </div>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-section">
+          <h3 class="summary-heading">
+            <span class="material-icons">store</span> Contact Details
+          </h3>
+          <div class="summary-row">
+            <span class="summary-label">Name</span>
+            <span class="summary-value">{{ contact.name }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Restaurant</span>
+            <span class="summary-value">{{ contact.restaurantName }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Email</span>
+            <span class="summary-value">{{ contact.email }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Phone</span>
+            <span class="summary-value">{{ contact.phone }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Location</span>
+            <span class="summary-value">{{ contact.city }}, {{ contact.state }}</span>
+          </div>
+          <div class="summary-row" *ngIf="contact.gstNumber">
+            <span class="summary-label">GST Number</span>
+            <span class="summary-value">{{ contact.gstNumber }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="error-banner" *ngIf="errorMessage">
+        <span class="material-icons">error_outline</span>
+        {{ errorMessage }}
+      </div>
+
+      <div class="sub-actions sub-actions-pay">
+        <button
+          class="btn-proceed btn-pay"
+          type="button"
+          [disabled]="isLoading"
+          (click)="submitPayment()"
+        >
+          <span class="material-icons spin" *ngIf="isLoading">autorenew</span>
+          <span>{{ isLoading ? 'Processing...' : 'Pay Now ' + totalAmount }}</span>
+          <span class="material-icons" *ngIf="!isLoading">lock</span>
+        </button>
+      </div>
+
     </div>
   </ng-container>
 

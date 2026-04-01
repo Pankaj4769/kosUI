@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -13,27 +13,23 @@ import { MessageResponse } from '../../../domains/dashboard/models/message.model
   templateUrl: './restaurant-setup.component.html',
   styleUrls: ['./restaurant-setup.component.css']
 })
-export class RestaurantSetupComponent {
+export class RestaurantSetupComponent implements OnInit {
 
-  step: 'restaurant' | 'staff' = 'restaurant';
   isLoading = false;
   saveError = '';
 
+  onboardingContact: {
+    restaurantName: string; email: string; phone: string;
+    city: string; state: string;
+  } | null = null;
+
   restaurant: RestaurantSetup = {
     restaurantName: '',
-    address: '', 
-    phone: '', 
-    email: '', 
+    address: '',
+    phone: '',
+    email: '',
     staff: []
   };
-
-  ngOnInit(){
-    const user = this.auth.currentUser;
-    console.log('[Setup] currentUser:', user);
-    console.log('[Setup] subscriptionPlan:', user?.subscriptionPlan);
-    this.restaurant.phone = user?.mobile ?? '';
-    this.restaurant.email = user?.email ?? '';
-  }
 
   staffLimitMap: Record<SubscriptionPlan, number> = {
     STARTER: 1, GROWTH: 3, PRO: 10, ENTERPRISE: 15
@@ -41,17 +37,45 @@ export class RestaurantSetupComponent {
 
   availableRoles: UserRole[] = ['MANAGER', 'CASHIER', 'BILLING_ASSISTANT', 'CHEF', 'WAITER'];
 
+  roleLabels: Partial<Record<UserRole, string>> = {
+    MANAGER:           'Manager',
+    CASHIER:           'Cashier',
+    BILLING_ASSISTANT: 'Billing Assistant',
+    CHEF:              'Chef',
+    WAITER:            'Waiter'
+  };
+
   get staffLimit(): number {
     const plan = this.auth.currentUser?.subscriptionPlan;
-    return plan ? this.staffLimitMap[plan] : 5;
+    return plan ? this.staffLimitMap[plan] : 1;
   }
 
   get canAddStaff(): boolean {
     return this.restaurant.staff.length < this.staffLimit;
   }
 
-  constructor(private auth: AuthService, private router: Router) {
-    this.addStaffRow(); // Start with one row
+  get planName(): string {
+    const plan = this.auth.currentUser?.subscriptionPlan ?? '';
+    return plan.charAt(0) + plan.slice(1).toLowerCase();
+  }
+
+  constructor(private auth: AuthService, private router: Router) {}
+
+  ngOnInit(): void {
+    const stored = localStorage.getItem('kos_onboarding_contact');
+    if (stored) {
+      try {
+        this.onboardingContact = JSON.parse(stored);
+        this.restaurant.restaurantName = this.onboardingContact!.restaurantName;
+        this.restaurant.phone          = this.onboardingContact!.phone;
+        this.restaurant.email          = this.onboardingContact!.email;
+      } catch {}
+    }
+    const user = this.auth.currentUser;
+    if (!this.restaurant.phone && user?.mobile) this.restaurant.phone = user.mobile;
+    if (!this.restaurant.email && user?.email)  this.restaurant.email = user.email;
+
+    this.addStaffRow();
   }
 
   addStaffRow(): void {
@@ -63,35 +87,36 @@ export class RestaurantSetupComponent {
     this.restaurant.staff.splice(index, 1);
   }
 
-  proceedToStaff(): void {
-    if (!this.restaurant.restaurantName || !this.restaurant.phone) return;
-    this.step = 'staff';
-  }
-
   completeSetup(): void {
-    console.log(this.auth.currentUser?.subscriptionPlan+'Hello')
+    this.saveError = '';
+    this.restaurant.staff = this.restaurant.staff.filter(s => s.name.trim() || s.mobile.trim());
+    const invalid = this.restaurant.staff.some(s => !s.name.trim() || !s.mobile.trim());
+    if (invalid) {
+      this.saveError = 'Each staff member must have a name and mobile number.';
+      return;
+    }
+    if (!this.restaurant.restaurantName || !this.restaurant.phone) return;
+
     this.isLoading = true;
-    setTimeout(() => {
-      this.auth.updateOnboardingStatus('SETUP_COMPLETE', this.restaurant, this.auth.currentUser?.subscriptionPlan)?.subscribe({
-        next: (res) => {
-          console.log(res);
-          const user = this.auth.currentUser;
-        let r = res as MessageResponse;
-          if (r.status && user) {
-            user.onboardingStatus = 'SETUP_COMPLETE' as OnboardingStatus;
-            localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
-            this.isLoading = false;
-            this.router.navigate(['/dashboard']);
-          }
+    this.auth.updateOnboardingStatus('SETUP_COMPLETE', this.restaurant, this.auth.currentUser?.subscriptionPlan)?.subscribe({
+      next: (res) => {
+        const r = res as MessageResponse;
+        const user = this.auth.currentUser;
+        if (r.status && user) {
+          user.onboardingStatus = 'SETUP_COMPLETE' as OnboardingStatus;
+          localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
+          localStorage.removeItem('kos_onboarding_contact');
           this.isLoading = false;
-        },
-        error: (err: any) => {
-          console.error('[completeSetup] DB save failed:', err);
-          this.saveError = 'Setup could not be saved. Please try again.';
-          this.isLoading = false;
+          this.router.navigate(['/dashboard']);
         }
-      });
-    }, 1000);
+        this.isLoading = false;
+      },
+      error: (err: any) => {
+        console.error('[completeSetup] error:', err);
+        this.saveError = err?.error?.message ?? 'Setup could not be saved. Please try again.';
+        this.isLoading = false;
+      }
+    });
   }
 
   trackByIndex(index: number): number { return index; }

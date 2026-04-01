@@ -238,18 +238,22 @@
                 type="button"
                 (click)="loginWithGoogle()"
                 [disabled]="isLoading">
-          <img src="assets/icons/google.svg" alt=""
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-          <span class="social-fallback" style="display:none">G</span>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18" height="18" style="flex-shrink:0">
+            <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 7.9 2.9l5.9-5.9C34.2 3.4 29.4 1.5 24 1.5 14.8 1.5 7 7.1 3.6 15l6.9 5.4C12.2 13.9 17.6 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.7c4.3-4 6.8-9.9 6.8-16.9z"/>
+            <path fill="#FBBC05" d="M10.5 28.4c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4L3.6 15C2.1 17.9 1.2 21.1 1.2 24.5s.9 6.6 2.4 9.5l6.9-5.6z"/>
+            <path fill="#34A853" d="M24 47.5c5.4 0 10-1.8 13.3-4.8l-7.4-5.7c-1.8 1.2-4.1 1.9-5.9 1.9-6.4 0-11.8-4.3-13.5-10.5l-6.9 5.5C7 41.9 14.8 47.5 24 47.5z"/>
+          </svg>
           <span>Google</span>
         </button>
         <button class="btn-social btn-zoho"
                 type="button"
                 (click)="loginWithZoho()"
                 [disabled]="isLoading">
-          <img src="assets/icons/zoho.svg" alt=""
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-          <span class="social-fallback" style="display:none">Z</span>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18" height="18" style="flex-shrink:0">
+            <rect width="48" height="48" rx="8" fill="#E42527"/>
+            <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="22" font-family="Arial, sans-serif" font-weight="bold">Z</text>
+          </svg>
           <span>Zoho Mail</span>
         </button>
       </div>
