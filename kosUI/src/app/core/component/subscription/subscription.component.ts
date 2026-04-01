@@ -305,6 +305,7 @@ export class SubscriptionComponent implements OnInit {
         if (user) {
           user.subscriptionPlan = paymentResp.activePlan as SubscriptionPlan;
           user.mobile = this.contact.phone;
+          user.restaurantId = paymentResp.restaurantId;
           localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
         }
         this.isLoading = false;

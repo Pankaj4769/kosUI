@@ -75,6 +75,7 @@ export interface PaymentRequest {
 export interface PaymentResponse{
   paymentStatus: boolean;
   activePlan: string;
+  restaurantId: string;
 
 }
 
