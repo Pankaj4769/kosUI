@@ -266,15 +266,36 @@ export class SubscriptionComponent implements OnInit {
 
   proceedToContact(): void {
     if (!this.selectedPlan) return;
+  
     const user = this.auth.currentUser;
-    if (user) {
-      this.contact.name  = user.name;
-      this.contact.email = user.email ?? '';
-      this.contact.phone = user.mobile ?? '';
+  
+    if (user && user.onboardingStatus === 'SETUP_COMPLETE') {
+      this.isLoading = true;
+  
+      this.subscriptioService.upgradePlan(user!.restaurantId!, this.selectedPlan)!
+        .subscribe({
+          next: () => {
+            user.subscriptionPlan = this.selectedPlan!;
+            localStorage.setItem(this.auth.STORAGE_KEY, JSON.stringify(user));
+            this.isLoading = false;
+            this.router.navigate(['/dashboard']);
+          },
+          error: (err: any) => {
+            console.error('Plan upgrade failed:', err);
+            this.isLoading = false;
+          }
+        });
+  
+    } else {
+      if (user) {
+        this.contact.name  = user.name;
+        this.contact.email = user.email ?? '';
+        this.contact.phone = user.mobile ?? '';
+      }
+      this.touched = {};
+      this.errorMessage = null;
+      this.step = 'contact';
     }
-    this.touched = {};
-    this.errorMessage = null;
-    this.step = 'contact';
   }
 
   submitContact(): void {

@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -8,6 +8,8 @@ import { HttpClient } from '@angular/common/http';
 import { BASE_URL } from '../../../../apiUrls';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { SubscriptionPlan } from '../../../../core/auth/auth.model';
+import { MessageResponse } from '../../../dashboard/models/message.model';
+import { upgradePlan } from '../../../../core/component/services/subscription-service.service';
 
 export interface UpgradePlanDialogData {
   planKey: SubscriptionPlan;
@@ -45,7 +47,8 @@ export class UpgradePlanDialogComponent implements OnInit {
     public dialogRef: MatDialogRef<UpgradePlanDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: UpgradePlanDialogData,
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {}
@@ -88,11 +91,11 @@ export class UpgradePlanDialogComponent implements OnInit {
       return;
     }
 
-    this.http.put<unknown>(
-      `${BASE_URL}/api/subscription/upgrade/${restaurantId}`,
-      null,
-      { params: { newPlan: this.data.planKey } }
-    ).subscribe({
+    let plan: upgradePlan = {
+      restaurantId: restaurantId,
+      plan: this.data.planKey
+    };
+    this.http.patch<MessageResponse>(BASE_URL+'/api/subscription/upgradePlan', plan).subscribe({
       next: () => {
         this.applyUpgrade(this.data.planKey);
         this.step = 'success';
@@ -115,6 +118,7 @@ export class UpgradePlanDialogComponent implements OnInit {
 
   close(upgraded = false): void {
     this.dialogRef.close(upgraded);
+    this.cdr.detectChanges();
   }
 
   retry(): void {

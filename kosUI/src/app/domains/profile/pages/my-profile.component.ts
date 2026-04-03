@@ -9,6 +9,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { AuthUser } from '../../../core/auth/auth.model';
 import { ConfirmDialogComponent } from '../../common-popup/pages/confirm-dialog.component';
 import { UpgradePlanDialogComponent } from '../components/upgrade-plan-dialog/upgrade-plan-dialog.component';
+import { SubscriptionServiceService } from '../../../core/component/services/subscription-service.service';
 
 @Component({
   selector: 'app-my-profile',
@@ -42,6 +43,7 @@ export class MyProfileComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private dialog: MatDialog,
+    private subscriptionService: SubscriptionServiceService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -132,8 +134,10 @@ export class MyProfileComponent implements OnInit {
       if (upgraded) {
         this.user = this.authService.currentUser;
         this.saveSuccess = true;
+        this.cdr.detectChanges();
         this.cdr.markForCheck();
         setTimeout(() => { this.saveSuccess = false; this.cdr.markForCheck(); }, 4000);
+        window.location.reload();
       }
     });
   }
