@@ -13,6 +13,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog } from '@angular/material/dialog';
 import { CartItem } from '../../models/cart-item.model';
 import { ConfirmDialogComponent } from '../../../common-popup/pages/confirm-dialog.component';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { PaymentService } from '../../services/payment.service';
 
 
 /* ── Types ─────────────────────────────────────────── */
@@ -34,6 +36,8 @@ export interface PaymentData {
   partPayments?: PartPaymentEntry[];
   transactionId?: string;
   timestamp: Date;
+  items: CartItem[];
+  restaurantId: string;
 }
 
 export interface SplitPayment {
@@ -120,7 +124,12 @@ export class PaymentPopupComponent implements OnInit {
   readonly quickCashOptions     = [100, 200, 500];
   readonly methods: PaymentMethod[] = ['cash', 'card', 'upi', 'wallet'];
 
-  constructor(private cdr: ChangeDetectorRef, private dialog: MatDialog) {}
+  constructor(
+    private cdr: ChangeDetectorRef, 
+    private dialog: MatDialog,
+    private authService: AuthService,
+    private paymentServie: PaymentService
+  ) {}
 
   ngOnInit(): void {
     this.cashReceived   = Math.ceil(this.finalTotal / 100) * 100;
@@ -287,13 +296,19 @@ export class PaymentPopupComponent implements OnInit {
         splitCount:     this.paymentMode === 'split' ? this.splitCount : undefined,
         partPayments:   this.paymentMode === 'part'  ? this.partPayments : undefined,
         transactionId:  `TXN${Date.now()}${Math.random().toString(36).slice(2,9).toUpperCase()}`,
-        timestamp:      new Date()
+        timestamp:      new Date(),
+        items: this.cart,
+        restaurantId: this.authService.currentUser?.restaurantId ?? ''
       };
+      console.log(data);
 
-      if (this.printAfterPayment) this.printReceipt();
-      if (this.sendSMS && this.customerInfo?.phone) this.sendPaymentSMS();
-
-      this.complete.emit(data);
+      this.paymentServie.processPayment(data).subscribe(res=>{
+        console.log(res);
+        if (this.printAfterPayment) this.printReceipt();
+        if (this.sendSMS && this.customerInfo?.phone) this.sendPaymentSMS();
+  
+        this.complete.emit(data);
+      });
     } catch (e) {
       console.error(e);
     } finally {
