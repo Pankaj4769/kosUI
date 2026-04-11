@@ -1,4 +1,7 @@
-<div class="cashier-container" [class.loading]="loading">
+<div class="cashier-container"
+  [class.loading]="loading"
+  [class.mobile-menu]="mobileView === 'menu'"
+  [class.mobile-cart]="mobileView === 'cart'">
 
   <!-- ===== BODY ROW: Left Column + Right Sidebar ===== -->
   <div class="body-row">
@@ -82,6 +85,24 @@
     </aside>
 
   </div>
+
+  <!-- ===== MOBILE BOTTOM NAV (phone only) ===== -->
+  <nav class="mobile-bottom-nav">
+    <button class="mbn-tab" [class.active]="mobileView === 'menu'"
+      (click)="mobileView = 'menu'" type="button">
+      <mat-icon>restaurant_menu</mat-icon>
+      <span>Menu</span>
+    </button>
+    <button class="mbn-tab mbn-cart-tab" [class.active]="mobileView === 'cart'"
+      (click)="mobileView = 'cart'" type="button">
+      <span class="mbn-icon-wrap">
+        <mat-icon>shopping_cart</mat-icon>
+        <span class="mbn-badge" *ngIf="itemCount > 0">{{ itemCount }}</span>
+      </span>
+      <span>Cart</span>
+      <span class="mbn-total" *ngIf="hasItems">₹{{ total | number:'1.0-0' }}</span>
+    </button>
+  </nav>
 
   <!-- ===== BOTTOM ACTION BAR ===== -->
   <!-- <footer class="bottom-bar">

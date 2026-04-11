@@ -1,116 +1,333 @@
-<!-- Single namespace wrapper -->
-<div class="staff-role-mgmt">
-    <div class="container">
-        <div class="header">
-            <h1>Staff Role Management</h1>
-            <button class="btn btn-primary" (click)="openModal()">
-                <span>+</span> Create New Role
-            </button>
+<div class="rm-page">
+
+  <!-- ═══════════ PAGE HEADER ═══════════ -->
+  <div class="rm-header">
+    <button class="rm-btn-primary" (click)="openModal()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Create New Role
+    </button>
+  </div>
+
+
+  <!-- ═══════════ ROLES GRID ═══════════ -->
+  <div class="rm-grid">
+
+    <!-- ── OWNER CARD (locked, always first) ── -->
+    <div class="rm-role-card rm-role-card--owner">
+      <div class="rm-owner-crown">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <path d="M2 19h20v2H2v-2zm18-9l-3 3-5-7-5 7-3-3v8h16v-8z"/>
+        </svg>
+        Owner
+      </div>
+
+      <div class="rm-card-header">
+        <div class="rm-role-avatar rm-role-avatar--owner">{{ ownerName.charAt(0) }}</div>
+        <div class="rm-role-meta">
+          <span class="rm-role-name">{{ ownerName }}</span>
+          <span class="rm-role-desc">Full unrestricted access to all restaurant systems</span>
+        </div>
+        <div class="rm-lock-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          Locked
+        </div>
+      </div>
+
+      <div class="rm-perm-summary">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        All {{ ALL_PERMISSIONS.length }} permissions granted
+      </div>
+
+      <div class="rm-perm-tags">
+        <span class="rm-perm-tag rm-perm-tag--owner" *ngFor="let perm of ALL_PERMISSIONS | slice:0:4">
+          {{ formatPermission(perm) }}
+        </span>
+        <span class="rm-perm-tag rm-perm-tag--more">+{{ ALL_PERMISSIONS.length - 4 }} more</span>
+      </div>
+    </div>
+
+
+    <!-- ── ROLE CARDS ── -->
+    <div class="rm-role-card" *ngFor="let role of roles">
+
+      <div class="rm-card-header">
+        <div class="rm-role-avatar" [style.background]="getAvatarColor(role.name)">
+          {{ role.name.charAt(0) }}
+        </div>
+        <div class="rm-role-meta">
+          <span class="rm-role-name">{{ role.name }}</span>
+          <span class="rm-role-desc">{{ role.description || 'No description provided' }}</span>
+        </div>
+        <div class="rm-card-actions">
+          <button class="rm-icon-btn" (click)="openModal(role.id)" title="Edit role">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="rm-icon-btn rm-icon-btn--danger" (click)="confirmDelete(role)" title="Delete role">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Permission count -->
+      <div class="rm-perm-summary">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        {{ role.permissions.length }} permission{{ role.permissions.length !== 1 ? 's' : '' }}
+      </div>
+
+      <!-- Permission tags -->
+      <div class="rm-perm-tags">
+        <span class="rm-perm-tag" *ngFor="let perm of getVisiblePermissions(role.permissions)">
+          {{ formatPermission(perm) }}
+        </span>
+        <span class="rm-perm-tag rm-perm-tag--more" *ngIf="getRemainingCount(role.permissions) > 0">
+          +{{ getRemainingCount(role.permissions) }} more
+        </span>
+      </div>
+
+      <!-- Assigned Staff -->
+      <div class="rm-staff-row">
+        <div class="rm-staff-avatars">
+          <div
+            class="rm-staff-avatar"
+            *ngFor="let member of getVisibleStaff(role)"
+            [style.background]="getAvatarColor(member.name)"
+            [title]="member.name">
+            {{ member.name.charAt(0) }}
+          </div>
+          <div class="rm-staff-avatar rm-staff-avatar--more" *ngIf="getExtraStaffCount(role) > 0">
+            +{{ getExtraStaffCount(role) }}
+          </div>
+        </div>
+        <span class="rm-staff-count" *ngIf="getStaffForRole(role).length > 0">
+          {{ getStaffForRole(role).length }} member{{ getStaffForRole(role).length !== 1 ? 's' : '' }}
+        </span>
+        <span class="rm-staff-count rm-staff-count--empty" *ngIf="getStaffForRole(role).length === 0">
+          No members assigned
+        </span>
+      </div>
+
+    </div>
+
+    <!-- Empty State -->
+    <div class="rm-empty" *ngIf="roles.length === 0">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <h3>No roles created yet</h3>
+      <p>Create your first staff role to get started</p>
+      <button class="rm-btn-primary" (click)="openModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Create New Role
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════ CREATE / EDIT MODAL ═══════════ -->
+<div class="rm-overlay" *ngIf="isModalOpen" (click)="onModalBackdropClick($event)">
+  <div class="rm-modal">
+
+    <div class="rm-modal-header">
+      <div class="rm-modal-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <ng-container *ngIf="!editingRoleId">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </ng-container>
+          <ng-container *ngIf="editingRoleId">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </ng-container>
+        </svg>
+        {{ getModalTitle() }}
+      </div>
+      <button class="rm-close-btn" (click)="closeModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="rm-modal-body">
+      <form (submit)="saveRole(); $event.preventDefault()">
+
+        <div class="rm-field">
+          <label class="rm-label" for="roleName">Role Name <span class="rm-required">*</span></label>
+          <input type="text" id="roleName" class="rm-input" [(ngModel)]="roleName"
+                 name="roleName" placeholder="e.g., Manager, Chef, Waiter" required/>
         </div>
 
-        <div class="roles-grid">
-            <!-- Role Cards -->
-            <div class="role-card" *ngFor="let role of roles">
-                <div class="role-header">
-                    <div style="flex: 1; min-width: 0;">
-                        <div class="role-title">{{ role.name }}</div>
-                        <div class="role-description">{{ role.description || 'No description provided' }}</div>
-                    </div>
-                    <div class="role-actions">
-                        <button class="icon-btn" (click)="openModal(role.id)" title="Edit">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                        </button>
-                        <button class="icon-btn" (click)="deleteRole(role.id)" title="Delete">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="permissions-list">
-                    <span class="permission-tag" *ngFor="let perm of getVisiblePermissions(role.permissions)">
-                        {{ formatPermission(perm) }}
-                    </span>
-                    <span class="permission-tag" 
-                          *ngIf="getRemainingCount(role.permissions) > 0"
-                          style="background: var(--color-secondary); color: var(--color-text);">
-                        +{{ getRemainingCount(role.permissions) }} more
-                    </span>
-                </div>
-            </div>
+        <div class="rm-field">
+          <label class="rm-label" for="roleDescription">Description</label>
+          <textarea id="roleDescription" class="rm-input rm-textarea" [(ngModel)]="roleDescription"
+                    name="roleDescription" placeholder="Brief description of this role's responsibilities"
+                    rows="2"></textarea>
+        </div>
 
-            <!-- Empty State -->
-            <div class="empty-state" *ngIf="roles.length === 0" style="grid-column: 1/-1;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        <!-- Assigned Staff (edit mode) -->
+        <div class="rm-assigned-staff" *ngIf="editingRoleId">
+          <div class="rm-section-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            </svg>
+            Assigned Staff
+          </div>
+          <ng-container *ngFor="let role of roles">
+            <ng-container *ngIf="role.id === editingRoleId">
+              <div class="rm-assigned-list" *ngIf="getStaffForRole(role).length > 0">
+                <div class="rm-assigned-member" *ngFor="let member of getStaffForRole(role)">
+                  <div class="rm-staff-avatar rm-staff-avatar--sm" [style.background]="getAvatarColor(member.name)">
+                    {{ member.name.charAt(0) }}
+                  </div>
+                  <div class="rm-member-info">
+                    <span class="rm-member-name">{{ member.name }}</span>
+                    <span class="rm-member-role">{{ member.position || member.roleName }}</span>
+                  </div>
+                  <span class="rm-member-status" [class.rm-member-status--active]="member.status === 'ACTIVE'">
+                    {{ member.status }}
+                  </span>
+                </div>
+              </div>
+              <p class="rm-no-members" *ngIf="getStaffForRole(role).length === 0">No staff assigned to this role yet.</p>
+            </ng-container>
+          </ng-container>
+        </div>
+
+        <!-- Permissions -->
+        <div class="rm-perms-section">
+          <div class="rm-perms-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Permissions
+          </div>
+
+          <div class="rm-perm-category" *ngFor="let category of permissionCategories">
+            <!-- Category header with select-all toggle -->
+            <div class="rm-category-header" (click)="toggleCategory(category)">
+              <div class="rm-category-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <polyline points="9 18 15 12 9 6"/>
                 </svg>
-                <h3>No roles created yet</h3>
-                <p>Create your first staff role to get started</p>
+                {{ category.title }}
+              </div>
+              <span class="rm-checkbox rm-checkbox--category"
+                    [class.rm-checkbox--checked]="isCategoryFullySelected(category)"
+                    [class.rm-checkbox--partial]="isCategoryPartiallySelected(category)">
+                <svg *ngIf="isCategoryFullySelected(category)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <svg *ngIf="isCategoryPartiallySelected(category) && !isCategoryFullySelected(category)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </span>
             </div>
+
+            <div class="rm-checkboxes">
+              <label class="rm-checkbox-row"
+                     *ngFor="let perm of category.permissions"
+                     [class.rm-checkbox-row--checked]="isPermissionSelected(perm.id)"
+                     (click)="togglePermission(perm.id)">
+                <span class="rm-checkbox" [class.rm-checkbox--checked]="isPermissionSelected(perm.id)">
+                  <svg *ngIf="isPermissionSelected(perm.id)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </span>
+                {{ perm.label }}
+              </label>
+            </div>
+          </div>
         </div>
+
+      </form>
     </div>
 
-    <!-- Modal -->
-    <div class="modal" [class.active]="isModalOpen" (click)="onModalBackdropClick($event)">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>{{ getModalTitle() }}</h2>
-                <button class="close-btn" (click)="closeModal()">&times;</button>
-            </div>
-
-            <div class="modal-body">
-                <form (submit)="saveRole(); $event.preventDefault()">
-                    <div class="form-group">
-                        <label class="form-label" for="roleName">Role Name *</label>
-                        <input type="text" 
-                               id="roleName" 
-                               class="form-input" 
-                               [(ngModel)]="roleName"
-                               name="roleName"
-                               placeholder="e.g., Manager, Chef, Waiter" 
-                               required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="roleDescription">Description</label>
-                        <textarea id="roleDescription" 
-                                  class="form-input" 
-                                  [(ngModel)]="roleDescription"
-                                  name="roleDescription"
-                                  placeholder="Brief description of this role's responsibilities"></textarea>
-                    </div>
-
-                    <div class="permissions-section">
-                        <h3 class="form-label">Permissions</h3>
-
-                        <div class="permission-category" *ngFor="let category of permissionCategories">
-                            <div class="category-title">{{ category.title }}</div>
-                            <div class="permission-checkboxes">
-                                <div class="checkbox-wrapper" *ngFor="let perm of category.permissions">
-                                    <input type="checkbox" 
-                                           [id]="'perm-' + perm.id" 
-                                           [value]="perm.id"
-                                           [checked]="isPermissionSelected(perm.id)"
-                                           (change)="togglePermission(perm.id)">
-                                    <label [for]="'perm-' + perm.id">{{ perm.label }}</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Role</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <div class="rm-modal-footer">
+      <button type="button" class="rm-btn-secondary" (click)="closeModal()">Cancel</button>
+      <button type="button" class="rm-btn-primary" (click)="saveRole()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Save Role
+      </button>
     </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ DELETE CONFIRM MODAL ═══════════ -->
+<div class="rm-overlay" *ngIf="deletingRole" (click)="deletingRole = null">
+  <div class="rm-modal rm-modal--sm" (click)="$event.stopPropagation()">
+    <div class="rm-modal-header">
+      <div class="rm-modal-title rm-modal-title--danger">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Delete Role
+      </div>
+      <button class="rm-close-btn" (click)="deletingRole = null">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="rm-modal-body rm-delete-body">
+      <div class="rm-delete-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+      </div>
+      <p class="rm-delete-msg">
+        Are you sure you want to delete <strong>{{ deletingRole!.name }}</strong>?
+        <ng-container *ngIf="getStaffForRole(deletingRole!).length > 0">
+          <br><span class="rm-delete-warn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            {{ getStaffForRole(deletingRole!).length }} staff member{{ getStaffForRole(deletingRole!).length !== 1 ? 's are' : ' is' }} assigned to this role.
+          </span>
+        </ng-container>
+      </p>
+    </div>
+    <div class="rm-modal-footer">
+      <button class="rm-btn-secondary" (click)="deletingRole = null">Cancel</button>
+      <button class="rm-btn-danger" (click)="executeDelete()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+        </svg>
+        Delete Role
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ TOAST ═══════════ -->
+<div class="rm-toast" *ngIf="toast" [class.rm-toast--error]="toast.type === 'error'">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+    <ng-container *ngIf="toast.type !== 'error'"><polyline points="20 6 9 17 4 12"/></ng-container>
+    <ng-container *ngIf="toast.type === 'error'"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></ng-container>
+  </svg>
+  {{ toast.message }}
 </div>

@@ -1,0 +1,162 @@
+<div class="sa-page">
+
+  <div class="sa-header">
+    <div class="sa-header-title">
+      <h1>Salary Advance &amp; Loans</h1>
+      <p>Manage employee advance requests and loan repayments</p>
+    </div>
+    <button class="sa-add-btn" (click)="openAdd()">
+      <span class="material-icons">add</span> New Request
+    </button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="sa-kpis">
+    <div class="sa-kpi"><span class="material-icons" style="color:#3b82f6">payments</span>
+      <div><div class="sa-kpi-val">₹{{ totalDisbursed | number:'1.0-0' }}</div><div class="sa-kpi-lbl">Total Disbursed</div></div>
+    </div>
+    <div class="sa-kpi"><span class="material-icons" style="color:#ef4444">account_balance</span>
+      <div><div class="sa-kpi-val">₹{{ totalOutstanding | number:'1.0-0' }}</div><div class="sa-kpi-lbl">Outstanding</div></div>
+    </div>
+    <div class="sa-kpi"><span class="material-icons" style="color:#f59e0b">pending_actions</span>
+      <div><div class="sa-kpi-val">{{ pendingCount }}</div><div class="sa-kpi-lbl">Pending Approval</div></div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="sa-filters">
+    <select class="sa-select" [(ngModel)]="filterStatus">
+      <option value="">All Status</option>
+      <option value="PENDING">Pending</option>
+      <option value="APPROVED">Approved</option>
+      <option value="DISBURSED">Disbursed</option>
+      <option value="CLOSED">Closed</option>
+      <option value="REJECTED">Rejected</option>
+    </select>
+    <select class="sa-select" [(ngModel)]="filterType">
+      <option value="">All Types</option>
+      <option value="SALARY_ADVANCE">Salary Advance</option>
+      <option value="LOAN">Loan</option>
+      <option value="EMERGENCY">Emergency</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="sa-table-wrap">
+    <table class="sa-table">
+      <thead>
+        <tr>
+          <th>Employee</th><th>Type</th><th>Amount</th><th>EMI</th>
+          <th>Repaid</th><th>Outstanding</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of filtered" (click)="openDetail(r)" class="sa-row">
+          <td>
+            <div class="sa-emp-name">{{ r.employeeName }}</div>
+            <div class="sa-emp-date">{{ r.requestDate | date:'mediumDate' }}</div>
+          </td>
+          <td><span class="type-badge">{{ typeLabel(r.type) }}</span></td>
+          <td class="sa-amount">₹{{ r.amount | number:'1.0-0' }}</td>
+          <td>₹{{ r.emiAmount | number:'1.0-0' }}/mo</td>
+          <td>
+            <div class="sa-progress-wrap">
+              <div class="sa-progress-bar" [style.width.%]="(r.repaidAmount / r.amount) * 100"></div>
+            </div>
+            <span class="sa-progress-text">₹{{ r.repaidAmount | number:'1.0-0' }}</span>
+          </td>
+          <td [class.sa-outstanding]="r.remainingAmount > 0">₹{{ r.remainingAmount | number:'1.0-0' }}</td>
+          <td><span class="badge" [class]="statusClass(r.status)">{{ r.status }}</span></td>
+          <td class="sa-actions" (click)="$event.stopPropagation()">
+            <button class="sa-act approve" *ngIf="r.status==='PENDING'"  (click)="approve(r)"  title="Approve"><span class="material-icons">check</span></button>
+            <button class="sa-act reject"  *ngIf="r.status==='PENDING'"  (click)="reject(r)"   title="Reject"><span class="material-icons">close</span></button>
+            <button class="sa-act disburse" *ngIf="r.status==='APPROVED'" (click)="disburse(r)" title="Disburse"><span class="material-icons">payments</span></button>
+            <button class="sa-act emi"      *ngIf="r.status==='DISBURSED' && r.remainingAmount > 0" (click)="recordEmi(r)" title="Record EMI"><span class="material-icons">currency_rupee</span></button>
+          </td>
+        </tr>
+        <tr *ngIf="filtered.length === 0">
+          <td colspan="8" class="sa-empty">No records found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Detail Panel -->
+  <div class="sa-overlay" *ngIf="detailRecord" (click)="detailRecord=null">
+    <div class="sa-modal" (click)="$event.stopPropagation()">
+      <div class="sa-modal-head">
+        <h2>{{ detailRecord.employeeName }} — {{ typeLabel(detailRecord.type) }}</h2>
+        <button class="sa-modal-close" (click)="detailRecord=null"><span class="material-icons">close</span></button>
+      </div>
+      <div class="sa-modal-body sa-detail-grid">
+        <div class="sa-detail-row"><span>Amount</span><strong>₹{{ detailRecord.amount | number:'1.0-0' }}</strong></div>
+        <div class="sa-detail-row"><span>EMI / Month</span><strong>₹{{ detailRecord.emiAmount | number:'1.0-0' }}</strong></div>
+        <div class="sa-detail-row"><span>Repay Period</span><strong>{{ detailRecord.repayMonths }} months</strong></div>
+        <div class="sa-detail-row"><span>Repaid</span><strong>₹{{ detailRecord.repaidAmount | number:'1.0-0' }}</strong></div>
+        <div class="sa-detail-row"><span>Remaining</span><strong>₹{{ detailRecord.remainingAmount | number:'1.0-0' }}</strong></div>
+        <div class="sa-detail-row"><span>Status</span><span class="badge" [class]="statusClass(detailRecord.status)">{{ detailRecord.status }}</span></div>
+        <div class="sa-detail-row"><span>Reason</span><span>{{ detailRecord.reason }}</span></div>
+        <div class="sa-detail-row" *ngIf="detailRecord.approvedBy"><span>Approved By</span><strong>{{ detailRecord.approvedBy }}</strong></div>
+        <div class="sa-detail-row" *ngIf="detailRecord.disbursedDate"><span>Disbursed On</span><strong>{{ detailRecord.disbursedDate | date:'mediumDate' }}</strong></div>
+        <div class="sa-detail-row" *ngIf="detailRecord.notes"><span>Notes</span><span>{{ detailRecord.notes }}</span></div>
+      </div>
+      <!-- Repayment bar -->
+      <div class="sa-repay-section">
+        <div class="sa-repay-label">
+          Repayment Progress
+          <span>{{ ((detailRecord.repaidAmount / detailRecord.amount) * 100) | number:'1.0-0' }}%</span>
+        </div>
+        <div class="sa-repay-track">
+          <div class="sa-repay-fill" [style.width.%]="(detailRecord.repaidAmount / detailRecord.amount) * 100"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Request Modal -->
+  <div class="sa-overlay" *ngIf="showModal" (click)="showModal=false">
+    <div class="sa-modal" (click)="$event.stopPropagation()">
+      <div class="sa-modal-head">
+        <h2>New Advance / Loan Request</h2>
+        <button class="sa-modal-close" (click)="showModal=false"><span class="material-icons">close</span></button>
+      </div>
+      <div class="sa-modal-body">
+        <label class="sa-label">Employee <span class="req">*</span>
+          <select class="sa-input" [(ngModel)]="form.employeeId">
+            <option [value]="0" disabled>Select employee</option>
+            <option *ngFor="let e of employees" [value]="e.id">{{ e.name ?? '#'+e.id }}</option>
+          </select>
+        </label>
+        <label class="sa-label">Type
+          <select class="sa-input" [(ngModel)]="form.type">
+            <option value="SALARY_ADVANCE">Salary Advance</option>
+            <option value="LOAN">Loan</option>
+            <option value="EMERGENCY">Emergency</option>
+          </select>
+        </label>
+        <div class="sa-row-2">
+          <label class="sa-label">Amount (₹) <span class="req">*</span>
+            <input type="number" class="sa-input" [(ngModel)]="form.amount" min="0" placeholder="0" />
+          </label>
+          <label class="sa-label">Repay in (months)
+            <input type="number" class="sa-input" [(ngModel)]="form.repayMonths" min="1" max="24" />
+          </label>
+        </div>
+        <div class="sa-emi-preview" *ngIf="form.amount > 0">
+          EMI: <strong>₹{{ (form.amount / form.repayMonths) | number:'1.0-0' }} / month</strong>
+        </div>
+        <label class="sa-label">Reason <span class="req">*</span>
+          <input class="sa-input" [(ngModel)]="form.reason" placeholder="Brief reason for request" />
+        </label>
+        <label class="sa-label">Notes
+          <textarea class="sa-input sa-textarea" [(ngModel)]="form.notes" rows="2" placeholder="Additional details"></textarea>
+        </label>
+      </div>
+      <div class="sa-modal-foot">
+        <button class="sa-btn-secondary" (click)="showModal=false">Cancel</button>
+        <button class="sa-btn-primary" (click)="save()" [disabled]="!form.employeeId || !form.amount || !form.reason">Submit Request</button>
+      </div>
+    </div>
+  </div>
+
+</div>

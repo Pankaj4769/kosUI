@@ -1,0 +1,135 @@
+<div class="cm-page">
+
+  <!-- Header -->
+  <div class="cm-header">
+    <div class="cm-header-title">
+      <h1>Commission &amp; Incentives</h1>
+      <p>Track and manage staff sales commissions</p>
+    </div>
+    <div class="cm-header-right">
+      <input type="month" class="cm-month-picker" [(ngModel)]="filterMonth" (change)="load()" />
+      <button class="cm-add-btn" (click)="openAdd()">
+        <span class="material-icons">add</span> Add Commission
+      </button>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="cm-error" *ngIf="error">
+    <span class="material-icons">error_outline</span> {{ error }}
+    <button (click)="error=''" class="cm-error-close">×</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="cm-kpis" *ngIf="!loading">
+    <div class="cm-kpi">
+      <span class="material-icons" style="color:#16a34a">trending_up</span>
+      <div>
+        <div class="cm-kpi-val">₹{{ totalCommission | number:'1.0-0' }}</div>
+        <div class="cm-kpi-lbl">Total Commission</div>
+      </div>
+    </div>
+    <div class="cm-kpi">
+      <span class="material-icons" style="color:#f59e0b">pending</span>
+      <div>
+        <div class="cm-kpi-val">{{ pendingCount }}</div>
+        <div class="cm-kpi-lbl">Pending Payouts</div>
+      </div>
+    </div>
+    <div class="cm-kpi">
+      <span class="material-icons" style="color:#3b82f6">check_circle</span>
+      <div>
+        <div class="cm-kpi-val">{{ paidCount }}</div>
+        <div class="cm-kpi-lbl">Paid</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="cm-loading" *ngIf="loading">
+    <span class="material-icons spin">autorenew</span> Loading…
+  </div>
+
+  <!-- Empty -->
+  <div class="cm-empty" *ngIf="!loading && records.length === 0">
+    <span class="material-icons">trending_up</span>
+    <p>No commission records for this month.</p>
+  </div>
+
+  <!-- Table -->
+  <div class="cm-table-wrap" *ngIf="!loading && records.length > 0">
+    <table class="cm-table">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Month</th>
+          <th>Sales Amount</th>
+          <th>Rate</th>
+          <th>Commission</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of records">
+          <td>{{ r.employeeName || employeeName(r.employeeId) }}</td>
+          <td>{{ r.month }}</td>
+          <td>₹{{ r.salesAmount | number:'1.0-0' }}</td>
+          <td>{{ r.commissionRate }}%</td>
+          <td class="cm-amount">₹{{ r.commissionAmount | number:'1.0-0' }}</td>
+          <td><span class="badge" [class]="statusClass(r.status)">{{ r.status }}</span></td>
+          <td>
+            <button class="cm-pay-btn" *ngIf="r.status === 'PENDING'" (click)="markPaid(r)">
+              Mark Paid
+            </button>
+            <span class="cm-paid-date" *ngIf="r.status === 'PAID' && r.paidDate">
+              {{ r.paidDate | date:'mediumDate' }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Modal -->
+  <div class="cm-overlay" *ngIf="showModal" (click)="showModal=false">
+    <div class="cm-modal" (click)="$event.stopPropagation()">
+      <div class="cm-modal-head">
+        <h2>Add Commission Record</h2>
+        <button class="cm-modal-close" (click)="showModal=false"><span class="material-icons">close</span></button>
+      </div>
+      <div class="cm-modal-body">
+        <label class="cm-label">
+          Employee <span class="req">*</span>
+          <select class="cm-input" [(ngModel)]="form.employeeId">
+            <option [value]="0" disabled>Select employee</option>
+            <option *ngFor="let e of employees" [value]="e.id">{{ e.name ?? '#'+e.id }}</option>
+          </select>
+        </label>
+        <label class="cm-label">
+          Month <span class="req">*</span>
+          <input type="month" class="cm-input" [(ngModel)]="form.month" />
+        </label>
+        <label class="cm-label">
+          Sales Amount (₹) <span class="req">*</span>
+          <input type="number" class="cm-input" [(ngModel)]="form.salesAmount" min="0" placeholder="0" />
+        </label>
+        <label class="cm-label">
+          Commission Rate (%)
+          <input type="number" class="cm-input" [(ngModel)]="form.commissionRate" min="0" max="100" />
+        </label>
+        <div class="cm-computed">
+          Commission: <strong>₹{{ computedCommission() | number:'1.2-2' }}</strong>
+        </div>
+      </div>
+      <div class="cm-modal-foot">
+        <button class="cm-btn-secondary" (click)="showModal=false">Cancel</button>
+        <button class="cm-btn-primary" (click)="save()" [disabled]="saving || !form.employeeId || !form.salesAmount">
+          <span class="material-icons spin" *ngIf="saving">autorenew</span>
+          {{ saving ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

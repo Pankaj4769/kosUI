@@ -1,101 +1,174 @@
-// src/app/domains/staff/services/payroll.service.ts
-
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import {
-  CommissionRecord,
-  SalarySlip,
-  CommissionStatus
-} from '../models/payroll.model';
-import { StaffMember } from '../services/staff.service';
+import { catchError, map } from 'rxjs/operators';
+import { EMPLOYEE_MGMT_URL } from '../../../apiUrls';
+import { SalarySlip, CommissionRecord, CommissionStatus } from '../models/payroll.model';
+
+interface SalarySlipDTO {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  month: string;
+  basicSalary: number;
+  hra: number;
+  shiftAllowance: number;
+  leaveDeductions: number;
+  commission: number;
+  bonus: number;
+  grossSalary: number;
+  pf: number;
+  tax: number;
+  netSalary: number;
+  status: string;
+  generatedDate: string;
+  paymentDate?: string;
+}
+
+interface CommissionDTO {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  month: string;
+  salesAmount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  status: string;
+  paidDate?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class PayrollService {
-  constructor() {}
+  private readonly SLIP_API = `${EMPLOYEE_MGMT_URL}/api/payroll/salary-slips`;
+  private readonly COMM_API = `${EMPLOYEE_MGMT_URL}/api/payroll/commissions`;
 
-  getSalarySlips(
-    staff: StaffMember[],
-    month: string
-  ): Observable<SalarySlip[]> {
-    const slips: SalarySlip[] = staff.slice(0, 10).map((s, index) => {
-      const basicSalary = 35000 + index * 5000;
-      const hra = basicSalary * 0.2;
-      const commission = Math.floor(Math.random() * 10000);
-      const bonus = Math.floor(Math.random() * 5000);
-      const grossSalary = basicSalary + hra + commission + bonus;
-      const pf = basicSalary * 0.12;
-      const tax = grossSalary * 0.05;
-      const deductions = pf + tax;
-      const netSalary = grossSalary - deductions;
+  constructor(private http: HttpClient) {}
 
-      return {
-        id: `SAL-${index + 1}`,
-        staffId: s.id,
-        staffName: s.name,
-        month,
-        basicSalary,
-        hra,
-        commission,
-        bonus,
-        grossSalary,
-        pf,
-        tax,
-        deductions,
-        netSalary,
-        status: Math.random() > 0.3 ? 'SENT' : 'PENDING',
-        generatedDate: new Date()
-      };
-    });
-
-    return of(slips);
+  getSalarySlips(month: string): Observable<SalarySlip[]> {
+    return this.http.get<SalarySlipDTO[]>(`${this.SLIP_API}/month/${month}`).pipe(
+      map(list => list.map(this.toSalarySlip)),
+      catchError(err => {
+        console.error('Failed to load salary slips:', err);
+        return of([]);
+      })
+    );
   }
 
-  getCommissionRecords(
-    staff: StaffMember[],
-    month: string
-  ): Observable<CommissionRecord[]> {
-    const records: CommissionRecord[] = staff.slice(0, 10).map((s, idx) => ({
-      id: `COM-${idx + 1}`,
-      staffId: s.id,
-      staffName: s.name,
-      salesAmount: Math.floor(Math.random() * 100000) + 20000,
-      commissionRate: Math.floor(Math.random() * 8) + 3,
-      commissionAmount: 0,
-      month,
-      status: Math.random() > 0.5 ? 'PAID' : 'PENDING'
-    }));
-
-    records.forEach((r) => {
-      r.commissionAmount = (r.salesAmount * r.commissionRate) / 100;
-    });
-
-    return of(records);
+  getSalarySlipsByEmployee(employeeId: string): Observable<SalarySlip[]> {
+    return this.http.get<SalarySlipDTO[]>(`${this.SLIP_API}/employee/${employeeId}`).pipe(
+      map(list => list.map(this.toSalarySlip)),
+      catchError(() => of([]))
+    );
   }
 
-  markCommissionPaid(
-    record: CommissionRecord
-  ): CommissionRecord {
-    if (record.status === 'PENDING') {
-      return {
-        ...record,
-        status: 'PAID' as CommissionStatus,
-        paidDate: new Date()
-      };
-    }
-    return record;
+  generateSalarySlip(slip: Partial<SalarySlip> & { employeeId: string; month: string }): Observable<SalarySlip> {
+    const payload = {
+      employeeId: Number(slip.employeeId),
+      month: slip.month,
+      basicSalary: slip.basicSalary ?? 0,
+      hra: slip.hra ?? 0,
+      shiftAllowance: (slip as any).shiftAllowance ?? 0,
+      leaveDeductions: (slip as any).leaveDeductions ?? 0,
+      commission: slip.commission ?? 0,
+      bonus: slip.bonus ?? 0,
+      pf: slip.pf ?? 0,
+      tax: slip.tax ?? 0
+    };
+    return this.http.post<SalarySlipDTO>(this.SLIP_API, payload).pipe(
+      map(this.toSalarySlip),
+      catchError(err => {
+        console.error('Failed to generate salary slip:', err);
+        return of({} as SalarySlip);
+      })
+    );
   }
 
-  // Stub methods for actions – can be implemented later with HTTP
-  generateSalarySlipForStaff(staffId: string, month: string): Observable<void> {
-    return of(void 0);
+  updateSlipStatus(slipId: string, status: string): Observable<SalarySlip> {
+    return this.http.patch<SalarySlipDTO>(
+      `${this.SLIP_API}/${slipId}/status?status=${status}`, {}
+    ).pipe(map(this.toSalarySlip));
+  }
+
+  getCommissionRecords(month: string): Observable<CommissionRecord[]> {
+    return this.http.get<CommissionDTO[]>(`${this.COMM_API}/month/${month}`).pipe(
+      map(list => list.map(this.toCommissionRecord)),
+      catchError(err => {
+        console.error('Failed to load commissions:', err);
+        return of([]);
+      })
+    );
+  }
+
+  getCommissionsByEmployee(employeeId: string): Observable<CommissionRecord[]> {
+    return this.http.get<CommissionDTO[]>(`${this.COMM_API}/employee/${employeeId}`).pipe(
+      map(list => list.map(this.toCommissionRecord)),
+      catchError(() => of([]))
+    );
+  }
+
+  addCommission(employeeId: string, month: string, salesAmount: number, commissionRate: number): Observable<CommissionRecord> {
+    return this.http.post<CommissionDTO>(this.COMM_API, {
+      employeeId: Number(employeeId), month, salesAmount, commissionRate
+    }).pipe(map(this.toCommissionRecord));
+  }
+
+  markCommissionPaid(record: CommissionRecord): Observable<CommissionRecord> {
+    return this.http.patch<CommissionDTO>(`${this.COMM_API}/${record.id}/pay`, {}).pipe(
+      map(this.toCommissionRecord),
+      catchError(err => {
+        console.error('Failed to mark commission paid:', err);
+        // Optimistic local update
+        return of({ ...record, status: 'PAID' as CommissionStatus, paidDate: new Date() });
+      })
+    );
   }
 
   downloadSalarySlip(slipId: string): void {
-    // TODO integrate with backend/file API
     console.log('Download salary slip', slipId);
+    // TODO: implement file download when backend supports it
   }
 
   emailSalarySlip(slipId: string): void {
     console.log('Email salary slip', slipId);
+    // TODO: implement email when backend supports it
+  }
+
+  // ─── Mappers ───────────────────────────────────────────────────────────────
+
+  private toSalarySlip(dto: SalarySlipDTO): SalarySlip {
+    return {
+      id: String(dto.id),
+      staffId: String(dto.employeeId),
+      staffName: dto.employeeName ?? '',
+      month: dto.month,
+      basicSalary: dto.basicSalary,
+      hra: dto.hra,
+      shiftAllowance: dto.shiftAllowance ?? 0,
+      leaveDeductions: dto.leaveDeductions ?? 0,
+      commission: dto.commission,
+      bonus: dto.bonus,
+      grossSalary: dto.grossSalary,
+      pf: dto.pf,
+      tax: dto.tax,
+      deductions: dto.pf + dto.tax + (dto.leaveDeductions ?? 0),
+      netSalary: dto.netSalary,
+      status: dto.status as any,
+      generatedDate: new Date(dto.generatedDate),
+      paymentDate: dto.paymentDate ? new Date(dto.paymentDate) : undefined
+    };
+  }
+
+  private toCommissionRecord(dto: CommissionDTO): CommissionRecord {
+    return {
+      id: String(dto.id),
+      staffId: String(dto.employeeId),
+      staffName: dto.employeeName ?? '',
+      salesAmount: dto.salesAmount,
+      commissionRate: dto.commissionRate,
+      commissionAmount: dto.commissionAmount,
+      month: dto.month,
+      status: dto.status as CommissionStatus,
+      paidDate: dto.paidDate ? new Date(dto.paidDate) : undefined
+    };
   }
 }

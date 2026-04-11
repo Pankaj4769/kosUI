@@ -1,354 +1,442 @@
-<section class="shift-management-layout" aria-label="Shift management dashboard">
+<section class="sm-layout" aria-label="Shift management dashboard">
 
-  <!-- ================= WIZARD STEP 1: POLICY MODAL (Starts Open) ================= -->
-  <div class="modal-overlay" *ngIf="currentStep === 'policy'">
-    <div class="modal-content info-modal">
-      <div class="modal-header">
-        <h3>ℹ️ Shift Scheduling Policy</h3>
+  <!-- ═══════════ WIZARD STEP 1: POLICY ═══════════ -->
+  <div class="sm-overlay" *ngIf="currentStep === 'policy'">
+    <div class="sm-modal sm-modal--sm">
+      <div class="sm-modal-header">
+        <div class="sm-modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Shift Scheduling Policy
+        </div>
       </div>
-      <div class="modal-body policy-text">
+      <div class="sm-modal-body sm-policy-body">
         <p>Shift Scheduling is enabled for:</p>
-        <ul>
-          <li><strong>30 calendar days</strong> retrospectively (past)</li>
-          <li>Up to <strong>90 calendar days</strong> in the future</li>
+        <ul class="sm-policy-list">
+          <li>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <strong>30 calendar days</strong> retrospectively (past)
+          </li>
+          <li>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Up to <strong>90 calendar days</strong> in the future
+          </li>
         </ul>
-        <p class="hint">Please ensure all assignments comply with labor laws.</p>
+        <p class="sm-policy-hint">Please ensure all assignments comply with labor laws.</p>
       </div>
-      <div class="modal-footer center-footer">
-        <button class="btn-primary large-btn" (click)="acceptPolicy()">OK, I Understand</button>
+      <div class="sm-modal-footer sm-modal-footer--center">
+        <button class="sm-btn-primary" (click)="acceptPolicy()">OK, I Understand</button>
       </div>
     </div>
   </div>
 
 
-  <!-- ================= WIZARD STEP 2: DATE SELECTION ================= -->
-  <div class="wizard-step-container" *ngIf="currentStep === 'date-selection'">
-    <div class="step-card">
-      <h2>📅 Select Schedule Range</h2>
-      <p>Choose the dates for which you want to mark or edit the schedule.</p>
-      
-      <div class="date-range-picker">
-        <div class="form-group">
-          <label>From Date</label>
-          <input type="date" [(ngModel)]="selectedRange.start" class="form-input date-large">
+  <!-- ═══════════ WIZARD STEP 2: DATE SELECTION ═══════════ -->
+  <div class="sm-wizard-container" *ngIf="currentStep === 'date-selection'">
+    <div class="sm-step-card">
+      <div class="sm-step-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <h2 class="sm-step-title">Select Schedule Range</h2>
+      <p class="sm-step-desc">Choose the dates for which you want to mark or edit the schedule.</p>
+
+      <div class="sm-date-range">
+        <div class="sm-field">
+          <label class="sm-label">From Date</label>
+          <input type="date" [(ngModel)]="selectedRange.start" class="sm-input sm-input--lg">
         </div>
-        <div class="form-group">
-          <label>To Date</label>
-          <input type="date" [(ngModel)]="selectedRange.end" class="form-input date-large">
+        <div class="sm-range-arrow">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="sm-field">
+          <label class="sm-label">To Date</label>
+          <input type="date" [(ngModel)]="selectedRange.end" class="sm-input sm-input--lg">
         </div>
       </div>
 
-      <div class="step-actions">
-        <button class="btn-primary large-btn" (click)="confirmDateRange()">
-          Next: View Staff List ➡️
+      <div class="sm-step-actions">
+        <button class="sm-btn-primary sm-btn-primary--lg" (click)="confirmDateRange()">
+          Next: View Staff List
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
       </div>
     </div>
   </div>
 
 
-  <!-- ================= WIZARD STEP 3: STAFF LIST & ACTIONS ================= -->
-  <div class="wizard-step-container full-width" *ngIf="currentStep === 'staff-list'">
-    
-    <!-- HEADER ACTIONS -->
-    <div class="action-bar">
-      <div class="range-info">
-        <h3>Managing Schedule</h3>
-        <span class="range-pill">{{ selectedRange.start | date }} ➔ {{ selectedRange.end | date }}</span>
-        <button class="btn-text small" (click)="currentStep = 'date-selection'">(Change Dates)</button>
+  <!-- ═══════════ WIZARD STEP 3: STAFF LIST ═══════════ -->
+  <div class="sm-wizard-container sm-wizard-container--full" *ngIf="currentStep === 'staff-list'">
+
+    <!-- Action Bar -->
+    <div class="sm-action-bar">
+      <div class="sm-range-info">
+        <span class="sm-range-label">Managing Schedule</span>
+        <span class="sm-range-pill">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          {{ selectedRange.start | date }} → {{ selectedRange.end | date }}
+        </span>
+        <button class="sm-btn-text" (click)="currentStep = 'date-selection'">Change Dates</button>
       </div>
 
-      <div class="action-buttons">
-        <button class="btn-secondary" (click)="onDownloadTemplate()">
-          📥 Download Template
+      <div class="sm-action-group">
+        <button class="sm-btn-secondary" (click)="onDownloadTemplate()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Template
         </button>
-        
-        <label class="btn-secondary upload-btn">
-          📤 Upload Template
+
+        <label class="sm-btn-secondary sm-upload-label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Template
           <input type="file" (change)="onUploadTemplate($event)" hidden accept=".xlsx,.csv">
         </label>
-        
-        <button class="btn-secondary" (click)="openBulkAssignModal()">
-          📅 Bulk Assign
-        </button>
-        
-        <button class="btn-primary" (click)="onViewReport()">
-          📊 View Report
+
+        <button class="sm-btn-secondary" (click)="openBulkAssignModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+          Bulk Assign
         </button>
 
-        <!-- SWITCH TO DASHBOARD VIEW -->
-        <button class="btn-primary outline" (click)="currentStep = 'dashboard'">
-          View Dashboard ➡️
+        <button class="sm-btn-primary" (click)="onViewReport()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          View Report
+        </button>
+
+        <button class="sm-btn-primary sm-btn-primary--outline" (click)="currentStep = 'dashboard'">
+          View Dashboard
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
       </div>
     </div>
 
-
-    <!-- STAFF LIST TABLE -->
-    <div class="staff-list-container">
-      <table class="staff-table">
-        <thead>
-          <tr>
-            <th>Name / Emp ID</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <ng-container *ngFor="let staff of availableStaff">
-            
-            <!-- Main Row -->
-            <tr class="staff-row" [class.expanded]="expandedStaffId === staff.id" (click)="toggleStaffExpand(staff.id)">
-              <td>
-                <div class="staff-info-cell">
-                  <div class="avatar">{{ staff.name ? staff.name.charAt(0) : '?' }}</div>
-                  <div>
-                    <strong>{{ staff.name }}</strong>
-                    <div class="emp-id">{{ staff.id }}</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="role-badge">{{ staff.role }}</span></td>
-              <td>
-                <span class="status-dot"></span> Active
-              </td>
-              <td>
-                <button class="btn-expand">
-                  {{ expandedStaffId === staff.id ? 'Collapse ▲' : 'View Schedule ▼' }}
-                </button>
-              </td>
+    <!-- Staff Table -->
+    <div class="sm-card sm-table-card">
+      <div class="sm-table-wrap">
+        <table class="sm-table">
+          <thead>
+            <tr>
+              <th>Name / Emp ID</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let staff of availableStaff">
 
-            <!-- Expanded Detail Row (Weekly View) -->
-            <tr *ngIf="expandedStaffId === staff.id" class="detail-row">
-              <td colspan="4">
-                <div class="expanded-schedule-view">
-                  <h4>Schedule for {{ staff.name }}</h4>
-                  
-                  <div class="week-grid">
-                    <!-- Preview first 7 days of range -->
-                    <div class="day-column" *ngFor="let day of weekDaysForRange">
-                      <div class="day-header">
-                        <span class="day-name">{{ day | date:'EEE' }}</span>
-                        <span class="day-date">{{ day | date:'dd' }}</span>
-                      </div>
-                      
-                      <div class="day-body" (click)="openBulkAssignModal(staff.id)">
-                        <ng-container *ngIf="getAssignmentForDay(staff.id, day) as assign; else noAssign">
-                          <div class="shift-pill">{{ assign.shiftName }}</div>
-                          <div class="time-text">{{ assign.startTime }} - {{ assign.endTime }}</div>
-                        </ng-container>
-                        <ng-template #noAssign>
-                          <div class="add-slot">+</div>
-                        </ng-template>
-                      </div>
+              <!-- Main Row -->
+              <tr class="sm-staff-row" [class.sm-staff-row--expanded]="expandedStaffId === staff.id" (click)="toggleStaffExpand(staff.id)">
+                <td>
+                  <div class="sm-name-cell">
+                    <div class="sm-avatar">{{ staff.name ? staff.name.charAt(0) : '?' }}</div>
+                    <div>
+                      <strong>{{ staff.name }}</strong>
+                      <div class="sm-emp-id">{{ staff.id }}</div>
                     </div>
                   </div>
+                </td>
+                <td><span class="sm-role-pill">{{ staff.role }}</span></td>
+                <td>
+                  <span class="sm-status-dot"></span>
+                  <span style="color: var(--primary); font-weight: 600; font-size: .82rem;">Active</span>
+                </td>
+                <td>
+                  <button class="sm-expand-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                      <ng-container *ngIf="expandedStaffId === staff.id"><polyline points="18 15 12 9 6 15"/></ng-container>
+                      <ng-container *ngIf="expandedStaffId !== staff.id"><polyline points="6 9 12 15 18 9"/></ng-container>
+                    </svg>
+                    {{ expandedStaffId === staff.id ? 'Collapse' : 'View Schedule' }}
+                  </button>
+                </td>
+              </tr>
 
-                  <div class="detail-actions">
-                     <button class="btn-text" (click)="openBulkAssignModal(staff.id)">Edit Full Range</button>
+              <!-- Expanded Detail Row -->
+              <tr *ngIf="expandedStaffId === staff.id" class="sm-detail-row">
+                <td colspan="4">
+                  <div class="sm-expanded-schedule">
+                    <div class="sm-expanded-title">Schedule for <strong>{{ staff.name }}</strong></div>
+
+                    <div class="sm-week-grid">
+                      <div class="sm-day-col" *ngFor="let day of weekDaysForRange">
+                        <div class="sm-day-hdr">
+                          <span class="sm-day-name">{{ day | date:'EEE' }}</span>
+                          <span class="sm-day-num">{{ day | date:'dd' }}</span>
+                        </div>
+                        <div class="sm-day-body" (click)="openBulkAssignModal(staff.id)">
+                          <ng-container *ngIf="getAssignmentForDay(staff.id, day) as assign; else noAssign">
+                            <span class="sm-shift-pill">{{ assign.shiftName }}</span>
+                            <span class="sm-shift-time">{{ assign.startTime }} – {{ assign.endTime }}</span>
+                          </ng-container>
+                          <ng-template #noAssign>
+                            <div class="sm-add-slot">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            </div>
+                          </ng-template>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="sm-detail-actions">
+                      <button class="sm-btn-text" (click)="openBulkAssignModal(staff.id)">Edit Full Range</button>
+                    </div>
                   </div>
-                </div>
-              </td>
-            </tr>
+                </td>
+              </tr>
 
-          </ng-container>
-        </tbody>
-      </table>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
 
-  <!-- ================= DASHBOARD VIEW (Original Layout) ================= -->
-  <div class="dashboard-wrapper" *ngIf="currentStep === 'dashboard'">
-    
-    <div class="shift-header">
-      <div class="header-left">
-        <div class="header-title">
-          <h2>Shift & Roster Management</h2>
-          <button class="btn-text small" (click)="currentStep = 'staff-list'">⬅ Back to Wizard</button>
+  <!-- ═══════════ DASHBOARD VIEW ═══════════ -->
+  <div class="sm-dashboard" *ngIf="currentStep === 'dashboard'">
+
+    <!-- Header -->
+    <div class="sm-card sm-header-card">
+      <div class="sm-header-left">
+        <div class="sm-header-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color: var(--primary)">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/>
+          </svg>
+          Shift &amp; Roster Management
         </div>
-        
+        <button class="sm-btn-text sm-back-btn" (click)="currentStep = 'staff-list'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Back to Wizard
+        </button>
+
         <!-- View Switcher -->
-        <div class="view-switcher">
-          <button [class.active]="currentView === 'day'" (click)="setView('day')">Daily</button>
-          <button [class.active]="currentView === 'week'" (click)="setView('week')">Weekly</button>
-          <button [class.active]="currentView === 'month'" (click)="setView('month')">Monthly</button>
+        <div class="sm-view-switcher">
+          <button [class.sm-view-btn--active]="currentView === 'day'" (click)="setView('day')">Daily</button>
+          <button [class.sm-view-btn--active]="currentView === 'week'" (click)="setView('week')">Weekly</button>
+          <button [class.sm-view-btn--active]="currentView === 'month'" (click)="setView('month')">Monthly</button>
         </div>
       </div>
 
-      <div class="header-actions">
+      <div class="sm-header-right">
         <!-- Date Nav -->
-        <div class="date-selector">
-          <button class="icon-btn" (click)="previousDay()">◀</button>
-          <span class="current-date">
-             <ng-container *ngIf="currentView === 'day'">{{ selectedDate | date:'EEEE, MMM d' }}</ng-container>
-             <ng-container *ngIf="currentView === 'week'">Week of {{ weekDays[0] | date:'MMM d' }}</ng-container>
-             <ng-container *ngIf="currentView === 'month'">{{ selectedDate | date:'MMMM y' }}</ng-container>
+        <div class="sm-date-nav">
+          <button class="sm-nav-btn" (click)="previousDay()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="sm-current-date">
+            <ng-container *ngIf="currentView === 'day'">{{ selectedDate | date:'EEEE, MMM d' }}</ng-container>
+            <ng-container *ngIf="currentView === 'week'">Week of {{ weekDays[0] | date:'MMM d' }}</ng-container>
+            <ng-container *ngIf="currentView === 'month'">{{ selectedDate | date:'MMMM y' }}</ng-container>
           </span>
-          <button class="icon-btn" (click)="nextDay()">▶</button>
+          <button class="sm-nav-btn" (click)="nextDay()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
-        
-        <!-- Toggle Staff Button -->
-        <button class="btn-secondary" [class.active]="showDirectory" (click)="toggleDirectory()">
+
+        <button class="sm-btn-secondary" [class.sm-btn-secondary--active]="showDirectory" (click)="toggleDirectory()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           {{ showDirectory ? 'Hide' : 'Show' }} Staff
         </button>
 
-        <button class="btn-secondary" (click)="openBulkAssignModal()">📅 Bulk Assign</button>
-        <button class="btn-secondary" (click)="onAutoGenerate()">🤖 Auto-Roster</button>
-        <button class="btn-primary" (click)="onOpenShiftSelector()">+ Select Shift</button>
+        <button class="sm-btn-secondary" (click)="openBulkAssignModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Bulk Assign
+        </button>
+
+        <button class="sm-btn-secondary" (click)="onAutoGenerate()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Auto-Roster
+        </button>
+
+        <button class="sm-btn-primary" (click)="onOpenShiftSelector()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Select Shift
+        </button>
       </div>
     </div>
 
 
-    <!-- KPI Cards -->
-    <div class="kpi-row" *ngIf="kpi">
-      <div class="kpi-card active-shifts">
-        <div class="kpi-icon">⏰</div>
-        <div class="kpi-content"><span>Active Shifts</span><strong>{{ kpi.activeShifts }}</strong></div>
-      </div>
-      <div class="kpi-card on-duty">
-        <div class="kpi-icon">✅</div>
-        <div class="kpi-content"><span>On Duty</span><strong>{{ kpi.onDuty }}</strong></div>
-      </div>
-      <div class="kpi-card off-duty">
-        <div class="kpi-icon">💤</div>
-        <div class="kpi-content"><span>Off Duty</span><strong>{{ kpi.offDuty }}</strong></div>
-      </div>
-      <div class="kpi-card current-shift">
-        <div class="kpi-icon">📢</div>
-        <div class="kpi-content"><span>Current Shift</span><strong class="shift-name-text">{{ kpi.currentShift || 'None' }}</strong></div>
-      </div>
-    </div>
-
-
-    <!-- REPLACED: Simple Staff Availability List (No external component) -->
-    <div class="staff-availability-panel" *ngIf="showDirectory">
-      <div class="panel-header">
-        <h3>Available Staff</h3>
-        <button class="close-btn" (click)="toggleDirectory()">✕</button>
-      </div>
-      
-      <!-- New Simple List -->
-      <div class="simple-staff-list">
-        <div class="staff-card-simple" *ngFor="let staff of availableStaff">
-           <div class="staff-card-avatar">{{ staff.name ? staff.name.charAt(0) : '?' }}</div>
-           <div class="staff-card-info">
-             <strong>{{ staff.name }}</strong>
-             <span>{{ staff.role }}</span>
-           </div>
-           <div class="staff-status-badge active">Idle</div>
+    <!-- KPI Strip -->
+    <div class="sm-kpi-strip" *ngIf="kpi">
+      <div class="sm-kpi-card">
+        <div class="sm-kpi-icon sm-kpi-icon--blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        <div *ngIf="availableStaff.length === 0" class="empty-state">No staff available</div>
+        <div class="sm-kpi-body">
+          <span class="sm-kpi-label">Active Shifts</span>
+          <strong class="sm-kpi-value">{{ kpi.activeShifts }}</strong>
+        </div>
+      </div>
+      <div class="sm-kpi-card">
+        <div class="sm-kpi-icon sm-kpi-icon--green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="sm-kpi-body">
+          <span class="sm-kpi-label">On Duty</span>
+          <strong class="sm-kpi-value">{{ kpi.onDuty }}</strong>
+        </div>
+      </div>
+      <div class="sm-kpi-card">
+        <div class="sm-kpi-icon sm-kpi-icon--amber">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+        </div>
+        <div class="sm-kpi-body">
+          <span class="sm-kpi-label">Off Duty</span>
+          <strong class="sm-kpi-value">{{ kpi.offDuty }}</strong>
+        </div>
+      </div>
+      <div class="sm-kpi-card">
+        <div class="sm-kpi-icon sm-kpi-icon--indigo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="sm-kpi-body">
+          <span class="sm-kpi-label">Current Shift</span>
+          <strong class="sm-kpi-value sm-kpi-value--sm">{{ kpi.currentShift || 'None' }}</strong>
+        </div>
       </div>
     </div>
 
 
-    <!-- ================= VIEWS CONTAINER ================= -->
-    <div class="shift-dashboard-grid">
-      
-      <!-- Templates Column (Hide in Monthly view) -->
-      <div class="dashboard-column templates-column" *ngIf="currentView !== 'month'">
-        <div class="column-header">
-          <h3>Shift Templates</h3>
-          <span class="badge-count">{{ templates.length }}</span>
+    <!-- Staff Availability Panel -->
+    <div class="sm-staff-panel" *ngIf="showDirectory">
+      <div class="sm-panel-header">
+        <span class="sm-panel-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Available Staff
+        </span>
+        <button class="sm-close-btn" (click)="toggleDirectory()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="sm-staff-list">
+        <div class="sm-staff-item" *ngFor="let staff of availableStaff">
+          <div class="sm-avatar sm-avatar--sm">{{ staff.name ? staff.name.charAt(0) : '?' }}</div>
+          <div class="sm-staff-info">
+            <strong>{{ staff.name }}</strong>
+            <span>{{ staff.role }}</span>
+          </div>
+          <span class="sm-idle-badge">Idle</span>
         </div>
+        <div class="sm-empty-state" *ngIf="availableStaff.length === 0">No staff available</div>
+      </div>
+    </div>
 
-        <div class="templates-list">
-          <div 
-            class="template-card" 
-            *ngFor="let shift of templates"
-            [class.active-template]="shift.isActive"
-            (click)="onEditShift(shift)">
-            
-            <div class="template-status-bar" [class.active]="shift.isActive"></div>
-            
-            <div class="template-content">
-              <div class="template-top">
-                <h4>{{ shift.name }}</h4>
-                <span class="duration-badge">{{ shift.duration }}h</span>
+
+    <!-- Dashboard Grid -->
+    <div class="sm-dashboard-grid">
+
+      <!-- Templates Column -->
+      <div class="sm-col sm-col--templates" *ngIf="currentView !== 'month'">
+        <div class="sm-card">
+          <div class="sm-col-header">
+            <span class="sm-col-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Shift Templates
+            </span>
+            <span class="sm-count-badge">{{ templates.length }}</span>
+          </div>
+
+          <div class="sm-templates-list">
+            <div class="sm-template-card" *ngFor="let shift of templates"
+                 [class.sm-template-card--active]="shift.isActive"
+                 (click)="onEditShift(shift)">
+              <div class="sm-template-bar" [class.sm-template-bar--active]="shift.isActive"></div>
+              <div class="sm-template-body">
+                <div class="sm-template-top">
+                  <span class="sm-template-name">{{ shift.name }}</span>
+                  <span class="sm-duration-badge">{{ shift.duration }}h</span>
+                </div>
+                <div class="sm-template-time">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {{ shift.startTime }} – {{ shift.endTime }}
+                </div>
+                <div class="sm-template-footer">
+                  <span class="sm-active-text" [class.sm-active-text--on]="shift.isActive">
+                    {{ shift.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                  <button class="sm-edit-btn" title="Edit">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                </div>
               </div>
-              <div class="template-time">
-                <span class="time-icon">🕒</span>
-                {{ shift.startTime }} - {{ shift.endTime }}
-              </div>
-              <div class="template-footer">
-                <span class="status-text" [class.text-active]="shift.isActive">
-                  {{ shift.isActive ? 'Active' : 'Inactive' }}
-                </span>
-                <button class="btn-icon-small" title="Select Template">✏️</button>
-              </div>
+            </div>
+
+            <button class="sm-add-template-btn" (click)="onOpenShiftSelector()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Select Shift Template
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Roster Column -->
+      <div class="sm-col sm-col--roster" [class.sm-col--full]="currentView === 'month'">
+
+        <!-- ── DAILY VIEW ── -->
+        <div *ngIf="currentView === 'day'" class="sm-card">
+          <div class="sm-col-header">
+            <span class="sm-col-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Daily Roster
+            </span>
+            <div class="sm-roster-actions">
+              <button class="sm-btn-text" (click)="onFilterRoster()">Filter</button>
+              <button class="sm-btn-text" (click)="onPrintRoster()">Print</button>
             </div>
           </div>
 
-          <button class="add-template-placeholder" (click)="onOpenShiftSelector()">
-            <span class="plus-icon">➕</span>
-            <span>Select Shift Template</span>
-          </button>
-        </div>
-      </div>
-
-
-      <!-- RIGHT COL: DYNAMIC ROSTER VIEW -->
-      <div class="dashboard-column roster-column" [class.full-width]="currentView === 'month'">
-        
-        <!-- 1. DAILY VIEW -->
-        <div *ngIf="currentView === 'day'">
-          <div class="column-header">
-            <h3>Daily Roster</h3>
-            <div class="roster-actions">
-              <button class="btn-text" (click)="onFilterRoster()">Filter</button>
-              <button class="btn-text" (click)="onPrintRoster()">Print</button>
-            </div>
-          </div>
-
-          <div class="timeline-visual">
-            <div class="timeline-hours">
+          <!-- Timeline -->
+          <div class="sm-timeline">
+            <div class="sm-timeline-hours">
               <span>6am</span><span>9am</span><span>12pm</span><span>3pm</span><span>6pm</span><span>9pm</span><span>12am</span>
             </div>
-            <div class="timeline-tracks">
-              <div class="timeline-track" *ngFor="let shift of templates">
-                 <div class="track-label">{{ shift.name }}</div>
-                 <div class="track-bar-container">
-                   <div 
-                     class="track-bar" 
-                     [style.left]="getShiftOffset(shift.startTime)" 
-                     [style.width]="getShiftWidth(shift.duration)">
-                     <span class="track-info">{{ getAssignmentsByShift(shift.id).length }} Staff</span>
-                   </div>
-                 </div>
+            <div class="sm-timeline-tracks">
+              <div class="sm-track" *ngFor="let shift of templates">
+                <div class="sm-track-label">{{ shift.name }}</div>
+                <div class="sm-track-bar-wrap">
+                  <div class="sm-track-bar"
+                       [style.left]="getShiftOffset(shift.startTime)"
+                       [style.width]="getShiftWidth(shift.duration)">
+                    <span>{{ getAssignmentsByShift(shift.id).length }} Staff</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="assignments-list-container">
-            <div class="shift-group" *ngFor="let shift of templates">
-              <div class="shift-group-header">
-                <div class="shift-info">
-                  <h4>{{ shift.name }}</h4>
-                  <span class="shift-time-pill">{{ shift.startTime }} - {{ shift.endTime }}</span>
+          <!-- Shift Groups -->
+          <div class="sm-assignments">
+            <div class="sm-shift-group" *ngFor="let shift of templates">
+              <div class="sm-shift-group-header">
+                <div class="sm-shift-info">
+                  <span class="sm-shift-name">{{ shift.name }}</span>
+                  <span class="sm-time-pill">{{ shift.startTime }} – {{ shift.endTime }}</span>
                 </div>
-                <button class="btn-assign" (click)="onAssignStaff(shift.id)">+ Assign Staff</button>
+                <button class="sm-btn-assign" (click)="onAssignStaff(shift.id)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Assign Staff
+                </button>
               </div>
 
-              <div class="staff-grid">
-                <div 
-                  class="staff-assignment-card" 
-                  *ngFor="let assign of getAssignmentsByShift(shift.id)"
-                  [class.status-active]="assign.status === 'ACTIVE'"
-                  [class.status-completed]="assign.status === 'COMPLETED'">
-                  <div class="staff-avatar">{{ assign.staffName.charAt(0) }}</div>
-                  <div class="staff-details">
-                    <span class="staff-name">{{ assign.staffName }}</span>
-                    <span class="assignment-status" [class]="assign.status.toLowerCase()">
-                      {{ assign.status }}
-                    </span>
+              <div class="sm-staff-grid">
+                <div class="sm-assign-card"
+                     *ngFor="let assign of getAssignmentsByShift(shift.id)"
+                     [class.sm-assign-card--active]="assign.status === 'ACTIVE'"
+                     [class.sm-assign-card--done]="assign.status === 'COMPLETED'">
+                  <div class="sm-avatar sm-avatar--sm">{{ assign.staffName.charAt(0) }}</div>
+                  <div class="sm-assign-info">
+                    <span class="sm-assign-name">{{ assign.staffName }}</span>
+                    <span class="sm-status-pill sm-s-{{ assign.status | lowercase }}">{{ assign.status }}</span>
                   </div>
-                  <button class="btn-more" (click)="onAssignmentAction(assign)">⋮</button>
+                  <button class="sm-more-btn" (click)="onAssignmentAction(assign)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                  </button>
                 </div>
-                <div class="empty-assignment" *ngIf="getAssignmentsByShift(shift.id).length === 0">
-                  <span>No staff assigned yet</span>
+                <div class="sm-empty-assign" *ngIf="getAssignmentsByShift(shift.id).length === 0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                  No staff assigned yet
                 </div>
               </div>
             </div>
@@ -356,69 +444,72 @@
         </div>
 
 
-        <!-- 2. WEEKLY VIEW -->
-        <div class="weekly-roster-view" *ngIf="currentView === 'week'">
-          <table class="roster-table">
-            <thead>
-              <tr>
-                <th class="sticky-col">Staff Member</th>
-                <th *ngFor="let day of weekDays" [class.today]="isToday(day)">
-                  <div class="th-date">{{ day | date:'d' }}</div>
-                  <div class="th-day">{{ day | date:'EEE' }}</div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let staff of availableStaff">
-                <td class="staff-cell sticky-col">
-                  <div class="staff-info">
-                    <strong>{{ staff.name }}</strong>
-                    <span class="role-badge">{{ staff.role }}</span>
-                  </div>
-                </td>
-                <td *ngFor="let day of weekDays" class="shift-cell" (click)="openBulkAssignModal(staff.id)">
-                  <ng-container *ngIf="getAssignmentForDay(staff.id, day) as assignment; else noShift">
-                    <div class="shift-block" [class.active]="assignment.status === 'ACTIVE'">
-                      <span class="shift-name">{{ assignment.shiftName }}</span>
-                      <span class="shift-time">{{ assignment.startTime }} - {{ assignment.endTime }}</span>
+        <!-- ── WEEKLY VIEW ── -->
+        <div class="sm-card" *ngIf="currentView === 'week'">
+          <div class="sm-table-wrap">
+            <table class="sm-table sm-roster-table">
+              <thead>
+                <tr>
+                  <th class="sm-sticky-col">Staff Member</th>
+                  <th *ngFor="let day of weekDays" [class.sm-today-col]="isToday(day)">
+                    <div class="sm-th-num">{{ day | date:'d' }}</div>
+                    <div class="sm-th-day">{{ day | date:'EEE' }}</div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let staff of availableStaff">
+                  <td class="sm-sticky-col sm-staff-cell">
+                    <div class="sm-name-cell">
+                      <div class="sm-avatar sm-avatar--sm">{{ staff.name.charAt(0) }}</div>
+                      <div>
+                        <strong>{{ staff.name }}</strong>
+                        <span class="sm-role-pill">{{ staff.role }}</span>
+                      </div>
                     </div>
-                  </ng-container>
-                  <ng-template #noShift>
-                    <div class="empty-slot">+</div>
-                  </ng-template>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                  <td *ngFor="let day of weekDays" class="sm-shift-cell" (click)="openBulkAssignModal(staff.id)">
+                    <ng-container *ngIf="getAssignmentForDay(staff.id, day) as assignment; else noShift">
+                      <div class="sm-shift-block" [class.sm-shift-block--active]="assignment.status === 'ACTIVE'">
+                        <span class="sm-block-name">{{ assignment.shiftName }}</span>
+                        <span class="sm-block-time">{{ assignment.startTime }} – {{ assignment.endTime }}</span>
+                      </div>
+                    </ng-container>
+                    <ng-template #noShift>
+                      <div class="sm-empty-slot">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </div>
+                    </ng-template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
 
-        <!-- 3. MONTHLY VIEW -->
-        <div class="monthly-roster-view" *ngIf="currentView === 'month'">
-          <div class="calendar-grid">
-            <div class="calendar-header" *ngFor="let day of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">
-              {{ day }}
-            </div>
-            
+        <!-- ── MONTHLY VIEW ── -->
+        <div class="sm-card" *ngIf="currentView === 'month'">
+          <div class="sm-calendar-grid">
+            <div class="sm-cal-day-label" *ngFor="let day of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">{{ day }}</div>
+
             <ng-container *ngFor="let week of monthWeeks">
-              <div class="calendar-day" *ngFor="let day of week" 
-                   [class.other-month]="day.getMonth() !== selectedDate.getMonth()" 
-                   [class.today]="isToday(day)"
+              <div class="sm-cal-day"
+                   *ngFor="let day of week"
+                   [class.sm-cal-day--other]="day.getMonth() !== selectedDate.getMonth()"
+                   [class.sm-cal-day--today]="isToday(day)"
                    (click)="selectedDate = day; setView('day')">
-                
-                <div class="day-number">{{ day | date:'d' }}</div>
-                
-                <div class="day-shifts">
-                  <div class="shift-dot" *ngFor="let assign of getAssignmentsForDate(day) | slice:0:3"></div>
-                  <div class="more-shifts" *ngIf="getAssignmentsForDate(day).length > 3">
+                <div class="sm-cal-num">{{ day | date:'d' }}</div>
+                <div class="sm-cal-dots">
+                  <div class="sm-cal-dot" *ngFor="let assign of getAssignmentsForDate(day) | slice:0:3"></div>
+                  <span class="sm-cal-more" *ngIf="getAssignmentsForDate(day).length > 3">
                     +{{ getAssignmentsForDate(day).length - 3 }}
-                  </div>
+                  </span>
                 </div>
               </div>
             </ng-container>
           </div>
         </div>
-
 
       </div>
     </div>
@@ -426,29 +517,30 @@
 
 </section>
 
-<!-- ================= VIEW REPORT MODAL (NEW) ================= -->
-<div class="modal-overlay" *ngIf="showReportModal" (click)="closeReportModal()">
-  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>📊 Assigned Shifts Report</h3>
-      <button class="close-btn" (click)="closeReportModal()">✕</button>
-    </div>
-    
-    <div class="modal-body">
-      <div class="report-filters">
-        <p><strong>Range:</strong> {{ selectedRange.start | date }} to {{ selectedRange.end | date }}</p>
-      </div>
 
-      <div class="report-table-container">
-        <table class="report-table">
+<!-- ═══════════ REPORT MODAL ═══════════ -->
+<div class="sm-overlay" *ngIf="showReportModal" (click)="closeReportModal()">
+  <div class="sm-modal sm-modal--lg" (click)="$event.stopPropagation()">
+    <div class="sm-modal-header">
+      <div class="sm-modal-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Assigned Shifts Report
+      </div>
+      <button class="sm-close-btn" (click)="closeReportModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="sm-modal-body">
+      <p class="sm-report-range">
+        <strong>Range:</strong> {{ selectedRange.start | date }} to {{ selectedRange.end | date }}
+      </p>
+      <div class="sm-table-wrap">
+        <table class="sm-table">
           <thead>
             <tr>
-              <th>Staff Name</th>
-              <th>Emp ID</th>
-              <th>Role</th>
-              <th>Date</th>
-              <th>Shift Assigned</th>
-              <th>Status</th>
+              <th>Staff Name</th><th>Emp ID</th><th>Role</th><th>Date</th><th>Shift Assigned</th><th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -458,57 +550,72 @@
               <td>{{ row.role }}</td>
               <td>{{ row.date }}</td>
               <td>{{ row.shift }}</td>
-              <td>
-                <span class="status-badge" [class]="row.status.toLowerCase()">{{ row.status }}</span>
-              </td>
+              <td><span class="sm-status-pill sm-s-{{ row.status | lowercase }}">{{ row.status }}</span></td>
             </tr>
             <tr *ngIf="reportData.length === 0">
-              <td colspan="6" class="text-center">No assignments found for this date range.</td>
+              <td colspan="6" class="sm-empty-row">No assignments found for this date range.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-
-    <div class="modal-footer">
-      <button type="button" class="btn-secondary" (click)="closeReportModal()">Close</button>
-      <button type="button" class="btn-primary" (click)="onDownloadReport()">📥 Download Report</button>
+    <div class="sm-modal-footer">
+      <button class="sm-btn-secondary" (click)="closeReportModal()">Close</button>
+      <button class="sm-btn-primary" (click)="onDownloadReport()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Report
+      </button>
     </div>
   </div>
 </div>
 
-<!-- ================= SHIFT SELECTOR MODAL (NEW) ================= -->
-<div class="modal-overlay" *ngIf="showShiftSelector" (click)="closeShiftSelector()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Select Shift Template</h3>
-      <button class="close-btn" (click)="closeShiftSelector()">✕</button>
+
+<!-- ═══════════ SHIFT SELECTOR MODAL ═══════════ -->
+<div class="sm-overlay" *ngIf="showShiftSelector" (click)="closeShiftSelector()">
+  <div class="sm-modal" (click)="$event.stopPropagation()">
+    <div class="sm-modal-header">
+      <div class="sm-modal-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Select Shift Template
+      </div>
+      <button class="sm-close-btn" (click)="closeShiftSelector()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="modal-body">
+    <div class="sm-modal-body">
       <form (submit)="confirmShiftSelection(); $event.preventDefault()">
-        
-        <div class="form-group">
-          <label>Choose Existing Template</label>
-          <select [(ngModel)]="selectedShiftId" name="selectedShiftId" class="form-input" required>
-            <option value="" disabled>-- Select a Shift --</option>
+        <div class="sm-field">
+          <label class="sm-label">Choose Existing Template</label>
+          <select [(ngModel)]="selectedShiftId" name="selectedShiftId" class="sm-input" required>
+            <option value="" disabled>— Select a Shift —</option>
             <option *ngFor="let t of templates" [value]="t.id">
-              {{ t.name }} ({{ t.startTime }} - {{ t.endTime }})
+              {{ t.name }} ({{ t.startTime }} – {{ t.endTime }})
             </option>
           </select>
         </div>
 
-        <div class="template-preview" *ngIf="selectedShiftId">
-          <div class="preview-card" *ngFor="let t of templates">
-             <ng-container *ngIf="t.id === selectedShiftId">
-               <div class="preview-row"><strong>Duration:</strong> {{ t.duration }} hrs</div>
-               <div class="preview-row"><strong>Status:</strong> {{ t.isActive ? 'Active' : 'Inactive' }}</div>
-             </ng-container>
-          </div>
+        <div class="sm-template-preview" *ngIf="selectedShiftId">
+          <ng-container *ngFor="let t of templates">
+            <ng-container *ngIf="t.id === selectedShiftId">
+              <div class="sm-preview-row">
+                <span class="sm-preview-label">Duration</span>
+                <strong>{{ t.duration }} hrs</strong>
+              </div>
+              <div class="sm-preview-row">
+                <span class="sm-preview-label">Status</span>
+                <span class="sm-status-pill" [class.sm-s-active]="t.isActive" [class.sm-s-inactive]="!t.isActive">
+                  {{ t.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+            </ng-container>
+          </ng-container>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" (click)="closeShiftSelector()">Cancel</button>
-          <button type="submit" class="btn-primary">Confirm Selection</button>
+        <div class="sm-modal-footer">
+          <button type="button" class="sm-btn-secondary" (click)="closeShiftSelector()">Cancel</button>
+          <button type="submit" class="sm-btn-primary">Confirm Selection</button>
         </div>
       </form>
     </div>
@@ -516,63 +623,67 @@
 </div>
 
 
-
-<!-- ================= BULK ASSIGN MODAL (Remains same) ================= -->
-<div class="modal-overlay" *ngIf="showBulkModal" (click)="closeBulkModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>📅 Bulk Shift Assignment</h3>
-      <button class="close-btn" (click)="closeBulkModal()">✕</button>
+<!-- ═══════════ BULK ASSIGN MODAL ═══════════ -->
+<div class="sm-overlay" *ngIf="showBulkModal" (click)="closeBulkModal()">
+  <div class="sm-modal" (click)="$event.stopPropagation()">
+    <div class="sm-modal-header">
+      <div class="sm-modal-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/>
+        </svg>
+        Bulk Shift Assignment
+      </div>
+      <button class="sm-close-btn" (click)="closeBulkModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-
-    <div class="modal-body">
+    <div class="sm-modal-body">
       <form (submit)="saveBulkAssignment(); $event.preventDefault()">
-        
-        <div class="form-group">
-          <label>Select Staff</label>
-          <select [(ngModel)]="bulkForm.staffId" name="staffId" class="form-input" required>
-            <option value="" disabled>Choose a staff member...</option>
+
+        <div class="sm-field">
+          <label class="sm-label">Select Staff</label>
+          <select [(ngModel)]="bulkForm.staffId" name="staffId" class="sm-input" required>
+            <option value="" disabled>Choose a staff member…</option>
             <option *ngFor="let s of availableStaff" [value]="s.id">{{ s.name }} ({{ s.role }})</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label>Select Shift</label>
-          <select [(ngModel)]="bulkForm.shiftId" name="shiftId" class="form-input" required>
-            <option value="" disabled>Choose a shift...</option>
+        <div class="sm-field">
+          <label class="sm-label">Select Shift</label>
+          <select [(ngModel)]="bulkForm.shiftId" name="shiftId" class="sm-input" required>
+            <option value="" disabled>Choose a shift…</option>
             <option *ngFor="let t of templates" [value]="t.id">
-              {{ t.name }} ({{ t.startTime }} - {{ t.endTime }})
+              {{ t.name }} ({{ t.startTime }} – {{ t.endTime }})
             </option>
           </select>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>From</label>
-            <input type="date" [(ngModel)]="bulkForm.startDate" name="startDate" class="form-input" required>
+        <div class="sm-form-row">
+          <div class="sm-field">
+            <label class="sm-label">From</label>
+            <input type="date" [(ngModel)]="bulkForm.startDate" name="startDate" class="sm-input" required>
           </div>
-          <div class="form-group">
-            <label>To</label>
-            <input type="date" [(ngModel)]="bulkForm.endDate" name="endDate" class="form-input" required>
+          <div class="sm-field">
+            <label class="sm-label">To</label>
+            <input type="date" [(ngModel)]="bulkForm.endDate" name="endDate" class="sm-input" required>
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Repeat On</label>
-          <div class="week-selector">
-            <div 
-              *ngFor="let day of daysOfWeek" 
-              class="day-chip" 
-              [class.selected]="isDaySelected(day.id)"
-              (click)="toggleDaySelection(day.id)">
+        <div class="sm-field">
+          <label class="sm-label">Repeat On</label>
+          <div class="sm-day-selector">
+            <div class="sm-day-chip"
+                 *ngFor="let day of daysOfWeek"
+                 [class.sm-day-chip--active]="isDaySelected(day.id)"
+                 (click)="toggleDaySelection(day.id)">
               {{ day.label }}
             </div>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" (click)="closeBulkModal()">Cancel</button>
-          <button type="submit" class="btn-primary">Apply Schedule</button>
+        <div class="sm-modal-footer">
+          <button type="button" class="sm-btn-secondary" (click)="closeBulkModal()">Cancel</button>
+          <button type="submit" class="sm-btn-primary">Apply Schedule</button>
         </div>
       </form>
     </div>

@@ -52,6 +52,7 @@ interface RouteConfig {
 /* ── Route map ── */
 const ROUTE_TITLES: Record<string, RouteConfig> = {
 
+  // ── Dashboard ──────────────────────────────────────────
   '/dashboard': {
     title: 'Dashboard', icon: 'explore',
     centerConfig: {
@@ -64,6 +65,7 @@ const ROUTE_TITLES: Record<string, RouteConfig> = {
     }
   },
 
+  // ── Inventory ──────────────────────────────────────────
   '/inventory/dashboard': {
     title: 'Inventory Dashboard', icon: 'inventory_2',
     centerConfig: {
@@ -76,7 +78,7 @@ const ROUTE_TITLES: Record<string, RouteConfig> = {
     }
   },
 
-  '/inventory': {
+  '/inventory/manage': {
     title: 'Manage Inventory', icon: 'factory',
     centerConfig: {
       type: 'chips',
@@ -87,6 +89,49 @@ const ROUTE_TITLES: Record<string, RouteConfig> = {
     }
   },
 
+  '/inventory/alerts': {
+    title: 'Stock Alerts', icon: 'notification_important',
+    centerConfig: {
+      type: 'chips',
+      chips: [
+        { icon: 'warning_amber', label: 'Critical', value: 3 },
+        { icon: 'info',          label: 'Low',      value: 8 }
+      ]
+    }
+  },
+
+  '/inventory/suppliers': {
+    title: 'Supplier Management', icon: 'local_shipping',
+    centerConfig: { type: 'search' }
+  },
+
+  '/inventory/purchase': {
+    title: 'Purchase Orders', icon: 'shopping_cart',
+    centerConfig: {
+      type: 'search+filter',
+      filterChips: [
+        { icon: 'calendar_today', label: 'Filter', value: 'This Month' }
+      ]
+    }
+  },
+
+  '/inventory/waste': {
+    title: 'Waste Tracking', icon: 'delete_sweep',
+    centerConfig: {
+      type: 'chips',
+      chips: [
+        { icon: 'calendar_today', label: 'Date',        value: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) },
+        { icon: 'trending_down',  label: 'Waste Today', value: '2.4 kg' }
+      ]
+    }
+  },
+
+  '/inventory/categories': {
+    title: 'Menu Categories', icon: 'category',
+    centerConfig: { type: 'search' }
+  },
+
+  // ── POS ────────────────────────────────────────────────
   '/pos/tables': {
     title: 'Tables', icon: 'chair',
     centerConfig: {
@@ -114,12 +159,8 @@ const ROUTE_TITLES: Record<string, RouteConfig> = {
     centerConfig: { type: 'search' }
   },
 
-  '/menu': {
-    title: 'Menu Management', icon: 'menu_book',
-    centerConfig: { type: 'search' }
-  },
-
-  '/order/live-orders': {
+  // ── Orders ─────────────────────────────────────────────
+  '/orders/live': {
     title: 'Live Orders', icon: 'receipt_long',
     centerConfig: {
       type: 'chips',
@@ -131,7 +172,7 @@ const ROUTE_TITLES: Record<string, RouteConfig> = {
     }
   },
 
-  '/order/history': {
+  '/orders/history': {
     title: 'Order History', icon: 'history',
     centerConfig: {
       type: 'search+filter',
@@ -141,7 +182,8 @@ const ROUTE_TITLES: Record<string, RouteConfig> = {
     }
   },
 
-  '/staff': {
+  // ── Staff ──────────────────────────────────────────────
+  '/staff/directory': {
     title: 'Staff Directory', icon: 'groups',
     centerConfig: {
       type: 'chips',
@@ -153,14 +195,238 @@ const ROUTE_TITLES: Record<string, RouteConfig> = {
     }
   },
 
-  '/kitchen': {
-    title: 'Kitchen Display', icon: 'soup_kitchen',
+  '/staff/attendance': {
+    title: 'Attendance', icon: 'fact_check',
+    centerConfig: {
+      type: 'chips',
+      chips: [
+        { icon: 'calendar_today', label: 'Date',    value: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) },
+        { icon: 'check_circle',   label: 'Present', value: 14 },
+        { icon: 'cancel',         label: 'Absent',  value: 2  }
+      ]
+    }
+  },
+
+  '/staff/leave': {
+    title: 'Leave Management', icon: 'event_busy',
+    centerConfig: {
+      type: 'chips',
+      chips: [
+        { icon: 'pending', label: 'Pending', value: 3 },
+        { icon: 'check',   label: 'Approved', value: 5 }
+      ]
+    }
+  },
+
+  '/staff/salary': {
+    title: 'Salary Management', icon: 'payments',
+    centerConfig: {
+      type: 'chips',
+      chips: [
+        { icon: 'calendar_today', label: 'Month', value: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) },
+        { icon: 'group',          label: 'Staff',  value: 18 }
+      ]
+    }
+  },
+
+  '/staff/shifts': {
+    title: 'Shift Management', icon: 'schedule',
+    centerConfig: {
+      type: 'chips',
+      chips: [
+        { icon: 'wb_sunny',  label: 'Morning',   value: 6 },
+        { icon: 'nights_stay', label: 'Evening', value: 5 },
+        { icon: 'bedtime',   label: 'Night',     value: 3 }
+      ]
+    }
+  },
+
+  '/staff/roles': {
+    title: 'Role Management', icon: 'admin_panel_settings',
+    centerConfig: { type: 'search' }
+  },
+
+  '/staff/documents': {
+    title: 'Staff Documents', icon: 'folder_shared',
+    centerConfig: {
+      type: 'chips',
+      chips: [
+        { icon: 'check_circle', label: 'Valid',    value: 0 },
+        { icon: 'warning',      label: 'Expiring', value: 0 },
+        { icon: 'error',        label: 'Expired',  value: 0 }
+      ]
+    }
+  },
+
+  '/staff/announcements': {
+    title: 'Announcements', icon: 'campaign',
+    centerConfig: {
+      type: 'chips',
+      chips: [
+        { icon: 'push_pin',    label: 'Pinned', value: 0 },
+        { icon: 'schedule',    label: 'Active',  value: 0 },
+        { icon: 'drafts',      label: 'Drafts',  value: 0 }
+      ]
+    }
+  },
+
+  // ── Waiter ─────────────────────────────────────────────
+  '/waiter': {
+    title: 'Waiter View', icon: 'room_service',
+    centerConfig: {
+      type: 'chips',
+      chips: [
+        { icon: 'table_restaurant', label: 'My Tables', value: 4 },
+        { icon: 'receipt_long',     label: 'Orders',    value: 7 }
+      ]
+    }
+  },
+
+  // ── Reports ────────────────────────────────────────────
+  '/reports/sales': {
+    title: 'Sales Report', icon: 'trending_up',
+    centerConfig: {
+      type: 'search+filter',
+      filterChips: [
+        { icon: 'calendar_today', label: 'Filter', value: 'This Month' }
+      ]
+    }
+  },
+
+  '/reports/inventory': {
+    title: 'Inventory Report', icon: 'inventory',
+    centerConfig: {
+      type: 'search+filter',
+      filterChips: [
+        { icon: 'calendar_today', label: 'Filter', value: 'This Month' }
+      ]
+    }
+  },
+
+  '/reports/customer': {
+    title: 'Customer Report', icon: 'people',
+    centerConfig: {
+      type: 'search+filter',
+      filterChips: [
+        { icon: 'calendar_today', label: 'Filter', value: 'This Month' }
+      ]
+    }
+  },
+
+  '/reports/staff': {
+    title: 'Staff Report', icon: 'badge',
+    centerConfig: {
+      type: 'search+filter',
+      filterChips: [
+        { icon: 'calendar_today', label: 'Filter', value: 'This Month' }
+      ]
+    }
+  },
+
+  '/reports/financial': {
+    title: 'Financial Report', icon: 'account_balance',
+    centerConfig: {
+      type: 'search+filter',
+      filterChips: [
+        { icon: 'calendar_today', label: 'Filter', value: 'This Month' }
+      ]
+    }
+  },
+
+  '/reports/kitchen': {
+    title: 'Kitchen & Order Report', icon: 'soup_kitchen',
+    centerConfig: {
+      type: 'search+filter',
+      filterChips: [
+        { icon: 'calendar_today', label: 'Filter', value: 'Today' }
+      ]
+    }
+  },
+
+  '/reports/delivery': {
+    title: 'Online & Delivery Report', icon: 'delivery_dining',
+    centerConfig: {
+      type: 'search+filter',
+      filterChips: [
+        { icon: 'calendar_today', label: 'Filter', value: 'Today' }
+      ]
+    }
+  },
+
+  '/reports/branches': {
+    title: 'Branch Report', icon: 'store',
+    centerConfig: {
+      type: 'search+filter',
+      filterChips: [
+        { icon: 'calendar_today', label: 'Filter', value: 'This Month' }
+      ]
+    }
+  },
+
+  // ── Admin ──────────────────────────────────────────────
+  '/admin': {
+    title: 'Admin Dashboard', icon: 'admin_panel_settings',
+    centerConfig: {
+      type: 'chips',
+      chips: [
+        { icon: 'business',   label: 'Tenants', value: 24 },
+        { icon: 'people',     label: 'Users',   value: 312 },
+        { icon: 'monetization_on', label: 'Revenue', value: '₹1.2L' }
+      ]
+    }
+  },
+
+  '/admin/users': {
+    title: 'User & Tenant Management', icon: 'manage_accounts',
+    centerConfig: { type: 'search' }
+  },
+
+  '/admin/subscriptions': {
+    title: 'Subscription & Revenue', icon: 'monetization_on',
+    centerConfig: {
+      type: 'chips',
+      chips: [
+        { icon: 'star',        label: 'Pro',    value: 8  },
+        { icon: 'star_half',   label: 'Growth', value: 11 },
+        { icon: 'star_border', label: 'Starter', value: 5 }
+      ]
+    }
+  },
+
+  '/admin/rbac': {
+    title: 'RBAC Engine', icon: 'security',
     centerConfig: { type: 'none' }
   },
 
-  '/reports': {
-    title: 'Reports', icon: 'bar_chart',
-    centerConfig: { type: 'search' }
+  '/admin/security': {
+    title: 'Security & Compliance', icon: 'verified_user',
+    centerConfig: { type: 'none' }
+  },
+
+  '/admin/notifications': {
+    title: 'Notifications', icon: 'campaign',
+    centerConfig: { type: 'none' }
+  },
+
+  '/admin/products': {
+    title: 'Product Features', icon: 'extension',
+    centerConfig: { type: 'none' }
+  },
+
+  '/admin/configuration': {
+    title: 'Configuration Management', icon: 'tune',
+    centerConfig: { type: 'none' }
+  },
+
+  '/admin/ai-control': {
+    title: 'AI Smart Control', icon: 'psychology',
+    centerConfig: { type: 'none' }
+  },
+
+  // ── Misc ───────────────────────────────────────────────
+  '/kitchen': {
+    title: 'Kitchen Display', icon: 'soup_kitchen',
+    centerConfig: { type: 'none' }
   },
 
   '/settings': {
@@ -175,6 +441,21 @@ const ROUTE_TITLES: Record<string, RouteConfig> = {
 
   '/reservations': {
     title: 'Reservations', icon: 'event_available',
+    centerConfig: { type: 'none' }
+  },
+
+  '/qr': {
+    title: 'QR Codes', icon: 'qr_code_2',
+    centerConfig: { type: 'none' }
+  },
+
+  '/upgrade': {
+    title: 'Upgrade Plan', icon: 'workspace_premium',
+    centerConfig: { type: 'none' }
+  },
+
+  '/unauthorized': {
+    title: 'Access Denied', icon: 'block',
     centerConfig: { type: 'none' }
   }
 };

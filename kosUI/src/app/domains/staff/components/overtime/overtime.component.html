@@ -1,0 +1,105 @@
+<div class="ot-page">
+
+  <!-- Header -->
+  <div class="ot-header">
+    <div class="ot-header-title">
+      <h1>Overtime Tracking</h1>
+      <p>Monitor and approve overtime hours for all staff</p>
+    </div>
+    <div class="ot-header-right">
+      <input type="month" class="ot-picker" [(ngModel)]="filterMonth" (change)="loadFromAttendance()" />
+      <select class="ot-picker" [(ngModel)]="filterStatus">
+        <option value="">All Status</option>
+        <option value="PENDING">Pending</option>
+        <option value="APPROVED">Approved</option>
+        <option value="PAID">Paid</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="ot-error" *ngIf="error">
+    <span class="material-icons">error_outline</span> {{ error }}
+    <button (click)="error=''" class="ot-error-close">×</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="ot-kpis" *ngIf="!loading">
+    <div class="ot-kpi">
+      <span class="material-icons" style="color:#f59e0b">more_time</span>
+      <div>
+        <div class="ot-kpi-val">{{ totalOTHours | number:'1.1-1' }} hrs</div>
+        <div class="ot-kpi-lbl">Total OT Hours</div>
+      </div>
+    </div>
+    <div class="ot-kpi">
+      <span class="material-icons" style="color:#16a34a">account_balance_wallet</span>
+      <div>
+        <div class="ot-kpi-val">₹{{ totalOTPay | number:'1.0-0' }}</div>
+        <div class="ot-kpi-lbl">Total OT Pay</div>
+      </div>
+    </div>
+    <div class="ot-kpi">
+      <span class="material-icons" style="color:#3b82f6">groups</span>
+      <div>
+        <div class="ot-kpi-val">{{ records.length }}</div>
+        <div class="ot-kpi-lbl">Records</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="ot-loading" *ngIf="loading">
+    <span class="material-icons spin">autorenew</span> Analysing attendance data…
+  </div>
+
+  <!-- Empty -->
+  <div class="ot-empty" *ngIf="!loading && filtered.length === 0">
+    <span class="material-icons">more_time</span>
+    <p>No overtime records for this period.</p>
+  </div>
+
+  <!-- Table -->
+  <div class="ot-table-wrap" *ngIf="!loading && filtered.length > 0">
+    <table class="ot-table">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Date</th>
+          <th>Regular Hrs</th>
+          <th>Total Hrs</th>
+          <th>OT Hours</th>
+          <th>Rate</th>
+          <th>OT Pay</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of filtered">
+          <td>{{ r.employeeName }}</td>
+          <td>{{ r.date | date:'mediumDate' }}</td>
+          <td>{{ r.regularHours }}</td>
+          <td>{{ r.totalHours | number:'1.1-1' }}</td>
+          <td class="ot-hours">{{ r.overtimeHours | number:'1.1-1' }} hrs</td>
+          <td>{{ r.overtimeRate }}×</td>
+          <td class="ot-pay">₹{{ r.overtimePay | number:'1.0-0' }}</td>
+          <td><span class="badge" [class]="statusClass(r.status)">{{ r.status }}</span></td>
+          <td class="ot-actions">
+            <button class="ot-act-btn ot-approve" *ngIf="r.status === 'PENDING'" (click)="approve(r)" title="Approve">
+              <span class="material-icons">check</span>
+            </button>
+            <button class="ot-act-btn ot-reject" *ngIf="r.status === 'PENDING'" (click)="reject(r)" title="Reject">
+              <span class="material-icons">close</span>
+            </button>
+            <button class="ot-act-btn ot-pay" *ngIf="r.status === 'APPROVED'" (click)="markPaid(r)" title="Mark Paid">
+              <span class="material-icons">payments</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

@@ -9,6 +9,8 @@ export interface SalarySlip {
   month: string;
   basicSalary: number;
   hra: number;
+  shiftAllowance: number;
+  leaveDeductions: number;
   commission: number;
   bonus: number;
   grossSalary: number;
@@ -18,6 +20,7 @@ export interface SalarySlip {
   netSalary: number;
   status: PayrollStatus;
   generatedDate: Date;
+  paymentDate?: Date;
 }
 
 export type CommissionStatus = 'PENDING' | 'PAID';

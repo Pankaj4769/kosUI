@@ -1,691 +1,694 @@
 /* ================================================================
-   PAYROLL COMPONENT — FULL CSS
-   Sections:
-   1. KPI Cards
-   2. Salary Generator & Preview
-   3. Commission Section Header
-   4. Commission Calculator
-   5. Table Styles (Shared)
-   6. Status Badges (All Statuses)
-   7. Modal Styles (Shared)
-   8. Bulk Commission Modal
-   9. Salary Status Modal
-   10. Utility & Responsive
+   PAYROLL COMPONENT — REDESIGNED CSS
+   Design tokens + pr- prefix, matching staff-directory / attendance /
+   leave-management design system.
 ================================================================ */
 
+:host {
+  --primary:       #16a34a;
+  --primary-dark:  #15803d;
+  --primary-light: #dcfce7;
+  --teal:          #0f766e;
+  --teal-light:    #f0fdfa;
+  --blue:          #2563eb;
+  --blue-light:    #eff6ff;
+  --indigo:        #4f46e5;
+  --indigo-light:  #eef2ff;
+  --amber:         #d97706;
+  --amber-light:   #fef3c7;
+  --red:           #dc2626;
+  --red-light:     #fee2e2;
+  --bg:            #f1f5f9;
+  --card:          #ffffff;
+  --border:        #e2e8f0;
+  --text:          #0f172a;
+  --text-secondary:#64748b;
+  --text-muted:    #94a3b8;
+  display: block;
+}
 
-/* ================= 1. KPI CARDS ================= */
+/* ─── PAGE WRAPPER ─────────────────────────────────────────────── */
 
-.kpi-row-modern {
+.pr-page {
+  padding: 24px;
+  background: var(--bg);
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.pr-page-header {
   display: flex;
-  gap: 16px;
-  margin-bottom: 25px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 14px;
   flex-wrap: wrap;
 }
 
-.kpi-card-modern {
+.pr-page-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pr-page-title svg { color: var(--primary); }
+
+.pr-page-controls { display: flex; align-items: center; gap: 10px; }
+
+.pr-month-picker { width: auto; }
+
+/* ─── KPI STRIP ────────────────────────────────────────────────── */
+
+.pr-kpi-strip {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.pr-kpi-card {
   flex: 1;
-  min-width: 180px;
-  background: white;
-  border-radius: 12px;
-  padding: 18px 20px;
+  min-width: 160px;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   gap: 14px;
-  border-left: 5px solid #3b82f6;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  transition: transform .2s, box-shadow .2s;
 }
 
-.kpi-card-modern:hover {
+.pr-kpi-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 16px rgba(0,0,0,.09);
 }
 
-/* Clickable KPI (Paid / Hold cards) */
-.kpi-card-modern.clickable {
+.pr-kpi-card--clickable {
   cursor: pointer;
   user-select: none;
 }
 
-.kpi-card-modern.clickable:active {
-  transform: translateY(0px);
-}
+.pr-kpi-card--clickable:active { transform: translateY(0); }
 
-/* Color Variants */
-.kpi-card-modern.on-duty   { border-color: #10b981; }
-.kpi-card-modern.efficiency { border-color: #8b5cf6; }
-
-.kpi-icon-modern {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  background: #eff6ff;
+.pr-kpi-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
 }
 
-.kpi-content-modern {
+.pr-kpi-icon--blue   { background: var(--blue-light);   color: var(--blue); }
+.pr-kpi-icon--green  { background: var(--primary-light); color: var(--primary); }
+.pr-kpi-icon--indigo { background: var(--indigo-light);  color: var(--indigo); }
+.pr-kpi-icon--amber  { background: var(--amber-light);   color: var(--amber); }
+.pr-kpi-icon--teal   { background: var(--teal-light);    color: var(--teal); }
+.pr-kpi-icon--red    { background: var(--red-light);     color: var(--red); }
+
+.pr-kpi-body {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
-.kpi-label-modern {
-  font-size: 0.78rem;
-  color: #64748b;
+.pr-kpi-label {
+  font-size: .75rem;
+  color: var(--text-secondary);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: .5px;
+  white-space: nowrap;
 }
 
-.kpi-value-modern {
-  font-size: 1.45rem;
+.pr-kpi-value {
+  font-size: 1.35rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text);
   line-height: 1.2;
 }
 
-/* "View Details ›" under clickable KPI */
-.kpi-link {
-  font-size: 0.75rem;
-  color: #3b82f6;
+.pr-kpi-link {
+  font-size: .72rem;
+  color: var(--blue);
   font-weight: 500;
-  margin-top: 2px;
 }
 
 
-/* ================= 2. SALARY GENERATOR & PREVIEW ================= */
+/* ─── GENERIC CARD ─────────────────────────────────────────────── */
 
-.salary-generator {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  margin-bottom: 28px;
-  border: 1px solid #e2e8f0;
+.pr-card {
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  margin-bottom: 24px;
+  overflow: hidden;
 }
 
-.salary-generator h3 {
-  margin: 0 0 20px 0;
-  color: #1e293b;
-  font-size: 1.2rem;
-  border-bottom: 2px solid #f1f5f9;
-  padding-bottom: 12px;
+.pr-card-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  background: #fafafa;
 }
 
-.generator-container {
+.pr-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pr-card-title svg { color: var(--primary); }
+
+
+/* ─── SALARY GENERATOR ─────────────────────────────────────────── */
+
+.pr-generator-body {
   display: flex;
   gap: 28px;
+  padding: 22px;
   flex-wrap: wrap;
   align-items: flex-start;
 }
 
-/* Left: Form */
-.generator-form {
+.pr-gen-form {
   flex: 1;
-  min-width: 280px;
+  min-width: 260px;
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.form-group-inline {
+.pr-field {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 
-.form-group-inline label {
+.pr-label {
+  font-size: .83rem;
   font-weight: 600;
-  color: #475569;
-  font-size: 0.88rem;
+  color: var(--text-secondary);
 }
 
-.form-input {
+.pr-input {
   padding: 10px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  color: #1e293b;
-  background: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: .93rem;
+  color: var(--text);
+  background: var(--card);
+  transition: border-color .2s, box-shadow .2s;
   width: 100%;
   box-sizing: border-box;
 }
 
-.form-input:focus {
+.pr-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(22,163,74,.12);
 }
 
-/* Staff info chips shown after selection */
-.staff-info-preview {
+.pr-info-chips {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-top: -8px;
+  margin-top: -6px;
 }
 
-.info-chip {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  padding: 5px 12px;
+.pr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.82rem;
-  color: #475569;
+  font-size: .8rem;
+  color: var(--text-secondary);
 }
 
-.generator-actions {
-  margin-top: 6px;
-  display: flex;
-  gap: 12px;
+.pr-chip--green {
+  background: var(--primary-light);
+  border-color: #bbf7d0;
+  color: var(--primary);
 }
 
-.btn-generate {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 11px 22px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+.pr-gen-actions { margin-top: 4px; }
+
+/* Live Preview */
+.pr-preview {
   flex: 1;
-}
-
-.btn-generate:hover:not(:disabled) { background: #2563eb; transform: translateY(-1px); }
-.btn-generate:disabled { background: #94a3b8; cursor: not-allowed; }
-
-/* Right: Live Calculation Preview */
-.calculation-preview {
-  flex: 1;
-  min-width: 280px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  min-width: 260px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
   padding: 20px;
 }
 
-.calculation-preview h4 {
-  margin: 0 0 4px 0;
-  color: #1e293b;
-  font-size: 1rem;
+.pr-preview-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
 }
 
-.preview-staff-name {
-  margin: 0 0 16px 0;
-  font-size: 0.85rem;
-  color: #64748b;
-  font-weight: 400;
+.pr-preview-head svg { color: var(--primary); }
+
+.pr-preview-name {
+  font-size: .82rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
 }
 
-.preview-section-label {
-  font-size: 0.75rem;
+.pr-preview-grid { display: flex; flex-direction: column; gap: 8px; }
+
+.pr-preview-section-label {
+  font-size: .72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: #94a3b8;
+  letter-spacing: .7px;
+  color: var(--text-muted);
   padding-bottom: 4px;
-  border-bottom: 1px solid #e2e8f0;
-  margin-bottom: 2px;
+  border-bottom: 1px solid var(--border);
 }
 
-.deduct-label { color: #fca5a5; }
+.pr-preview-section-label--red { color: #fca5a5; }
 
-.preview-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.preview-item {
+.pr-preview-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.92rem;
-  color: #475569;
-  padding-bottom: 8px;
-  border-bottom: 1px dashed #e2e8f0;
+  font-size: .9rem;
+  color: var(--text-secondary);
+  padding-bottom: 7px;
+  border-bottom: 1px dashed var(--border);
 }
 
-.preview-item:last-child { border-bottom: none; padding-bottom: 0; }
-.preview-item strong    { color: #1e293b; }
-.preview-item.add       strong { color: #10b981; }
-.preview-item.deduct    strong { color: #ef4444; }
+.pr-preview-row:last-child { border-bottom: none; padding-bottom: 0; }
+.pr-preview-row strong { color: var(--text); }
+.pr-preview-row--add strong { color: var(--primary); }
+.pr-preview-row--deduct strong { color: var(--red); }
 
-.preview-item.total {
-  margin-top: 8px;
+.pr-preview-row--total {
+  margin-top: 6px;
   padding-top: 12px;
-  border-top: 2px solid #cbd5e1;
-  font-size: 1.05rem;
+  border-top: 2px solid var(--border);
+  font-size: 1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text);
   border-bottom: none;
 }
 
-.preview-item.total strong { color: #3b82f6; font-size: 1.1rem; }
+.pr-preview-row--total strong {
+  color: var(--primary);
+  font-size: 1.1rem;
+}
 
-/* Empty Preview State */
-.empty-preview {
+/* Empty Preview */
+.pr-preview-empty {
   flex: 1;
-  min-width: 280px;
-  background: #f8fafc;
-  border: 2px dashed #e2e8f0;
-  border-radius: 10px;
-  padding: 40px 20px;
+  min-width: 260px;
+  background: var(--bg);
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  padding: 40px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #94a3b8;
-  gap: 10px;
-}
-
-.empty-preview span { font-size: 2rem; }
-.empty-preview p    { margin: 0; font-size: 0.9rem; }
-
-
-/* ================= 3. COMMISSION SECTION HEADER ================= */
-
-.commission-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
   gap: 12px;
 }
 
-.commission-section-header h2 {
+.pr-preview-empty p {
   margin: 0;
-  font-size: 1.2rem;
-  color: #1e293b;
+  font-size: .88rem;
+  color: var(--text-muted);
+  max-width: 260px;
+  line-height: 1.6;
 }
 
-/* Bulk Commission Button */
-.btn-bulk-commission {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
+
+/* ─── SECTION HEADER ───────────────────────────────────────────── */
+
+.pr-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.btn-bulk-commission:hover { opacity: 0.9; transform: translateY(-1px); }
-
-
-/* ================= 4. COMMISSION CALCULATOR ================= */
-
-.commission-calculator {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  margin-bottom: 28px;
-  border: 1px solid #e2e8f0;
+.pr-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
 }
 
-.commission-calculator h3 {
-  margin: 0 0 20px 0;
-  color: #1e293b;
-  font-size: 1.2rem;
-  border-bottom: 2px solid #f1f5f9;
-  padding-bottom: 12px;
-}
+.pr-section-title svg { color: var(--primary); }
 
-.calculator-form {
+
+/* ─── COMMISSION CALCULATOR ────────────────────────────────────── */
+
+.pr-calculator-body {
   display: flex;
   gap: 20px;
   align-items: flex-end;
   flex-wrap: wrap;
+  padding: 22px;
 }
 
-.calculator-form .form-group-inline { flex: 1; min-width: 180px; }
+.pr-calculator-body .pr-field { flex: 1; min-width: 160px; }
 
-.result-group {
-  justify-content: flex-end;
-}
-
-.commission-result {
+.pr-calc-result {
   display: block;
-  font-size: 1.6rem;
-  color: #10b981;
+  font-size: 1.5rem;
+  color: var(--primary);
   font-weight: 700;
-  padding: 6px 0;
+  padding: 8px 0;
 }
 
 
-/* ================= 5. TABLE STYLES (SHARED) ================= */
+/* ─── TABLES ────────────────────────────────────────────────────── */
 
-.salary-table-container,
-.commission-table-container {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  margin-bottom: 28px;
-  border: 1px solid #e2e8f0;
-}
+.pr-table-card { overflow: visible; }
 
-.table-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
+.pr-table-wrap { overflow-x: auto; }
 
-.table-section-header h3 {
-  margin: 0;
-  color: #1e293b;
-  font-size: 1.1rem;
-}
-
-.table-scroll-wrapper {
-  overflow-x: auto;
-}
-
-.staff-table,
-.report-table,
-.preview-table {
+.pr-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 700px;
+  min-width: 680px;
 }
 
-.staff-table thead th,
-.report-table thead th,
-.preview-table thead th {
+.pr-table thead th {
   text-align: left;
   padding: 11px 16px;
-  background: #f8fafc;
-  color: #64748b;
+  background: #fafafa;
+  color: var(--text-secondary);
   font-weight: 700;
-  font-size: 0.8rem;
-  border-bottom: 2px solid #e2e8f0;
+  font-size: .75rem;
+  border-bottom: 2px solid var(--border);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: .5px;
   white-space: nowrap;
 }
 
-.staff-table tbody td,
-.report-table tbody td,
-.preview-table tbody td {
-  padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9;
+.pr-table tbody td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
   color: #334155;
-  font-size: 0.92rem;
+  font-size: .9rem;
   vertical-align: middle;
 }
 
-.staff-table tbody tr:hover,
-.report-table tbody tr:hover { background: #f8fafc; }
+.pr-table tbody tr:last-child td { border-bottom: none; }
+.pr-table tbody tr:hover { background: #fafcff; }
 
-.staff-table tbody tr:last-child td,
-.report-table tbody tr:last-child td { border-bottom: none; }
+.pr-table--compact thead th,
+.pr-table--compact tbody td { padding: 9px 14px; }
 
-/* Staff name with avatar */
-.staff-name-cell {
+.pr-name-cell {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.table-avatar {
+.pr-avatar {
   width: 34px;
   height: 34px;
   min-width: 34px;
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
-  color: white;
   border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--teal));
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: .85rem;
 }
 
-.table-avatar.hold-avatar {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-}
+.pr-avatar--red { background: linear-gradient(135deg, var(--red), #b91c1c); }
 
-/* Rate pill in commission table */
-.rate-pill {
-  background: #ede9fe;
-  color: #6d28d9;
+.pr-rate-pill {
+  background: var(--indigo-light);
+  color: var(--indigo);
   padding: 3px 10px;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: .78rem;
   font-weight: 600;
 }
 
-/* Column-specific styling */
-.allowance-cell    { color: #10b981; font-weight: 600; }
-.deduction-amount  { color: #ef4444; font-weight: 600; }
-.net-salary,
-.commission-amount { color: #1e293b; font-weight: 700; }
+.pr-amount { color: var(--text); font-weight: 700; }
 
-.empty-table-row {
+.pr-cell--add    { color: var(--primary); font-weight: 600; }
+.pr-cell--deduct { color: var(--red);     font-weight: 600; }
+
+.pr-empty-row {
   text-align: center;
-  color: #94a3b8;
-  padding: 30px !important;
-  font-style: italic;
+  color: var(--text-muted);
+  padding: 36px !important;
+  font-size: .88rem;
 }
 
+/* Actions */
+.pr-actions { display: flex; gap: 6px; }
 
-/* ================= 6. STATUS BADGES ================= */
-
-.status-badge-modern {
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  display: inline-block;
-  white-space: nowrap;
-}
-
-/* PAID / SENT */
-.status-badge-modern.on-duty {
-  background: #dcfce7;
-  color: #166534;
-}
-
-/* PENDING / HOLD */
-.status-badge-modern.off-duty {
-  background: #fef9c3;
-  color: #854d0e;
-}
-
-/* GENERATED */
-.status-badge-modern.status-generated {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-/* SENT */
-.status-badge-modern.status-sent {
-  background: #e0f2fe;
-  color: #0369a1;
-}
-
-/* HOLD (Red) */
-.status-badge-modern.status-hold {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-/* Action icon buttons */
-.action-btn-icon {
-  background: none;
-  border: 1px solid #e2e8f0;
+.pr-icon-btn {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  cursor: pointer;
-  display: inline-flex;
+  border: 1.5px solid var(--border);
+  background: none;
+  display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 6px;
-  transition: all 0.2s;
-  font-size: 1rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all .2s;
 }
 
-.action-btn-icon:hover {
-  background: #f1f5f9;
+.pr-icon-btn:hover {
+  background: var(--bg);
   border-color: #cbd5e1;
+  color: var(--text);
   transform: translateY(-1px);
 }
 
+.pr-icon-btn--green { color: var(--primary); }
+.pr-icon-btn--green:hover { background: var(--primary-light); border-color: #86efac; }
 
-/* ================= 7. MODAL STYLES (SHARED) ================= */
 
-.modal-overlay {
+/* ─── STATUS PILLS ──────────────────────────────────────────────── */
+
+.pr-status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  white-space: nowrap;
+}
+
+.pr-s-paid      { background: var(--primary-light); color: #166534; }
+.pr-s-pending   { background: var(--amber-light);   color: #92400e; }
+.pr-s-hold      { background: var(--red-light);     color: #991b1b; }
+.pr-s-generated { background: var(--blue-light);    color: #1d4ed8; }
+.pr-s-sent      { background: var(--teal-light);    color: var(--teal); }
+
+
+/* ─── BUTTONS ───────────────────────────────────────────────────── */
+
+.pr-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+}
+
+.pr-btn-primary:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); }
+.pr-btn-primary:disabled { background: var(--text-muted); cursor: not-allowed; }
+
+.pr-btn-primary--teal { background: var(--teal); }
+.pr-btn-primary--teal:hover:not(:disabled) { background: #0d6b63; }
+
+.pr-btn-primary--red { background: var(--red); }
+.pr-btn-primary--red:hover:not(:disabled) { background: #b91c1c; }
+
+.pr-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.pr-btn-secondary:hover { background: var(--bg); }
+
+.pr-btn-commission {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: opacity .2s, transform .15s;
+}
+
+.pr-btn-commission:hover { opacity: .9; transform: translateY(-1px); }
+
+
+/* ─── MODALS ────────────────────────────────────────────────────── */
+
+.pr-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15,23,42,.5);
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(2px);
   padding: 20px;
 }
 
-.modal-content {
-  background: white;
-  border-radius: 14px;
+.pr-modal {
+  background: var(--card);
+  border-radius: 20px;
   width: 100%;
-  max-width: 550px;
+  max-width: 560px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-  animation: modalIn 0.2s ease;
+  box-shadow: 0 24px 60px rgba(0,0,0,.22);
+  animation: pr-slide-up .22s ease;
 }
 
-.modal-content.large-modal {
-  max-width: 850px;
+.pr-modal--large { max-width: 880px; }
+
+@keyframes pr-slide-up {
+  from { opacity: 0; transform: translateY(20px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(0.96) translateY(8px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.modal-header {
+.pr-modal-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #1e293b;
-}
-
-.modal-title-group {
+.pr-modal-title-group {
   display: flex;
   flex-direction: column;
   gap: 10px;
   flex: 1;
 }
 
-.close-btn {
-  background: #f1f5f9;
-  border: none;
+.pr-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pr-modal-title svg { color: var(--primary); }
+
+.pr-close-btn {
   width: 32px;
   height: 32px;
+  min-width: 32px;
   border-radius: 8px;
+  border: none;
+  background: var(--bg);
   cursor: pointer;
-  font-size: 1rem;
-  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
-  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: background .2s, color .2s;
 }
 
-.close-btn:hover { background: #e2e8f0; color: #1e293b; }
+.pr-close-btn:hover { background: var(--border); color: var(--text); }
 
-.modal-body {
+.pr-modal-body {
   padding: 22px 24px;
   overflow-y: auto;
   flex-grow: 1;
 }
 
-.modal-footer {
+.pr-modal-footer {
   padding: 16px 24px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border);
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
-.modal-description {
-  color: #64748b;
-  font-size: 0.92rem;
+.pr-modal-desc {
+  color: var(--text-secondary);
+  font-size: .9rem;
   line-height: 1.6;
   margin: 0 0 18px 0;
-  background: #f8fafc;
-  border-radius: 8px;
+  background: var(--blue-light);
+  border-radius: 10px;
   padding: 12px 15px;
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid var(--blue);
 }
 
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 10px 22px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-}
 
-.btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+/* ─── TIER BOX ──────────────────────────────────────────────────── */
 
-.btn-secondary {
-  background: white;
-  color: #475569;
-  border: 1px solid #cbd5e1;
-  padding: 10px 22px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-secondary:hover { background: #f8fafc; }
-
-
-/* ================= 8. BULK COMMISSION MODAL ================= */
-
-/* Performance tier info box */
-.tier-info-box {
+.pr-tier-box {
   background: #fefce8;
   border: 1px solid #fde047;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 14px 16px;
   margin-bottom: 20px;
   display: flex;
@@ -693,116 +696,123 @@
   gap: 8px;
 }
 
-.tier-row {
+.pr-tier-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.88rem;
+  font-size: .86rem;
   color: #713f12;
 }
 
-.tier-dot {
+.pr-tier-dot {
   width: 10px;
   height: 10px;
   min-width: 10px;
   border-radius: 50%;
 }
 
-.tier-dot.gold  { background: #f59e0b; }
-.tier-dot.green { background: #22c55e; }
+.pr-tier-dot--gold  { background: #f59e0b; }
+.pr-tier-dot--green { background: #22c55e; }
 
-/* Rate selector buttons */
-.rate-selector {
+
+/* ─── RATE SELECTOR ─────────────────────────────────────────────── */
+
+.pr-rate-selector {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.rate-btn {
+.pr-rate-btn {
   flex: 1;
   min-width: 100px;
   padding: 10px 14px;
-  border: 2px solid #e2e8f0;
-  background: white;
+  border: 2px solid var(--border);
+  background: var(--card);
   border-radius: 10px;
   font-weight: 600;
-  font-size: 0.88rem;
-  color: #475569;
+  font-size: .86rem;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all .2s;
   text-align: center;
 }
 
-.rate-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+.pr-rate-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
 
-.rate-btn.selected {
-  border-color: #3b82f6;
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-/* Bulk commission preview table */
-.bulk-commission-preview {
-  margin-top: 22px;
-}
-
-.bulk-commission-preview h4 {
-  margin: 0 0 12px 0;
-  color: #334155;
-  font-size: 0.95rem;
-}
-
-.bulk-commission-preview .preview-table {
-  min-width: 400px;
+.pr-rate-btn--active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary-dark);
 }
 
 
-/* ================= 9. SALARY STATUS MODAL ================= */
+/* ─── BULK PREVIEW ──────────────────────────────────────────────── */
 
-/* Paid / Hold Tab Switcher */
-.status-filter-tabs {
+.pr-bulk-preview { margin-top: 22px; }
+
+.pr-bulk-preview-title {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+
+/* ─── SALARY STATUS TABS ────────────────────────────────────────── */
+
+.pr-status-tabs {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
-.tab-btn {
-  padding: 7px 16px;
-  border: 1px solid #e2e8f0;
-  background: white;
+.pr-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
   border-radius: 20px;
-  font-size: 0.82rem;
+  font-size: .8rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all .2s;
 }
 
-.tab-btn:hover { background: #f8fafc; }
+.pr-tab-btn:hover { background: var(--bg); }
 
-.tab-btn.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
-  color: white;
+.pr-tab-btn--active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
 }
 
+.pr-tab-btn--active svg { stroke: #fff; }
 
-/* ================= 10. RESPONSIVE ================= */
+
+/* ─── RESPONSIVE ────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
-  .kpi-card-modern { min-width: 45%; }
-  .generator-container { flex-direction: column; }
-  .calculation-preview, .empty-preview { min-width: unset; }
-  .calculator-form { flex-direction: column; }
-  .rate-selector { flex-direction: column; }
-  .commission-section-header { flex-direction: column; align-items: flex-start; }
-  .modal-content { max-width: 100%; margin: 10px; }
-  .modal-footer { justify-content: stretch; }
-  .modal-footer .btn-primary,
-  .modal-footer .btn-secondary { flex: 1; text-align: center; }
-  .status-filter-tabs { flex-wrap: wrap; }
+  .pr-kpi-card { min-width: 44%; }
+  .pr-generator-body { flex-direction: column; }
+  .pr-preview, .pr-preview-empty { min-width: unset; }
+  .pr-calculator-body { flex-direction: column; }
+  .pr-rate-selector { flex-direction: column; }
+  .pr-section-header { flex-direction: column; align-items: flex-start; }
+  .pr-modal { max-width: 100%; }
+  .pr-modal-footer { justify-content: stretch; }
+  .pr-modal-footer .pr-btn-primary,
+  .pr-modal-footer .pr-btn-secondary { flex: 1; justify-content: center; }
+  .pr-status-tabs { flex-wrap: wrap; }
 }
 
 @media (max-width: 480px) {
-  .kpi-card-modern { min-width: 100%; }
-  .kpi-value-modern { font-size: 1.2rem; }
+  .pr-kpi-card { min-width: 100%; }
+  .pr-kpi-value { font-size: 1.2rem; }
+  .pr-calc-result { font-size: 1.2rem; }
 }

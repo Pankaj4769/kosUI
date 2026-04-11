@@ -1,0 +1,152 @@
+<div class="categories-container">
+
+  <!-- ============================================================ -->
+  <!-- HEADER -->
+  <!-- ============================================================ -->
+  <header class="categories-header">
+    <button class="btn-add" (click)="openAddDrawer()">
+      <span class="btn-icon">+</span>
+      Add Category
+    </button>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- ERROR BANNER -->
+  <!-- ============================================================ -->
+  <div class="error-banner" *ngIf="errorMsg">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMsg }}</span>
+    <button class="error-close" (click)="errorMsg = ''">×</button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- LOADING -->
+  <!-- ============================================================ -->
+  <div class="loading-wrap" *ngIf="loading">
+    <mat-progress-spinner mode="indeterminate" diameter="40" color="primary"></mat-progress-spinner>
+    <span class="loading-text">Loading categories…</span>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- EMPTY STATE -->
+  <!-- ============================================================ -->
+  <div class="empty-state" *ngIf="!loading && categories.length === 0">
+    <div class="empty-icon">🏷</div>
+    <div class="empty-title">No categories yet</div>
+    <div class="empty-sub">Add your first category to start organising your menu — e.g. Breakfast, Soft Drinks, Dessert.</div>
+    <button class="btn-add" (click)="openAddDrawer()">
+      <span class="btn-icon">+</span>
+      Add First Category
+    </button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CATEGORY GRID -->
+  <!-- ============================================================ -->
+  <div class="category-grid" *ngIf="!loading && categories.length > 0">
+    <div class="category-card" *ngFor="let cat of categories">
+
+      <!-- Delete confirm overlay -->
+      <div class="delete-confirm" *ngIf="deletingId === cat.categoryId">
+        <div class="delete-confirm-text">Delete <strong>{{ cat.name }}</strong>?</div>
+        <div class="delete-confirm-actions">
+          <button class="btn-confirm-yes" (click)="deleteCategory(cat.categoryId)">Delete</button>
+          <button class="btn-confirm-no" (click)="cancelDelete()">Cancel</button>
+        </div>
+      </div>
+
+      <div class="card-body" [class.blurred]="deletingId === cat.categoryId">
+        <div class="card-icon">{{ cat.icon }}</div>
+        <div class="card-name">{{ cat.name }}</div>
+        <div class="card-count">
+          <mat-icon class="count-icon">inventory_2</mat-icon>
+          {{ getItemCount(cat.name) }} item{{ getItemCount(cat.name) !== 1 ? 's' : '' }}
+        </div>
+      </div>
+
+      <div class="card-actions" [class.blurred]="deletingId === cat.categoryId">
+        <button class="action-btn edit-btn" (click)="openEditDrawer(cat)" matTooltip="Edit">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button class="action-btn delete-btn" (click)="confirmDelete(cat.categoryId)" matTooltip="Delete">
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- DRAWER BACKDROP -->
+  <!-- ============================================================ -->
+  <div class="drawer-backdrop" *ngIf="drawerOpen" (click)="closeDrawer()"></div>
+
+  <!-- ============================================================ -->
+  <!-- ADD / EDIT DRAWER -->
+  <!-- ============================================================ -->
+  <aside class="drawer" [class.drawer-open]="drawerOpen">
+    <div class="drawer-header">
+      <h2 class="drawer-title">{{ editingCategory ? 'Edit Category' : 'New Category' }}</h2>
+      <button class="drawer-close" (click)="closeDrawer()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+
+      <!-- Icon picker -->
+      <div class="form-group">
+        <label class="form-label">Icon</label>
+        <div class="icon-selector" (click)="iconPickerOpen = !iconPickerOpen">
+          <span class="selected-icon">{{ formIcon }}</span>
+          <span class="icon-selector-hint">Click to change</span>
+          <mat-icon class="icon-chevron">{{ iconPickerOpen ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </div>
+        <div class="icon-grid" *ngIf="iconPickerOpen">
+          <button
+            class="icon-option"
+            *ngFor="let ic of defaultIcons"
+            [class.icon-selected]="formIcon === ic"
+            (click)="selectIcon(ic)">
+            {{ ic }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Name input -->
+      <div class="form-group">
+        <label class="form-label">Category Name <span class="required">*</span></label>
+        <input
+          class="form-input"
+          type="text"
+          placeholder="e.g. Dessert, Soft Drinks, Biryani…"
+          [(ngModel)]="formName"
+          (keyup.enter)="saveCategory()"
+          maxlength="40" />
+        <div class="char-count">{{ formName.length }}/40</div>
+      </div>
+
+      <!-- Error -->
+      <div class="form-error" *ngIf="formError">
+        <mat-icon>warning_amber</mat-icon>
+        {{ formError }}
+      </div>
+
+      <!-- Preview -->
+      <div class="preview-card" *ngIf="formName.trim()">
+        <div class="preview-icon">{{ formIcon }}</div>
+        <div class="preview-name">{{ formName.trim() }}</div>
+      </div>
+
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn-cancel" (click)="closeDrawer()" [disabled]="saving">Cancel</button>
+      <button class="btn-save" (click)="saveCategory()" [disabled]="saving || !formName.trim()">
+        <mat-progress-spinner *ngIf="saving" mode="indeterminate" diameter="16" color="accent"></mat-progress-spinner>
+        <span>{{ saving ? 'Saving…' : (editingCategory ? 'Update' : 'Add Category') }}</span>
+      </button>
+    </div>
+  </aside>
+
+</div>

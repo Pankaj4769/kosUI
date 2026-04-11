@@ -1,170 +1,353 @@
-/* =====================================================
-   SIDEBAR SHELL
-===================================================== */
+/* ═══════════════════════════════════════════════════
+   SIDEBAR  —  Tech2Kitchen KOS
+   SaaS-grade dark sidebar (Linear / Vercel inspired)
+   Palette:
+     bg          #13131f   near-black, subtle indigo tint
+     header bg   #0c1b3a→#102048  deep navy gradient
+     active bg   #1e3a8a   solid deep-blue pill
+     active txt  #dbeafe   near-white blue
+     hover bg    rgba(255,255,255,0.05)
+     muted txt   #52525b   zinc-600
+     border      rgba(255,255,255,0.07)
+═══════════════════════════════════════════════════ */
+
+/* ══════════════════════════
+   1. SHELL
+══════════════════════════ */
 .sidebar {
-  width: 250px;
+  width: 240px;
   height: 100%;
-  background: linear-gradient(180deg, #020617, #0f172a);
-  color: #e5e7eb;
+  background: #13131f;
+  color: #a1a1aa;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
   white-space: nowrap;
-  position: relative;              /* stays in flow when expanded */
-  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  transition: width 0.28s cubic-bezier(0.25, 0.8, 0.25, 1);
   z-index: 100;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* ── Scrollable nav ── */
+/* Scrollable nav */
 nav {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  padding: 8px 0 16px;
   scrollbar-width: thin;
-  scrollbar-color: #1e293b transparent;
+  scrollbar-color: rgba(255,255,255,0.06) transparent;
 }
 
-/* ── COLLAPSED STATE ── */
+nav::-webkit-scrollbar          { width: 4px; }
+nav::-webkit-scrollbar-track    { background: transparent; }
+nav::-webkit-scrollbar-thumb    { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+
+/* ══════════════════════════
+   2. COLLAPSED + HOVER
+══════════════════════════ */
 .sidebar.collapsed {
-  width: 72px;
+  width: 64px;
 }
 
-/* ── HOVER OVERLAY — expands over content, does NOT push it ── */
 .sidebar.collapsed:hover {
-  width: 250px;
-  position: absolute;             /* lifts OUT of flex flow */
-  top: 0;
-  left: 0;
+  width: 240px;
+  position: absolute;
+  top: 0; left: 0;
   height: 100%;
-  z-index: 500;                   /* floats above content */
-  box-shadow: 6px 0 24px rgba(0, 0, 0, 0.50);
+  z-index: 500;
+  box-shadow: 8px 0 40px rgba(0, 0, 0, 0.55);
 }
 
-/* =====================================================
-   TOGGLE BUTTON
-===================================================== */
+
+/* ══════════════════════════
+   3. HEADER  (brand + toggle)
+══════════════════════════ */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 0 14px;
+  min-height: 60px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0c1b3a 0%, #102048 100%);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.22);
+  position: relative;
+}
+
+/* Glowing orb top-right */
+.sidebar-header::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 110px; height: 110px;
+  background: radial-gradient(circle, rgba(37,99,235,0.30) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Bottom-left glow */
+.sidebar-header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: 10px;
+  width: 80px; height: 60px;
+  background: radial-gradient(circle, rgba(56,189,248,0.10) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+
+/* ══════════════════════════
+   4. BRAND WORDMARK (expanded)
+══════════════════════════ */
+.sidebar-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  animation: sbDrop 0.42s cubic-bezier(0.34, 1.5, 0.64, 1) both;
+}
+
+.sb-tech, .sb-two, .sb-kitchen {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sb-tech {
+  font-size: 16px;
+  color: #f1f5f9;
+  animation: sbLeft 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+
+.sb-two {
+  font-size: 22px;
+  font-weight: 900;
+  color: #f59e0b;
+  animation: sbPop 0.48s cubic-bezier(0.34, 1.7, 0.64, 1) 0.16s both;
+}
+
+.sb-kitchen {
+  font-size: 16px;
+  color: #38bdf8;
+  animation: sbRight 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both;
+}
+
+
+/* ══════════════════════════
+   5. BRAND ICON (collapsed)
+      Shows "2K" badge
+══════════════════════════ */
+.sidebar-brand-icon {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  animation: sbDrop 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+.sb-icon-two {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: #f59e0b;
+}
+
+.sb-icon-k {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+
+/* ══════════════════════════
+   6. TOGGLE BUTTON
+══════════════════════════ */
 .toggle {
   background: transparent;
   border: none;
-  color: #fff;
-  font-size: 22px;
-  padding: 12px;
+  color: #52525b;
+  font-size: 20px;
+  padding: 8px;
   cursor: pointer;
-  margin-left: 8px;
   display: flex;
   align-items: center;
-  min-width: 40px;
+  justify-content: center;
   flex-shrink: 0;
-  transition: color 0.15s;
+  border-radius: 8px;
+  transition: color 0.15s, background 0.15s;
+  position: relative;
+  z-index: 1;
 }
 
-.toggle:hover { color: #60a5fa; }
+.toggle:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.08);
+}
 
-/* =====================================================
-   TEXT & ARROW VISIBILITY
-===================================================== */
+.toggle:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+
+/* ══════════════════════════
+   7. NAV SECTION LABEL
+══════════════════════════ */
+.nav-label {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: #3f3f46;
+  padding: 6px 20px 4px;
+  margin: 0;
+  user-select: none;
+}
+
+
+/* ══════════════════════════
+   8. TEXT & ARROW VISIBILITY
+══════════════════════════ */
 .text, .arrow {
   opacity: 1;
-  transition: opacity 0.15s ease-in-out;
-  transition-delay: 0.08s;
+  transition: opacity 0.14s ease;
+  transition-delay: 0.06s;
 }
 
-/* Hide when collapsed AND NOT hovered */
 .sidebar.collapsed:not(:hover) .text,
-.sidebar.collapsed:not(:hover) .arrow {
+.sidebar.collapsed:not(:hover) .arrow,
+.sidebar.collapsed:not(:hover) .nav-label {
   opacity: 0;
   pointer-events: none;
   width: 0;
   overflow: hidden;
 }
 
-/* =====================================================
-   MENU ITEMS
-===================================================== */
+
+/* ══════════════════════════
+   9. MENU ITEMS
+══════════════════════════ */
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  margin: 3px 10px;
-  border-radius: 10px;
-  color: #c7d2fe;
+  gap: 10px;
+  padding: 9px 12px;
+  margin: 1px 8px;
+  border-radius: 8px;
+  color: #71717a;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-  font-size: 14px;
+  transition: background 0.18s ease, color 0.18s ease;
+  font-size: 13px;
   font-weight: 500;
   overflow: hidden;
   white-space: nowrap;
   border: none;
-  width: calc(100% - 20px);
+  width: calc(100% - 16px);
   text-align: left;
   background: transparent;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  position: relative;
 }
 
+/* Hover — subtle lift */
 .menu-item:hover {
-  background: rgba(37, 99, 235, 0.12);
-  color: #fff;
-  transform: translateX(2px);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e4e4e7;
 }
 
-.menu-item.active {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #fff;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+.menu-item:hover .icon {
+  color: #a1a1aa;
 }
+
+/* Active — solid deep-blue pill */
+.menu-item.active {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  color: #dbeafe;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(30, 58, 138, 0.50),
+              inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.menu-item.active .icon {
+  color: #93c5fd;
+}
+
 
 /* ── Icon ── */
 .icon {
-  font-size: 20px;
-  min-width: 22px;
+  font-size: 18px;
+  min-width: 20px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #52525b;
+  transition: color 0.18s ease;
 }
 
 /* ── Arrow ── */
 .arrow {
-  font-size: 16px;
-  opacity: 0.6;
+  font-size: 15px;
+  opacity: 0.35;
   margin-left: auto;
   flex-shrink: 0;
-  transition: transform 0.2s ease, opacity 0.15s ease;
+  transition: transform 0.22s ease, opacity 0.15s ease;
+  color: #71717a;
 }
 
 .menu-group.expanded .arrow {
   transform: rotate(180deg);
+  opacity: 0.65;
 }
 
-/* =====================================================
-   GROUP HEADER
-===================================================== */
+
+/* ══════════════════════════
+   10. GROUP HEADER
+══════════════════════════ */
 .group-header {
-  background: transparent;
-  border-radius: 10px;
-  font-weight: 600;
+  border-radius: 8px;
+  font-weight: 500;
 }
 
 .active-group {
-  background: rgba(37, 99, 235, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  color: #d4d4d8;
 }
 
-/* =====================================================
-   SUBMENU
-===================================================== */
+.active-group .icon {
+  color: #a1a1aa;
+}
+
+
+/* ══════════════════════════
+   11. SUBMENU
+══════════════════════════ */
 .submenu {
-  margin-left: 30px;
-  padding-left: 12px;
-  border-left: 2px solid rgba(255, 255, 255, 0.08);
+  margin-left: 26px;
+  padding-left: 14px;
+  border-left: 1.5px solid rgba(59, 130, 246, 0.18);
   max-height: 0;
   overflow: hidden;
   opacity: 0;
-  transform: translateY(-4px);
-  transition: max-height 0.25s ease,
-              opacity    0.25s ease,
-              transform  0.25s ease;
+  transform: translateY(-6px);
+  transition: max-height 0.26s cubic-bezier(.4,0,.2,1),
+              opacity    0.22s ease,
+              transform  0.22s ease;
 }
 
 .menu-group.expanded .submenu {
@@ -173,50 +356,89 @@ nav {
   transform: translateY(0);
 }
 
-/* Force hide submenu when collapsed and not hovered */
 .sidebar.collapsed:not(:hover) .submenu {
   display: none;
 }
 
-/* ── Submenu Items ── */
+/* Submenu Items */
 .submenu-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 7px 10px;
-  border-radius: 7px;
-  color: #9ca3af;
+  border-radius: 6px;
+  color: #52525b;
   text-decoration: none;
-  font-size: 13px;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: background 0.18s ease, color 0.18s ease;
   white-space: nowrap;
   overflow: hidden;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.submenu-item .icon {
+  font-size: 15px;
+  min-width: 17px;
+  color: #3f3f46;
 }
 
 .submenu-item:hover {
-  background: rgba(37, 99, 235, 0.15);
-  color: #fff;
-  transform: translateX(3px);
+  background: rgba(255, 255, 255, 0.05);
+  color: #d4d4d8;
 }
+
+.submenu-item:hover .icon { color: #a1a1aa; }
 
 .submenu-item.active {
-  background: rgba(37, 99, 235, 0.30);
-  color: #fff;
+  color: #93c5fd;
   font-weight: 600;
+  background: rgba(30, 58, 138, 0.20);
 }
 
-/* =====================================================
-   RESPONSIVE
-===================================================== */
+.submenu-item.active .icon { color: #60a5fa; }
+
+
+/* ══════════════════════════
+   12. BRAND ANIMATIONS
+══════════════════════════ */
+@keyframes sbDrop {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sbLeft {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sbPop {
+  0%   { opacity: 0; transform: scale(0.3) translateY(-12px); }
+  55%  { opacity: 1; transform: scale(1.18) translateY(2px); }
+  78%  { transform: scale(0.93) translateY(-1px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes sbRight {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+
+/* ══════════════════════════
+   13. RESPONSIVE
+══════════════════════════ */
 @media (max-width: 767px) {
   .sidebar.collapsed:hover {
-    position: fixed;     /* fixed on mobile so it covers from edge */
+    position: fixed;
   }
 }
 
-/* =====================================================
-   FOCUS / ACCESSIBILITY
-===================================================== */
+
+/* ══════════════════════════
+   14. FOCUS / A11Y
+══════════════════════════ */
 .menu-item:focus-visible,
 .submenu-item:focus-visible,
 .toggle:focus-visible {
