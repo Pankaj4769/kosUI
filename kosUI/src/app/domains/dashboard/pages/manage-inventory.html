@@ -1,4 +1,6 @@
-<div class="shell">
+<div class="shell"
+  [class.mobile-list]="mobileView === 'list'"
+  [class.mobile-overview]="mobileView === 'overview'">
 
   <!-- SIDEBAR -->
   <!-- <aside [class.collapsed]="sidebarCollapsed">
@@ -17,13 +19,8 @@
   <!-- MAIN CONTENT -->
   <main>
 
-    <!-- HEADER -->
-    <header class="top">
-      <div>
-        <h2 class="page-title">Manage Inventory</h2>
-        <p class="page-subtitle">Track stock, pricing and availability of all items</p>
-      </div>
-    </header>
+    <!-- ── OVERVIEW SECTION (KPI + Sold-Out) ── -->
+    <div class="overview-section">
 
     <!-- KPI BAR -->
     <section class="kpi-bar">
@@ -71,6 +68,18 @@
       </div>
 
     </section>
+
+    <!-- Mobile Add button inside overview -->
+    <div class="overview-add-row">
+      <button class="add-btn" (click)="openDrawer()">
+        <span class="add-btn-icon">＋</span> Add Item
+      </button>
+    </div>
+
+    </div><!-- /overview-section -->
+
+    <!-- ── LIST SECTION (Search + Table) ── -->
+    <div class="list-section">
 
     <!-- ACTION BAR -->
     <section class="action-bar">
@@ -287,7 +296,26 @@
 
     <footer class="app-footer">© tech2copyright</footer>
 
+    </div><!-- /list-section -->
+
   </main>
+
+  <!-- ── MOBILE BOTTOM NAV ── -->
+  <nav class="inv-mobile-nav">
+    <button class="imn-tab" [class.active]="mobileView === 'list'"
+      (click)="mobileView = 'list'" type="button">
+      <span class="imn-icon">📋</span>
+      <span>Items</span>
+    </button>
+    <button class="imn-tab" [class.active]="mobileView === 'overview'"
+      (click)="mobileView = 'overview'" type="button">
+      <span class="imn-icon-wrap">
+        <span class="imn-icon">📊</span>
+        <span class="imn-badge" *ngIf="(lowStock + soldOut) > 0">{{ lowStock + soldOut }}</span>
+      </span>
+      <span>Overview</span>
+    </button>
+  </nav>
 
   <!-- ADD / EDIT DRAWER -->
  <div class="drawer modern" *ngIf="drawerOpen">

@@ -14,13 +14,14 @@ import { RoleService } from '../../core/services/role.service';
 import { FeatureKey } from '../../core/config/feature-access.config';
 
 export interface SidebarMenu {
-  label:       string;
-  icon:        string;
-  route?:      string;
-  children?:   SidebarMenu[];
-  expanded?:   boolean;
-  featureKey?: FeatureKey;   // plan + role gate
-  adminOnly?:  boolean;      // visible to ADMIN role only
+  label:        string;
+  icon:         string;
+  route?:       string;
+  externalUrl?: string;      // opens in a new browser tab
+  children?:    SidebarMenu[];
+  expanded?:    boolean;
+  featureKey?:  FeatureKey;  // plan + role gate
+  adminOnly?:   boolean;     // visible to ADMIN role only
 }
 
 @Component({
@@ -90,15 +91,29 @@ export class SidebarComponent implements OnInit, OnDestroy {
     },
     {
       label: 'Employee Management', icon: 'people',
+      externalUrl: 'http://localhost:4201',
       featureKey: 'staff-directory',
       expanded: false,
       children: [
-        { label: 'Staff Directory',  icon: 'people_outline',         route: '/staff/directory',  featureKey: 'staff-directory'    },
-        { label: 'Attendance',       icon: 'access_time',            route: '/staff/attendance', featureKey: 'attendance-tracking'},
-        { label: 'Leave Management', icon: 'calendar_today',         route: '/staff/leave',      featureKey: 'leave-management'   },
-        { label: 'Salary Management',icon: 'account_balance_wallet', route: '/staff/salary',     featureKey: 'payroll'            },
-        { label: 'Shift Management', icon: 'schedule',               route: '/staff/shifts',     featureKey: 'shift-scheduling'   },
-        { label: 'Role Management',  icon: 'admin_panel_settings',   route: '/staff/roles',      featureKey: 'role-based-access'  },
+        { label: 'EM Dashboard',     icon: 'dashboard',              route: '/staff/em-dashboard',   featureKey: 'staff-directory'    },
+        { label: 'Staff Directory',  icon: 'people_outline',         route: '/staff/directory',      featureKey: 'staff-directory'    },
+        { label: 'Attendance',       icon: 'access_time',            route: '/staff/attendance',     featureKey: 'attendance-tracking'},
+        { label: 'Leave Management', icon: 'calendar_today',         route: '/staff/leave',          featureKey: 'leave-management'   },
+        { label: 'Salary Management',icon: 'account_balance_wallet', route: '/staff/salary',         featureKey: 'payroll'            },
+        { label: 'Commission',       icon: 'trending_up',            route: '/staff/commissions',    featureKey: 'payroll'            },
+        { label: 'Overtime',         icon: 'more_time',              route: '/staff/overtime',       featureKey: 'attendance-tracking'},
+        { label: 'Shift Management', icon: 'schedule',               route: '/staff/shifts',         featureKey: 'shift-scheduling'   },
+        { label: 'Holiday Calendar', icon: 'event',                  route: '/staff/holidays',       featureKey: 'staff-directory'    },
+        { label: 'Departments',      icon: 'corporate_fare',         route: '/staff/departments',    featureKey: 'staff-directory'    },
+        { label: 'Role Management',    icon: 'admin_panel_settings',   route: '/staff/roles',          featureKey: 'role-based-access'  },
+        { label: 'Staff Documents',   icon: 'folder_shared',          route: '/staff/documents',      featureKey: 'staff-directory'    },
+        { label: 'Announcements',     icon: 'campaign',               route: '/staff/announcements',  featureKey: 'staff-directory'    },
+        { label: 'Salary Advances',   icon: 'currency_rupee',         route: '/staff/advances',       featureKey: 'payroll'            },
+        { label: 'Expenses',          icon: 'receipt_long',           route: '/staff/expenses',       featureKey: 'payroll'            },
+        { label: 'Performance',       icon: 'star_rate',              route: '/staff/performance',    featureKey: 'staff-directory'    },
+        { label: 'Onboarding',        icon: 'person_add',             route: '/staff/onboarding',     featureKey: 'staff-directory'    },
+        { label: 'Grievances',        icon: 'report_problem',         route: '/staff/grievances',     featureKey: 'staff-directory'    },
+        { label: 'HR Analytics',      icon: 'bar_chart',              route: '/staff/hr-analytics',   featureKey: 'staff-performance-reports' },
       ]
     },
     {
@@ -140,9 +155,25 @@ export class SidebarComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════
      LIFECYCLE
   ═══════════════════════════════════════════ */
+  get isEmMode(): boolean {
+    return sessionStorage.getItem('kosEmMode') === 'true';
+  }
+
   ngOnInit(): void {
+    // Detect EM-only tab: set from URL param, persist in sessionStorage for this tab
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'em') {
+      sessionStorage.setItem('kosEmMode', 'true');
+    }
+
     this.layout.init();
     this.menuItems = this.buildFilteredMenu();
+
+    // In EM mode, auto-expand the single group
+    if (this.isEmMode && this.menuItems[0]?.children) {
+      this.menuItems[0].expanded = true;
+    }
+
     this.autoExpandActiveGroup();
 
     this.router.events
@@ -171,7 +202,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   private buildFilteredMenu(): SidebarMenu[] {
-    return this.rawMenu
+    const source = this.isEmMode
+      ? this.rawMenu.filter(item => item.label === 'Employee Management')
+      : this.rawMenu;
+
+    return source
       .filter(item => this.canShowItem(item))
       .map(item => {
         if (!item.children) return item;
@@ -204,6 +239,20 @@ export class SidebarComponent implements OnInit, OnDestroy {
      MENU ACTIONS
   ═══════════════════════════════════════════ */
   toggleGroup(item: SidebarMenu): void {
+    if (item.externalUrl) {
+      const token   = localStorage.getItem('token');
+      const kosUser = localStorage.getItem('kos_user');
+
+      let url = item.externalUrl.includes('?')
+        ? `${item.externalUrl}&mode=em`
+        : `${item.externalUrl}?mode=em`;
+
+      if (token)   url += `&token=${encodeURIComponent(token)}`;
+      if (kosUser) url += `&user=${encodeURIComponent(btoa(kosUser))}`;
+
+      window.open(url, '_blank');
+      return;
+    }
     item.expanded = !item.expanded;
     this.cdr.markForCheck();
   }

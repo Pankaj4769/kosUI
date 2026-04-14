@@ -1,0 +1,129 @@
+<div class="hc-page">
+
+  <!-- Header -->
+  <div class="hc-header">
+    <div class="hc-header-title">
+      <h1>Holiday Calendar</h1>
+      <p>Manage public and company holidays for the year</p>
+    </div>
+    <div class="hc-header-right">
+      <div class="hc-year-nav">
+        <button class="hc-year-btn" (click)="prevYear()">
+          <span class="material-icons">chevron_left</span>
+        </button>
+        <span class="hc-year-label">{{ year }}</span>
+        <button class="hc-year-btn" (click)="nextYear()">
+          <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+      <button class="hc-add-btn" (click)="openAdd()">
+        <span class="material-icons">add</span> Add Holiday
+      </button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="hc-kpis">
+    <div class="hc-kpi">
+      <span class="material-icons" style="color:#16a34a">event</span>
+      <div><div class="hc-kpi-val">{{ totalCount }}</div><div class="hc-kpi-lbl">Total Holidays</div></div>
+    </div>
+    <div class="hc-kpi">
+      <span class="material-icons" style="color:#3b82f6">public</span>
+      <div><div class="hc-kpi-val">{{ publicCount }}</div><div class="hc-kpi-lbl">Public</div></div>
+    </div>
+    <div class="hc-kpi">
+      <span class="material-icons" style="color:#8b5cf6">business</span>
+      <div><div class="hc-kpi-val">{{ companyCount }}</div><div class="hc-kpi-lbl">Company</div></div>
+    </div>
+    <div class="hc-kpi">
+      <span class="material-icons" style="color:#f59e0b">stars</span>
+      <div><div class="hc-kpi-val">{{ optionalCount }}</div><div class="hc-kpi-lbl">Optional</div></div>
+    </div>
+  </div>
+
+  <!-- Empty -->
+  <div class="hc-empty" *ngIf="filteredHolidays.length === 0">
+    <span class="material-icons">event_busy</span>
+    <p>No holidays defined for {{ year }}.</p>
+  </div>
+
+  <!-- Month groups -->
+  <div class="hc-months" *ngIf="filteredHolidays.length > 0">
+    <div class="hc-month-group" *ngFor="let g of monthGroups()">
+      <div class="hc-month-label">{{ g.month }}</div>
+      <div class="hc-item" *ngFor="let h of g.items">
+        <div class="hc-item-date">
+          <div class="hc-day">{{ h.date | date:'dd' }}</div>
+          <div class="hc-dow">{{ h.date | date:'EEE' }}</div>
+        </div>
+        <div class="hc-item-info">
+          <div class="hc-item-name">{{ h.name }}</div>
+          <div class="hc-item-desc" *ngIf="h.description">{{ h.description }}</div>
+        </div>
+        <span class="badge" [class]="typeClass(h.type)">{{ typeLabel(h.type) }}</span>
+        <div class="hc-item-actions">
+          <button class="hc-icon-btn" (click)="openEdit(h)" title="Edit">
+            <span class="material-icons">edit</span>
+          </button>
+          <button class="hc-icon-btn hc-icon-danger" (click)="deleteTarget = h" title="Delete">
+            <span class="material-icons">delete_outline</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / Edit Modal -->
+  <div class="hc-overlay" *ngIf="showModal" (click)="showModal=false">
+    <div class="hc-modal" (click)="$event.stopPropagation()">
+      <div class="hc-modal-head">
+        <h2>{{ editTarget ? 'Edit Holiday' : 'Add Holiday' }}</h2>
+        <button class="hc-modal-close" (click)="showModal=false"><span class="material-icons">close</span></button>
+      </div>
+      <div class="hc-modal-body">
+        <label class="hc-label">
+          Holiday Name <span class="req">*</span>
+          <input class="hc-input" [(ngModel)]="form.name" placeholder="e.g. Diwali" />
+        </label>
+        <label class="hc-label">
+          Date <span class="req">*</span>
+          <input type="date" class="hc-input" [(ngModel)]="form.date" />
+        </label>
+        <label class="hc-label">
+          Type
+          <select class="hc-input" [(ngModel)]="form.type">
+            <option value="PUBLIC">Public Holiday</option>
+            <option value="COMPANY">Company Holiday</option>
+            <option value="OPTIONAL">Optional Holiday</option>
+          </select>
+        </label>
+        <label class="hc-label">
+          Description
+          <input class="hc-input" [(ngModel)]="form.description" placeholder="Optional note" />
+        </label>
+      </div>
+      <div class="hc-modal-foot">
+        <button class="hc-btn-secondary" (click)="showModal=false">Cancel</button>
+        <button class="hc-btn-primary" (click)="save()" [disabled]="!form.name.trim() || !form.date">
+          {{ editTarget ? 'Update' : 'Add' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirm -->
+  <div class="hc-overlay" *ngIf="deleteTarget" (click)="deleteTarget=null">
+    <div class="hc-modal hc-modal-sm" (click)="$event.stopPropagation()">
+      <div class="hc-modal-head"><h2>Remove Holiday</h2></div>
+      <div class="hc-modal-body">
+        <p>Remove <strong>{{ deleteTarget!.name }}</strong> from the calendar?</p>
+      </div>
+      <div class="hc-modal-foot">
+        <button class="hc-btn-secondary" (click)="deleteTarget=null">Cancel</button>
+        <button class="hc-btn-danger" (click)="doDelete()">Remove</button>
+      </div>
+    </div>
+  </div>
+
+</div>

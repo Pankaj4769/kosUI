@@ -4,26 +4,37 @@
   (mouseenter)="onMouseEnter()"
   (mouseleave)="onMouseLeave()">
 
-  <!-- Toggle button -->
-  <button
-    class="toggle"
-    type="button"
-    (click)="layout.toggle()"
-    [title]="layout.isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-    aria-label="Toggle sidebar">
-    <span class="material-icons">
-      {{ isCollapsedView ? 'menu_open' : 'menu' }}
-    </span>
-  </button>
+  <!-- ══ Header: Brand + Toggle ══ -->
+  <div class="sidebar-header">
 
-  <!-- Logo -->
-  <!-- <div class="logo">
-    <span class="logo-short" *ngIf="isCollapsedView">K</span>
-    <span class="logo-full"  *ngIf="!isCollapsedView">KOS</span>
-  </div> -->
+    <!-- T2K brand — re-mounts on every open, re-triggering animation -->
+    <div class="sidebar-brand" *ngIf="!isCollapsedView" aria-label="Tech2Kitchen">
+      <span class="sb-tech">Tech</span><span class="sb-two">2</span><span class="sb-kitchen">Kitchen</span>
+    </div>
 
-  <!-- Nav -->
+    <!-- Collapsed: show icon mark only -->
+    <div class="sidebar-brand-icon" *ngIf="isCollapsedView" aria-hidden="true">
+      <span class="sb-icon-two">2</span><span class="sb-icon-k">K</span>
+    </div>
+
+    <button
+      class="toggle"
+      type="button"
+      (click)="layout.toggle()"
+      [title]="layout.isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+      aria-label="Toggle sidebar">
+      <span class="material-icons">
+        {{ isCollapsedView ? 'menu_open' : 'menu' }}
+      </span>
+    </button>
+
+  </div>
+
+  <!-- ══ Nav ══ -->
   <nav role="navigation" aria-label="Main navigation">
+
+    <p class="nav-label" *ngIf="!isCollapsedView">Menu</p>
+
     <ng-container *ngFor="let item of menuItems; trackBy: trackByLabel">
 
       <!-- SINGLE item -->
@@ -55,7 +66,7 @@
           <span class="material-icons icon">{{ item.icon }}</span>
           <span class="text">{{ item.label }}</span>
           <span class="material-icons arrow">
-            {{ item.expanded ? 'expand_less' : 'expand_more' }}
+            {{ item.externalUrl ? 'open_in_new' : (item.expanded ? 'expand_less' : 'expand_more') }}
           </span>
         </button>
 

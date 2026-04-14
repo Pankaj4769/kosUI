@@ -1,0 +1,96 @@
+<div class="emd-page">
+
+  <!-- Header -->
+  <div class="emd-header">
+    <div>
+      <h1>Employee Management</h1>
+      <p>Overview for {{ today | date:'EEEE, MMMM d, y' }}</p>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="emd-loading" *ngIf="loading">
+    <span class="material-icons spin">autorenew</span>
+    Loading dashboard…
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- KPI Cards -->
+    <div class="emd-kpis">
+      <a *ngFor="let k of kpis" [routerLink]="k.route" class="kpi-card">
+        <div class="kpi-icon" [style.background]="k.color + '18'" [style.color]="k.color">
+          <span class="material-icons">{{ k.icon }}</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ k.value }}</div>
+          <div class="kpi-label">{{ k.label }}</div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Bottom panels -->
+    <div class="emd-panels">
+
+      <!-- Pending Leaves -->
+      <div class="emd-card">
+        <div class="emd-card-head">
+          <span class="material-icons">pending_actions</span>
+          Pending Leave Requests
+          <a routerLink="/staff/leave" class="see-all">See all</a>
+        </div>
+        <div class="emd-empty" *ngIf="pendingLeaves.length === 0">
+          <span class="material-icons">check_circle</span> No pending requests
+        </div>
+        <table class="emd-table" *ngIf="pendingLeaves.length > 0">
+          <thead>
+            <tr><th>Employee</th><th>Type</th><th>From</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of pendingLeaves">
+              <td>{{ l.employeeName }}</td>
+              <td>{{ l.type }}</td>
+              <td>{{ l.startDate | date:'mediumDate' }}</td>
+              <td><span class="badge" [class]="statusClass(l.status)">{{ l.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Department Headcount -->
+      <div class="emd-card">
+        <div class="emd-card-head">
+          <span class="material-icons">corporate_fare</span>
+          Department Headcount
+          <a routerLink="/staff/departments" class="see-all">Manage</a>
+        </div>
+        <div class="emd-empty" *ngIf="deptStats.length === 0">
+          <span class="material-icons">inbox</span> No departments yet
+        </div>
+        <div class="dept-list" *ngIf="deptStats.length > 0">
+          <div class="dept-row" *ngFor="let d of deptStats">
+            <span class="dept-name">{{ d.name }}</span>
+            <div class="dept-bar-wrap">
+              <div class="dept-bar" [style.width.%]="(d.count / (totalEmployees || 1)) * 100"></div>
+            </div>
+            <span class="dept-count">{{ d.count }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Quick links -->
+    <div class="emd-quick">
+      <a routerLink="/staff/directory"    class="quick-link"><span class="material-icons">people_outline</span>Staff Directory</a>
+      <a routerLink="/staff/attendance"   class="quick-link"><span class="material-icons">access_time</span>Attendance</a>
+      <a routerLink="/staff/leave"        class="quick-link"><span class="material-icons">calendar_today</span>Leave</a>
+      <a routerLink="/staff/salary"       class="quick-link"><span class="material-icons">account_balance_wallet</span>Payroll</a>
+      <a routerLink="/staff/commissions"  class="quick-link"><span class="material-icons">trending_up</span>Commissions</a>
+      <a routerLink="/staff/overtime"     class="quick-link"><span class="material-icons">more_time</span>Overtime</a>
+      <a routerLink="/staff/holidays"     class="quick-link"><span class="material-icons">event</span>Holidays</a>
+      <a routerLink="/staff/shifts"       class="quick-link"><span class="material-icons">schedule</span>Shifts</a>
+    </div>
+
+  </ng-container>
+</div>

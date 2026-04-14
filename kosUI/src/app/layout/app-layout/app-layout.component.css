@@ -22,15 +22,15 @@
    uses position:absolute on hover so it overlays content.
 ===================================================== */
 .sidebar-wrapper {
-  width: 250px;
+  width: 240px;
   flex-shrink: 0;
   position: relative;    /* anchor for absolute-positioned sidebar on hover */
-  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: width 0.28s cubic-bezier(0.25, 0.8, 0.25, 1);
   z-index: 201;          /* must be above header's z-index: 200 */
 }
 
 .sidebar-wrapper.collapsed {
-  width: 72px;           /* content area gains back 178px — stays at its width */
+  width: 64px;           /* content area gains back 176px — stays at its width */
 }
 
 /* =====================================================
@@ -48,10 +48,51 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  background: #020617;
+  background: #f0f9f4;
   scrollbar-width: thin;
-  scrollbar-color: #1e293b transparent;
+  scrollbar-color: #a5d6a7 transparent;
 }
+
+/* =====================================================
+   GLOBAL FOOTER
+===================================================== */
+.app-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(90deg, #0a0f1e 0%, #0e1f45 35%, #1a0a2e 65%, #0a0f1e 100%);
+  border-top: 1px solid rgba(139, 92, 246, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 20px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.footer-copy {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.38);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+/* "Tech" — white */
+.ft-tech { color: rgba(248, 250, 252, 0.55); font-weight: 700; }
+
+/* "2" — amber accent */
+.ft-two  { color: #f59e0b; font-weight: 900; font-size: 0.80rem; }
+
+/* "Kitchen" — sky blue */
+.ft-kitchen { color: #38bdf8; font-weight: 700; }
+
+/* Push main-content up so footer never overlaps content */
+.main-content   { padding-bottom: 30px; }
+.auth-main      { padding-bottom: 30px; }
 
 /* =====================================================
    RESPONSIVE

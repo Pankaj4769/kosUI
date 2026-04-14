@@ -1,0 +1,570 @@
+<div class="doc-page">
+
+  <!-- ═══════════ PAGE HEADER ═══════════ -->
+  <div class="doc-header">
+    <div class="doc-header-left">
+      <div class="doc-header-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="doc-header-title">Staff Documents</h1>
+        <p class="doc-header-sub">Manage employee files, certificates &amp; compliance records</p>
+      </div>
+    </div>
+    <button class="doc-btn-primary" (click)="openUpload()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Upload Document
+    </button>
+  </div>
+
+
+  <!-- ═══════════ KPI STRIP ═══════════ -->
+  <div class="doc-kpi-strip">
+
+    <div class="doc-kpi" (click)="selectedStatus = 'ALL'" [class.doc-kpi--active]="selectedStatus === 'ALL'">
+      <div class="doc-kpi-icon doc-kpi-icon--blue">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </div>
+      <div class="doc-kpi-body">
+        <span class="doc-kpi-value">{{ countByStatus('ALL') }}</span>
+        <span class="doc-kpi-label">Total Documents</span>
+      </div>
+    </div>
+
+    <div class="doc-kpi" (click)="selectedStatus = 'VALID'" [class.doc-kpi--active]="selectedStatus === 'VALID'">
+      <div class="doc-kpi-icon doc-kpi-icon--green">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <div class="doc-kpi-body">
+        <span class="doc-kpi-value">{{ countByStatus('VALID') }}</span>
+        <span class="doc-kpi-label">Valid</span>
+      </div>
+    </div>
+
+    <div class="doc-kpi" (click)="selectedStatus = 'EXPIRING_SOON'" [class.doc-kpi--active]="selectedStatus === 'EXPIRING_SOON'">
+      <div class="doc-kpi-icon doc-kpi-icon--amber">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="doc-kpi-body">
+        <span class="doc-kpi-value">{{ countByStatus('EXPIRING_SOON') }}</span>
+        <span class="doc-kpi-label">Expiring Soon</span>
+      </div>
+    </div>
+
+    <div class="doc-kpi" (click)="selectedStatus = 'EXPIRED'" [class.doc-kpi--active]="selectedStatus === 'EXPIRED'">
+      <div class="doc-kpi-icon doc-kpi-icon--red">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+      </div>
+      <div class="doc-kpi-body">
+        <span class="doc-kpi-value">{{ countByStatus('EXPIRED') }}</span>
+        <span class="doc-kpi-label">Expired</span>
+      </div>
+    </div>
+
+    <div class="doc-kpi doc-kpi--warn" *ngIf="staffWithMissingDocs() > 0">
+      <div class="doc-kpi-icon doc-kpi-icon--purple">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/>
+        </svg>
+      </div>
+      <div class="doc-kpi-body">
+        <span class="doc-kpi-value">{{ staffWithMissingDocs() }}</span>
+        <span class="doc-kpi-label">Staff with No Docs</span>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════ FILTERS ═══════════ -->
+  <div class="doc-filters">
+
+    <div class="doc-search-wrap">
+      <svg class="doc-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="doc-search" type="text" placeholder="Search by name or document..."
+             [(ngModel)]="searchQuery"/>
+    </div>
+
+    <select class="doc-select" [(ngModel)]="selectedStaffId">
+      <option value="ALL">All Staff</option>
+      <option *ngFor="let m of staffMembers" [value]="m.id">{{ m.name }}</option>
+    </select>
+
+    <select class="doc-select" [(ngModel)]="selectedStatus">
+      <option value="ALL">All Status</option>
+      <option value="VALID">Valid</option>
+      <option value="EXPIRING_SOON">Expiring Soon</option>
+      <option value="EXPIRED">Expired</option>
+    </select>
+
+  </div>
+
+
+  <!-- ═══════════ ALERT BANNER — EXPIRED ═══════════ -->
+  <div class="doc-alert doc-alert--red" *ngIf="countByStatus('EXPIRED') > 0">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <span><strong>{{ countByStatus('EXPIRED') }} document{{ countByStatus('EXPIRED') !== 1 ? 's' : '' }}</strong> have expired. Renew immediately to stay compliant.</span>
+    <button class="doc-alert-action" (click)="selectedStatus = 'EXPIRED'">View All</button>
+  </div>
+
+  <div class="doc-alert doc-alert--amber" *ngIf="countByStatus('EXPIRING_SOON') > 0 && countByStatus('EXPIRED') === 0">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span><strong>{{ countByStatus('EXPIRING_SOON') }} document{{ countByStatus('EXPIRING_SOON') !== 1 ? 's' : '' }}</strong> expiring within 30 days. Schedule renewals soon.</span>
+    <button class="doc-alert-action" (click)="selectedStatus = 'EXPIRING_SOON'">View All</button>
+  </div>
+
+
+  <!-- ═══════════ DOCUMENTS TABLE ═══════════ -->
+  <div class="doc-table-card" *ngIf="filteredDocuments.length > 0">
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th>Staff Member</th>
+          <th>Document</th>
+          <th>Type</th>
+          <th>Uploaded</th>
+          <th>Expiry</th>
+          <th>Status</th>
+          <th class="doc-th--actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let doc of filteredDocuments" class="doc-tr">
+
+          <!-- Staff -->
+          <td class="doc-td-staff">
+            <div class="doc-staff-cell">
+              <div class="doc-avatar" [style.background]="getAvatarColor(getStaffName(doc.staffId))">
+                {{ getStaffInitial(doc.staffId) }}
+              </div>
+              <div class="doc-staff-info">
+                <span class="doc-staff-name">{{ getStaffName(doc.staffId) }}</span>
+                <span class="doc-staff-role">{{ getStaffPosition(doc.staffId) }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Document name -->
+          <td>
+            <div class="doc-file-cell">
+              <div class="doc-file-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+              </div>
+              <div>
+                <span class="doc-file-label">{{ doc.label }}</span>
+                <span class="doc-file-name">{{ doc.fileName }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Type badge -->
+          <td>
+            <span class="doc-type-badge">{{ DOC_TYPE_META[doc.type].label }}</span>
+          </td>
+
+          <!-- Uploaded date -->
+          <td class="doc-td-date">{{ formatDate(doc.uploadedDate) }}</td>
+
+          <!-- Expiry -->
+          <td class="doc-td-date">
+            <ng-container *ngIf="doc.expiryDate; else noExpiry">
+              <span [class.doc-expiry--warn]="doc.status === 'EXPIRING_SOON'"
+                    [class.doc-expiry--expired]="doc.status === 'EXPIRED'">
+                {{ formatDate(doc.expiryDate) }}
+              </span>
+              <span class="doc-days-left" *ngIf="daysUntilExpiry(doc) !== null && daysUntilExpiry(doc)! >= 0">
+                {{ daysUntilExpiry(doc) }}d left
+              </span>
+              <span class="doc-days-left doc-days-left--expired" *ngIf="daysUntilExpiry(doc) !== null && daysUntilExpiry(doc)! < 0">
+                {{ -daysUntilExpiry(doc)! }}d ago
+              </span>
+            </ng-container>
+            <ng-template #noExpiry><span class="doc-td-muted">No expiry</span></ng-template>
+          </td>
+
+          <!-- Status -->
+          <td>
+            <span class="doc-status-badge"
+                  [class.doc-status--valid]="doc.status === 'VALID'"
+                  [class.doc-status--warn]="doc.status === 'EXPIRING_SOON'"
+                  [class.doc-status--expired]="doc.status === 'EXPIRED'"
+                  [class.doc-status--missing]="doc.status === 'MISSING'">
+              <span class="doc-status-dot"></span>
+              {{ statusLabel(doc.status) }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td class="doc-td-actions">
+            <button class="doc-icon-btn" title="Preview" (click)="openPreview(doc)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+            <button class="doc-icon-btn" title="Download">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
+            <button class="doc-icon-btn doc-icon-btn--danger" title="Delete" (click)="confirmDelete(doc)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </button>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ═══════════ PER-STAFF OVERVIEW CARDS ═══════════ -->
+  <div class="doc-section-title" *ngIf="filteredDocuments.length === 0 || selectedStaffId === 'ALL'">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+    </svg>
+    Staff Overview
+  </div>
+
+  <div class="doc-staff-grid" *ngIf="selectedStaffId === 'ALL'">
+    <div class="doc-staff-card" *ngFor="let member of staffMembers">
+      <div class="doc-staff-card-header">
+        <div class="doc-avatar doc-avatar--lg" [style.background]="getAvatarColor(member.name)">
+          {{ member.name.charAt(0) }}
+        </div>
+        <div class="doc-staff-card-meta">
+          <span class="doc-staff-card-name">{{ member.name }}</span>
+          <span class="doc-staff-card-role">{{ member.position || member.roleName }}</span>
+        </div>
+        <span class="doc-status-badge"
+              [class.doc-status--valid]="getWorstStatusForStaff(member.id) === 'VALID'"
+              [class.doc-status--warn]="getWorstStatusForStaff(member.id) === 'EXPIRING_SOON'"
+              [class.doc-status--expired]="getWorstStatusForStaff(member.id) === 'EXPIRED'"
+              [class.doc-status--missing]="getWorstStatusForStaff(member.id) === 'MISSING'">
+          <span class="doc-status-dot"></span>
+          {{ statusLabel(getWorstStatusForStaff(member.id)!) }}
+        </span>
+      </div>
+
+      <div class="doc-staff-doc-list">
+        <div class="doc-staff-doc-row" *ngFor="let doc of getDocumentsForStaff(member.id)">
+          <span class="doc-staff-doc-name">{{ doc.label }}</span>
+          <span class="doc-staff-doc-expiry" *ngIf="doc.expiryDate"
+                [class.doc-expiry--warn]="doc.status === 'EXPIRING_SOON'"
+                [class.doc-expiry--expired]="doc.status === 'EXPIRED'">
+            {{ formatDate(doc.expiryDate) }}
+          </span>
+          <span class="doc-staff-dot"
+                [class.doc-staff-dot--green]="doc.status === 'VALID'"
+                [class.doc-staff-dot--amber]="doc.status === 'EXPIRING_SOON'"
+                [class.doc-staff-dot--red]="doc.status === 'EXPIRED'">
+          </span>
+        </div>
+        <div class="doc-staff-empty" *ngIf="getDocumentsForStaff(member.id).length === 0">
+          No documents uploaded
+        </div>
+      </div>
+
+      <button class="doc-btn-outline" (click)="openUpload(member.id)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Document
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="doc-empty" *ngIf="filteredDocuments.length === 0 && selectedStaffId !== 'ALL'">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+    </svg>
+    <h3>No documents found</h3>
+    <p>Upload a document to get started</p>
+    <button class="doc-btn-primary" (click)="openUpload()">Upload Document</button>
+  </div>
+
+</div>
+
+
+<!-- ═══════════ UPLOAD MODAL ═══════════ -->
+<div class="doc-overlay" *ngIf="isUploadOpen" (click)="onBackdropClick($event)">
+  <div class="doc-modal">
+
+    <div class="doc-modal-header">
+      <div class="doc-modal-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Upload Document
+      </div>
+      <button class="doc-close-btn" (click)="closeUpload()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="doc-modal-body">
+
+      <div class="doc-field">
+        <label class="doc-label">Staff Member <span class="doc-required">*</span></label>
+        <select class="doc-input" [(ngModel)]="uploadForm.staffId">
+          <option value="">Select staff member</option>
+          <option *ngFor="let m of staffMembers" [value]="m.id">{{ m.name }}</option>
+        </select>
+      </div>
+
+      <div class="doc-field">
+        <label class="doc-label">Document Type <span class="doc-required">*</span></label>
+        <select class="doc-input" [(ngModel)]="uploadForm.type"
+                (ngModelChange)="uploadForm.label = DOC_TYPE_META[uploadForm.type].label">
+          <option *ngFor="let t of DOC_TYPES" [value]="t">{{ DOC_TYPE_META[t].label }}</option>
+        </select>
+      </div>
+
+      <div class="doc-field">
+        <label class="doc-label">Document Name <span class="doc-required">*</span></label>
+        <input type="text" class="doc-input" [(ngModel)]="uploadForm.label"
+               placeholder="e.g., Aadhar Card, Medical Certificate"/>
+      </div>
+
+      <div class="doc-field" *ngIf="uploadTypeRequiresExpiry">
+        <label class="doc-label">
+          Expiry Date
+          <span class="doc-label-hint">Required for this document type</span>
+        </label>
+        <input type="date" class="doc-input" [(ngModel)]="uploadForm.expiryDate"/>
+      </div>
+
+      <!-- File upload drop zone -->
+      <div class="doc-dropzone" (click)="fileInput.click()">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <p class="doc-dropzone-text" *ngIf="!uploadForm.fileName">
+          Click to upload or drag &amp; drop
+          <span>PDF, JPG, PNG up to 10MB</span>
+        </p>
+        <p class="doc-dropzone-text doc-dropzone-text--selected" *ngIf="uploadForm.fileName">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          {{ uploadForm.fileName }}
+        </p>
+        <input #fileInput type="file" accept=".pdf,.jpg,.jpeg,.png" style="display:none" (change)="onFileChange($event)"/>
+      </div>
+
+      <div class="doc-field">
+        <label class="doc-label">Notes (optional)</label>
+        <textarea class="doc-input doc-textarea" [(ngModel)]="uploadForm.notes"
+                  placeholder="Any additional notes..." rows="2"></textarea>
+      </div>
+
+    </div>
+
+    <div class="doc-modal-footer">
+      <button class="doc-btn-secondary" (click)="closeUpload()">Cancel</button>
+      <button class="doc-btn-primary"
+              [disabled]="!uploadForm.staffId || !uploadForm.type || !uploadForm.label"
+              (click)="saveDocument()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Upload Document
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════ PREVIEW MODAL ═══════════ -->
+<div class="doc-overlay" *ngIf="previewDoc" (click)="closePreview()">
+  <div class="doc-modal doc-modal--preview" (click)="$event.stopPropagation()">
+
+    <div class="doc-modal-header">
+      <div class="doc-modal-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        Document Details
+      </div>
+      <button class="doc-close-btn" (click)="closePreview()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="doc-modal-body" *ngIf="previewDoc">
+
+      <!-- Staff info -->
+      <div class="doc-preview-staff">
+        <div class="doc-avatar" [style.background]="getAvatarColor(getStaffName(previewDoc.staffId))">
+          {{ getStaffInitial(previewDoc.staffId) }}
+        </div>
+        <div>
+          <div class="doc-preview-staff-name">{{ getStaffName(previewDoc.staffId) }}</div>
+          <div class="doc-preview-staff-role">{{ getStaffPosition(previewDoc.staffId) }}</div>
+        </div>
+      </div>
+
+      <!-- Document details grid -->
+      <div class="doc-preview-grid">
+        <div class="doc-preview-row">
+          <span class="doc-preview-key">Document</span>
+          <span class="doc-preview-val">{{ previewDoc.label }}</span>
+        </div>
+        <div class="doc-preview-row">
+          <span class="doc-preview-key">Type</span>
+          <span class="doc-preview-val">{{ DOC_TYPE_META[previewDoc.type].label }}</span>
+        </div>
+        <div class="doc-preview-row">
+          <span class="doc-preview-key">File</span>
+          <span class="doc-preview-val doc-preview-file">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            {{ previewDoc.fileName }}
+          </span>
+        </div>
+        <div class="doc-preview-row">
+          <span class="doc-preview-key">Uploaded</span>
+          <span class="doc-preview-val">{{ formatDate(previewDoc.uploadedDate) }}</span>
+        </div>
+        <div class="doc-preview-row" *ngIf="previewDoc.expiryDate">
+          <span class="doc-preview-key">Expires</span>
+          <span class="doc-preview-val"
+                [class.doc-expiry--warn]="previewDoc.status === 'EXPIRING_SOON'"
+                [class.doc-expiry--expired]="previewDoc.status === 'EXPIRED'">
+            {{ formatDate(previewDoc.expiryDate) }}
+            <ng-container *ngIf="daysUntilExpiry(previewDoc) !== null">
+              <span *ngIf="daysUntilExpiry(previewDoc)! >= 0">({{ daysUntilExpiry(previewDoc) }} days left)</span>
+              <span *ngIf="daysUntilExpiry(previewDoc)! < 0">({{ -daysUntilExpiry(previewDoc)! }} days overdue)</span>
+            </ng-container>
+          </span>
+        </div>
+        <div class="doc-preview-row">
+          <span class="doc-preview-key">Status</span>
+          <span class="doc-status-badge"
+                [class.doc-status--valid]="previewDoc.status === 'VALID'"
+                [class.doc-status--warn]="previewDoc.status === 'EXPIRING_SOON'"
+                [class.doc-status--expired]="previewDoc.status === 'EXPIRED'">
+            <span class="doc-status-dot"></span>
+            {{ statusLabel(previewDoc.status) }}
+          </span>
+        </div>
+        <div class="doc-preview-row" *ngIf="previewDoc.notes">
+          <span class="doc-preview-key">Notes</span>
+          <span class="doc-preview-val">{{ previewDoc.notes }}</span>
+        </div>
+      </div>
+
+      <!-- File preview placeholder -->
+      <div class="doc-file-preview">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <span>{{ previewDoc.fileName }}</span>
+      </div>
+
+    </div>
+
+    <div class="doc-modal-footer">
+      <button class="doc-btn-secondary" (click)="closePreview()">Close</button>
+      <button class="doc-btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════ DELETE CONFIRM ═══════════ -->
+<div class="doc-overlay" *ngIf="deletingDoc" (click)="deletingDoc = null">
+  <div class="doc-modal doc-modal--sm" (click)="$event.stopPropagation()">
+    <div class="doc-modal-header">
+      <div class="doc-modal-title doc-modal-title--danger">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Delete Document
+      </div>
+      <button class="doc-close-btn" (click)="deletingDoc = null">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="doc-modal-body doc-delete-body">
+      <div class="doc-delete-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+      </div>
+      <p class="doc-delete-msg">
+        Delete <strong>{{ deletingDoc!.label }}</strong> for <strong>{{ getStaffName(deletingDoc!.staffId) }}</strong>?
+        This cannot be undone.
+      </p>
+    </div>
+    <div class="doc-modal-footer">
+      <button class="doc-btn-secondary" (click)="deletingDoc = null">Cancel</button>
+      <button class="doc-btn-danger" (click)="executeDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ TOAST ═══════════ -->
+<div class="doc-toast" *ngIf="toast" [class.doc-toast--error]="toast.type === 'error'">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+    <ng-container *ngIf="toast.type !== 'error'"><polyline points="20 6 9 17 4 12"/></ng-container>
+    <ng-container *ngIf="toast.type === 'error'"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></ng-container>
+  </svg>
+  {{ toast.message }}
+</div>

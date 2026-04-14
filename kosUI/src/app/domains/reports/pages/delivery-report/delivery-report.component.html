@@ -2,13 +2,6 @@
 
   <!-- Header -->
   <div class="rpt-header">
-    <div class="rpt-header__icon" style="background:#eff6ff">
-      <mat-icon style="color:#0284c7">local_shipping</mat-icon>
-    </div>
-    <div>
-      <h1>Delivery Report</h1>
-      <p>Online orders &amp; delivery performance</p>
-    </div>
     <div class="rpt-date-tabs">
       <button *ngFor="let r of ranges" [class.active]="activeRange===r" (click)="activeRange=r">{{r}}</button>
     </div>

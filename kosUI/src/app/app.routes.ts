@@ -11,6 +11,19 @@ import { AttendanceComponent } from './domains/staff/components/attendance/atten
 import { LeaveManagementComponent } from './domains/staff/components/leave-management/leave-management.component';
 import { PayrollComponent } from './domains/staff/components/payroll/payroll.component';
 import { ShiftManagementComponent } from './domains/staff/components/shift-management/shift-management.component';
+import { StaffDocumentsComponent } from './domains/staff/components/staff-documents/staff-documents.component';
+import { AnnouncementsComponent } from './domains/staff/components/announcements/announcements.component';
+import { EmDashboardComponent } from './domains/staff/components/em-dashboard/em-dashboard.component';
+import { DepartmentManagementComponent } from './domains/staff/components/department-management/department-management.component';
+import { CommissionComponent } from './domains/staff/components/commission/commission.component';
+import { OvertimeComponent } from './domains/staff/components/overtime/overtime.component';
+import { HolidayCalendarComponent } from './domains/staff/components/holiday-calendar/holiday-calendar.component';
+import { SalaryAdvanceComponent } from './domains/staff/components/salary-advance/salary-advance.component';
+import { ExpenseReimbursementComponent } from './domains/staff/components/expense-reimbursement/expense-reimbursement.component';
+import { PerformanceComponent } from './domains/staff/components/performance/performance.component';
+import { OnboardingComponent } from './domains/staff/components/onboarding/onboarding.component';
+import { GrievanceComponent } from './domains/staff/components/grievance/grievance.component';
+import { HrAnalyticsComponent } from './domains/staff/components/hr-analytics/hr-analytics.component';
 import { LoginComponent } from './core/component/login/login.component';
 import { AuthGuard } from './core/guards/auth.guard';
 import { accessGuard } from './core/guards/access.guard';
@@ -29,6 +42,7 @@ import { ProductFeatureComponent } from '../Admin/pages/product-feature/product-
 import { AiSmartControlComponent } from '../Admin/pages/AI-Smart-Control/ai-smart-control.component';
 import { ConfigManagementComponent } from '../Admin/pages/configure-management/config-management.component';
 import { SignupComponent } from './core/component/sign-up/signup.component';
+import { ResetPasswordComponent } from './core/component/reset-password/reset-password.component';
 import { WaiterComponent } from './domains/waiter/pages/waiter/waiter.component';
 import { SalesReportComponent } from './domains/reports/pages/sales-report/sales-report.component';
 import { InventoryReportComponent } from './domains/reports/pages/inventory-report/inventory-report.component';
@@ -46,6 +60,7 @@ import { StockAlertsComponent } from './domains/inventory/pages/stock-alerts/sto
 import { SupplierManagementComponent } from './domains/inventory/pages/supplier-management/supplier-management.component';
 import { PurchaseOrdersComponent } from './domains/inventory/pages/purchase-orders/purchase-orders.component';
 import { WasteTrackingComponent } from './domains/inventory/pages/waste-tracking/waste-tracking.component';
+import { ManageCategoriesComponent } from './domains/inventory/pages/manage-categories/manage-categories.component';
 
 export const routes: Routes = [
 
@@ -54,8 +69,9 @@ export const routes: Routes = [
     path: '',
     component: AppLayoutComponent,
     children: [
-      { path: 'login',  title: 'Login | Kitchen Book',  component: LoginComponent },
-      { path: 'signup', title: 'Sign Up | Kitchen Book', component: SignupComponent },
+      { path: 'login',          title: 'Login | Kitchen Book',          component: LoginComponent },
+      { path: 'signup',         title: 'Sign Up | Kitchen Book',         component: SignupComponent },
+      { path: 'reset-password', title: 'Reset Password | Kitchen Book',  component: ResetPasswordComponent },
       { path: 'onboarding/subscription', title: 'Subscription | Kitchen Book', component: SubscriptionComponent },
       { path: 'onboarding/pending',      title: 'Pending Approval | Kitchen Book', component: PendingApprovalComponent },
       { path: 'onboarding/setup',        title: 'Restaurant Setup | Kitchen Book', component: RestaurantSetupComponent },
@@ -83,7 +99,8 @@ export const routes: Routes = [
           { path: 'alerts',    title: 'Stock Alerts | Kitchen Book',        component: StockAlertsComponent,        canActivate: [accessGuard('low-stock-alerts')] },
           { path: 'suppliers', title: 'Supplier Management | Kitchen Book', component: SupplierManagementComponent, canActivate: [accessGuard('supplier-management')] },
           { path: 'purchase',  title: 'Purchase Orders | Kitchen Book',     component: PurchaseOrdersComponent,     canActivate: [accessGuard('purchase-order-management')] },
-          { path: 'waste',     title: 'Waste Tracking | Kitchen Book',      component: WasteTrackingComponent,      canActivate: [accessGuard('waste-tracking')] },
+          { path: 'waste',      title: 'Waste Tracking | Kitchen Book',       component: WasteTrackingComponent,       canActivate: [accessGuard('waste-tracking')] },
+          { path: 'categories', title: 'Menu Categories | Kitchen Book',      component: ManageCategoriesComponent },
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ], canActivate: [AuthGuard]
       },
@@ -115,6 +132,19 @@ export const routes: Routes = [
           { path: 'salary',     title: 'Salary Management | Kitchen Book', component: PayrollComponent,          canActivate: [accessGuard('payroll')] },
           { path: 'shifts',     title: 'Shift Management | Kitchen Book',  component: ShiftManagementComponent,  canActivate: [accessGuard('shift-scheduling')] },
           { path: 'roles',      title: 'Role Management | Kitchen Book',   component: RoleManagementComponent,   canActivate: [accessGuard('role-based-access')] },
+          { path: 'documents',      title: 'Staff Documents | Kitchen Book',      component: StaffDocumentsComponent,       canActivate: [accessGuard('staff-directory')] },
+          { path: 'announcements', title: 'Announcements | Kitchen Book',         component: AnnouncementsComponent,        canActivate: [accessGuard('staff-directory')] },
+          { path: 'em-dashboard',  title: 'EM Dashboard | Kitchen Book',             component: EmDashboardComponent,          canActivate: [accessGuard('staff-directory')] },
+          { path: 'departments',   title: 'Department Management | Kitchen Book',   component: DepartmentManagementComponent, canActivate: [accessGuard('staff-directory')] },
+          { path: 'commissions',   title: 'Commission & Incentives | Kitchen Book', component: CommissionComponent,           canActivate: [accessGuard('payroll')] },
+          { path: 'overtime',      title: 'Overtime Tracking | Kitchen Book',       component: OvertimeComponent,             canActivate: [accessGuard('attendance-tracking')] },
+          { path: 'holidays',      title: 'Holiday Calendar | Kitchen Book',        component: HolidayCalendarComponent,      canActivate: [accessGuard('staff-directory')] },
+          { path: 'advances',      title: 'Salary Advance & Loans | Kitchen Book',  component: SalaryAdvanceComponent,        canActivate: [accessGuard('payroll')] },
+          { path: 'expenses',      title: 'Expense Reimbursement | Kitchen Book',   component: ExpenseReimbursementComponent, canActivate: [accessGuard('payroll')] },
+          { path: 'performance',   title: 'Performance Reviews | Kitchen Book',     component: PerformanceComponent,          canActivate: [accessGuard('staff-directory')] },
+          { path: 'onboarding',    title: 'Employee Onboarding | Kitchen Book',     component: OnboardingComponent,           canActivate: [accessGuard('staff-directory')] },
+          { path: 'grievances',    title: 'Grievances | Kitchen Book',              component: GrievanceComponent,            canActivate: [accessGuard('staff-directory')] },
+          { path: 'hr-analytics',  title: 'HR Analytics | Kitchen Book',            component: HrAnalyticsComponent,          canActivate: [accessGuard('staff-performance-reports')] },
           { path: '', redirectTo: 'directory', pathMatch: 'full' }
         ], canActivate: [AuthGuard]
       },

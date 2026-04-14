@@ -2,13 +2,6 @@
 
   <!-- Header -->
   <div class="rpt-header">
-    <div class="rpt-header__icon" style="background:#fff7ed">
-      <mat-icon style="color:#d97706">badge</mat-icon>
-    </div>
-    <div>
-      <h1>Staff Report</h1>
-      <p>Staff performance &amp; attendance summary</p>
-    </div>
     <div class="rpt-date-tabs">
       <button *ngFor="let r of ranges" [class.active]="activeRange===r" (click)="activeRange=r">{{r}}</button>
     </div>

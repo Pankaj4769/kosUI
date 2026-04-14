@@ -1,17 +1,9 @@
 <!-- ── QR Codes Page ─────────────────────────────────── -->
 <div class="qr-page">
 
-  <!-- ── Header ── -->
+  <!-- ── Header Actions ── -->
   <div class="page-header">
-    <div class="header-left">
-      <h1 class="page-title">
-        <span class="material-icons title-icon">qr_code_2</span>
-        Table QR Codes
-      </h1>
-      <p class="page-subtitle">Generate and manage QR codes for customer self-ordering and waiter calls</p>
-    </div>
     <div class="header-actions">
-      <!-- Waiter Calls Bell -->
       <button class="btn-calls" (click)="showCallsPanel = !showCallsPanel"
               [class.has-calls]="pendingCallCount > 0"
               matTooltip="Waiter Call Requests">

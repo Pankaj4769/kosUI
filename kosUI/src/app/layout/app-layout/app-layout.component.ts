@@ -33,6 +33,7 @@ const AUTH_ROUTES = ['/login','/signup', '/register', '/forgot-password', '/rese
 export class AppLayoutComponent implements OnInit, OnDestroy {
 
   isAuthPage = false;
+  readonly currentYear = new Date().getFullYear();
 
   private destroy$ = new Subject<void>();
 

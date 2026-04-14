@@ -1,0 +1,165 @@
+<div class="gv-page">
+  <div class="gv-header">
+    <div class="gv-header-title">
+      <h1>Grievance &amp; Complaints</h1>
+      <p>Register, track and resolve employee grievances</p>
+    </div>
+    <button class="gv-add-btn" (click)="openNew()"><span class="material-icons">add</span> Raise Grievance</button>
+  </div>
+
+  <div class="gv-kpis">
+    <div class="gv-kpi"><span class="material-icons" style="color:#f59e0b">inbox</span>
+      <div><div class="gv-kpi-val">{{ openCount }}</div><div class="gv-kpi-lbl">Open</div></div></div>
+    <div class="gv-kpi"><span class="material-icons" style="color:#ef4444">priority_high</span>
+      <div><div class="gv-kpi-val">{{ escalatedCount }}</div><div class="gv-kpi-lbl">Escalated</div></div></div>
+    <div class="gv-kpi"><span class="material-icons" style="color:#16a34a">task_alt</span>
+      <div><div class="gv-kpi-val">{{ resolvedCount }}</div><div class="gv-kpi-lbl">Resolved</div></div></div>
+  </div>
+
+  <!-- List View -->
+  <ng-container *ngIf="!selected">
+    <div class="gv-filters">
+      <select class="gv-select" [(ngModel)]="filterStatus">
+        <option value="">All Status</option>
+        <option value="OPEN">Open</option><option value="IN_REVIEW">In Review</option>
+        <option value="ESCALATED">Escalated</option><option value="RESOLVED">Resolved</option><option value="CLOSED">Closed</option>
+      </select>
+      <select class="gv-select" [(ngModel)]="filterCategory">
+        <option value="">All Categories</option>
+        <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+      </select>
+      <select class="gv-select" [(ngModel)]="filterPriority">
+        <option value="">All Priority</option>
+        <option value="LOW">Low</option><option value="MEDIUM">Medium</option>
+        <option value="HIGH">High</option><option value="CRITICAL">Critical</option>
+      </select>
+    </div>
+
+    <div class="gv-list">
+      <div class="gv-item" *ngFor="let g of filtered" (click)="openDetail(g)">
+        <div class="gv-item-icon" [class]="'cat-'+g.category.toLowerCase()">
+          <span class="material-icons">{{ catIcon(g.category) }}</span>
+        </div>
+        <div class="gv-item-body">
+          <div class="gv-item-top">
+            <span class="gv-ticket">{{ g.ticketNo }}</span>
+            <span class="gv-subject">{{ g.subject }}</span>
+          </div>
+          <div class="gv-item-meta">
+            {{ g.anonymous ? 'Anonymous' : g.employeeName }} · {{ g.category }} · {{ g.raisedDate | date:'mediumDate' }}
+          </div>
+        </div>
+        <div class="gv-item-badges">
+          <span class="badge" [class]="priorityClass(g.priority)">{{ g.priority }}</span>
+          <span class="badge" [class]="statusClass(g.status)">{{ g.status.replace('_',' ') }}</span>
+        </div>
+      </div>
+      <div class="gv-empty" *ngIf="filtered.length===0">
+        <span class="material-icons">inbox</span><p>No grievances found.</p>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Detail View -->
+  <ng-container *ngIf="selected">
+    <div class="gv-detail-card">
+      <div class="gv-detail-header">
+        <button class="gv-back-btn" (click)="selected=null"><span class="material-icons">arrow_back</span> Back</button>
+        <div class="gv-detail-title">
+          <span class="gv-ticket">{{ selected.ticketNo }}</span>
+          <h2>{{ selected.subject }}</h2>
+        </div>
+        <div class="gv-detail-badges">
+          <span class="badge" [class]="priorityClass(selected.priority)">{{ selected.priority }}</span>
+          <span class="badge" [class]="statusClass(selected.status)">{{ selected.status.replace('_',' ') }}</span>
+        </div>
+      </div>
+
+      <div class="gv-detail-body">
+        <div class="gv-detail-meta-row">
+          <span><strong>Employee:</strong> {{ selected.anonymous ? 'Anonymous' : selected.employeeName }}</span>
+          <span><strong>Category:</strong> {{ selected.category }}</span>
+          <span><strong>Raised:</strong> {{ selected.raisedDate | date:'mediumDate' }}</span>
+          <span><strong>Assigned To:</strong> {{ selected.assignedTo }}</span>
+          <span *ngIf="selected.resolvedDate"><strong>Resolved:</strong> {{ selected.resolvedDate | date:'mediumDate' }}</span>
+        </div>
+
+        <div class="gv-description">
+          <div class="gv-section-label">Description</div>
+          <p>{{ selected.description }}</p>
+        </div>
+
+        <div class="gv-resolution" *ngIf="selected.resolution">
+          <div class="gv-section-label">Resolution</div>
+          <p>{{ selected.resolution }}</p>
+        </div>
+
+        <!-- Status Actions -->
+        <div class="gv-status-actions">
+          <div class="gv-section-label">Update Status</div>
+          <div class="gv-action-btns">
+            <button class="gv-status-btn info"     *ngIf="selected.status==='OPEN'"      (click)="updateStatus(selected,'IN_REVIEW')">Mark In Review</button>
+            <button class="gv-status-btn warn"     *ngIf="selected.status!=='ESCALATED' && selected.status!=='RESOLVED' && selected.status!=='CLOSED'" (click)="updateStatus(selected,'ESCALATED')">Escalate</button>
+            <button class="gv-status-btn ok"       *ngIf="selected.status!=='RESOLVED' && selected.status!=='CLOSED'"  (click)="updateStatus(selected,'RESOLVED')">Mark Resolved</button>
+            <button class="gv-status-btn muted"    *ngIf="selected.status==='RESOLVED'"  (click)="updateStatus(selected,'CLOSED')">Close</button>
+          </div>
+        </div>
+
+        <!-- Comments -->
+        <div class="gv-comments">
+          <div class="gv-section-label">Comments ({{ selected.comments.length }})</div>
+          <div class="gv-comment" *ngFor="let c of selected.comments">
+            <div class="gv-comment-author">{{ c.author }} · {{ c.date | date:'mediumDate' }}</div>
+            <div class="gv-comment-text">{{ c.text }}</div>
+          </div>
+          <div class="gv-add-comment">
+            <input class="gv-comment-input" [(ngModel)]="newComment" placeholder="Add a comment…" (keyup.enter)="addComment()" />
+            <button class="gv-comment-btn" (click)="addComment()" [disabled]="!newComment.trim()">
+              <span class="material-icons">send</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- New Grievance Modal -->
+  <div class="gv-overlay" *ngIf="showModal" (click)="showModal=false">
+    <div class="gv-modal" (click)="$event.stopPropagation()">
+      <div class="gv-modal-head">
+        <h2>Raise Grievance</h2>
+        <button class="gv-modal-close" (click)="showModal=false"><span class="material-icons">close</span></button>
+      </div>
+      <div class="gv-modal-body">
+        <label class="gv-label">Employee
+          <select class="gv-input" [(ngModel)]="form.employeeId" [disabled]="form.anonymous">
+            <option [value]="0" disabled>Select employee</option>
+            <option *ngFor="let e of employees" [value]="e.id">{{ e.name ?? '#'+e.id }}</option>
+          </select></label>
+        <label class="gv-label gv-anon-row">
+          <input type="checkbox" [(ngModel)]="form.anonymous" />
+          Submit Anonymously
+        </label>
+        <div class="gv-row-2">
+          <label class="gv-label">Category
+            <select class="gv-input" [(ngModel)]="form.category">
+              <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+            </select></label>
+          <label class="gv-label">Priority
+            <select class="gv-input" [(ngModel)]="form.priority">
+              <option value="LOW">Low</option><option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option><option value="CRITICAL">Critical</option>
+            </select></label>
+        </div>
+        <label class="gv-label">Subject <span class="req">*</span>
+          <input class="gv-input" [(ngModel)]="form.subject" placeholder="Brief subject" /></label>
+        <label class="gv-label">Description <span class="req">*</span>
+          <textarea class="gv-input gv-textarea" [(ngModel)]="form.description" rows="4" placeholder="Detailed description of the issue"></textarea></label>
+      </div>
+      <div class="gv-modal-foot">
+        <button class="gv-btn-secondary" (click)="showModal=false">Cancel</button>
+        <button class="gv-btn-primary" (click)="save()" [disabled]="!form.subject||!form.description">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>

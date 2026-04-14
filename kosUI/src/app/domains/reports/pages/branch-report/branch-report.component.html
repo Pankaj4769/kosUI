@@ -2,13 +2,6 @@
 
   <!-- Header -->
   <div class="rpt-header">
-    <div class="rpt-header__icon" style="background:#faf5ff">
-      <mat-icon style="color:#7c3aed">apartment</mat-icon>
-    </div>
-    <div>
-      <h1>Branch Report</h1>
-      <p>Cross-branch performance comparison</p>
-    </div>
     <div class="rpt-date-tabs">
       <button *ngFor="let r of ranges" [class.active]="activeRange===r" (click)="activeRange=r">{{r}}</button>
     </div>

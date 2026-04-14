@@ -63,22 +63,7 @@ export class OrderManagementService {
     shareReplay(1)
   );
 
-  constructor() {
-    this.initializeData();
-  }
-
-  /**
-   * Initialize with mock data
-   */
-  private initializeData(): void {
-    // Generate live orders (active orders)
-    const liveOrders = this.generateMockOrders(10, true);
-    this.liveOrdersSubject.next(liveOrders);
-
-    // Generate historical orders (completed)
-    const historyOrders = this.generateMockOrders(50, false);
-    this.historyOrdersSubject.next(historyOrders);
-  }
+  constructor() {}
 
   /**
    * Get all orders (live + history)
@@ -250,14 +235,11 @@ export class OrderManagementService {
   }
 
   /**
-   * Refresh all orders
+   * Refresh all orders — re-emits current state to trigger downstream updates
    */
   refreshAllOrders(): void {
-    const liveOrders = this.generateMockOrders(10, true);
-    const historyOrders = this.generateMockOrders(50, false);
-    
-    this.liveOrdersSubject.next(liveOrders);
-    this.historyOrdersSubject.next(historyOrders);
+    this.liveOrdersSubject.next(this.liveOrdersSubject.getValue());
+    this.historyOrdersSubject.next(this.historyOrdersSubject.getValue());
   }
 
   /**

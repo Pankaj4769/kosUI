@@ -1,0 +1,388 @@
+<div class="ann-page">
+
+  <!-- ══════════════════ PAGE HEADER ══════════════════ -->
+  <div class="ann-page-hdr">
+    <div class="ann-page-hdr-left">
+      <h1 class="ann-page-title">
+        <span class="material-icons">campaign</span>
+        Announcements &amp; Noticeboard
+      </h1>
+      <p class="ann-page-sub">Post notices, policies and updates to your team</p>
+    </div>
+    <div class="ann-page-hdr-actions">
+      <button class="ann-btn-secondary" (click)="viewMode = viewMode === 'cards' ? 'list' : 'cards'">
+        <span class="material-icons">{{ viewMode === 'cards' ? 'view_list' : 'grid_view' }}</span>
+        {{ viewMode === 'cards' ? 'List View' : 'Card View' }}
+      </button>
+      <button class="ann-btn-primary" (click)="openCompose()">
+        <span class="material-icons">add</span>
+        New Announcement
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ KPI STRIP ══════════════════ -->
+  <div class="ann-kpi-strip">
+    <div class="ann-kpi-card" (click)="applyKpiFilter('ALL')" [class.ann-kpi--active]="filterStatus === 'ALL'">
+      <span class="material-icons ann-kpi-icon kpi-blue">campaign</span>
+      <div class="ann-kpi-body">
+        <span class="ann-kpi-val">{{ totalCount }}</span>
+        <span class="ann-kpi-lbl">Total</span>
+      </div>
+    </div>
+    <div class="ann-kpi-card" (click)="applyKpiFilter('ACTIVE')" [class.ann-kpi--active]="filterStatus === 'ACTIVE'">
+      <span class="material-icons ann-kpi-icon kpi-green">check_circle</span>
+      <div class="ann-kpi-body">
+        <span class="ann-kpi-val">{{ activeCount }}</span>
+        <span class="ann-kpi-lbl">Active</span>
+      </div>
+    </div>
+    <div class="ann-kpi-card" (click)="applyKpiFilter('ALL')" [class.ann-kpi--active]="false">
+      <span class="material-icons ann-kpi-icon kpi-orange">push_pin</span>
+      <div class="ann-kpi-body">
+        <span class="ann-kpi-val">{{ pinnedCount }}</span>
+        <span class="ann-kpi-lbl">Pinned</span>
+      </div>
+    </div>
+    <div class="ann-kpi-card" (click)="applyKpiFilter('SCHEDULED')" [class.ann-kpi--active]="filterStatus === 'SCHEDULED'">
+      <span class="material-icons ann-kpi-icon kpi-purple">schedule</span>
+      <div class="ann-kpi-body">
+        <span class="ann-kpi-val">{{ scheduledCount }}</span>
+        <span class="ann-kpi-lbl">Scheduled</span>
+      </div>
+    </div>
+    <div class="ann-kpi-card" (click)="applyKpiFilter('DRAFT')" [class.ann-kpi--active]="filterStatus === 'DRAFT'">
+      <span class="material-icons ann-kpi-icon kpi-gray">drafts</span>
+      <div class="ann-kpi-body">
+        <span class="ann-kpi-val">{{ draftCount }}</span>
+        <span class="ann-kpi-lbl">Drafts</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ FILTER BAR ══════════════════ -->
+  <div class="ann-filter-bar">
+    <div class="ann-search-wrap">
+      <span class="material-icons ann-search-ico">search</span>
+      <input type="text" class="ann-search-input" placeholder="Search announcements..."
+             [(ngModel)]="searchQuery" autocomplete="off"/>
+      <button class="ann-search-clear" *ngIf="searchQuery" (click)="searchQuery=''">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <select class="ann-select" [(ngModel)]="filterCategory">
+      <option value="ALL">All Categories</option>
+      <option *ngFor="let c of categories" [value]="c">{{ getCatMeta(c).label }}</option>
+    </select>
+
+    <select class="ann-select" [(ngModel)]="filterAudience">
+      <option value="ALL">All Audiences</option>
+      <option *ngFor="let a of audiences" [value]="a">{{ getAudMeta(a).label }}</option>
+    </select>
+  </div>
+
+  <!-- ══════════════════ PINNED SECTION ══════════════════ -->
+  <ng-container *ngIf="pinnedItems.length > 0">
+    <div class="ann-section-label">
+      <span class="material-icons">push_pin</span> Pinned
+    </div>
+    <div [class]="viewMode === 'cards' ? 'ann-grid' : 'ann-list'">
+      <ng-container *ngFor="let a of pinnedItems; trackBy: trackById">
+        <ng-container *ngTemplateOutlet="annCard; context: { $implicit: a }"></ng-container>
+      </ng-container>
+    </div>
+  </ng-container>
+
+  <!-- ══════════════════ ALL ANNOUNCEMENTS ══════════════════ -->
+  <div class="ann-section-label" *ngIf="unpinnedItems.length > 0">
+    <span class="material-icons">article</span>
+    {{ pinnedItems.length ? 'Other Announcements' : 'Announcements' }}
+    <span class="ann-section-count">{{ unpinnedItems.length }}</span>
+  </div>
+
+  <div [class]="viewMode === 'cards' ? 'ann-grid' : 'ann-list'" *ngIf="unpinnedItems.length > 0">
+    <ng-container *ngFor="let a of unpinnedItems; trackBy: trackById">
+      <ng-container *ngTemplateOutlet="annCard; context: { $implicit: a }"></ng-container>
+    </ng-container>
+  </div>
+
+  <!-- ══════════════════ EMPTY STATE ══════════════════ -->
+  <div class="ann-empty" *ngIf="filtered.length === 0">
+    <span class="material-icons">campaign</span>
+    <p>No announcements match your filters</p>
+    <button class="ann-btn-primary" (click)="openCompose()">Post First Announcement</button>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════ CARD TEMPLATE ══════════════════════════════ -->
+<ng-template #annCard let-a>
+  <div class="ann-card" [class.ann-card--pinned]="a.pinned"
+       [class.ann-card--draft]="a.status === 'DRAFT'"
+       [class.ann-card--urgent]="a.category === 'URGENT'">
+
+    <!-- Card top bar -->
+    <div class="ann-card-topbar">
+      <span class="ann-cat-badge" [ngClass]="getCatMeta(a.category).colorClass">
+        <span class="material-icons">{{ getCatMeta(a.category).icon }}</span>
+        {{ getCatMeta(a.category).label }}
+      </span>
+      <div class="ann-card-actions">
+        <button class="ann-icon-btn" [class.ann-pin--active]="a.pinned"
+                (click)="togglePin(a); $event.stopPropagation()" [title]="a.pinned ? 'Unpin' : 'Pin'">
+          <span class="material-icons">push_pin</span>
+        </button>
+        <button class="ann-icon-btn" (click)="openCompose(a); $event.stopPropagation()" title="Edit">
+          <span class="material-icons">edit</span>
+        </button>
+        <button class="ann-icon-btn ann-icon-btn--danger" (click)="confirmDelete(a); $event.stopPropagation()" title="Delete">
+          <span class="material-icons">delete_outline</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card body -->
+    <div class="ann-card-body" (click)="openDetail(a)">
+      <h3 class="ann-card-title">{{ a.title }}</h3>
+      <p class="ann-card-excerpt">{{ a.body | slice:0:120 }}{{ a.body.length > 120 ? '…' : '' }}</p>
+    </div>
+
+    <!-- Card meta -->
+    <div class="ann-card-meta">
+      <!-- Audience chips -->
+      <div class="ann-audience-chips">
+        <span class="ann-audience-chip" *ngFor="let aud of a.audience">
+          <span class="material-icons">{{ getAudMeta(aud).icon }}</span>
+          {{ getAudMeta(aud).label }}
+        </span>
+      </div>
+
+      <!-- Status badge -->
+      <span class="ann-status-badge" [ngClass]="'ann-status--' + a.status.toLowerCase()">
+        {{ a.status === 'SCHEDULED' ? ('Scheduled ' + (a.scheduledAt | date:'d MMM')) : a.status }}
+      </span>
+    </div>
+
+    <!-- Read progress -->
+    <div class="ann-read-row" *ngIf="a.status === 'ACTIVE' && a.totalStaff > 0">
+      <div class="ann-read-bar-wrap">
+        <div class="ann-read-bar" [style.width.%]="readRate(a)"></div>
+      </div>
+      <span class="ann-read-label">{{ a.readBy.length }}/{{ a.totalStaff }} read</span>
+    </div>
+
+    <!-- Card footer -->
+    <div class="ann-card-footer">
+      <span class="ann-footer-by">
+        <span class="material-icons">person</span> {{ a.createdBy }}
+      </span>
+      <span class="ann-footer-date">{{ a.publishedAt | date:'d MMM yyyy' }}</span>
+    </div>
+
+  </div>
+</ng-template>
+
+
+<!-- ══════════════════════════════ DETAIL MODAL ══════════════════════════════ -->
+<div class="ann-modal-backdrop" *ngIf="showDetail" (click)="showDetail = null">
+  <div class="ann-modal ann-modal--detail" (click)="$event.stopPropagation()">
+    <div class="ann-modal-hdr">
+      <div class="ann-modal-hdr-left">
+        <span class="ann-cat-badge" [ngClass]="getCatMeta(showDetail!.category).colorClass">
+          <span class="material-icons">{{ getCatMeta(showDetail!.category).icon }}</span>
+          {{ getCatMeta(showDetail!.category).label }}
+        </span>
+        <h2>{{ showDetail!.title }}</h2>
+      </div>
+      <button class="ann-modal-close" (click)="showDetail = null">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="ann-modal-body">
+      <p class="ann-detail-body">{{ showDetail!.body }}</p>
+
+      <div class="ann-detail-meta-grid">
+        <div class="ann-detail-meta-item">
+          <span class="ann-detail-meta-lbl">Audience</span>
+          <div class="ann-audience-chips">
+            <span class="ann-audience-chip" *ngFor="let aud of showDetail!.audience">
+              <span class="material-icons">{{ getAudMeta(aud).icon }}</span>
+              {{ getAudMeta(aud).label }}
+            </span>
+          </div>
+        </div>
+        <div class="ann-detail-meta-item">
+          <span class="ann-detail-meta-lbl">Status</span>
+          <span class="ann-status-badge" [ngClass]="'ann-status--' + showDetail!.status.toLowerCase()">
+            {{ showDetail!.status }}
+          </span>
+        </div>
+        <div class="ann-detail-meta-item">
+          <span class="ann-detail-meta-lbl">Published by</span>
+          <span>{{ showDetail!.createdBy }}</span>
+        </div>
+        <div class="ann-detail-meta-item">
+          <span class="ann-detail-meta-lbl">Date</span>
+          <span>{{ showDetail!.publishedAt | date:'d MMMM yyyy, h:mm a' }}</span>
+        </div>
+        <div class="ann-detail-meta-item" *ngIf="showDetail!.scheduledAt">
+          <span class="ann-detail-meta-lbl">Scheduled for</span>
+          <span>{{ showDetail!.scheduledAt | date:'d MMMM yyyy' }}</span>
+        </div>
+        <div class="ann-detail-meta-item" *ngIf="showDetail!.status === 'ACTIVE'">
+          <span class="ann-detail-meta-lbl">Read by</span>
+          <span>{{ showDetail!.readBy.length }} of {{ showDetail!.totalStaff }} staff</span>
+        </div>
+      </div>
+
+      <!-- Read progress full -->
+      <div class="ann-read-progress-full" *ngIf="showDetail!.status === 'ACTIVE'">
+        <div class="ann-read-bar-wrap">
+          <div class="ann-read-bar" [style.width.%]="readRate(showDetail!)"></div>
+        </div>
+        <span class="ann-read-pct">{{ readRate(showDetail!) }}% read rate</span>
+      </div>
+    </div>
+
+    <div class="ann-modal-footer">
+      <button class="ann-btn-secondary" (click)="archiveAnnouncement(showDetail!)"
+              *ngIf="showDetail!.status === 'ACTIVE'">
+        <span class="material-icons">archive</span> Archive
+      </button>
+      <button class="ann-btn-secondary" (click)="openCompose(showDetail!); showDetail = null">
+        <span class="material-icons">edit</span> Edit
+      </button>
+      <button class="ann-btn-danger" (click)="confirmDelete(showDetail!)">
+        <span class="material-icons">delete</span> Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ COMPOSE MODAL ══════════════════════════════ -->
+<div class="ann-modal-backdrop" *ngIf="showCompose" (click)="showCompose = false">
+  <div class="ann-modal ann-modal--compose" (click)="$event.stopPropagation()">
+    <div class="ann-modal-hdr">
+      <h2>{{ draft.id ? 'Edit Announcement' : 'New Announcement' }}</h2>
+      <button class="ann-modal-close" (click)="showCompose = false">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="ann-modal-body ann-compose-body">
+
+      <!-- Title -->
+      <div class="ann-field">
+        <label class="ann-label">Title <span class="ann-required">*</span></label>
+        <input class="ann-input" type="text" placeholder="Announcement title…" [(ngModel)]="draft.title" maxlength="120"/>
+      </div>
+
+      <!-- Body -->
+      <div class="ann-field">
+        <label class="ann-label">Message <span class="ann-required">*</span></label>
+        <textarea class="ann-textarea" rows="5" placeholder="Write your announcement…"
+                  [(ngModel)]="draft.body" maxlength="2000"></textarea>
+        <span class="ann-char-count">{{ (draft.body?.length ?? 0) }}/2000</span>
+      </div>
+
+      <!-- Category + Status row -->
+      <div class="ann-field-row">
+        <div class="ann-field">
+          <label class="ann-label">Category</label>
+          <select class="ann-select" [(ngModel)]="draft.category">
+            <option *ngFor="let c of categories" [value]="c">{{ getCatMeta(c).label }}</option>
+          </select>
+        </div>
+        <div class="ann-field">
+          <label class="ann-label">Status</label>
+          <select class="ann-select" [(ngModel)]="draft.status">
+            <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Audience -->
+      <div class="ann-field">
+        <label class="ann-label">Audience</label>
+        <div class="ann-audience-toggle-group">
+          <button *ngFor="let aud of audiences" type="button"
+                  class="ann-audience-toggle" [class.selected]="isAudienceSelected(aud)"
+                  (click)="toggleAudience(aud)">
+            <span class="material-icons">{{ getAudMeta(aud).icon }}</span>
+            {{ getAudMeta(aud).label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Scheduled / Expires row -->
+      <div class="ann-field-row" *ngIf="draft.status === 'SCHEDULED' || draft.status === 'ACTIVE'">
+        <div class="ann-field" *ngIf="draft.status === 'SCHEDULED'">
+          <label class="ann-label">Publish Date</label>
+          <input class="ann-input" type="date" [(ngModel)]="draft.scheduledAt"/>
+        </div>
+        <div class="ann-field">
+          <label class="ann-label">Expires On (optional)</label>
+          <input class="ann-input" type="date" [(ngModel)]="draft.expiresAt"/>
+        </div>
+      </div>
+
+      <!-- Pin toggle -->
+      <div class="ann-field ann-field--inline">
+        <label class="ann-toggle-label">
+          <input type="checkbox" class="ann-toggle-checkbox" [(ngModel)]="draft.pinned"/>
+          <span class="ann-toggle-track"></span>
+          <span class="ann-toggle-text">
+            <span class="material-icons">push_pin</span>
+            Pin this announcement to the top
+          </span>
+        </label>
+      </div>
+
+    </div>
+
+    <div class="ann-modal-footer">
+      <button class="ann-btn-secondary" (click)="showCompose = false">Cancel</button>
+      <button class="ann-btn-primary" (click)="saveAnnouncement()">
+        <span class="material-icons">send</span>
+        {{ draft.id ? 'Update' : 'Publish' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ DELETE CONFIRM ══════════════════════════════ -->
+<div class="ann-modal-backdrop" *ngIf="showDeleteConfirm" (click)="showDeleteConfirm = null">
+  <div class="ann-modal ann-modal--confirm" (click)="$event.stopPropagation()">
+    <div class="ann-modal-hdr">
+      <h2>Delete Announcement</h2>
+      <button class="ann-modal-close" (click)="showDeleteConfirm = null">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="ann-modal-body">
+      <div class="ann-confirm-icon"><span class="material-icons">delete_forever</span></div>
+      <p class="ann-confirm-msg">Are you sure you want to delete<br/>
+        <strong>{{ showDeleteConfirm!.title }}</strong>?
+      </p>
+      <p class="ann-confirm-sub">This action cannot be undone.</p>
+    </div>
+    <div class="ann-modal-footer">
+      <button class="ann-btn-secondary" (click)="showDeleteConfirm = null">Cancel</button>
+      <button class="ann-btn-danger" (click)="executeDelete()">
+        <span class="material-icons">delete</span> Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ TOAST ══════════════════════════════ -->
+<div class="ann-toast" [class.ann-toast--visible]="toastVisible"
+     [class.ann-toast--error]="toastType === 'error'">
+  <span class="material-icons">{{ toastType === 'success' ? 'check_circle' : 'error' }}</span>
+  {{ toastMsg }}
+</div>

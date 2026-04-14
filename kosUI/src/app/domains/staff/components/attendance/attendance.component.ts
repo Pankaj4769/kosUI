@@ -1,15 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Subject, of } from 'rxjs';
+import { catchError, takeUntil } from 'rxjs/operators';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { StaffService, StaffMember } from '../../services/staff.service';
+import { AttendanceService } from '../../services/attendance.service';
+import { AttendanceStatus } from '../../models/attendance.model';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-export type AttendanceStatus =
-  | 'PRESENT'
-  | 'ABSENT'
-  | 'LATE'
-  | 'HALF_DAY'
-  | 'ON_LEAVE';
 
 export type ViewMode = 'employee' | 'manager';
 
@@ -32,67 +31,6 @@ export interface AttendanceKpi {
   onLeave: number;
 }
 
-// ─── Mock Session ─────────────────────────────────────────────────────────────
-// Simulates what AuthService / RoleService would return.
-// To wire real services:
-//   1. constructor(private auth: AuthService, private role: RoleService) {}
-//   2. In resolveSession():
-//      this.currentStaffId   = this.auth.currentUser.staffId;
-//      this.currentStaffName = this.auth.currentUser.name;
-//      this.hasManagerAccess = this.role.hasRole(['MANAGER', 'ADMIN']);
-//   3. Delete MOCK_SESSION and MOCK_* constants below.
-
-const MOCK_SESSION = {
-  staffId:   'S001',
-  staffName: 'Arjun Mehta',
-  role:      'MANAGER' as 'EMPLOYEE' | 'MANAGER' | 'ADMIN'
-};
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const MOCK_RECORDS: AttendanceRecordView[] = [
-  {
-    id: 'a1', staffId: 'S001', staffName: 'Arjun Mehta',
-    date: new Date(), clockIn: '09:02', clockOut: '18:05',
-    status: 'PRESENT', totalHours: 9.05, notes: ''
-  },
-  {
-    id: 'a2', staffId: 'S002', staffName: 'Priya Sharma',
-    date: new Date(), clockIn: '09:45', clockOut: '18:00',
-    status: 'LATE', totalHours: 8.25, notes: 'Traffic delay'
-  },
-  {
-    id: 'a3', staffId: 'S003', staffName: 'Rahul Nair',
-    date: new Date(), clockIn: null, clockOut: null,
-    status: 'ABSENT', totalHours: 0, notes: 'No show'
-  },
-  {
-    id: 'a4', staffId: 'S004', staffName: 'Sneha Patil',
-    date: new Date(), clockIn: '09:00', clockOut: '13:00',
-    status: 'HALF_DAY', totalHours: 4, notes: 'Doctor appointment'
-  },
-  {
-    id: 'a5', staffId: 'S005', staffName: 'Kiran Das',
-    date: new Date(), clockIn: null, clockOut: null,
-    status: 'ON_LEAVE', totalHours: 0, notes: 'Approved CL'
-  },
-  {
-    id: 'a6', staffId: 'S006', staffName: 'Meera Iyer',
-    date: new Date(), clockIn: '08:55', clockOut: '18:10',
-    status: 'PRESENT', totalHours: 9.25, notes: ''
-  },
-  {
-    id: 'a7', staffId: 'S007', staffName: 'Vijay Kumar',
-    date: new Date(), clockIn: '10:15', clockOut: '18:00',
-    status: 'LATE', totalHours: 7.75, notes: 'Bike breakdown'
-  }
-];
-
-const MOCK_KPI: AttendanceKpi = { present: 3, absent: 1, late: 2, onLeave: 1 };
-
-// Legacy: kept for any external bindings; modal now iterates records directly.
-const MOCK_STAFF_IDS: string[] = ['S001', 'S002', 'S003', 'S004', 'S005', 'S006', 'S007'];
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 @Component({
@@ -102,37 +40,30 @@ const MOCK_STAFF_IDS: string[] = ['S001', 'S002', 'S003', 'S004', 'S005', 'S006'
   templateUrl: './attendance.component.html',
   styleUrls: ['./attendance.component.css']
 })
-export class AttendanceComponent implements OnInit {
+export class AttendanceComponent implements OnInit, OnDestroy {
 
-  // ── Inputs ──────────────────────────────────────────────────────────────
-  @Input() records: AttendanceRecordView[] = [];
-  @Input() kpi!: AttendanceKpi;
-  @Input() selectedDate!: Date;
-  @Input() loading = false;
-  @Input() errorMessage: string | null = null;
+  private destroy$ = new Subject<void>();
 
-  // ── Outputs ─────────────────────────────────────────────────────────────
-  @Output() dateChange     = new EventEmitter<Date>();
-  @Output() markAttendance = new EventEmitter<{ staffId: string; status: AttendanceStatus }>();
-  @Output() clockOut       = new EventEmitter<string>();
-  @Output() viewDetails    = new EventEmitter<AttendanceRecordView>();
+  // ── Data ─────────────────────────────────────────────────────────────────
+  records: AttendanceRecordView[] = [];
+  kpi: AttendanceKpi = { present: 0, absent: 0, late: 0, onLeave: 0 };
+  selectedDate: Date = new Date();
+  loading = false;
+  errorMessage: string | null = null;
 
-  // ── Role / Session ───────────────────────────────────────────────────────
-  /** Resolved from session in ngOnInit. Never set via @Input(). */
+  // ── Session ──────────────────────────────────────────────────────────────
   hasManagerAccess = false;
-  currentStaffId   = '';
+  currentStaffId   = '';   // EM employee id
   currentStaffName = '';
+  staffMembers: StaffMember[] = [];   // all staff (for dropdown)
 
   // ── View State ───────────────────────────────────────────────────────────
-  /** Always opens as 'employee'. Switches to 'manager' only on explicit user action + role check. */
   viewMode: ViewMode = 'employee';
-
   statusFilter: AttendanceStatus | 'ALL' = 'ALL';
   searchQuery = '';
 
   showMarkModal   = false;
   showDetailModal = false;
-
   selectedRecord: AttendanceRecordView | null = null;
 
   markForm: { staffId: string; status: AttendanceStatus; notes: string } = {
@@ -147,60 +78,121 @@ export class AttendanceComponent implements OnInit {
     'PRESENT', 'ABSENT', 'LATE', 'HALF_DAY', 'ON_LEAVE'
   ];
 
-  readonly staffIds = MOCK_STAFF_IDS;
-
   calendarDays: Array<{ date: Date; status: AttendanceStatus | null }> = [];
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
+  constructor(
+    private auth: AuthService,
+    private staffSvc: StaffService,
+    private attendanceSvc: AttendanceService
+  ) {}
+
   ngOnInit(): void {
-    this.resolveSession();               // Step 1: identity + role
-    this.viewMode = 'employee';          // Step 2: always open employee view
-
-    if (!this.selectedDate) {
-      this.selectedDate = new Date();    // Step 3: default to today
-    }
-    if (!this.records || this.records.length === 0) {
-      this.records = MOCK_RECORDS;       // Step 4: seed mock if no parent data
-    }
-    if (!this.kpi) {
-      this.kpi = MOCK_KPI;
-    }
-
-    this.buildCalendar();
+    this.resolveSession();
   }
 
-  /**
-   * Resolves identity and role from session.
-   * Currently uses MOCK_SESSION — swap body for real service when ready.
-   */
-  private resolveSession(): void {
-    // ── Mock (safe default) ──────────────────────────────────────────────
-    this.currentStaffId   = MOCK_SESSION.staffId;
-    this.currentStaffName = MOCK_SESSION.staffName;
-    this.hasManagerAccess = MOCK_SESSION.role === 'MANAGER' || MOCK_SESSION.role === 'ADMIN';
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
-    // ── Real service (uncomment when AuthService is available) ───────────
-    // this.currentStaffId   = this.auth.currentUser.staffId;
-    // this.currentStaffName = this.auth.currentUser.name;
-    // this.hasManagerAccess = this.role.hasRole(['MANAGER', 'ADMIN']);
+  // ── Session ──────────────────────────────────────────────────────────────
+  private resolveSession(): void {
+    const user = this.auth.currentUser;
+    if (!user) return;
+
+    this.currentStaffName = user.name;
+    const kosRole = user.role;
+    this.hasManagerAccess = kosRole === 'OWNER' || kosRole === 'MANAGER';
+
+    // Find EM employee id (emId) for this user via StaffService
+    const restaurantId = user.restaurantId ?? '';
+    this.staffSvc.loadStaff(restaurantId);
+    this.staffSvc.staff$.pipe(takeUntil(this.destroy$)).subscribe(staffList => {
+      this.staffMembers = staffList;
+      const me = staffList.find(s => s.id === String(user.staffId));
+      if (me?.emId) {
+        this.currentStaffId = me.emId;
+        this.loadAttendance();
+        this.loadCalendar();
+      } else {
+        // No EM record yet — load attendance for manager view if access
+        if (this.hasManagerAccess) {
+          this.loadAttendance();
+        }
+      }
+    });
+  }
+
+  // ── Data Loading ─────────────────────────────────────────────────────────
+  loadAttendance(): void {
+    this.loading = true;
+    this.errorMessage = null;
+
+    const source$ = (this.viewMode === 'manager' || !this.currentStaffId)
+      ? this.attendanceSvc.getAttendanceForDate(this.selectedDate)
+      : this.attendanceSvc.getAttendanceForEmployee(this.currentStaffId).pipe(
+          catchError(() => of([]))
+        );
+
+    source$.pipe(
+      catchError(() => {
+        this.errorMessage = 'Failed to load attendance data.';
+        return of([]);
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe(records => {
+      // In employee view, filter to only the current user's records
+      const filtered = (this.viewMode === 'employee' && this.currentStaffId)
+        ? records.filter(r => r.staffId === this.currentStaffId)
+        : records;
+      this.records = filtered.map(r => ({ ...r }));
+      this.recalcKpi();
+      this.loading = false;
+    });
+  }
+
+  loadCalendar(): void {
+    if (!this.currentStaffId) return;
+    const year  = this.selectedDate.getFullYear();
+    const month = this.selectedDate.getMonth();
+    const start = new Date(year, month, 1);
+    const end   = new Date(year, month + 1, 0);
+
+    this.attendanceSvc.getAttendanceForEmployeeRange(this.currentStaffId, start, end)
+      .pipe(takeUntil(this.destroy$), catchError(() => of([])))
+      .subscribe(records => {
+        const statusByDay = new Map<string, AttendanceStatus>();
+        records.forEach(r => {
+          const key = new Date(r.date).toISOString().split('T')[0];
+          statusByDay.set(key, r.status);
+        });
+        const daysInMonth = end.getDate();
+        this.calendarDays = Array.from({ length: daysInMonth }, (_, i) => {
+          const d = new Date(year, month, i + 1);
+          return {
+            date:   d,
+            status: statusByDay.get(d.toISOString().split('T')[0]) ?? null
+          };
+        });
+      });
   }
 
   // ── View Toggle ──────────────────────────────────────────────────────────
   switchToManager(): void {
-    if (!this.hasManagerAccess) return;  // TS guard — HTML *ngIf is secondary
+    if (!this.hasManagerAccess) return;
     this.viewMode = 'manager';
+    this.loadAttendance();
   }
 
   switchToEmployee(): void {
     this.viewMode = 'employee';
+    this.loadAttendance();
   }
 
   // ── Filtered Records ─────────────────────────────────────────────────────
   get filteredRecords(): AttendanceRecordView[] {
-    let list = this.viewMode === 'employee'
-      ? this.records.filter(r => r.staffId === this.currentStaffId)
-      : [...this.records];
-
+    let list = [...this.records];
     if (this.statusFilter !== 'ALL') {
       list = list.filter(r => r.status === this.statusFilter);
     }
@@ -224,8 +216,8 @@ export class AttendanceComponent implements OnInit {
     const next = new Date(value);
     if (!isNaN(next.getTime())) {
       this.selectedDate = next;
-      this.dateChange.emit(next);
-      this.buildCalendar();
+      this.loadAttendance();
+      this.loadCalendar();
     }
   }
 
@@ -238,7 +230,7 @@ export class AttendanceComponent implements OnInit {
   // ── Mark Attendance Modal ────────────────────────────────────────────────
   openMarkModal(record?: AttendanceRecordView): void {
     this.markForm = {
-      staffId: record?.staffId ?? '',
+      staffId: record?.staffId ?? this.currentStaffId,
       status:  record?.status  ?? 'PRESENT',
       notes:   record?.notes   ?? ''
     };
@@ -251,21 +243,28 @@ export class AttendanceComponent implements OnInit {
 
   submitMarkForm(): void {
     if (!this.markForm.staffId) return;
-    this.onMarkAttendance(this.markForm.staffId, this.markForm.status);
-    const rec = this.records.find(r => r.staffId === this.markForm.staffId);
-    if (rec) {
-      rec.status = this.markForm.status;
-      rec.notes  = this.markForm.notes;
-    }
-    this.recalcKpi();
-    this.closeMarkModal();
+    this.attendanceSvc.markAttendance(
+      this.markForm.staffId,
+      this.markForm.status,
+      this.selectedDate,
+      this.markForm.notes
+    ).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.closeMarkModal();
+        this.loadAttendance();
+        this.loadCalendar();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to mark attendance.';
+        this.closeMarkModal();
+      }
+    });
   }
 
   // ── Detail Modal ─────────────────────────────────────────────────────────
   openDetailModal(record: AttendanceRecordView): void {
-    this.selectedRecord = record;
+    this.selectedRecord  = record;
     this.showDetailModal = true;
-    this.onViewDetails(record);
   }
 
   closeDetailModal(): void {
@@ -273,10 +272,6 @@ export class AttendanceComponent implements OnInit {
     this.selectedRecord  = null;
   }
 
-  /**
-   * Opens mark modal from within the detail modal.
-   * Closes detail first, then opens mark on next tick to prevent flicker.
-   */
   onEditFromDetail(): void {
     const rec = this.selectedRecord;
     this.closeDetailModal();
@@ -285,27 +280,20 @@ export class AttendanceComponent implements OnInit {
 
   // ── Clock Out ────────────────────────────────────────────────────────────
   handleClockOut(staffId: string): void {
-    const now  = new Date();
-    const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    const rec  = this.records.find(r => r.staffId === staffId);
-    if (rec) rec.clockOut = time;
-    this.onClockOut(staffId);
+    const record = this.records.find(r => r.staffId === staffId);
+    if (!record) return;
+    this.attendanceSvc.clockOut(record.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: updated => {
+        const idx = this.records.findIndex(r => r.id === record.id);
+        if (idx !== -1 && updated.clockOut) {
+          this.records[idx].clockOut = updated.clockOut;
+        }
+      },
+      error: () => { this.errorMessage = 'Failed to clock out.'; }
+    });
   }
 
   // ── Calendar ─────────────────────────────────────────────────────────────
-  buildCalendar(): void {
-    const year        = this.selectedDate.getFullYear();
-    const month       = this.selectedDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const fakeStatuses: AttendanceStatus[] = [
-      'PRESENT', 'PRESENT', 'PRESENT', 'LATE', 'ABSENT', 'HALF_DAY', 'ON_LEAVE'
-    ];
-    this.calendarDays = Array.from({ length: daysInMonth }, (_, i) => ({
-      date:   new Date(year, month, i + 1),
-      status: fakeStatuses[i % fakeStatuses.length]
-    }));
-  }
-
   get calendarMonthLabel(): string {
     return this.selectedDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
   }
@@ -318,28 +306,34 @@ export class AttendanceComponent implements OnInit {
     ).getDay();
   }
 
-  /**
-   * Returns a fixed-length array for calendar offset slots.
-   * Replaces [].constructor(n) in templates to avoid strict-mode warnings.
-   */
   getOffsetArray(): number[] {
     return Array(this.getCalendarStartOffset()).fill(0);
   }
 
-  // ── Emitters ─────────────────────────────────────────────────────────────
-  onMarkAttendance(staffId: string, status: AttendanceStatus): void {
-    this.markAttendance.emit({ staffId, status });
+  // ── Computed ─────────────────────────────────────────────────────────────
+  get staffWithEmId(): StaffMember[] {
+    return this.staffMembers.filter(s => !!s.emId);
   }
 
-  onClockOut(staffId: string): void {
-    this.clockOut.emit(staffId);
+  get hasEmProfile(): boolean {
+    return !!this.currentStaffId;
   }
 
-  onViewDetails(record: AttendanceRecordView): void {
-    this.viewDetails.emit(record);
+  get unmarkedCount(): number {
+    const marked = new Set(this.records.map(r => r.staffId));
+    return this.staffWithEmId.filter(s => !marked.has(s.emId!)).length;
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
+  recalcKpi(): void {
+    this.kpi = {
+      present: this.records.filter(r => r.status === 'PRESENT').length,
+      absent:  this.records.filter(r => r.status === 'ABSENT').length,
+      late:    this.records.filter(r => r.status === 'LATE').length,
+      onLeave: this.records.filter(r => r.status === 'ON_LEAVE').length
+    };
+  }
+
   getAttendanceStatusColor(status: AttendanceStatus): string {
     const colors: Record<AttendanceStatus, string> = {
       PRESENT:  '#22c55e',
@@ -366,15 +360,6 @@ export class AttendanceComponent implements OnInit {
   getCountByStatus(status: AttendanceStatus | 'ALL'): number {
     if (status === 'ALL') return this.records.length;
     return this.records.filter(r => r.status === status).length;
-  }
-
-  recalcKpi(): void {
-    this.kpi = {
-      present: this.records.filter(r => r.status === 'PRESENT').length,
-      absent:  this.records.filter(r => r.status === 'ABSENT').length,
-      late:    this.records.filter(r => r.status === 'LATE').length,
-      onLeave: this.records.filter(r => r.status === 'ON_LEAVE').length
-    };
   }
 
   trackByRecordId(_: number, record: AttendanceRecordView): string {

@@ -1,450 +1,734 @@
-<div class="leave-management-wrapper">
+<div class="lm-page">
 
-  <!-- ================= PAGE HEADER ================= -->
-  <div class="page-header">
-    <div class="page-title-group">
-      <h2 class="page-title">
-        {{ viewMode === 'employee' ? '🙋 My Leave' : '🗂 Leave Management' }}
-      </h2>
-      <span class="view-pill" [class.manager-pill]="viewMode === 'manager'">
-        {{ viewMode === 'employee' ? 'Employee View' : 'Manager View' }}
-      </span>
+  <!-- ═══════════════════════════════════════════════════════
+       PAGE HEADER
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="lm-header">
+    <div class="lm-header-title">
+      <h1>{{ viewMode === 'employee' ? 'My Leave' : 'Leave Management' }}</h1>
+      <p>{{ viewMode === 'employee' ? 'Apply, track and manage your leave requests' : 'Review and manage team leave requests' }}</p>
     </div>
 
-    <div class="header-actions" *ngIf="hasManagerAccess">
-      <button
-        class="btn-view-toggle"
-        [class.active-manager]="viewMode === 'manager'"
-        (click)="viewMode === 'employee' ? switchToManager() : switchToEmployee()">
-        <span class="toggle-icon">{{ viewMode === 'employee' ? '🔑' : '👤' }}</span>
-        {{ viewMode === 'employee' ? 'Manager View' : 'Back to My Leave' }}
+    <div class="lm-header-right">
+      <!-- View toggle tabs (manager/owner only) -->
+      <nav class="lm-tabs" *ngIf="hasManagerAccess">
+        <button class="lm-tab" [class.lm-tab--active]="viewMode === 'employee'" (click)="switchToEmployee()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          My Leave
+        </button>
+        <button class="lm-tab" [class.lm-tab--active]="viewMode === 'manager'" (click)="switchToManager()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Manager View
+        </button>
+      </nav>
+
+      <!-- Apply / New Request button -->
+      <button class="lm-apply-btn" (click)="openNewRequestModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5"  y1="12" x2="19" y2="12"/>
+        </svg>
+        {{ viewMode === 'employee' ? 'Apply for Leave' : 'New Request' }}
       </button>
     </div>
   </div>
 
+  <!-- Error banner -->
+  <div class="lm-error" *ngIf="errorMessage" role="alert">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8"  x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    {{ errorMessage }}
+  </div>
 
-  <!-- ============================================================
+
+  <!-- ═══════════════════════════════════════════════════════
        EMPLOYEE VIEW
-  ============================================================ -->
+  ═══════════════════════════════════════════════════════════ -->
   <ng-container *ngIf="viewMode === 'employee'">
 
-    <!-- Employee KPI Strip -->
-    <div class="emp-kpi-strip">
-      <div class="emp-kpi-card">
-        <span class="emp-kpi-icon">📋</span>
-        <div>
-          <div class="emp-kpi-value">{{ myPendingCount }}</div>
-          <div class="emp-kpi-label">Pending</div>
+    <!-- Employee KPI strip -->
+    <div class="lm-kpi-strip">
+      <div class="lm-kpi-card">
+        <div class="lm-kpi-icon lm-kpi-icon--amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="lm-kpi-body">
+          <span class="lm-kpi-label">Pending</span>
+          <strong class="lm-kpi-value">{{ myPendingCount }}</strong>
         </div>
       </div>
-      <div class="emp-kpi-card">
-        <span class="emp-kpi-icon">✅</span>
-        <div>
-          <div class="emp-kpi-value">{{ myApprovedCount }}</div>
-          <div class="emp-kpi-label">Approved</div>
+
+      <div class="lm-kpi-card">
+        <div class="lm-kpi-icon lm-kpi-icon--green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="lm-kpi-body">
+          <span class="lm-kpi-label">Approved</span>
+          <strong class="lm-kpi-value">{{ myApprovedCount }}</strong>
         </div>
       </div>
-      <div class="emp-kpi-card">
-        <span class="emp-kpi-icon">📅</span>
-        <div>
-          <div class="emp-kpi-value">{{ myTotalDaysUsed }}</div>
-          <div class="emp-kpi-label">Days Used</div>
+
+      <div class="lm-kpi-card">
+        <div class="lm-kpi-icon lm-kpi-icon--blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2"  x2="16" y2="6"/>
+            <line x1="8"  y1="2"  x2="8"  y2="6"/>
+            <line x1="3"  y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div class="lm-kpi-body">
+          <span class="lm-kpi-label">Days Used</span>
+          <strong class="lm-kpi-value">{{ myTotalDaysUsed }}</strong>
         </div>
       </div>
-      <div class="emp-kpi-card highlight">
-        <span class="emp-kpi-icon">🏖</span>
-        <div>
-          <div class="emp-kpi-value">{{ (myBalance?.totalAllotted ?? 35) - myTotalDaysUsed }}</div>
-          <div class="emp-kpi-label">Days Remaining</div>
+
+      <div class="lm-kpi-card">
+        <div class="lm-kpi-icon lm-kpi-icon--teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <div class="lm-kpi-body">
+          <span class="lm-kpi-label">Days Remaining</span>
+          <strong class="lm-kpi-value">{{ (myBalance?.totalAllotted ?? 35) - myTotalDaysUsed }}</strong>
         </div>
       </div>
     </div>
 
-    <!-- Employee Tab Switcher + Apply Button -->
-    <div class="top-action-bar">
-      <div class="tab-switcher">
-        <button [class.active]="empTab === 'overview'"  (click)="empTab = 'overview'">📊 My Balance</button>
-        <button [class.active]="empTab === 'history'"   (click)="empTab = 'history'">📋 My Requests</button>
-        <button [class.active]="empTab === 'calendar'"  (click)="empTab = 'calendar'">🗓 Calendar</button>
-      </div>
-      <button class="btn-new-request" (click)="openNewRequestModal()">+ Apply for Leave</button>
+    <!-- Employee inner tab bar -->
+    <div class="lm-inner-tabs">
+      <button class="lm-inner-tab" [class.lm-inner-tab--active]="empTab === 'overview'" (click)="empTab = 'overview'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        Balance
+      </button>
+      <button class="lm-inner-tab" [class.lm-inner-tab--active]="empTab === 'history'" (click)="empTab = 'history'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+        </svg>
+        My Requests
+      </button>
+      <button class="lm-inner-tab" [class.lm-inner-tab--active]="empTab === 'calendar'" (click)="empTab = 'calendar'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2"  x2="16" y2="6"/>
+          <line x1="8"  y1="2"  x2="8"  y2="6"/>
+          <line x1="3"  y1="10" x2="21" y2="10"/>
+        </svg>
+        Calendar
+      </button>
     </div>
 
 
-    <!-- ===== EMPLOYEE TAB: MY BALANCE ===== -->
+    <!-- ── Employee: Balance overview ───────────────────── -->
     <ng-container *ngIf="empTab === 'overview'">
-      <div class="emp-balance-wrapper">
+      <div class="lm-balance-layout">
 
-        <!-- Balance Tiles -->
-        <div class="emp-balance-cards">
-          <div class="emp-balance-tile sick">
-            <div class="tile-header"><span class="tile-icon">🤒</span><span class="tile-title">Sick Leave</span></div>
-            <div class="tile-numbers">
-              <span class="tile-remaining">{{ getMyBalanceForType('SICK') }}</span>
-              <span class="tile-total">/ {{ ALLOTMENT['SICK'] }}</span>
-            </div>
-            <div class="tile-sub">{{ getMyUsedForType('SICK') }} days used</div>
-            <div class="tile-bar"><div class="tile-bar-fill sick" [style.width.%]="getUsedPercent('SICK')"></div></div>
-          </div>
+        <!-- Leave balance tiles -->
+        <div class="lm-balance-tiles">
 
-          <div class="emp-balance-tile casual">
-            <div class="tile-header"><span class="tile-icon">🌴</span><span class="tile-title">Casual Leave</span></div>
-            <div class="tile-numbers">
-              <span class="tile-remaining">{{ getMyBalanceForType('CASUAL') }}</span>
-              <span class="tile-total">/ {{ ALLOTMENT['CASUAL'] }}</span>
-            </div>
-            <div class="tile-sub">{{ getMyUsedForType('CASUAL') }} days used</div>
-            <div class="tile-bar"><div class="tile-bar-fill casual" [style.width.%]="getUsedPercent('CASUAL')"></div></div>
-          </div>
-
-          <div class="emp-balance-tile earned">
-            <div class="tile-header"><span class="tile-icon">⭐</span><span class="tile-title">Earned Leave</span></div>
-            <div class="tile-numbers">
-              <span class="tile-remaining">{{ getMyBalanceForType('EARNED') }}</span>
-              <span class="tile-total">/ {{ ALLOTMENT['EARNED'] }}</span>
-            </div>
-            <div class="tile-sub">{{ getMyUsedForType('EARNED') }} days used</div>
-            <div class="tile-bar"><div class="tile-bar-fill earned" [style.width.%]="getUsedPercent('EARNED')"></div></div>
-          </div>
-
-          <div class="emp-balance-tile unpaid">
-            <div class="tile-header"><span class="tile-icon">🔒</span><span class="tile-title">Unpaid Leave</span></div>
-            <div class="tile-numbers">
-              <span class="tile-remaining tile-red">{{ getMyUsedForType('UNPAID') }}</span>
-              <span class="tile-total">days taken</span>
-            </div>
-            <div class="tile-sub">No fixed limit</div>
-            <div class="tile-bar">
-              <div class="tile-bar-fill unpaid"
-                [style.width.%]="getMyUsedForType('UNPAID') > 0 ? 100 : 0">
+          <div class="lm-balance-tile">
+            <div class="lm-balance-tile-top">
+              <div class="lm-balance-icon lm-balance-icon--red">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+              </div>
+              <div>
+                <span class="lm-balance-tile-title">Sick Leave</span>
+                <span class="lm-balance-allot">{{ ALLOTMENT['SICK'] }} days allotted</span>
               </div>
             </div>
+            <div class="lm-balance-numbers">
+              <span class="lm-balance-remaining">{{ getMyBalanceForType('SICK') }}</span>
+              <span class="lm-balance-used">{{ getMyUsedForType('SICK') }} used</span>
+            </div>
+            <div class="lm-balance-track">
+              <div class="lm-balance-fill lm-fill--red" [style.width.%]="getUsedPercent('SICK')"></div>
+            </div>
           </div>
+
+          <div class="lm-balance-tile">
+            <div class="lm-balance-tile-top">
+              <div class="lm-balance-icon lm-balance-icon--amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5"/>
+                  <line x1="12" y1="1"  x2="12" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22"  x2="5.64"  y2="5.64"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12"  x2="3"  y2="12"/>
+                  <line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64"  y2="18.36"/>
+                  <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
+                </svg>
+              </div>
+              <div>
+                <span class="lm-balance-tile-title">Casual Leave</span>
+                <span class="lm-balance-allot">{{ ALLOTMENT['CASUAL'] }} days allotted</span>
+              </div>
+            </div>
+            <div class="lm-balance-numbers">
+              <span class="lm-balance-remaining">{{ getMyBalanceForType('CASUAL') }}</span>
+              <span class="lm-balance-used">{{ getMyUsedForType('CASUAL') }} used</span>
+            </div>
+            <div class="lm-balance-track">
+              <div class="lm-balance-fill lm-fill--amber" [style.width.%]="getUsedPercent('CASUAL')"></div>
+            </div>
+          </div>
+
+          <div class="lm-balance-tile">
+            <div class="lm-balance-tile-top">
+              <div class="lm-balance-icon lm-balance-icon--green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              </div>
+              <div>
+                <span class="lm-balance-tile-title">Earned Leave</span>
+                <span class="lm-balance-allot">{{ ALLOTMENT['EARNED'] }} days allotted</span>
+              </div>
+            </div>
+            <div class="lm-balance-numbers">
+              <span class="lm-balance-remaining">{{ getMyBalanceForType('EARNED') }}</span>
+              <span class="lm-balance-used">{{ getMyUsedForType('EARNED') }} used</span>
+            </div>
+            <div class="lm-balance-track">
+              <div class="lm-balance-fill lm-fill--green" [style.width.%]="getUsedPercent('EARNED')"></div>
+            </div>
+          </div>
+
+          <div class="lm-balance-tile">
+            <div class="lm-balance-tile-top">
+              <div class="lm-balance-icon lm-balance-icon--gray">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </div>
+              <div>
+                <span class="lm-balance-tile-title">Unpaid Leave</span>
+                <span class="lm-balance-allot">No fixed limit</span>
+              </div>
+            </div>
+            <div class="lm-balance-numbers">
+              <span class="lm-balance-remaining lm-remaining--red">{{ getMyUsedForType('UNPAID') }}</span>
+              <span class="lm-balance-used">days taken</span>
+            </div>
+            <div class="lm-balance-track">
+              <div class="lm-balance-fill lm-fill--gray" [style.width.%]="getMyUsedForType('UNPAID') > 0 ? 100 : 0"></div>
+            </div>
+          </div>
+
         </div>
 
-        <!-- Recent Requests Panel -->
-        <div class="emp-recent-panel">
-          <h4>Recent Requests</h4>
-          <div class="emp-recent-list">
-            <ng-container *ngIf="myRequests.length > 0; else noRecent">
-              <div
-                class="emp-recent-item"
-                *ngFor="let r of myRequests | slice:0:5"
-                (click)="openDetail(r)">
-                <div class="recent-left">
-                  <span class="leave-type-badge" [ngClass]="getLeaveTypeClass(r.leaveType)">
-                    {{ getLeaveTypeLabel(r.leaveType) }}
-                  </span>
-                  <span class="recent-dates">
-                    {{ r.startDate | date:'dd MMM' }}
-                    <ng-container *ngIf="!r.isHalfDay"> — {{ r.endDate | date:'dd MMM' }}</ng-container>
-                    <em *ngIf="r.isHalfDay"> (Half Day)</em>
-                  </span>
-                </div>
-                <span class="status-badge" [ngClass]="r.status.toLowerCase()">{{ r.status }}</span>
+        <!-- Recent requests side panel -->
+        <div class="lm-recent-panel">
+          <h3 class="lm-panel-title">Recent Requests</h3>
+
+          <ng-container *ngIf="myRequests.length > 0; else noRecent">
+            <div class="lm-recent-item"
+              *ngFor="let r of myRequests | slice:0:6"
+              (click)="openDetail(r)">
+              <div class="lm-recent-left">
+                <span class="lm-type-pill" [ngClass]="getLeaveTypeClass(r.leaveType)">
+                  {{ getLeaveTypeLabel(r.leaveType) }}
+                </span>
+                <span class="lm-recent-dates">
+                  {{ r.startDate | date:'dd MMM' }}
+                  <ng-container *ngIf="!r.isHalfDay"> – {{ r.endDate | date:'dd MMM' }}</ng-container>
+                  <em *ngIf="r.isHalfDay"> (Half Day)</em>
+                </span>
               </div>
-            </ng-container>
-            <ng-template #noRecent>
-              <div class="no-recent">No leave requests yet.</div>
-            </ng-template>
-          </div>
+              <span class="lm-status-pill" [ngClass]="'lm-s-' + r.status.toLowerCase()">
+                {{ r.status }}
+              </span>
+            </div>
+          </ng-container>
+
+          <ng-template #noRecent>
+            <div class="lm-recent-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                <rect x="9" y="3" width="6" height="4" rx="1"/>
+              </svg>
+              <p>No leave requests yet.</p>
+            </div>
+          </ng-template>
         </div>
 
       </div>
     </ng-container>
 
 
-    <!-- ===== EMPLOYEE TAB: MY HISTORY ===== -->
+    <!-- ── Employee: My Requests history ────────────────── -->
     <ng-container *ngIf="empTab === 'history'">
-
-      <!-- FIX 1 & 2: filterOptions typed array + getCountByEmpStatus() method -->
-      <div class="filter-bar">
-        <button
-          *ngFor="let f of filterOptions"
-          class="filter-btn"
-          [class.active]="empHistoryFilter === f"
-          (click)="empHistoryFilter = f">
-          {{ f }}
-          <span class="filter-count" *ngIf="f !== 'ALL'">
-            {{ getCountByEmpStatus(f) }}
-          </span>
-        </button>
+      <div class="lm-toolbar">
+        <div class="lm-filter-group">
+          <button class="lm-filter-btn" *ngFor="let f of filterOptions"
+            [class.lm-filter-btn--active]="empHistoryFilter === f"
+            (click)="empHistoryFilter = f">
+            {{ f }}
+            <span class="lm-filter-count">{{ getCountByEmpStatus(f) }}</span>
+          </button>
+        </div>
       </div>
 
-      <div class="requests-list">
-        <div
-          class="request-card"
+      <div class="lm-requests-list" *ngIf="myFilteredHistory.length > 0">
+        <div class="lm-request-row"
           *ngFor="let req of myFilteredHistory"
-          [class.pending]="req.status === 'PENDING'"
-          [class.approved]="req.status === 'APPROVED'"
-          [class.rejected]="req.status === 'REJECTED'"
           (click)="openDetail(req)">
 
-          <div class="card-left">
-            <div class="staff-avatar self-avatar">{{ currentStaffName.charAt(0) }}</div>
-            <div class="staff-info">
-              <span class="leave-type-badge" [ngClass]="getLeaveTypeClass(req.leaveType)">
-                {{ getLeaveTypeLabel(req.leaveType) }}
-                <em *ngIf="req.isHalfDay"> — Half Day</em>
-              </span>
-              <span class="role-text">Applied: {{ req.appliedDate | date:'dd MMM yyyy' }}</span>
+          <div class="lm-row-member">
+            <div class="lm-avatar">{{ currentStaffName.charAt(0) }}</div>
+            <div class="lm-row-info">
+              <strong>{{ currentStaffName }}</strong>
+              <span>Applied {{ req.appliedDate | date:'dd MMM yyyy' }}</span>
             </div>
           </div>
 
-          <div class="card-center">
-            <div class="leave-dates">
-              📅 {{ req.startDate | date:'dd MMM' }}
-              <ng-container *ngIf="!req.isHalfDay"> — {{ req.endDate | date:'dd MMM yyyy' }}</ng-container>
-              <span class="days-chip">{{ req.days }} day{{ req.days !== 1 ? 's' : '' }}</span>
-            </div>
-            <p class="leave-reason">{{ req.reason }}</p>
+          <span class="lm-type-pill" [ngClass]="getLeaveTypeClass(req.leaveType)">
+            {{ getLeaveTypeLabel(req.leaveType) }}
+            <em *ngIf="req.isHalfDay"> · Half Day</em>
+          </span>
+
+          <div class="lm-row-dates">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8"  y1="2" x2="8"  y2="6"/>
+              <line x1="3"  y1="10" x2="21" y2="10"/>
+            </svg>
+            {{ req.startDate | date:'dd MMM' }}
+            <ng-container *ngIf="!req.isHalfDay"> – {{ req.endDate | date:'dd MMM yyyy' }}</ng-container>
+            <span class="lm-days-chip">{{ req.days }}d</span>
           </div>
 
-          <div class="card-right" (click)="$event.stopPropagation()">
-            <span class="status-badge" [ngClass]="req.status.toLowerCase()">{{ req.status }}</span>
-            <div class="rejection-note" *ngIf="req.status === 'REJECTED' && req.rejectionReason">
-              <small>⚠️ {{ req.rejectionReason }}</small>
-            </div>
-            <div class="approval-note" *ngIf="req.status === 'APPROVED'">
-              <small>✔ By {{ req.approvedBy }} on {{ req.approvedDate | date:'dd MMM' }}</small>
-            </div>
+          <span class="lm-status-pill" [ngClass]="'lm-s-' + req.status.toLowerCase()">
+            {{ req.status }}
+          </span>
+
+          <div class="lm-row-meta">
+            <span *ngIf="req.status === 'APPROVED'" class="lm-meta-note lm-meta-note--ok">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              By {{ req.approvedBy }} · {{ req.approvedDate | date:'dd MMM' }}
+            </span>
+            <span *ngIf="req.status === 'REJECTED'" class="lm-meta-note lm-meta-note--err">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {{ req.rejectionReason }}
+            </span>
           </div>
 
-        </div>
-
-        <div class="empty-state" *ngIf="myFilteredHistory.length === 0">
-          <span>📭</span>
-          <p>No {{ empHistoryFilter !== 'ALL' ? empHistoryFilter.toLowerCase() : '' }} requests found.</p>
+          <button class="lm-icon-btn lm-icon-btn--view" title="View details" (click)="$event.stopPropagation(); openDetail(req)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
         </div>
       </div>
 
+      <div class="lm-empty" *ngIf="myFilteredHistory.length === 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+        </svg>
+        <p>No {{ empHistoryFilter !== 'ALL' ? empHistoryFilter.toLowerCase() : '' }} requests found.</p>
+      </div>
     </ng-container>
 
 
-    <!-- ===== EMPLOYEE TAB: CALENDAR ===== -->
+    <!-- ── Employee: Calendar ───────────────────────────── -->
     <ng-container *ngIf="empTab === 'calendar'">
+      <div class="lm-panel">
+        <div class="lm-cal-nav">
+          <button class="lm-cal-nav-btn" (click)="prevMonth()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="lm-cal-title">{{ calendarDate | date:'MMMM yyyy' }}</span>
+          <button class="lm-cal-nav-btn" (click)="nextMonth()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
 
-      <div class="calendar-nav">
-        <button class="icon-btn" (click)="prevMonth()">◀</button>
-        <h3>{{ calendarDate | date:'MMMM yyyy' }}</h3>
-        <button class="icon-btn" (click)="nextMonth()">▶</button>
-      </div>
-
-      <div class="calendar-grid">
-        <div class="cal-header" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">{{ d }}</div>
-        <ng-container *ngFor="let week of calendarWeeks">
-          <div
-            *ngFor="let day of week"
-            class="cal-day"
-            [class.today]="isToday(day)"
-            [class.other-month]="isOtherMonth(day)"
-            [class.my-leave-day]="getMyLeavesForDay(day).length > 0">
-            <div class="cal-date">{{ day | date:'d' }}</div>
-            <div class="cal-leaves">
-              <div
-                *ngFor="let lv of getMyLeavesForDay(day) | slice:0:2"
-                class="cal-leave-dot emp-leave-dot"
-                [style.background]="getLeaveColor(lv.leaveType)"
-                [title]="getLeaveTypeLabel(lv.leaveType) + ' — ' + lv.status">
+        <div class="lm-cal-grid">
+          <div class="lm-cal-label" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">{{ d }}</div>
+          <ng-container *ngFor="let week of calendarWeeks">
+            <div class="lm-cal-day"
+              *ngFor="let day of week"
+              [class.lm-cal-today]="isToday(day)"
+              [class.lm-cal-other]="isOtherMonth(day)"
+              [class.lm-cal-leave]="getMyLeavesForDay(day).length > 0">
+              <span class="lm-cal-date">{{ day | date:'d' }}</span>
+              <div class="lm-cal-dots">
+                <span class="lm-cal-dot"
+                  *ngFor="let lv of getMyLeavesForDay(day) | slice:0:2"
+                  [style.background]="getLeaveColor(lv.leaveType)"
+                  [title]="getLeaveTypeLabel(lv.leaveType) + ' — ' + lv.status">
+                </span>
               </div>
             </div>
-          </div>
-        </ng-container>
-      </div>
+          </ng-container>
+        </div>
 
-      <!-- FIX 3 & 4: leaveTypeOptions typed array + getLeaveColor() method -->
-      <div class="cal-legend">
-        <div class="legend-item" *ngFor="let type of leaveTypeOptions">
-          <span class="legend-dot" [style.background]="getLeaveColor(type)"></span>
-          {{ getLeaveTypeLabel(type) }}
+        <div class="lm-cal-legend">
+          <span class="lm-legend-item" *ngFor="let type of leaveTypeOptions">
+            <span class="lm-legend-dot" [style.background]="getLeaveColor(type)"></span>
+            {{ getLeaveTypeLabel(type) }}
+          </span>
         </div>
       </div>
-
     </ng-container>
 
   </ng-container>
   <!-- END EMPLOYEE VIEW -->
 
 
-  <!-- ============================================================
+  <!-- ═══════════════════════════════════════════════════════
        MANAGER VIEW
-  ============================================================ -->
+  ═══════════════════════════════════════════════════════════ -->
   <ng-container *ngIf="viewMode === 'manager'">
 
-    <!-- Manager KPI Cards -->
-    <div class="kpi-row" *ngIf="kpi">
-      <div class="kpi-card blue">
-        <div class="kpi-icon">⏳</div>
-        <div class="kpi-body"><span>Pending</span><strong>{{ kpi.pending }}</strong></div>
+    <!-- Manager KPI strip -->
+    <div class="lm-kpi-strip">
+      <div class="lm-kpi-card lm-kpi-card--click" (click)="onFilterChange('PENDING')">
+        <div class="lm-kpi-icon lm-kpi-icon--amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="lm-kpi-body">
+          <span class="lm-kpi-label">Pending</span>
+          <strong class="lm-kpi-value">{{ kpi.pending }}</strong>
+        </div>
       </div>
-      <div class="kpi-card green clickable" (click)="onFilterChange('APPROVED')">
-        <div class="kpi-icon">✅</div>
-        <div class="kpi-body"><span>Approved</span><strong>{{ kpi.approved }}</strong></div>
+
+      <div class="lm-kpi-card lm-kpi-card--click" (click)="onFilterChange('APPROVED')">
+        <div class="lm-kpi-icon lm-kpi-icon--green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="lm-kpi-body">
+          <span class="lm-kpi-label">Approved</span>
+          <strong class="lm-kpi-value">{{ kpi.approved }}</strong>
+        </div>
       </div>
-      <div class="kpi-card red clickable" (click)="onFilterChange('REJECTED')">
-        <div class="kpi-icon">❌</div>
-        <div class="kpi-body"><span>Rejected</span><strong>{{ kpi.rejected }}</strong></div>
+
+      <div class="lm-kpi-card lm-kpi-card--click" (click)="onFilterChange('REJECTED')">
+        <div class="lm-kpi-icon lm-kpi-icon--red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6"  y2="18"/>
+            <line x1="6"  y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+        <div class="lm-kpi-body">
+          <span class="lm-kpi-label">Rejected</span>
+          <strong class="lm-kpi-value">{{ kpi.rejected }}</strong>
+        </div>
       </div>
-      <div class="kpi-card purple">
-        <div class="kpi-icon">📅</div>
-        <div class="kpi-body"><span>Total Days</span><strong>{{ kpi.totalDays }}</strong></div>
+
+      <div class="lm-kpi-card">
+        <div class="lm-kpi-icon lm-kpi-icon--indigo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2"  x2="16" y2="6"/>
+            <line x1="8"  y1="2"  x2="8"  y2="6"/>
+            <line x1="3"  y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div class="lm-kpi-body">
+          <span class="lm-kpi-label">Total Days</span>
+          <strong class="lm-kpi-value">{{ kpi.totalDays }}</strong>
+        </div>
       </div>
-      <div class="kpi-card orange">
-        <div class="kpi-icon">🏠</div>
-        <div class="kpi-body"><span>On Leave Today</span><strong>{{ kpi.onLeaveToday ?? 0 }}</strong></div>
+
+      <div class="lm-kpi-card">
+        <div class="lm-kpi-icon lm-kpi-icon--teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <div class="lm-kpi-body">
+          <span class="lm-kpi-label">On Leave Today</span>
+          <strong class="lm-kpi-value">{{ kpi.onLeaveToday ?? 0 }}</strong>
+        </div>
       </div>
     </div>
 
-    <!-- Manager Tab Bar -->
-    <div class="top-action-bar">
-      <div class="tab-switcher">
-        <button [class.active]="activeTab === 'requests'" (click)="activeTab = 'requests'">📋 Requests</button>
-        <button [class.active]="activeTab === 'balances'" (click)="activeTab = 'balances'">📊 Balances</button>
-        <button [class.active]="activeTab === 'calendar'" (click)="activeTab = 'calendar'">🗓 Calendar</button>
-      </div>
-      <button class="btn-new-request" (click)="openNewRequestModal()">+ New Leave Request</button>
+    <!-- Manager inner tab bar -->
+    <div class="lm-inner-tabs">
+      <button class="lm-inner-tab" [class.lm-inner-tab--active]="activeTab === 'requests'" (click)="activeTab = 'requests'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+        </svg>
+        Requests
+      </button>
+      <button class="lm-inner-tab" [class.lm-inner-tab--active]="activeTab === 'balances'" (click)="activeTab = 'balances'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+        Balances
+      </button>
+      <button class="lm-inner-tab" [class.lm-inner-tab--active]="activeTab === 'calendar'" (click)="activeTab = 'calendar'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2"  x2="16" y2="6"/>
+          <line x1="8"  y1="2"  x2="8"  y2="6"/>
+          <line x1="3"  y1="10" x2="21" y2="10"/>
+        </svg>
+        Calendar
+      </button>
     </div>
 
-    <!-- Manager Tab: Requests -->
+
+    <!-- ── Manager: Requests tab ────────────────────────── -->
     <ng-container *ngIf="activeTab === 'requests'">
-      <div class="filter-bar">
-        <button
-          *ngFor="let f of filterOptions"
-          class="filter-btn"
-          [class.active]="filter === f"
-          (click)="onFilterChange(f)">
-          {{ f }}
-          <span class="filter-count" *ngIf="f !== 'ALL'">{{ getCountByStatus(f) }}</span>
-        </button>
+      <div class="lm-toolbar">
+        <div class="lm-filter-group">
+          <button class="lm-filter-btn" *ngFor="let f of filterOptions"
+            [class.lm-filter-btn--active]="filter === f"
+            (click)="onFilterChange(f)">
+            {{ f }}
+            <span class="lm-filter-count">{{ getCountByStatus(f) }}</span>
+          </button>
+        </div>
       </div>
 
-      <div class="requests-list">
-        <div
-          class="request-card"
+      <!-- Skeleton -->
+      <div class="lm-skeleton" *ngIf="loading">
+        <div class="lm-skel-row" *ngFor="let _ of [1,2,3,4]">
+          <div class="lm-skel lm-skel-avatar"></div>
+          <div class="lm-skel lm-skel-name"></div>
+          <div class="lm-skel lm-skel-badge"></div>
+          <div class="lm-skel lm-skel-date"></div>
+          <div class="lm-skel lm-skel-status"></div>
+          <div class="lm-skel lm-skel-actions"></div>
+        </div>
+      </div>
+
+      <div class="lm-requests-list" *ngIf="!loading && filteredRequests.length > 0">
+        <div class="lm-request-row"
           *ngFor="let req of filteredRequests"
-          [class.pending]="req.status === 'PENDING'"
-          [class.approved]="req.status === 'APPROVED'"
-          [class.rejected]="req.status === 'REJECTED'"
           (click)="openDetail(req)">
 
-          <div class="card-left">
-            <div class="staff-avatar">{{ req.staffName.charAt(0) }}</div>
-            <div class="staff-info">
+          <div class="lm-row-member">
+            <div class="lm-avatar">{{ req.staffName.charAt(0) }}</div>
+            <div class="lm-row-info">
               <strong>{{ req.staffName }}</strong>
-              <span class="role-text">{{ req.role }}</span>
+              <span>{{ req.role || '—' }}</span>
             </div>
           </div>
 
-          <div class="card-center">
-            <span class="leave-type-badge" [ngClass]="getLeaveTypeClass(req.leaveType)">
-              {{ getLeaveTypeLabel(req.leaveType) }}
-              <em *ngIf="req.isHalfDay"> — Half Day</em>
+          <span class="lm-type-pill" [ngClass]="getLeaveTypeClass(req.leaveType)">
+            {{ getLeaveTypeLabel(req.leaveType) }}
+            <em *ngIf="req.isHalfDay"> · Half Day</em>
+          </span>
+
+          <div class="lm-row-dates">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8"  y1="2" x2="8"  y2="6"/>
+              <line x1="3"  y1="10" x2="21" y2="10"/>
+            </svg>
+            {{ req.startDate | date:'dd MMM' }}
+            <ng-container *ngIf="!req.isHalfDay"> – {{ req.endDate | date:'dd MMM yyyy' }}</ng-container>
+            <span class="lm-days-chip">{{ req.days }}d</span>
+          </div>
+
+          <span class="lm-status-pill" [ngClass]="'lm-s-' + req.status.toLowerCase()">
+            {{ req.status }}
+          </span>
+
+          <div class="lm-row-meta">
+            <span *ngIf="req.status === 'APPROVED'" class="lm-meta-note lm-meta-note--ok">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              By {{ req.approvedBy }} · {{ req.approvedDate | date:'dd MMM' }}
             </span>
-            <div class="leave-dates">
-              📅 {{ req.startDate | date:'dd MMM' }}
-              <ng-container *ngIf="!req.isHalfDay"> — {{ req.endDate | date:'dd MMM yyyy' }}</ng-container>
-              <span class="days-chip">{{ req.days }} day{{ req.days !== 1 ? 's' : '' }}</span>
-            </div>
-            <p class="leave-reason">{{ req.reason }}</p>
+            <span *ngIf="req.status === 'REJECTED'" class="lm-meta-note lm-meta-note--err">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {{ req.rejectionReason }}
+            </span>
+            <span *ngIf="req.status === 'PENDING'" class="lm-meta-note">
+              Applied {{ req.appliedDate | date:'dd MMM yyyy' }}
+            </span>
           </div>
 
-          <div class="card-right" (click)="$event.stopPropagation()">
-            <span class="status-badge" [ngClass]="req.status.toLowerCase()">{{ req.status }}</span>
-            <div class="card-actions" *ngIf="req.status === 'PENDING'">
-              <button class="btn-approve" (click)="onApprove(req.id)">✅ Approve</button>
-              <button class="btn-reject"  (click)="openRejectModal(req.id)">❌ Reject</button>
-            </div>
-            <div class="rejection-note" *ngIf="req.status === 'REJECTED' && req.rejectionReason">
-              <small>⚠️ {{ req.rejectionReason }}</small>
-            </div>
-            <div class="approval-note" *ngIf="req.status === 'APPROVED'">
-              <small>✔ By {{ req.approvedBy }} on {{ req.approvedDate | date:'dd MMM' }}</small>
-            </div>
-            <div class="applied-date">
-              <small>Applied: {{ req.appliedDate | date:'dd MMM yyyy' }}</small>
-            </div>
+          <!-- Actions -->
+          <div class="lm-row-actions" (click)="$event.stopPropagation()">
+            <ng-container *ngIf="req.status === 'PENDING'">
+              <button class="lm-icon-btn lm-icon-btn--approve" title="Approve" (click)="onApprove(req.id)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button class="lm-icon-btn lm-icon-btn--reject" title="Reject" (click)="openRejectModal(req.id)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </ng-container>
+            <button class="lm-icon-btn lm-icon-btn--view" title="View details" (click)="openDetail(req)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
           </div>
 
         </div>
+      </div>
 
-        <div class="empty-state" *ngIf="filteredRequests.length === 0">
-          <span>📭</span>
-          <p>No {{ filter !== 'ALL' ? filter.toLowerCase() : '' }} leave requests found.</p>
-        </div>
+      <div class="lm-empty" *ngIf="!loading && filteredRequests.length === 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+        </svg>
+        <p>No {{ filter !== 'ALL' ? filter.toLowerCase() : '' }} leave requests found.</p>
       </div>
     </ng-container>
 
-    <!-- Manager Tab: Balances -->
+
+    <!-- ── Manager: Balances tab ────────────────────────── -->
     <ng-container *ngIf="activeTab === 'balances'">
-      <div class="balances-grid">
-        <div class="balance-card" *ngFor="let b of leaveBalances">
-          <div class="balance-header">
-            <div class="balance-avatar">{{ b.staffName.charAt(0) }}</div>
-            <div>
+      <div class="lm-balances-grid" *ngIf="leaveBalances.length > 0">
+        <div class="lm-balance-card" *ngFor="let b of leaveBalances">
+          <div class="lm-balance-card-header">
+            <div class="lm-avatar lm-avatar--lg">{{ b.staffName.charAt(0) }}</div>
+            <div class="lm-balance-card-info">
               <strong>{{ b.staffName }}</strong>
-              <div class="balance-sub">{{ b.totalUsed }} of {{ b.totalAllotted }} days used</div>
+              <span>{{ b.totalUsed }} of {{ b.totalAllotted }} days used</span>
             </div>
           </div>
-          <div class="balance-progress-bar">
-            <div class="progress-fill" [style.width.%]="getBalancePercent(b.totalUsed, b.totalAllotted)"></div>
+
+          <div class="lm-balance-overall-track">
+            <div class="lm-balance-overall-fill" [style.width.%]="getBalancePercent(b.totalUsed, b.totalAllotted)"></div>
           </div>
-          <div class="balance-types">
-            <div class="balance-type-row sick">
-              <span>🤒 Sick</span>
-              <div class="mini-bar"><div [style.width.%]="getBalancePercent(12 - b.sick, 12)"></div></div>
-              <strong>{{ b.sick }} left</strong>
+
+          <div class="lm-balance-card-rows">
+            <div class="lm-balance-card-row">
+              <div class="lm-bcr-label">
+                <span class="lm-bcr-dot lm-bcr-dot--red"></span> Sick
+              </div>
+              <div class="lm-bcr-bar">
+                <div class="lm-bcr-fill lm-fill--red" [style.width.%]="getBalancePercent(ALLOTMENT.SICK - b.sick, ALLOTMENT.SICK)"></div>
+              </div>
+              <span class="lm-bcr-val">{{ b.sick }} left</span>
             </div>
-            <div class="balance-type-row casual">
-              <span>🌴 Casual</span>
-              <div class="mini-bar"><div [style.width.%]="getBalancePercent(8 - b.casual, 8)"></div></div>
-              <strong>{{ b.casual }} left</strong>
+            <div class="lm-balance-card-row">
+              <div class="lm-bcr-label">
+                <span class="lm-bcr-dot lm-bcr-dot--amber"></span> Casual
+              </div>
+              <div class="lm-bcr-bar">
+                <div class="lm-bcr-fill lm-fill--amber" [style.width.%]="getBalancePercent(ALLOTMENT.CASUAL - b.casual, ALLOTMENT.CASUAL)"></div>
+              </div>
+              <span class="lm-bcr-val">{{ b.casual }} left</span>
             </div>
-            <div class="balance-type-row earned">
-              <span>⭐ Earned</span>
-              <div class="mini-bar"><div [style.width.%]="getBalancePercent(15 - b.earned, 15)"></div></div>
-              <strong>{{ b.earned }} left</strong>
+            <div class="lm-balance-card-row">
+              <div class="lm-bcr-label">
+                <span class="lm-bcr-dot lm-bcr-dot--green"></span> Earned
+              </div>
+              <div class="lm-bcr-bar">
+                <div class="lm-bcr-fill lm-fill--green" [style.width.%]="getBalancePercent(ALLOTMENT.EARNED - b.earned, ALLOTMENT.EARNED)"></div>
+              </div>
+              <span class="lm-bcr-val">{{ b.earned }} left</span>
             </div>
-            <div class="balance-type-row unpaid" *ngIf="b.unpaid > 0">
-              <span>🔒 Unpaid</span>
-              <div class="mini-bar"><div [style.width.%]="100"></div></div>
-              <strong class="text-red">{{ b.unpaid }} days</strong>
+            <div class="lm-balance-card-row" *ngIf="b.totalUsed - (ALLOTMENT.SICK - b.sick) - (ALLOTMENT.CASUAL - b.casual) - (ALLOTMENT.EARNED - b.earned) > 0">
+              <div class="lm-bcr-label">
+                <span class="lm-bcr-dot lm-bcr-dot--gray"></span> Unpaid
+              </div>
+              <div class="lm-bcr-bar">
+                <div class="lm-bcr-fill lm-fill--gray" [style.width.%]="100"></div>
+              </div>
+              <span class="lm-bcr-val lm-bcr-val--red">{{ ALLOTMENT.UNPAID - b.unpaid }}d</span>
             </div>
           </div>
         </div>
       </div>
+
+      <div class="lm-empty" *ngIf="leaveBalances.length === 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+        <p>No leave balance data available yet.</p>
+      </div>
     </ng-container>
 
-    <!-- Manager Tab: Calendar -->
+
+    <!-- ── Manager: Calendar tab ────────────────────────── -->
     <ng-container *ngIf="activeTab === 'calendar'">
-      <div class="calendar-nav">
-        <button class="icon-btn" (click)="prevMonth()">◀</button>
-        <h3>{{ calendarDate | date:'MMMM yyyy' }}</h3>
-        <button class="icon-btn" (click)="nextMonth()">▶</button>
-      </div>
-      <div class="calendar-grid">
-        <div class="cal-header" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">{{ d }}</div>
-        <ng-container *ngFor="let week of calendarWeeks">
-          <div
-            *ngFor="let day of week"
-            class="cal-day"
-            [class.today]="isToday(day)"
-            [class.other-month]="isOtherMonth(day)">
-            <div class="cal-date">{{ day | date:'d' }}</div>
-            <div class="cal-leaves">
-              <ng-container *ngFor="let lv of getLeavesForDay(day) | slice:0:3">
-                <div
-                  class="cal-leave-dot"
-                  [style.background]="getLeaveColor(lv.leaveType)"
+      <div class="lm-panel">
+        <div class="lm-cal-nav">
+          <button class="lm-cal-nav-btn" (click)="prevMonth()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="lm-cal-title">{{ calendarDate | date:'MMMM yyyy' }}</span>
+          <button class="lm-cal-nav-btn" (click)="nextMonth()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <div class="lm-cal-grid lm-cal-grid--tall">
+          <div class="lm-cal-label" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">{{ d }}</div>
+          <ng-container *ngFor="let week of calendarWeeks">
+            <div class="lm-cal-day lm-cal-day--tall"
+              *ngFor="let day of week"
+              [class.lm-cal-today]="isToday(day)"
+              [class.lm-cal-other]="isOtherMonth(day)">
+              <span class="lm-cal-date">{{ day | date:'d' }}</span>
+              <div class="lm-cal-badges">
+                <div class="lm-cal-badge"
+                  *ngFor="let lv of getLeavesForDay(day) | slice:0:3"
+                  [style.background]="getLeaveColor(lv.leaveType) + '22'"
+                  [style.border-color]="getLeaveColor(lv.leaveType)"
                   [title]="lv.staffName + ' — ' + getLeaveTypeLabel(lv.leaveType)">
                   {{ lv.staffName.charAt(0) }}
                 </div>
-              </ng-container>
-              <div class="cal-more" *ngIf="getLeavesForDay(day).length > 3">
-                +{{ getLeavesForDay(day).length - 3 }}
+                <span class="lm-cal-more" *ngIf="getLeavesForDay(day).length > 3">
+                  +{{ getLeavesForDay(day).length - 3 }}
+                </span>
               </div>
             </div>
-          </div>
-        </ng-container>
+          </ng-container>
+        </div>
+
+        <div class="lm-cal-legend">
+          <span class="lm-legend-item" *ngFor="let type of leaveTypeOptions">
+            <span class="lm-legend-dot" [style.background]="getLeaveColor(type)"></span>
+            {{ getLeaveTypeLabel(type) }}
+          </span>
+        </div>
       </div>
     </ng-container>
 
@@ -454,76 +738,98 @@
 </div>
 
 
-<!-- ================= NEW REQUEST MODAL ================= -->
-<div class="modal-overlay" *ngIf="showNewRequestModal" (click)="showNewRequestModal = false">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<!-- ═══════════════════════════════════════════════════════════
+     NEW REQUEST MODAL
+═══════════════════════════════════════════════════════════════ -->
+<div class="lm-overlay" *ngIf="showNewRequestModal" (click)="showNewRequestModal = false">
+  <div class="lm-modal" (click)="$event.stopPropagation()"
+    role="dialog" aria-modal="true" aria-labelledby="newReqTitle">
 
-    <div class="modal-header">
-      <h3>📝 {{ viewMode === 'employee' ? 'Apply for Leave' : 'New Leave Request' }}</h3>
-      <button class="close-btn" (click)="showNewRequestModal = false">✕</button>
+    <div class="lm-modal-header">
+      <div class="lm-modal-identity">
+        <div class="lm-modal-form-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 id="newReqTitle">{{ viewMode === 'employee' ? 'Apply for Leave' : 'New Leave Request' }}</h2>
+          <p>Fill in the details below</p>
+        </div>
+      </div>
+      <button class="lm-modal-close" (click)="showNewRequestModal = false" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
 
-    <div class="modal-body">
+    <div class="lm-modal-body">
       <form (ngSubmit)="submitNewRequest()">
 
-        <!-- Manager only: staff selector -->
-        <div class="form-group" *ngIf="viewMode === 'manager'">
-          <label>Staff Member</label>
-          <select class="form-input" [(ngModel)]="newLeaveForm.staffId" name="staffId" required>
+        <!-- Manager: staff selector -->
+        <div class="lm-form-group" *ngIf="viewMode === 'manager'">
+          <label class="lm-form-label">Staff Member</label>
+          <select class="lm-form-input" [(ngModel)]="newLeaveForm.staffId" name="staffId" required>
             <option value="">— Select Staff —</option>
-            <option *ngFor="let s of staffOptions" [value]="s.id">
-              {{ s.name }} ({{ s.role }})
-            </option>
+            <option *ngFor="let s of staffOptions" [value]="s.id">{{ s.name }} ({{ s.role }})</option>
           </select>
         </div>
 
-        <!-- Employee: read-only self info -->
-        <div class="emp-self-info" *ngIf="viewMode === 'employee'">
-          <div class="self-avatar-sm">{{ currentStaffName.charAt(0) }}</div>
+        <!-- Employee: self identity -->
+        <div class="lm-self-identity" *ngIf="viewMode === 'employee'">
+          <div class="lm-avatar">{{ currentStaffName.charAt(0) }}</div>
           <div>
             <strong>{{ currentStaffName }}</strong>
-            <span class="role-text">{{ currentStaffRole }}</span>
+            <span>{{ currentStaffRole }}</span>
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Leave Type</label>
-          <select class="form-input" [(ngModel)]="newLeaveForm.leaveType" name="leaveType">
-            <option value="SICK">🤒 Sick Leave</option>
-            <option value="CASUAL">🌴 Casual Leave</option>
-            <option value="EARNED">⭐ Earned Leave</option>
-            <option value="UNPAID">🔒 Unpaid Leave</option>
-          </select>
-        </div>
-
-        <!-- Balance hint for employee -->
-        <div class="balance-hint" *ngIf="viewMode === 'employee' && newLeaveForm.leaveType !== 'UNPAID'">
-          Available: <strong>{{ getMyBalanceForType(newLeaveForm.leaveType) }}</strong> days remaining
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>From Date</label>
-            <input type="date" class="form-input"
-              [(ngModel)]="newLeaveForm.startDate" name="startDate" required>
+        <div class="lm-form-group">
+          <label class="lm-form-label">Leave Type</label>
+          <div class="lm-type-picker">
+            <button type="button" class="lm-type-pick-btn"
+              *ngFor="let t of leaveTypeOptions"
+              [class.selected]="newLeaveForm.leaveType === t"
+              [style.border-color]="getLeaveColor(t)"
+              [style.color]="newLeaveForm.leaveType === t ? '#fff' : getLeaveColor(t)"
+              [style.background]="newLeaveForm.leaveType === t ? getLeaveColor(t) : 'transparent'"
+              (click)="newLeaveForm.leaveType = t">
+              {{ getLeaveTypeLabel(t) }}
+            </button>
           </div>
-          <div class="form-group" *ngIf="!newLeaveForm.isHalfDay">
-            <label>To Date</label>
-            <input type="date" class="form-input"
-              [(ngModel)]="newLeaveForm.endDate" name="endDate">
+          <!-- Balance hint -->
+          <div class="lm-balance-hint" *ngIf="viewMode === 'employee' && newLeaveForm.leaveType !== 'UNPAID'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <strong>{{ getMyBalanceForType(newLeaveForm.leaveType) }}</strong> days remaining
           </div>
         </div>
 
-        <div class="form-group checkbox-group">
-          <label class="checkbox-label">
+        <div class="lm-form-row">
+          <div class="lm-form-group">
+            <label class="lm-form-label">From Date <span class="lm-required">*</span></label>
+            <input type="date" class="lm-form-input" [(ngModel)]="newLeaveForm.startDate" name="startDate" required>
+          </div>
+          <div class="lm-form-group" *ngIf="!newLeaveForm.isHalfDay">
+            <label class="lm-form-label">To Date</label>
+            <input type="date" class="lm-form-input" [(ngModel)]="newLeaveForm.endDate" name="endDate">
+          </div>
+        </div>
+
+        <div class="lm-form-group">
+          <label class="lm-checkbox-label">
             <input type="checkbox" [(ngModel)]="newLeaveForm.isHalfDay" name="isHalfDay">
+            <span class="lm-checkbox-box"></span>
             Half Day Leave
           </label>
         </div>
 
-        <div class="form-group">
-          <label>Reason <span class="required">*</span></label>
-          <textarea class="form-input"
+        <div class="lm-form-group">
+          <label class="lm-form-label">Reason <span class="lm-required">*</span></label>
+          <textarea class="lm-form-input lm-form-textarea"
             [(ngModel)]="newLeaveForm.reason"
             name="reason" rows="3"
             placeholder="Enter reason for leave..."
@@ -531,40 +837,69 @@
           </textarea>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" (click)="showNewRequestModal = false">Cancel</button>
-          <button type="submit" class="btn-primary">
-            {{ viewMode === 'employee' ? 'Submit Request' : 'Add Request' }}
-          </button>
-        </div>
-
       </form>
+    </div>
+
+    <div class="lm-modal-footer">
+      <button class="lm-modal-btn lm-modal-btn--secondary" (click)="showNewRequestModal = false">Cancel</button>
+      <button class="lm-modal-btn lm-modal-btn--primary"
+        (click)="submitNewRequest()"
+        [disabled]="!newLeaveForm.staffId && viewMode === 'manager' || !newLeaveForm.startDate || !newLeaveForm.reason.trim()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        {{ viewMode === 'employee' ? 'Submit Request' : 'Add Request' }}
+      </button>
     </div>
   </div>
 </div>
 
 
-<!-- ================= REJECT MODAL ================= -->
-<div class="modal-overlay" *ngIf="showRejectModal" (click)="showRejectModal = false">
-  <div class="modal-content small-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>❌ Reject Leave Request</h3>
-      <button class="close-btn" (click)="showRejectModal = false">✕</button>
+<!-- ═══════════════════════════════════════════════════════════
+     REJECT MODAL
+═══════════════════════════════════════════════════════════════ -->
+<div class="lm-overlay" *ngIf="showRejectModal" (click)="showRejectModal = false">
+  <div class="lm-modal lm-modal--small" (click)="$event.stopPropagation()"
+    role="dialog" aria-modal="true" aria-labelledby="rejectTitle">
+
+    <div class="lm-modal-header">
+      <div class="lm-modal-identity">
+        <div class="lm-modal-form-icon lm-modal-form-icon--danger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+        <div>
+          <h2 id="rejectTitle">Reject Leave Request</h2>
+          <p>Provide a reason for the employee</p>
+        </div>
+      </div>
+      <button class="lm-modal-close" (click)="showRejectModal = false" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Reason for Rejection <span class="required">*</span></label>
-        <textarea class="form-input"
+
+    <div class="lm-modal-body">
+      <div class="lm-form-group">
+        <label class="lm-form-label">Rejection Reason <span class="lm-required">*</span></label>
+        <textarea class="lm-form-input lm-form-textarea"
           [(ngModel)]="rejectReason"
-          name="rejectReason"
-          rows="4"
+          name="rejectReason" rows="4"
           placeholder="Provide a reason...">
         </textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="showRejectModal = false">Cancel</button>
-      <button class="btn-danger" (click)="confirmReject()" [disabled]="!rejectReason.trim()">
+
+    <div class="lm-modal-footer">
+      <button class="lm-modal-btn lm-modal-btn--secondary" (click)="showRejectModal = false">Cancel</button>
+      <button class="lm-modal-btn lm-modal-btn--danger"
+        (click)="confirmReject()"
+        [disabled]="!rejectReason.trim()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
         Confirm Rejection
       </button>
     </div>
@@ -572,53 +907,147 @@
 </div>
 
 
-<!-- ================= DETAIL MODAL ================= -->
-<div class="modal-overlay" *ngIf="showDetailModal" (click)="showDetailModal = false">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>📋 Leave Request Detail</h3>
-      <button class="close-btn" (click)="showDetailModal = false">✕</button>
+<!-- ═══════════════════════════════════════════════════════════
+     DETAIL MODAL
+═══════════════════════════════════════════════════════════════ -->
+<div class="lm-overlay" *ngIf="showDetailModal && selectedRequest" (click)="showDetailModal = false">
+  <div class="lm-modal lm-modal--medium" (click)="$event.stopPropagation()"
+    role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+
+    <div class="lm-modal-header">
+      <div class="lm-modal-identity">
+        <div class="lm-avatar lm-avatar--lg">{{ selectedRequest!.staffName.charAt(0) }}</div>
+        <div>
+          <h2 id="detailTitle">{{ selectedRequest!.staffName }}</h2>
+          <p>{{ selectedRequest!.role || 'Staff' }} &nbsp;·&nbsp; Applied {{ selectedRequest!.appliedDate | date:'dd MMM yyyy' }}</p>
+        </div>
+      </div>
+      <button class="lm-modal-close" (click)="showDetailModal = false" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
-    <div class="modal-body" *ngIf="selectedRequest">
-      <div class="detail-grid">
-        <div class="detail-row"><span>Staff Name</span><strong>{{ selectedRequest.staffName }}</strong></div>
-        <div class="detail-row"><span>Role</span><strong>{{ selectedRequest.role || '—' }}</strong></div>
-        <div class="detail-row">
-          <span>Leave Type</span>
-          <span class="leave-type-badge" [ngClass]="getLeaveTypeClass(selectedRequest.leaveType)">
-            {{ getLeaveTypeLabel(selectedRequest.leaveType) }}
-          </span>
-        </div>
-        <div class="detail-row"><span>From</span><strong>{{ selectedRequest.startDate | date:'dd MMM yyyy' }}</strong></div>
-        <div class="detail-row"><span>To</span><strong>{{ selectedRequest.endDate | date:'dd MMM yyyy' }}</strong></div>
-        <div class="detail-row">
-          <span>Duration</span>
-          <strong>
-            {{ selectedRequest.days }} day{{ selectedRequest.days !== 1 ? 's' : '' }}
-            {{ selectedRequest.isHalfDay ? '(Half Day)' : '' }}
-          </strong>
-        </div>
-        <div class="detail-row"><span>Reason</span><strong>{{ selectedRequest.reason }}</strong></div>
-        <div class="detail-row"><span>Applied On</span><strong>{{ selectedRequest.appliedDate | date:'dd MMM yyyy' }}</strong></div>
-        <div class="detail-row" *ngIf="selectedRequest.approvedBy">
-          <span>Approved By</span><strong>{{ selectedRequest.approvedBy }}</strong>
-        </div>
-        <div class="detail-row" *ngIf="selectedRequest.rejectionReason">
-          <span>Rejection Reason</span><strong class="text-red">{{ selectedRequest.rejectionReason }}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Status</span>
-          <span class="status-badge" [ngClass]="selectedRequest.status.toLowerCase()">
-            {{ selectedRequest.status }}
-          </span>
+
+    <div class="lm-modal-body" *ngIf="selectedRequest">
+
+      <div class="lm-section">
+        <p class="lm-section-title">Leave Details</p>
+        <div class="lm-detail-grid">
+
+          <div class="lm-detail-item">
+            <div class="lm-detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+            <div>
+              <span class="lm-detail-label">Leave Type</span>
+              <span class="lm-type-pill" [ngClass]="getLeaveTypeClass(selectedRequest.leaveType)">
+                {{ getLeaveTypeLabel(selectedRequest.leaveType) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="lm-detail-item">
+            <div class="lm-detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2"  x2="16" y2="6"/>
+                <line x1="8"  y1="2"  x2="8"  y2="6"/>
+                <line x1="3"  y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div>
+              <span class="lm-detail-label">From</span>
+              <span class="lm-detail-value">{{ selectedRequest.startDate | date:'dd MMM yyyy' }}</span>
+            </div>
+          </div>
+
+          <div class="lm-detail-item">
+            <div class="lm-detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2"  x2="16" y2="6"/>
+                <line x1="8"  y1="2"  x2="8"  y2="6"/>
+                <line x1="3"  y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div>
+              <span class="lm-detail-label">To</span>
+              <span class="lm-detail-value">{{ selectedRequest.endDate | date:'dd MMM yyyy' }}</span>
+            </div>
+          </div>
+
+          <div class="lm-detail-item">
+            <div class="lm-detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div>
+              <span class="lm-detail-label">Duration</span>
+              <span class="lm-detail-value">
+                {{ selectedRequest.days }} day{{ selectedRequest.days !== 1 ? 's' : '' }}
+                {{ selectedRequest.isHalfDay ? '(Half Day)' : '' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="lm-detail-item">
+            <div class="lm-detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div>
+              <span class="lm-detail-label">Status</span>
+              <span class="lm-status-pill" [ngClass]="'lm-s-' + selectedRequest.status.toLowerCase()">
+                {{ selectedRequest.status }}
+              </span>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- Only manager can approve/reject from detail -->
-      <div class="detail-actions" *ngIf="viewMode === 'manager' && selectedRequest.status === 'PENDING'">
-        <button class="btn-approve" (click)="onApprove(selectedRequest.id); showDetailModal = false">✅ Approve</button>
-        <button class="btn-reject"  (click)="openRejectModal(selectedRequest.id); showDetailModal = false">❌ Reject</button>
+      <div class="lm-section">
+        <p class="lm-section-title">Reason</p>
+        <p class="lm-notes-text">{{ selectedRequest.reason }}</p>
       </div>
+
+      <div class="lm-section" *ngIf="selectedRequest.approvedBy">
+        <p class="lm-section-title">Approval</p>
+        <p class="lm-notes-text">
+          Approved by <strong>{{ selectedRequest.approvedBy }}</strong>
+          on {{ selectedRequest.approvedDate | date:'dd MMM yyyy' }}
+        </p>
+      </div>
+
+      <div class="lm-section" *ngIf="selectedRequest.rejectionReason">
+        <p class="lm-section-title">Rejection Reason</p>
+        <p class="lm-notes-text lm-notes-text--danger">{{ selectedRequest.rejectionReason }}</p>
+      </div>
+
+    </div>
+
+    <div class="lm-modal-footer">
+      <button class="lm-modal-btn lm-modal-btn--secondary" (click)="showDetailModal = false">Close</button>
+      <ng-container *ngIf="viewMode === 'manager' && selectedRequest?.status === 'PENDING'">
+        <button class="lm-modal-btn lm-modal-btn--danger" (click)="openRejectModal(selectedRequest!.id); showDetailModal = false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Reject
+        </button>
+        <button class="lm-modal-btn lm-modal-btn--primary" (click)="onApprove(selectedRequest!.id); showDetailModal = false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Approve
+        </button>
+      </ng-container>
     </div>
   </div>
 </div>

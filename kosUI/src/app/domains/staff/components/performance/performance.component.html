@@ -1,0 +1,168 @@
+<div class="pf-page">
+
+  <!-- Header -->
+  <div class="pf-header">
+    <div class="pf-header-title">
+      <h1>Performance Reviews</h1>
+      <p>Appraisals, ratings and improvement goals</p>
+    </div>
+    <button class="pf-add-btn" (click)="openNew()"><span class="material-icons">add</span> New Review</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="pf-kpis">
+    <div class="pf-kpi"><span class="material-icons" style="color:#16a34a">star</span>
+      <div><div class="pf-kpi-val">{{ avgScore }}/5</div><div class="pf-kpi-lbl">Avg Score</div></div></div>
+    <div class="pf-kpi"><span class="material-icons" style="color:#3b82f6">task_alt</span>
+      <div><div class="pf-kpi-val">{{ completedCount }}</div><div class="pf-kpi-lbl">Completed</div></div></div>
+    <div class="pf-kpi"><span class="material-icons" style="color:#f59e0b">pending_actions</span>
+      <div><div class="pf-kpi-val">{{ pendingCount }}</div><div class="pf-kpi-lbl">Pending</div></div></div>
+  </div>
+
+  <!-- LIST TAB -->
+  <ng-container *ngIf="activeTab === 'list'">
+    <div class="pf-filters">
+      <select class="pf-select" [(ngModel)]="filterStatus">
+        <option value="">All Status</option>
+        <option value="PENDING">Pending</option>
+        <option value="IN_PROGRESS">In Progress</option>
+        <option value="COMPLETED">Completed</option>
+      </select>
+      <select class="pf-select" [(ngModel)]="filterCycle">
+        <option value="">All Cycles</option>
+        <option value="MONTHLY">Monthly</option>
+        <option value="QUARTERLY">Quarterly</option>
+        <option value="ANNUAL">Annual</option>
+      </select>
+    </div>
+
+    <div class="pf-grid">
+      <div class="pf-card" *ngFor="let r of filtered" (click)="openDetail(r)">
+        <div class="pf-card-top">
+          <div class="pf-avatar">{{ r.employeeName[0] }}</div>
+          <div class="pf-card-info">
+            <div class="pf-card-name">{{ r.employeeName }}</div>
+            <div class="pf-card-dept">{{ r.department }} · {{ r.cycle }} · {{ r.period }}</div>
+          </div>
+          <span class="badge" [class]="statusClass(r.status)">{{ r.status }}</span>
+        </div>
+        <div class="pf-card-score" *ngIf="r.status === 'COMPLETED'">
+          <div class="pf-score-circle" [style.color]="scoreColor(r.overallScore)">{{ r.overallScore }}</div>
+          <div class="pf-stars">
+            <span *ngFor="let s of scoreStars(r.overallScore)" class="pf-star"
+              [class.pf-star-filled]="s <= r.overallScore">★</span>
+          </div>
+        </div>
+        <div class="pf-card-by">Reviewed by {{ r.reviewedBy }} · {{ r.createdDate | date:'mediumDate' }}</div>
+      </div>
+      <div class="pf-empty" *ngIf="filtered.length === 0">
+        <span class="material-icons">assessment</span><p>No reviews found.</p>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- FORM TAB -->
+  <ng-container *ngIf="activeTab === 'form'">
+    <div class="pf-form-card">
+      <div class="pf-form-header">
+        <button class="pf-back-btn" (click)="activeTab='list'"><span class="material-icons">arrow_back</span> Back</button>
+        <h2>New Performance Review</h2>
+      </div>
+      <div class="pf-form-body">
+        <div class="pf-row-3">
+          <label class="pf-label">Employee <span class="req">*</span>
+            <select class="pf-input" [(ngModel)]="form.employeeId">
+              <option [value]="0" disabled>Select employee</option>
+              <option *ngFor="let e of employees" [value]="e.id">{{ e.name ?? '#'+e.id }}</option>
+            </select></label>
+          <label class="pf-label">Review Cycle
+            <select class="pf-input" [(ngModel)]="form.cycle">
+              <option value="MONTHLY">Monthly</option>
+              <option value="QUARTERLY">Quarterly</option>
+              <option value="ANNUAL">Annual</option>
+            </select></label>
+          <label class="pf-label">Period
+            <input class="pf-input" [(ngModel)]="form.period" placeholder="e.g. Q2 2026" /></label>
+        </div>
+
+        <div class="pf-section-title">Rating Criteria (1 = Poor, 5 = Excellent)</div>
+        <div class="pf-criteria-grid">
+          <div class="pf-criterion" *ngFor="let c of form.criteria">
+            <div class="pf-criterion-label">{{ c.label }}</div>
+            <div class="pf-stars-input">
+              <button *ngFor="let s of scoreStars(5)" class="pf-star-btn"
+                [class.active]="s <= c.score" (click)="c.score = s">★</button>
+            </div>
+            <span class="pf-score-label">{{ c.score }}/5</span>
+          </div>
+        </div>
+
+        <div class="pf-overall-preview">
+          Overall Score: <strong [style.color]="scoreColor(computedOverall())">{{ computedOverall() }} / 5</strong>
+        </div>
+
+        <label class="pf-label">Strengths
+          <textarea class="pf-input pf-textarea" [(ngModel)]="form.strengths" rows="2" placeholder="Key strengths observed"></textarea></label>
+        <label class="pf-label">Areas for Improvement
+          <textarea class="pf-input pf-textarea" [(ngModel)]="form.improvements" rows="2" placeholder="What can be improved"></textarea></label>
+        <label class="pf-label">Goals for Next Period
+          <textarea class="pf-input pf-textarea" [(ngModel)]="form.goals" rows="2" placeholder="Set goals for the next review period"></textarea></label>
+
+        <div class="pf-form-actions">
+          <button class="pf-btn-secondary" (click)="activeTab='list'">Cancel</button>
+          <button class="pf-btn-primary" (click)="save()" [disabled]="!form.employeeId">Save Review</button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- DETAIL TAB -->
+  <ng-container *ngIf="activeTab === 'detail' && selectedReview">
+    <div class="pf-form-card">
+      <div class="pf-form-header">
+        <button class="pf-back-btn" (click)="activeTab='list'"><span class="material-icons">arrow_back</span> Back</button>
+        <h2>{{ selectedReview.employeeName }} — {{ selectedReview.period }}</h2>
+        <span class="badge" [class]="statusClass(selectedReview.status)">{{ selectedReview.status }}</span>
+      </div>
+      <div class="pf-form-body">
+        <div class="pf-detail-meta">
+          <span><strong>Cycle:</strong> {{ selectedReview.cycle }}</span>
+          <span><strong>Reviewed by:</strong> {{ selectedReview.reviewedBy }}</span>
+          <span><strong>Date:</strong> {{ selectedReview.createdDate | date:'mediumDate' }}</span>
+        </div>
+
+        <div class="pf-section-title">Ratings</div>
+        <div class="pf-criteria-grid">
+          <div class="pf-criterion" *ngFor="let c of selectedReview.criteria">
+            <div class="pf-criterion-label">{{ c.label }}</div>
+            <div class="pf-stars-input">
+              <span *ngFor="let s of scoreStars(5)" class="pf-star-btn"
+                [class.active]="s <= c.score">★</span>
+            </div>
+            <span class="pf-score-label">{{ c.score }}/5</span>
+          </div>
+        </div>
+
+        <div class="pf-overall-preview">
+          Overall Score: <strong [style.color]="scoreColor(selectedReview.overallScore)">{{ selectedReview.overallScore }} / 5</strong>
+        </div>
+
+        <div class="pf-review-sections" *ngIf="selectedReview.strengths || selectedReview.improvements || selectedReview.goals">
+          <div class="pf-review-section" *ngIf="selectedReview.strengths">
+            <div class="pf-section-title">Strengths</div>
+            <p>{{ selectedReview.strengths }}</p>
+          </div>
+          <div class="pf-review-section" *ngIf="selectedReview.improvements">
+            <div class="pf-section-title">Areas for Improvement</div>
+            <p>{{ selectedReview.improvements }}</p>
+          </div>
+          <div class="pf-review-section" *ngIf="selectedReview.goals">
+            <div class="pf-section-title">Goals</div>
+            <p>{{ selectedReview.goals }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+</div>

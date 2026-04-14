@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { 
-  Component, 
-  EventEmitter, 
-  Input, 
+import {
+  Component,
+  EventEmitter,
+  Input,
   Output,
   OnInit,
   OnChanges,
@@ -11,6 +11,9 @@ import {
 import { FormsModule } from '@angular/forms';
 import * as ExcelJS from 'exceljs';
 import * as fs from 'file-saver';
+import { ShiftService } from '../../services/shift.service';
+import { StaffService } from '../../services/staff.service';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 // --- Interfaces ---
 
@@ -70,10 +73,16 @@ export interface ReportRow {
   styleUrls: ['./shift-management.component.css']
 })
 export class ShiftManagementComponent implements OnInit, OnChanges {
-  
+
+  constructor(
+    private shiftSvc: ShiftService,
+    private staffSvc: StaffService,
+    private authSvc: AuthService
+  ) {}
+
   // ============= INPUTS =============
   @Input() templates: ShiftTemplateView[] = [];
-  @Input() assignments: ShiftAssignmentView[] = []; 
+  @Input() assignments: ShiftAssignmentView[] = [];
   @Input() kpi!: ShiftKpi;
   @Input() selectedDate: Date = new Date();
   @Input() availableStaff: SimpleStaff[] = [];
@@ -136,24 +145,25 @@ export class ShiftManagementComponent implements OnInit, OnChanges {
     this.generateCalendarData();
     this.initBulkFormDates();
 
-    if (!this.availableStaff || this.availableStaff.length === 0) this.loadMockStaff();
-    if (!this.templates || this.templates.length === 0) this.loadMockTemplates();
-  }
+    // When used as a standalone route (no parent passes inputs), load from services.
+    if (!this.templates.length) {
+      this.templates = this.shiftSvc.templates;
+      this.assignments = this.shiftSvc.assignments;
+      this.kpi = this.shiftSvc.computeKpi();
+    }
 
-  loadMockStaff() {
-    this.availableStaff = [
-      { id: 'EMP001', name: 'John Doe', role: 'Chef', status: 'Active' },
-      { id: 'EMP002', name: 'Jane Smith', role: 'Sous Chef', status: 'Active' },
-      { id: 'EMP003', name: 'Mike Johnson', role: 'Line Cook', status: 'Active' }
-    ];
-  }
-
-  loadMockTemplates() {
-    this.templates = [
-      { id: 'SH001', name: 'General', startTime: '09:00', endTime: '17:00', duration: 8, isActive: true },
-      { id: 'SH002', name: 'Morning', startTime: '06:00', endTime: '14:00', duration: 8, isActive: true },
-      { id: 'SH003', name: 'Evening', startTime: '14:00', endTime: '22:00', duration: 8, isActive: true }
-    ];
+    if (!this.availableStaff.length) {
+      const restaurantId = this.authSvc.currentUser?.restaurantId ?? '';
+      if (restaurantId) this.staffSvc.loadStaff(restaurantId);
+      this.staffSvc.staff$.subscribe(members => {
+        this.availableStaff = members.map(m => ({
+          id: m.id,
+          name: m.name,
+          role: m.position || m.roleName || '',
+          status: m.status
+        }));
+      });
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
