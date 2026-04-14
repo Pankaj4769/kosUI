@@ -12,7 +12,8 @@ export const SIDEBAR_MENU: SidebarItem[] = [
     children: [
       { label: 'Inventory Dashboard', icon: '📊', route: '/inventory/dashboard' },
       { label: 'Manage Inventory', icon: '📦', route: '/inventory/manage' },
-      { label: 'Stock Alerts', icon: '⚠', route: '/inventory/alerts' },
+      { label: 'Categories',       icon: '🏷', route: '/inventory/categories' },
+      { label: 'Stock Alerts',     icon: '⚠', route: '/inventory/alerts' },
     ]
   },
   {

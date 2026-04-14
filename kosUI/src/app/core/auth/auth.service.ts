@@ -63,9 +63,9 @@ export class AuthService {
 
     return this.preLogin(req).pipe(
       catchError((err) => {
-        const msg = err.status === 401
-          ? 'Incorrect username, password, or role.'
-          : 'Login failed. Please try again.';
+        let msg = 'Login failed. Please try again.';
+        if (err.status === 401) msg = 'Incorrect username, password, or role.';
+        else if (err.status === 403) msg = err.error?.message ?? 'Access denied. Please contact your owner.';
         return of({ success: false, message: msg });
       }),
       switchMap((res: LoginResponse | { success: boolean; message: string }) => {
@@ -188,12 +188,21 @@ export class AuthService {
 
   // ── Post Login Routing ───────────────────────────────────
   handlePostLogin(user: AuthUser): void {
+    if (user.mustResetPassword) {
+      this.router.navigate(['/reset-password']);
+      return;
+    }
+    // Non-owner staff skip all onboarding flows — go straight to their role page
+    if (user.role !== 'OWNER') {
+      this.redirectByRole(user.role);
+      return;
+    }
+    // Owner onboarding flow
     if (user.isFirstTime || user.onboardingStatus === 'NEW') {
       this.router.navigate(['/onboarding/subscription']);
       return;
     }
-    if (
-        user.onboardingStatus === 'PENDING') {
+    if (user.onboardingStatus === 'PENDING') {
       this.router.navigate(['/onboarding/pending']);
       return;
     }
@@ -270,6 +279,18 @@ export class AuthService {
 
   forgotPassword(req: ForgotPasswordRequest): Observable<MessageResponse> {
     return this.http.put<MessageResponse>(`${this.baseUrl}/auth/forgotPassword`, req);
+  }
+
+  resetTempPassword(username: string, newPassword: string): Observable<AuthUser> {
+    return this.http.put<AuthUser>(`${this.baseUrl}/auth/resetTempPassword`, { username, newPassword }).pipe(
+      tap(updatedUser => {
+        const stored = this.currentUser;
+        if (stored) {
+          const merged = { ...stored, mustResetPassword: false };
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(merged));
+        }
+      })
+    );
   }
 
 }

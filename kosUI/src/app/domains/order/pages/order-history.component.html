@@ -1,17 +1,5 @@
 <div class="order-history">
 
-  <!-- ================= HEADER ================= -->
-  <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">📋 Order History</h1>
-      <div class="header-actions">
-        <button class="btn btn-export" (click)="exportToCSV()">
-          📊 Export CSV
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- ================= FILTERS & SEARCH ================= -->
   <div class="filters-section">
     
@@ -78,6 +66,11 @@
           <option [value]="OrderType.TAKEAWAY">Takeaway</option>
           <option [value]="OrderType.DELIVERY">Delivery</option>
         </select>
+      </div>
+
+      <!-- Export -->
+      <div class="filter-group" style="margin-left:auto;">
+        <button class="btn btn-export" (click)="exportToCSV()">📊 Export CSV</button>
       </div>
 
       <!-- Sort By -->

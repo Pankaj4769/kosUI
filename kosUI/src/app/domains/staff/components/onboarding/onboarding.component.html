@@ -1,0 +1,119 @@
+<div class="ob-page">
+  <div class="ob-header">
+    <div class="ob-header-title">
+      <h1>Employee Onboarding</h1>
+      <p>Track new hire checklists and onboarding progress</p>
+    </div>
+    <button class="ob-add-btn" (click)="showNew=true"><span class="material-icons">person_add</span> Start Onboarding</button>
+  </div>
+
+  <div class="ob-kpis">
+    <div class="ob-kpi"><span class="material-icons" style="color:#f59e0b">pending</span>
+      <div><div class="ob-kpi-val">{{ notStartedCount }}</div><div class="ob-kpi-lbl">Not Started</div></div></div>
+    <div class="ob-kpi"><span class="material-icons" style="color:#3b82f6">hourglass_empty</span>
+      <div><div class="ob-kpi-val">{{ inProgressCount }}</div><div class="ob-kpi-lbl">In Progress</div></div></div>
+    <div class="ob-kpi"><span class="material-icons" style="color:#16a34a">task_alt</span>
+      <div><div class="ob-kpi-val">{{ completedCount }}</div><div class="ob-kpi-lbl">Completed</div></div></div>
+  </div>
+
+  <div class="ob-filters">
+    <select class="ob-select" [(ngModel)]="filterStatus">
+      <option value="">All Status</option>
+      <option value="NOT_STARTED">Not Started</option>
+      <option value="IN_PROGRESS">In Progress</option>
+      <option value="COMPLETED">Completed</option>
+    </select>
+  </div>
+
+  <!-- Cards list -->
+  <ng-container *ngIf="!selected">
+    <div class="ob-grid">
+      <div class="ob-card" *ngFor="let r of filtered" (click)="openRecord(r)">
+        <div class="ob-card-top">
+          <div class="ob-avatar">{{ r.employeeName[0] }}</div>
+          <div class="ob-card-info">
+            <div class="ob-card-name">{{ r.employeeName }}</div>
+            <div class="ob-card-meta">{{ r.role }} · {{ r.department }}</div>
+            <div class="ob-card-meta">Joined {{ r.joinDate | date:'mediumDate' }}</div>
+          </div>
+          <span class="badge" [class]="statusClass(r.status)">{{ r.status.replace('_',' ') }}</span>
+        </div>
+        <div class="ob-progress-row">
+          <div class="ob-progress-track">
+            <div class="ob-progress-fill" [style.width.%]="r.progress"></div>
+          </div>
+          <span class="ob-progress-pct">{{ r.progress }}%</span>
+        </div>
+        <div class="ob-task-counts">
+          {{ completedTasks(r) }} / {{ r.checklist.length }} tasks completed
+        </div>
+      </div>
+      <div class="ob-empty" *ngIf="filtered.length===0">
+        <span class="material-icons">person_add</span><p>No onboarding records found.</p>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Detail view -->
+  <ng-container *ngIf="selected">
+    <div class="ob-detail-card">
+      <div class="ob-detail-header">
+        <button class="ob-back-btn" (click)="selected=null"><span class="material-icons">arrow_back</span> Back</button>
+        <div class="ob-avatar">{{ selected.employeeName[0] }}</div>
+        <div>
+          <div class="ob-detail-name">{{ selected.employeeName }}</div>
+          <div class="ob-detail-meta">{{ selected.role }} · {{ selected.department }} · Joined {{ selected.joinDate | date:'mediumDate' }}</div>
+        </div>
+        <span class="badge" [class]="statusClass(selected.status)" style="margin-left:auto">{{ selected.status.replace('_',' ') }}</span>
+      </div>
+
+      <div class="ob-detail-progress">
+        <div class="ob-progress-track large">
+          <div class="ob-progress-fill" [style.width.%]="selected.progress"></div>
+        </div>
+        <span class="ob-progress-pct">{{ selected.progress }}%</span>
+      </div>
+
+      <div class="ob-checklist-body">
+        <div class="ob-group" *ngFor="let g of groupedTasks(selected.checklist)">
+          <div class="ob-group-label">{{ g.category }}</div>
+          <div class="ob-task" *ngFor="let item of g.items" [class.ob-task-done]="item.completed">
+            <label class="ob-task-check">
+              <input type="checkbox" [checked]="item.completed" (change)="toggleTask(selected!, item)" />
+              <span class="ob-task-label">{{ item.task }}</span>
+            </label>
+            <span class="ob-task-assign">{{ item.assignedTo }}</span>
+            <span class="ob-task-date" *ngIf="item.completedDate">{{ item.completedDate | date:'mediumDate' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- New Onboarding Modal -->
+  <div class="ob-overlay" *ngIf="showNew" (click)="showNew=false">
+    <div class="ob-modal" (click)="$event.stopPropagation()">
+      <div class="ob-modal-head">
+        <h2>Start Onboarding</h2>
+        <button class="ob-modal-close" (click)="showNew=false"><span class="material-icons">close</span></button>
+      </div>
+      <div class="ob-modal-body">
+        <label class="ob-label">Employee <span class="req">*</span>
+          <select class="ob-input" [(ngModel)]="newForm.employeeId">
+            <option [value]="0" disabled>Select employee</option>
+            <option *ngFor="let e of employees" [value]="e.id">{{ e.name ?? '#'+e.id }}</option>
+          </select></label>
+        <label class="ob-label">Join Date
+          <input type="date" class="ob-input" [(ngModel)]="newForm.joinDate" /></label>
+        <div class="ob-template-note">
+          <span class="material-icons">info</span>
+          A standard 12-task onboarding checklist will be created automatically.
+        </div>
+      </div>
+      <div class="ob-modal-foot">
+        <button class="ob-btn-secondary" (click)="showNew=false">Cancel</button>
+        <button class="ob-btn-primary" (click)="createNew()" [disabled]="!newForm.employeeId">Create Checklist</button>
+      </div>
+    </div>
+  </div>
+</div>

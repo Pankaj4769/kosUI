@@ -49,13 +49,11 @@ export class StaffReportComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    const currentMonth = new Date().toISOString().slice(0, 7);
-
     this.staffSvc.getStaff().pipe(
       takeUntil(this.destroy$),
       switchMap(staff => {
         this.computeTopPerformers(staff);
-        return this.attendanceSvc.getAttendanceForDate(staff, new Date());
+        return this.attendanceSvc.getAttendanceForDate(new Date());
       })
     ).subscribe(attendanceRecords => {
       const staffList = this.staffSvc['staffSubject']?.getValue() || [];

@@ -34,9 +34,11 @@ import { TableService } from '../../services/table.service';
 import { HoldService } from '../../services/hold.service';
 import { CartService } from '../../services/cart.service';
 import { CashierContextService } from '../../services/cashier-context.service';
+import { OrderManagementService } from '../../../order/services/order-management.service';
 
 // Models
 import { CartItem } from '../../models/cart-item.model';
+import { Order, OrderStatus, OrderType as OmsOrderType, OrderPriority } from '../../../order/models/order.model';
 
 /* ================= TYPES ================= */
 
@@ -98,6 +100,9 @@ export class CashierComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
 
+  // Mobile two-page view
+  mobileView: 'menu' | 'cart' = 'menu';
+
   // Session Info
   currentTime = new Date();
   orderNumber = '';
@@ -123,7 +128,8 @@ export class CashierComponent implements OnInit, OnDestroy {
     private cartService: CartService,
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
-    private cashierCtx:    CashierContextService
+    private cashierCtx: CashierContextService,
+    private orderManagementService: OrderManagementService
   ) {
     this.initializeSession();
     this.listenToRoute();
@@ -456,12 +462,47 @@ private pushContext(): void {
   }
 
   onPaymentComplete(paymentData: any): void {
-    console.log('Payment completed:', paymentData);
-    
+    this.pushCompletedOrder(paymentData);
     this.finalizeBill();
-    
     this.showNotification('Payment successful!', 'success');
     this.showPayment = false;
+  }
+
+  private pushCompletedOrder(paymentData: any): void {
+    const typeMap: Record<OrderType, OmsOrderType> = {
+      'Dine-In':  OmsOrderType.DINE_IN,
+      'Takeaway': OmsOrderType.TAKEAWAY,
+      'Delivery': OmsOrderType.DELIVERY
+    };
+
+    const orderItems = this.cart.map((ci, idx) => ({
+      id: idx + 1,
+      name: ci.name,
+      quantity: ci.qty,
+      price: ci.price,
+      notes: ci.notes || '',
+      category: ci.category
+    }));
+
+    const totalAmount = orderItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+    const order: Order = {
+      id: Date.now(),
+      orderNumber: this.orderNumber,
+      tableId: this.selectedTable ?? undefined,
+      tableName: this.selectedTable ? `Table ${this.selectedTable}` : undefined,
+      status: OrderStatus.SERVED,
+      priority: OrderPriority.MEDIUM,
+      type: typeMap[this.orderType] ?? OmsOrderType.DINE_IN,
+      items: orderItems,
+      totalAmount,
+      customerName: this.customerInfo?.name || 'Guest',
+      waiterName: this.waiterName,
+      orderTime: new Date(),
+      prepTime: paymentData?.prepTime
+    };
+
+    this.orderManagementService.addOrder(order);
   }
 
   onPaymentCancel(): void {

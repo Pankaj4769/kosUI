@@ -4,20 +4,29 @@
   <!-- HEADER SECTION -->
   <!-- ============================================================ -->
   <header class="dashboard-header">
+
+    <!-- decorative orbs -->
+    <div class="dh-orb dh-orb-1"></div>
+    <div class="dh-orb dh-orb-2"></div>
+
     <div class="header-content">
       <div class="header-left">
         <div class="header-title-block">
+          <div class="dh-eyebrow">
+            <span class="dh-dot"></span>
+            Live Dashboard
+          </div>
           <h1 class="dashboard-title">
-            <mat-icon class="title-icon">dashboard</mat-icon>
-            Inventory Dashboard
+            <mat-icon class="title-icon">storefront</mat-icon>
+            Dashboard
           </h1>
-          <p class="dashboard-subtitle">Real-time kitchen & orders overview</p>
+          <p class="dashboard-subtitle">Cloud Kitchen ERP — Real-time overview</p>
         </div>
-        
+
         <div class="header-meta">
           <div class="meta-item">
-            <mat-icon class="meta-icon">access_time</mat-icon>
-            <span class="meta-text">{{ currentTime | date:'short' }}</span>
+            <mat-icon class="meta-icon">schedule</mat-icon>
+            <span class="meta-text">{{ currentTime | date:'shortTime' }}</span>
           </div>
           <div class="meta-divider"></div>
           <div class="meta-item">
@@ -29,8 +38,8 @@
 
       <div class="header-actions">
         <!-- Date Range Filter -->
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Time Period</mat-label>
+        <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+          <mat-label>Period</mat-label>
           <mat-select [(ngModel)]="selectedDateRange" (selectionChange)="onDateRangeChange()">
             <mat-option *ngFor="let option of dateRangeOptions" [value]="option.value">
               {{ option.label }}
@@ -39,7 +48,7 @@
         </mat-form-field>
 
         <!-- Category Filter -->
-        <mat-form-field appearance="outline" class="filter-field">
+        <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
           <mat-label>Category</mat-label>
           <mat-select [(ngModel)]="selectedCategory" (selectionChange)="onCategoryChange()">
             <mat-option *ngFor="let option of categoryOptions" [value]="option.value">
@@ -47,32 +56,6 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-
-        <!-- Notifications Bell -->
-        <button mat-icon-button [matMenuTriggerFor]="notifMenu" class="notif-btn">
-          <mat-icon [matBadge]="unreadNotifications" matBadgeColor="warn" [matBadgeHidden]="unreadNotifications === 0">
-            notifications
-          </mat-icon>
-        </button>
-
-        <mat-menu #notifMenu="matMenu" class="notif-menu">
-          <div class="notif-header">
-            <h3>Notifications</h3>
-            <button mat-button (click)="markAllAsRead()" *ngIf="unreadNotifications > 0">
-              Mark all read
-            </button>
-          </div>
-          <mat-divider></mat-divider>
-          <button mat-menu-item 
-                  *ngFor="let notif of notifications" 
-                  (click)="markAsRead(notif.id)"
-                  [class.unread]="!notif.read">
-            <div class="notif-content">
-              <div class="notif-text">{{ notif.text }}</div>
-              <div class="notif-time">{{ notif.time }}</div>
-            </div>
-          </button>
-        </mat-menu>
 
         <!-- Action Menu -->
         <button mat-icon-button [matMenuTriggerFor]="menu" class="action-menu-btn">
@@ -110,34 +93,14 @@
           <div class="metric-label">{{ metric.label }}</div>
           <div class="metric-value">{{ metric.displayValue }}</div>
           <div class="metric-subtitle" *ngIf="metric.subtitle">{{ metric.subtitle }}</div>
+          <div class="metric-trend" *ngIf="metric.trend && metric.change !== undefined"
+               [ngClass]="'trend-' + metric.trend">
+            <mat-icon class="trend-icon">
+              {{ metric.trend === 'up' ? 'trending_up' : metric.trend === 'down' ? 'trending_down' : 'trending_flat' }}
+            </mat-icon>
+            <span>{{ metric.change > 0 ? '+' : '' }}{{ metric.change }}%</span>
+          </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================ -->
-  <!-- ALERTS BANNER -->
-  <!-- ============================================================ -->
-  <section class="alerts-section" *ngIf="alerts.length > 0">
-    <div class="alerts-container">
-      <div class="alert-card" 
-           *ngFor="let alert of alerts.slice(0, 3); trackBy: trackById"
-           [ngClass]="'alert-' + alert.type">
-        <mat-icon class="alert-icon">{{ alert.icon }}</mat-icon>
-        <div class="alert-content">
-          <div class="alert-title">{{ alert.title }}</div>
-          <div class="alert-message">{{ alert.message }}</div>
-        </div>
-        <button mat-icon-button class="alert-close" (click)="dismissAlert(alert.id)">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-      
-      <div class="alerts-more" *ngIf="alerts.length > 3">
-        <button mat-button color="primary">
-          View {{ alerts.length - 3 }} more alerts
-          <mat-icon>arrow_forward</mat-icon>
-        </button>
       </div>
     </div>
   </section>
@@ -211,13 +174,15 @@
     </mat-card>
 
     <!-- Wait Time Widget -->
-    <div class="wait-time-widget" [ngClass]="avgWaitTime.status">
-      <mat-icon class="wait-icon">schedule</mat-icon>
-      <div class="wait-info">
-        <div class="wait-value">{{ avgWaitTime.minutes }} min</div>
-        <div class="wait-label">Avg Wait Time</div>
-      </div>
-    </div>
+    <mat-card class="wait-time-card" [ngClass]="avgWaitTime.status">
+      <mat-card-content class="wait-card-content">
+        <mat-icon class="wait-icon">schedule</mat-icon>
+        <div class="wait-info">
+          <div class="wait-value">{{ avgWaitTime.minutes }} min</div>
+          <div class="wait-label">Avg Wait Time</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
   </div>
 
@@ -470,6 +435,11 @@
                 <div class="stat-number-large">{{ tableStatus.occupied }}</div>
                 <div class="stat-label-small">Occupied</div>
               </div>
+              <div class="table-stat reserved">
+                <div class="stat-icon-large">📋</div>
+                <div class="stat-number-large">{{ tableStatus.reserved }}</div>
+                <div class="stat-label-small">Reserved</div>
+              </div>
               <div class="table-stat available">
                 <div class="stat-icon-large">✓</div>
                 <div class="stat-number-large">{{ tableStatus.available }}</div>
@@ -498,28 +468,43 @@
             <div class="order-type-item">
               <mat-icon class="type-icon dine-in">restaurant</mat-icon>
               <div class="type-info">
-                <div class="type-label">Dine In</div>
-                <div class="type-count">{{ orderTypeStats.dineIn.count }} orders</div>
+                <div class="type-label-row">
+                  <span class="type-label">Dine In</span>
+                  <span class="type-count">{{ orderTypeStats.dineIn.count }} orders</span>
+                  <span class="type-percent">{{ orderTypeStats.dineIn.percent.toFixed(0) }}%</span>
+                </div>
+                <mat-progress-bar class="type-bar dine-in-bar" mode="determinate"
+                  [value]="orderTypeStats.dineIn.percent">
+                </mat-progress-bar>
               </div>
-              <div class="type-percent">{{ orderTypeStats.dineIn.percent.toFixed(0) }}%</div>
             </div>
-            
+
             <div class="order-type-item">
               <mat-icon class="type-icon takeaway">shopping_bag</mat-icon>
               <div class="type-info">
-                <div class="type-label">Takeaway</div>
-                <div class="type-count">{{ orderTypeStats.takeaway.count }} orders</div>
+                <div class="type-label-row">
+                  <span class="type-label">Takeaway</span>
+                  <span class="type-count">{{ orderTypeStats.takeaway.count }} orders</span>
+                  <span class="type-percent">{{ orderTypeStats.takeaway.percent.toFixed(0) }}%</span>
+                </div>
+                <mat-progress-bar class="type-bar takeaway-bar" mode="determinate"
+                  [value]="orderTypeStats.takeaway.percent">
+                </mat-progress-bar>
               </div>
-              <div class="type-percent">{{ orderTypeStats.takeaway.percent.toFixed(0) }}%</div>
             </div>
-            
+
             <div class="order-type-item">
               <mat-icon class="type-icon delivery">local_shipping</mat-icon>
               <div class="type-info">
-                <div class="type-label">Delivery</div>
-                <div class="type-count">{{ orderTypeStats.delivery.count }} orders</div>
+                <div class="type-label-row">
+                  <span class="type-label">Delivery</span>
+                  <span class="type-count">{{ orderTypeStats.delivery.count }} orders</span>
+                  <span class="type-percent">{{ orderTypeStats.delivery.percent.toFixed(0) }}%</span>
+                </div>
+                <mat-progress-bar class="type-bar delivery-bar" mode="determinate"
+                  [value]="orderTypeStats.delivery.percent">
+                </mat-progress-bar>
               </div>
-              <div class="type-percent">{{ orderTypeStats.delivery.percent.toFixed(0) }}%</div>
             </div>
           </div>
         </mat-card-content>
@@ -686,7 +671,7 @@
   <!-- ============================================================ -->
   <div class="loading-overlay" *ngIf="loading">
     <div class="loading-spinner">
-      <mat-icon class="spinner-icon">refresh</mat-icon>
+      <mat-progress-spinner mode="indeterminate" diameter="48" color="primary"></mat-progress-spinner>
       <div class="loading-text">Loading dashboard data...</div>
     </div>
   </div>

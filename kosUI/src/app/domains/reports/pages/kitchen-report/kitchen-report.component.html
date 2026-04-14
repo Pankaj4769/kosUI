@@ -2,13 +2,6 @@
 
   <!-- Header -->
   <div class="rpt-header">
-    <div class="rpt-header__icon" style="background:#fff1f2">
-      <mat-icon style="color:#e11d48">restaurant</mat-icon>
-    </div>
-    <div>
-      <h1>Kitchen Report</h1>
-      <p>Kitchen efficiency &amp; order analytics</p>
-    </div>
     <div class="rpt-date-tabs">
       <button *ngFor="let r of ranges" [class.active]="activeRange===r" (click)="activeRange=r">{{r}}</button>
     </div>

@@ -1,217 +1,307 @@
-<div class="attendance-wrapper" [class.loading-state]="loading" [attr.aria-busy]="loading">
+<div class="at-page">
 
-  <!-- Error Banner -->
-  <div class="error-banner" *ngIf="errorMessage" role="alert">
-    ⚠️ {{ errorMessage }}
-  </div>
-
-  <!-- ── Header ──────────────────────────────────────────────────────────── -->
-  <div class="attendance-header">
-    <div class="header-left">
-      <h2 class="page-title">🕐 Attendance</h2>
-      <span class="view-badge" [class.employee-badge]="viewMode === 'employee'">
-        {{ viewMode === 'manager' ? 'Manager View' : 'My Attendance' }}
-      </span>
+  <!-- ═══════════════════════════════════════════════════════════════
+       PAGE HEADER
+  ═══════════════════════════════════════════════════════════════════ -->
+  <div class="at-header">
+    <div class="at-header-title">
+      <h1>Attendance</h1>
+      <p>Track daily presence, clock-in/out and monthly trends</p>
     </div>
 
-    <div class="header-actions">
+    <div class="at-header-right">
+      <!-- View toggle -->
+      <nav class="at-tabs" *ngIf="hasManagerAccess">
+        <button class="at-tab" [class.at-tab--active]="viewMode === 'employee'" (click)="switchToEmployee()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          My Attendance
+        </button>
+        <button class="at-tab" [class.at-tab--active]="viewMode === 'manager'" (click)="switchToManager()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Manager View
+        </button>
+      </nav>
 
-      <!-- Back to employee view — only shown when in manager mode -->
-      <button class="btn-toggle btn-back"
-        *ngIf="viewMode === 'manager'"
-        (click)="switchToEmployee()">
-        👤 My Attendance
-      </button>
-
-      <!-- Switch to manager — only shown if role permits AND currently in employee view -->
-      <button class="btn-toggle btn-manager"
-        *ngIf="hasManagerAccess && viewMode === 'employee'"
-        (click)="switchToManager()">
-        🔑 Manager View
-      </button>
-
-      <input
-        type="date"
-        class="date-picker"
-        [value]="selectedDateIso"
-        (change)="onDateChange($any($event.target).value)"
-        aria-label="Select date"
-      />
-    </div>
-  </div>
-
-  <!-- ── KPI Strip ───────────────────────────────────────────────────────── -->
-  <div class="kpi-strip" *ngIf="kpi && viewMode === 'manager'">
-    <div class="kpi-card kpi-present">
-      <span class="kpi-icon">✅</span>
-      <div class="kpi-body">
-        <strong>{{ kpi.present }}</strong>
-        <small>Present</small>
-      </div>
-    </div>
-    <div class="kpi-card kpi-absent">
-      <span class="kpi-icon">❌</span>
-      <div class="kpi-body">
-        <strong>{{ kpi.absent }}</strong>
-        <small>Absent</small>
-      </div>
-    </div>
-    <div class="kpi-card kpi-late">
-      <span class="kpi-icon">⏰</span>
-      <div class="kpi-body">
-        <strong>{{ kpi.late }}</strong>
-        <small>Late</small>
-      </div>
-    </div>
-    <div class="kpi-card kpi-leave">
-      <span class="kpi-icon">🏖️</span>
-      <div class="kpi-body">
-        <strong>{{ kpi.onLeave }}</strong>
-        <small>On Leave</small>
-      </div>
-    </div>
-    <div class="kpi-card kpi-total">
-      <span class="kpi-icon">👥</span>
-      <div class="kpi-body">
-        <strong>{{ records.length }}</strong>
-        <small>Total Staff</small>
+      <!-- Date picker -->
+      <div class="at-date-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8"  y1="2" x2="8"  y2="6"/>
+          <line x1="3"  y1="10" x2="21" y2="10"/>
+        </svg>
+        <input
+          type="date"
+          class="at-date-input"
+          [value]="selectedDateIso"
+          (change)="onDateChange($any($event.target).value)"
+          aria-label="Select date"
+        />
       </div>
     </div>
   </div>
 
-  <!-- ── Employee Self-View ──────────────────────────────────────────────── -->
-  <div class="self-view" *ngIf="viewMode === 'employee'">
+  <!-- Error banner -->
+  <div class="at-error" *ngIf="errorMessage" role="alert">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8"  x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    {{ errorMessage }}
+  </div>
 
-    <div class="self-card" *ngIf="myRecord; else noSelfRecord">
-      <div class="self-avatar">{{ myRecord.staffName.charAt(0) }}</div>
+  <!-- ═══════════════════════════════════════════════════════════════
+       KPI STRIP  (manager view only)
+  ═══════════════════════════════════════════════════════════════════ -->
+  <div class="at-kpi-strip" *ngIf="viewMode === 'manager'">
 
-      <div class="self-info">
-        <h3>{{ myRecord.staffName }}</h3>
-        <p class="self-sub">{{ myRecord.staffId }}</p>
+    <div class="at-kpi-card">
+      <div class="at-kpi-icon at-kpi-icon--green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <div class="at-kpi-body">
+        <span class="at-kpi-label">Present</span>
+        <strong class="at-kpi-value">{{ kpi.present }}</strong>
+      </div>
+    </div>
+
+    <div class="at-kpi-card">
+      <div class="at-kpi-icon at-kpi-icon--red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6"  y2="18"/>
+          <line x1="6"  y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      <div class="at-kpi-body">
+        <span class="at-kpi-label">Absent</span>
+        <strong class="at-kpi-value">{{ kpi.absent }}</strong>
+      </div>
+    </div>
+
+    <div class="at-kpi-card">
+      <div class="at-kpi-icon at-kpi-icon--amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="at-kpi-body">
+        <span class="at-kpi-label">Late</span>
+        <strong class="at-kpi-value">{{ kpi.late }}</strong>
+      </div>
+    </div>
+
+    <div class="at-kpi-card">
+      <div class="at-kpi-icon at-kpi-icon--indigo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <div class="at-kpi-body">
+        <span class="at-kpi-label">On Leave</span>
+        <strong class="at-kpi-value">{{ kpi.onLeave }}</strong>
+      </div>
+    </div>
+
+    <div class="at-kpi-card">
+      <div class="at-kpi-icon at-kpi-icon--teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <div class="at-kpi-body">
+        <span class="at-kpi-label">Total Staff</span>
+        <strong class="at-kpi-value">{{ records.length }}</strong>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       EMPLOYEE SELF-VIEW
+  ═══════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="viewMode === 'employee'">
+
+    <!-- My record card -->
+    <div class="at-self-card" *ngIf="myRecord; else noSelfRecord">
+      <div class="at-self-left">
+        <div class="at-avatar at-avatar--lg">{{ myRecord.staffName.charAt(0) }}</div>
+        <div class="at-self-info">
+          <strong>{{ myRecord.staffName }}</strong>
+          <span>ID {{ myRecord.staffId }}</span>
+        </div>
       </div>
 
-      <div class="self-status">
-        <span class="status-badge"
-          [style.background]="getAttendanceStatusColor(myRecord.status)">
+      <div class="at-self-status">
+        <span class="at-status-pill"
+          [class]="'at-status-pill at-s-' + myRecord.status.toLowerCase()">
           {{ getStatusLabel(myRecord.status) }}
         </span>
       </div>
 
-      <div class="self-times">
-        <div class="time-block">
-          <small>Clock In</small>
-          <strong>{{ myRecord.clockIn ?? '—' }}</strong>
+      <div class="at-self-times">
+        <div class="at-time-block">
+          <span class="at-time-label">Clock In</span>
+          <strong class="at-time-value">{{ myRecord.clockIn ?? '—' }}</strong>
         </div>
-        <div class="time-block">
-          <small>Clock Out</small>
-          <strong>{{ myRecord.clockOut ?? '—' }}</strong>
+        <div class="at-time-sep"></div>
+        <div class="at-time-block">
+          <span class="at-time-label">Clock Out</span>
+          <strong class="at-time-value">{{ myRecord.clockOut ?? '—' }}</strong>
         </div>
-        <div class="time-block">
-          <small>Hours</small>
-          <strong>{{ myRecord.totalHours | number:'1.1-2' }}h</strong>
+        <div class="at-time-sep"></div>
+        <div class="at-time-block">
+          <span class="at-time-label">Hours</span>
+          <strong class="at-time-value">{{ myRecord.totalHours | number:'1.1-2' }}h</strong>
         </div>
       </div>
 
-      <button class="btn-clockout"
+      <button class="at-clockout-btn"
         *ngIf="myRecord.clockIn && !myRecord.clockOut"
         (click)="handleClockOut(myRecord.staffId)">
-        🔴 Clock Out
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Clock Out
       </button>
     </div>
 
     <ng-template #noSelfRecord>
-      <div class="empty-state">
-        <div class="empty-icon">📋</div>
-        <p>No attendance record found for today.</p>
+      <div class="at-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+          <line x1="9" y1="12" x2="15" y2="12"/>
+          <line x1="9" y1="16" x2="13" y2="16"/>
+        </svg>
+        <p *ngIf="hasEmProfile">No attendance record found for today.</p>
+        <p *ngIf="!hasEmProfile">No employee profile found. Ask admin to register you as an employee so your attendance can be tracked.</p>
       </div>
     </ng-template>
 
-    <!-- Monthly Calendar — Employee -->
-    <div class="calendar-section">
-      <h3>{{ calendarMonthLabel }}</h3>
-      <div class="calendar-grid">
-        <div class="cal-day-label"
-          *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">
-          {{ d }}
-        </div>
-        <div class="cal-offset"
-          aria-hidden="true"
-          *ngFor="let _ of getOffsetArray()">
-        </div>
-        <div class="cal-day"
+    <!-- Monthly Calendar -->
+    <div class="at-panel at-calendar-panel">
+      <h3 class="at-panel-title">{{ calendarMonthLabel }}</h3>
+      <div class="at-cal-grid">
+        <div class="at-cal-label" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">{{ d }}</div>
+        <div class="at-cal-offset" aria-hidden="true" *ngFor="let _ of getOffsetArray()"></div>
+        <div class="at-cal-day"
           *ngFor="let day of calendarDays"
-          [class.cal-today]="day.date.toDateString() === selectedDate.toDateString()"
-          [style.border-color]="day.status ? getAttendanceStatusColor(day.status) : '#e2e8f0'"
+          [class.at-cal-today]="day.date.toDateString() === selectedDate.toDateString()"
+          [style.border-color]="day.status ? getAttendanceStatusColor(day.status) : 'var(--border)'"
           [title]="day.status ? getStatusLabel(day.status) : ''">
-          <span class="cal-date">{{ day.date.getDate() }}</span>
-          <span class="cal-dot"
-            *ngIf="day.status"
-            [style.background]="getAttendanceStatusColor(day.status)">
-          </span>
+          <span class="at-cal-date">{{ day.date.getDate() }}</span>
+          <span class="at-cal-dot" *ngIf="day.status" [style.background]="getAttendanceStatusColor(day.status)"></span>
         </div>
       </div>
-      <div class="calendar-legend">
-        <span *ngFor="let s of allStatusValues" class="legend-item">
-          <span class="legend-dot" [style.background]="getAttendanceStatusColor(s)"></span>
+      <div class="at-cal-legend">
+        <span class="at-legend-item" *ngFor="let s of allStatusValues">
+          <span class="at-legend-dot" [style.background]="getAttendanceStatusColor(s)"></span>
           {{ getStatusLabel(s) }}
         </span>
       </div>
     </div>
+
   </div>
 
-  <!-- ── Manager Table View ──────────────────────────────────────────────── -->
-  <div class="manager-section" *ngIf="viewMode === 'manager'">
+  <!-- ═══════════════════════════════════════════════════════════════
+       MANAGER VIEW
+  ═══════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="viewMode === 'manager'">
 
-    <!-- Filter Bar -->
-    <div class="filter-bar">
-      <div class="filter-tabs">
-        <button
-          *ngFor="let s of statusOptions"
-          class="filter-tab"
-          [class.active]="statusFilter === s"
-          (click)="statusFilter = s">
-          {{ getStatusLabel(s) }}
-          <span class="tab-count">{{ getCountByStatus(s) }}</span>
-        </button>
-      </div>
-      <div class="search-box">
-        <span class="search-icon">🔍</span>
+    <!-- Toolbar -->
+    <div class="at-toolbar">
+
+      <!-- Search -->
+      <div class="at-search">
+        <svg class="at-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
         <input
           type="text"
+          class="at-search-input"
           placeholder="Search staff..."
           [(ngModel)]="searchQuery"
           aria-label="Search staff"
         />
       </div>
-      <button class="btn-mark-all" (click)="openMarkModal()">
-        ✏️ Mark Attendance
+
+      <!-- Status filter pills -->
+      <div class="at-filter-group">
+        <button
+          *ngFor="let s of statusOptions"
+          class="at-filter-btn"
+          [class.at-filter-btn--active]="statusFilter === s"
+          (click)="statusFilter = s">
+          {{ getStatusLabel(s) }}
+          <span class="at-filter-count">{{ getCountByStatus(s) }}</span>
+        </button>
+      </div>
+
+      <!-- Mark Attendance -->
+      <button class="at-mark-btn" (click)="openMarkModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Mark Attendance
       </button>
     </div>
 
-    <!-- Loading Skeleton -->
-    <div class="skeleton-rows" *ngIf="loading" aria-label="Loading attendance...">
-      <div class="skeleton-row" *ngFor="let _ of [1,2,3,4,5]">
-        <div class="skel skel-avatar"></div>
-        <div class="skel skel-name"></div>
-        <div class="skel skel-status"></div>
-        <div class="skel skel-time"></div>
-        <div class="skel skel-time"></div>
-        <div class="skel skel-btn"></div>
+    <!-- Skeleton -->
+    <div class="at-skeleton" *ngIf="loading" aria-label="Loading...">
+      <div class="at-skel-row" *ngFor="let _ of [1,2,3,4,5]">
+        <div class="at-skel at-skel-avatar"></div>
+        <div class="at-skel at-skel-name"></div>
+        <div class="at-skel at-skel-badge"></div>
+        <div class="at-skel at-skel-time"></div>
+        <div class="at-skel at-skel-time"></div>
+        <div class="at-skel at-skel-btn"></div>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div class="empty-state" *ngIf="isEmpty()">
-      <div class="empty-icon">📋</div>
-      <p>No attendance records found for the selected date.</p>
+    <!-- Empty state -->
+    <div class="at-empty" *ngIf="isEmpty()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+        <rect x="9" y="3" width="6" height="4" rx="1"/>
+      </svg>
+      <p>No attendance records for the selected date.</p>
+      <p class="at-empty-hint" *ngIf="staffWithEmId.length > 0">
+        {{ staffWithEmId.length }} staff registered — use "Mark Attendance" to record for this date.
+      </p>
+      <button class="at-empty-btn" (click)="openMarkModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Mark Attendance
+      </button>
     </div>
 
     <!-- Attendance Table -->
-    <div class="table-wrapper" *ngIf="!loading && filteredRecords.length > 0">
-      <table class="attendance-table" aria-label="Attendance records">
+    <div class="at-table-wrap" *ngIf="!loading && filteredRecords.length > 0">
+      <table class="at-table" aria-label="Attendance records">
         <thead>
           <tr>
-            <th>Staff</th>
+            <th>Staff Member</th>
             <th>Status</th>
             <th>Clock In</th>
             <th>Clock Out</th>
@@ -221,105 +311,136 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let rec of filteredRecords; trackBy: trackByRecordId"
-              class="table-row"
-              (click)="openDetailModal(rec)">
-            <td class="staff-cell">
-              <div class="staff-avatar">{{ rec.staffName.charAt(0) }}</div>
-              <div class="staff-meta">
-                <span class="staff-name">{{ rec.staffName }}</span>
-                <span class="staff-id">{{ rec.staffId }}</span>
+          <tr class="at-tr"
+            *ngFor="let rec of filteredRecords; trackBy: trackByRecordId"
+            (click)="openDetailModal(rec)">
+
+            <td>
+              <div class="at-td-member">
+                <div class="at-avatar">{{ rec.staffName.charAt(0) }}</div>
+                <div class="at-member-info">
+                  <strong>{{ rec.staffName }}</strong>
+                  <span>ID {{ rec.staffId }}</span>
+                </div>
               </div>
             </td>
+
             <td>
-              <span class="status-badge"
-                [style.background]="getAttendanceStatusColor(rec.status)">
+              <span class="at-status-pill"
+                [class]="'at-status-pill at-s-' + rec.status.toLowerCase()">
                 {{ getStatusLabel(rec.status) }}
               </span>
             </td>
-            <td class="time-cell">{{ rec.clockIn ?? '—' }}</td>
-            <td class="time-cell">{{ rec.clockOut ?? '—' }}</td>
-            <td class="hours-cell">
+
+            <td class="at-td-mono">{{ rec.clockIn ?? '—' }}</td>
+            <td class="at-td-mono">{{ rec.clockOut ?? '—' }}</td>
+
+            <td class="at-td-hours">
               <span *ngIf="rec.totalHours > 0">{{ rec.totalHours | number:'1.1-2' }}h</span>
-              <span *ngIf="rec.totalHours === 0" class="no-hours">—</span>
+              <span *ngIf="rec.totalHours === 0" class="at-td-dash">—</span>
             </td>
-            <td class="notes-cell">{{ rec.notes || '—' }}</td>
-            <td class="actions-cell" (click)="$event.stopPropagation()">
-              <button class="btn-icon" title="Edit"
-                (click)="openMarkModal(rec)">✏️</button>
-              <button class="btn-icon btn-clockout-sm"
-                *ngIf="rec.clockIn && !rec.clockOut"
-                title="Clock Out"
-                (click)="handleClockOut(rec.staffId)">🔴</button>
-              <button class="btn-icon" title="View Details"
-                (click)="openDetailModal(rec)">👁️</button>
+
+            <td class="at-td-notes">{{ rec.notes || '—' }}</td>
+
+            <td (click)="$event.stopPropagation()">
+              <div class="at-td-actions">
+                <button class="at-icon-btn at-icon-btn--edit" title="Edit" (click)="openMarkModal(rec)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="at-icon-btn at-icon-btn--clock" title="Clock Out"
+                  *ngIf="rec.clockIn && !rec.clockOut"
+                  (click)="handleClockOut(rec.staffId)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                </button>
+                <button class="at-icon-btn at-icon-btn--view" title="View Details" (click)="openDetailModal(rec)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Monthly Calendar — Manager -->
-    <div class="calendar-section">
-      <h3>{{ calendarMonthLabel }} — Overview</h3>
-      <div class="calendar-grid">
-        <div class="cal-day-label"
-          *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">
-          {{ d }}
-        </div>
-        <div class="cal-offset"
-          aria-hidden="true"
-          *ngFor="let _ of getOffsetArray()">
-        </div>
-        <div class="cal-day"
+    <!-- Calendar — Manager -->
+    <div class="at-panel at-calendar-panel">
+      <h3 class="at-panel-title">{{ calendarMonthLabel }} — Monthly Overview</h3>
+      <div class="at-cal-grid">
+        <div class="at-cal-label" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">{{ d }}</div>
+        <div class="at-cal-offset" aria-hidden="true" *ngFor="let _ of getOffsetArray()"></div>
+        <div class="at-cal-day"
           *ngFor="let day of calendarDays"
-          [class.cal-today]="day.date.toDateString() === selectedDate.toDateString()"
-          [style.border-color]="day.status ? getAttendanceStatusColor(day.status) : '#e2e8f0'"
+          [class.at-cal-today]="day.date.toDateString() === selectedDate.toDateString()"
+          [style.border-color]="day.status ? getAttendanceStatusColor(day.status) : 'var(--border)'"
           [title]="day.status ? getStatusLabel(day.status) : ''">
-          <span class="cal-date">{{ day.date.getDate() }}</span>
-          <span class="cal-dot"
-            *ngIf="day.status"
-            [style.background]="getAttendanceStatusColor(day.status)">
-          </span>
+          <span class="at-cal-date">{{ day.date.getDate() }}</span>
+          <span class="at-cal-dot" *ngIf="day.status" [style.background]="getAttendanceStatusColor(day.status)"></span>
         </div>
       </div>
-      <div class="calendar-legend">
-        <span *ngFor="let s of allStatusValues" class="legend-item">
-          <span class="legend-dot" [style.background]="getAttendanceStatusColor(s)"></span>
+      <div class="at-cal-legend">
+        <span class="at-legend-item" *ngFor="let s of allStatusValues">
+          <span class="at-legend-dot" [style.background]="getAttendanceStatusColor(s)"></span>
           {{ getStatusLabel(s) }}
         </span>
       </div>
     </div>
+
   </div>
 
-  <!-- ── Mark Attendance Modal ───────────────────────────────────────────── -->
-  <div class="modal-overlay" *ngIf="showMarkModal" (click)="closeMarkModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()"
+  <!-- ═══════════════════════════════════════════════════════════════
+       MARK ATTENDANCE MODAL
+  ═══════════════════════════════════════════════════════════════════ -->
+  <div class="at-overlay" *ngIf="showMarkModal" (click)="closeMarkModal()">
+    <div class="at-modal" (click)="$event.stopPropagation()"
       role="dialog" aria-modal="true" aria-labelledby="markModalTitle">
-      <div class="modal-header">
-        <h3 id="markModalTitle">✏️ Mark Attendance</h3>
-        <button class="modal-close" (click)="closeMarkModal()" aria-label="Close">✕</button>
-      </div>
-      <div class="modal-body">
 
-        <div class="form-group">
-          <label for="staffSelect">Staff Member</label>
-          <select id="staffSelect" [(ngModel)]="markForm.staffId" class="form-control">
-            <option value="">— Select Staff —</option>
-            <!-- FIX: Show name + ID instead of raw staffId -->
-            <option *ngFor="let rec of records" [value]="rec.staffId">
-              {{ rec.staffName }} ({{ rec.staffId }})
-            </option>
+      <div class="at-modal-header">
+        <div class="at-modal-identity">
+          <div class="at-modal-form-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 id="markModalTitle">Mark Attendance</h2>
+            <p>{{ selectedDateIso }}</p>
+          </div>
+        </div>
+        <button class="at-modal-close" (click)="closeMarkModal()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="at-modal-body">
+
+        <div class="at-form-group">
+          <label class="at-form-label" for="staffSelect">Staff Member</label>
+          <select id="staffSelect" [(ngModel)]="markForm.staffId" class="at-form-input">
+            <option value="">— Select staff —</option>
+            <option *ngFor="let s of staffWithEmId" [value]="s.emId">{{ s.name }}</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label>Status</label>
-          <div class="status-picker">
+        <div class="at-form-group">
+          <label class="at-form-label">Status</label>
+          <div class="at-status-picker">
             <button
               *ngFor="let s of allStatusValues"
               type="button"
-              class="status-pick-btn"
+              class="at-status-pick-btn"
               [class.selected]="markForm.status === s"
               [style.border-color]="getAttendanceStatusColor(s)"
               [style.color]="markForm.status === s ? '#fff' : getAttendanceStatusColor(s)"
@@ -330,86 +451,145 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="markNotes">Notes</label>
-          <textarea id="markNotes" class="form-control"
+        <div class="at-form-group">
+          <label class="at-form-label" for="markNotes">Notes <span class="at-optional">(optional)</span></label>
+          <textarea id="markNotes" class="at-form-input at-form-textarea"
             [(ngModel)]="markForm.notes"
             rows="2"
-            placeholder="Optional note...">
+            placeholder="Add a note...">
           </textarea>
         </div>
 
       </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeMarkModal()">Cancel</button>
-        <button class="btn-primary"
+
+      <div class="at-modal-footer">
+        <button class="at-modal-btn at-modal-btn--secondary" (click)="closeMarkModal()">Cancel</button>
+        <button class="at-modal-btn at-modal-btn--primary"
           (click)="submitMarkForm()"
           [disabled]="!markForm.staffId">
-          ✅ Save
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Save
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ── Detail Modal ────────────────────────────────────────────────────── -->
-  <div class="modal-overlay" *ngIf="showDetailModal && selectedRecord" (click)="closeDetailModal()">
-    <div class="modal-content detail-modal" (click)="$event.stopPropagation()"
+  <!-- ═══════════════════════════════════════════════════════════════
+       DETAIL MODAL
+  ═══════════════════════════════════════════════════════════════════ -->
+  <div class="at-overlay" *ngIf="showDetailModal && selectedRecord" (click)="closeDetailModal()">
+    <div class="at-modal at-modal--medium" (click)="$event.stopPropagation()"
       role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
-      <div class="modal-header">
-        <h3 id="detailModalTitle">👁️ Attendance Detail</h3>
-        <button class="modal-close" (click)="closeDetailModal()" aria-label="Close">✕</button>
-      </div>
 
-      <div class="modal-body" *ngIf="selectedRecord">
-        <div class="detail-row">
-          <span class="detail-label">Staff</span>
-          <span class="detail-value">
-            {{ selectedRecord.staffName }}
-            <span class="staff-id">({{ selectedRecord.staffId }})</span>
-          </span>
+      <div class="at-modal-header">
+        <div class="at-modal-identity">
+          <div class="at-avatar at-avatar--lg">{{ selectedRecord!.staffName.charAt(0) }}</div>
+          <div>
+            <h2 id="detailModalTitle">{{ selectedRecord!.staffName }}</h2>
+            <p>ID {{ selectedRecord!.staffId }} &nbsp;·&nbsp; {{ selectedRecord!.date | date:'mediumDate' }}</p>
+          </div>
         </div>
-        <div class="detail-row">
-          <span class="detail-label">Date</span>
-          <span class="detail-value">{{ selectedRecord.date | date:'mediumDate' }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Status</span>
-          <span class="status-badge"
-            [style.background]="getAttendanceStatusColor(selectedRecord.status)">
-            {{ getStatusLabel(selectedRecord.status) }}
-          </span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Clock In</span>
-          <span class="detail-value">{{ selectedRecord.clockIn ?? '—' }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Clock Out</span>
-          <span class="detail-value">{{ selectedRecord.clockOut ?? '—' }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Hours</span>
-          <span class="detail-value">{{ selectedRecord.totalHours | number:'1.1-2' }}h</span>
-        </div>
-        <div class="detail-row" *ngIf="selectedRecord.notes">
-          <span class="detail-label">Notes</span>
-          <span class="detail-value">{{ selectedRecord.notes }}</span>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <!-- FIX: single method call prevents flicker from simultaneous open+close -->
-        <button class="btn-primary"
-          *ngIf="hasManagerAccess"
-          (click)="onEditFromDetail()">
-          ✏️ Edit
+        <button class="at-modal-close" (click)="closeDetailModal()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
         </button>
-        <button class="btn-clockout"
+      </div>
+
+      <div class="at-modal-body" *ngIf="selectedRecord">
+
+        <div class="at-section">
+          <p class="at-section-title">Attendance Record</p>
+          <div class="at-detail-grid">
+
+            <div class="at-detail-item">
+              <div class="at-detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div>
+                <span class="at-detail-label">Status</span>
+                <span class="at-status-pill"
+                  [class]="'at-status-pill at-s-' + selectedRecord.status.toLowerCase()">
+                  {{ getStatusLabel(selectedRecord.status) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="at-detail-item">
+              <div class="at-detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="17 11 12 6 7 11"/>
+                  <line x1="12" y1="6" x2="12" y2="18"/>
+                </svg>
+              </div>
+              <div>
+                <span class="at-detail-label">Clock In</span>
+                <span class="at-detail-value">{{ selectedRecord.clockIn ?? '—' }}</span>
+              </div>
+            </div>
+
+            <div class="at-detail-item">
+              <div class="at-detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="7 13 12 18 17 13"/>
+                  <line x1="12" y1="6" x2="12" y2="18"/>
+                </svg>
+              </div>
+              <div>
+                <span class="at-detail-label">Clock Out</span>
+                <span class="at-detail-value">{{ selectedRecord.clockOut ?? '—' }}</span>
+              </div>
+            </div>
+
+            <div class="at-detail-item">
+              <div class="at-detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <path d="M3 9h18M9 21V9"/>
+                </svg>
+              </div>
+              <div>
+                <span class="at-detail-label">Total Hours</span>
+                <span class="at-detail-value">{{ selectedRecord.totalHours | number:'1.1-2' }}h</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="at-section" *ngIf="selectedRecord.notes">
+          <p class="at-section-title">Notes</p>
+          <p class="at-notes-text">{{ selectedRecord.notes }}</p>
+        </div>
+
+      </div>
+
+      <div class="at-modal-footer">
+        <button class="at-modal-btn at-modal-btn--secondary" (click)="closeDetailModal()">Close</button>
+        <button class="at-modal-btn at-modal-btn--clock"
           *ngIf="selectedRecord?.clockIn && !selectedRecord?.clockOut"
           (click)="handleClockOut(selectedRecord!.staffId); closeDetailModal()">
-          🔴 Clock Out
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Clock Out
         </button>
-        <button class="btn-secondary" (click)="closeDetailModal()">Close</button>
+        <button class="at-modal-btn at-modal-btn--primary"
+          *ngIf="hasManagerAccess"
+          (click)="onEditFromDetail()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
       </div>
     </div>
   </div>

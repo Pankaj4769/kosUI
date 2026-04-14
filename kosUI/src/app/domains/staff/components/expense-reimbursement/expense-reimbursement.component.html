@@ -1,0 +1,92 @@
+<div class="er-page">
+  <div class="er-header">
+    <div class="er-header-title">
+      <h1>Expense Reimbursement</h1>
+      <p>Track and approve staff expense claims</p>
+    </div>
+    <button class="er-add-btn" (click)="openAdd()"><span class="material-icons">add</span> New Claim</button>
+  </div>
+
+  <div class="er-kpis">
+    <div class="er-kpi"><span class="material-icons" style="color:#3b82f6">receipt_long</span>
+      <div><div class="er-kpi-val">₹{{ totalSubmitted | number:'1.0-0' }}</div><div class="er-kpi-lbl">Total Claims</div></div></div>
+    <div class="er-kpi"><span class="material-icons" style="color:#f59e0b">pending_actions</span>
+      <div><div class="er-kpi-val">{{ pendingApproval }}</div><div class="er-kpi-lbl">Pending Approval</div></div></div>
+    <div class="er-kpi"><span class="material-icons" style="color:#16a34a">payments</span>
+      <div><div class="er-kpi-val">₹{{ totalPaid | number:'1.0-0' }}</div><div class="er-kpi-lbl">Total Paid</div></div></div>
+  </div>
+
+  <div class="er-filters">
+    <input type="month" class="er-input-sm" [(ngModel)]="filterMonth" />
+    <select class="er-input-sm" [(ngModel)]="filterStatus">
+      <option value="">All Status</option>
+      <option value="SUBMITTED">Submitted</option>
+      <option value="APPROVED">Approved</option>
+      <option value="PAID">Paid</option>
+      <option value="REJECTED">Rejected</option>
+    </select>
+    <select class="er-input-sm" [(ngModel)]="filterCategory">
+      <option value="">All Categories</option>
+      <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+    </select>
+  </div>
+
+  <div class="er-table-wrap">
+    <table class="er-table">
+      <thead><tr><th>Employee</th><th>Category</th><th>Description</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let c of filtered">
+          <td>{{ c.employeeName }}</td>
+          <td>
+            <div class="er-cat">
+              <span class="material-icons er-cat-icon">{{ catIcon(c.category) }}</span>
+              {{ c.category }}
+            </div>
+          </td>
+          <td>{{ c.description }}</td>
+          <td>{{ c.date | date:'mediumDate' }}</td>
+          <td class="er-amount">₹{{ c.amount | number:'1.0-0' }}</td>
+          <td><span class="badge" [class]="statusClass(c.status)">{{ c.status }}</span></td>
+          <td class="er-actions">
+            <button class="er-act approve"  *ngIf="c.status==='SUBMITTED'" (click)="approve(c)"  title="Approve"><span class="material-icons">check</span></button>
+            <button class="er-act reject"   *ngIf="c.status==='SUBMITTED'" (click)="reject(c)"   title="Reject"><span class="material-icons">close</span></button>
+            <button class="er-act pay"      *ngIf="c.status==='APPROVED'"  (click)="markPaid(c)" title="Mark Paid"><span class="material-icons">payments</span></button>
+          </td>
+        </tr>
+        <tr *ngIf="filtered.length===0"><td colspan="7" class="er-empty">No expense claims found</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="er-overlay" *ngIf="showModal" (click)="showModal=false">
+    <div class="er-modal" (click)="$event.stopPropagation()">
+      <div class="er-modal-head"><h2>New Expense Claim</h2>
+        <button class="er-modal-close" (click)="showModal=false"><span class="material-icons">close</span></button></div>
+      <div class="er-modal-body">
+        <label class="er-label">Employee <span class="req">*</span>
+          <select class="er-input" [(ngModel)]="form.employeeId">
+            <option [value]="0" disabled>Select employee</option>
+            <option *ngFor="let e of employees" [value]="e.id">{{ e.name ?? '#'+e.id }}</option>
+          </select></label>
+        <div class="er-row-2">
+          <label class="er-label">Category
+            <select class="er-input" [(ngModel)]="form.category">
+              <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+            </select></label>
+          <label class="er-label">Date
+            <input type="date" class="er-input" [(ngModel)]="form.date" /></label>
+        </div>
+        <label class="er-label">Description <span class="req">*</span>
+          <input class="er-input" [(ngModel)]="form.description" placeholder="Brief description" /></label>
+        <label class="er-label">Amount (₹) <span class="req">*</span>
+          <input type="number" class="er-input" [(ngModel)]="form.amount" min="0" placeholder="0" /></label>
+        <label class="er-label">Notes
+          <textarea class="er-input er-textarea" [(ngModel)]="form.notes" rows="2"></textarea></label>
+      </div>
+      <div class="er-modal-foot">
+        <button class="er-btn-secondary" (click)="showModal=false">Cancel</button>
+        <button class="er-btn-primary" (click)="save()" [disabled]="!form.employeeId||!form.amount||!form.description">Submit Claim</button>
+      </div>
+    </div>
+  </div>
+</div>

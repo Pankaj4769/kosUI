@@ -47,7 +47,7 @@ export class ManageInventoryComponent {
       });
       this.inventoryService.populateItems(itemList);
       this.cdr.detectChanges();
-      
+
   });
   }
 
@@ -69,6 +69,9 @@ export class ManageInventoryComponent {
   sidebarCollapsed = false;
   drawerOpen = false;
   selectedImage: string | null = null;
+
+  // Mobile two-page view
+  mobileView: 'list' | 'overview' = 'list';
 
   /* ---------- UX Enhancements ---------- */
   formErrors: any = {};

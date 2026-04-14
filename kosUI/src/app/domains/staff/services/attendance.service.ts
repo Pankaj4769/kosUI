@@ -1,77 +1,115 @@
-// src/app/domains/staff/services/attendance.service.ts
-
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { EMPLOYEE_MGMT_URL } from '../../../apiUrls';
 import { AttendanceRecord, AttendanceStatus } from '../models/attendance.model';
-import { StaffMember } from '../services/staff.service';
+
+interface AttendanceDTO {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  date: string;
+  clockIn: string | null;
+  clockOut: string | null;
+  status: string;
+  totalHours: number;
+  notes?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AttendanceService {
-  constructor() {}
+  private readonly API = `${EMPLOYEE_MGMT_URL}/api/attendance`;
 
-  getAttendanceForDate(
-    staff: StaffMember[],
-    date: Date
-  ): Observable<AttendanceRecord[]> {
-    const records: AttendanceRecord[] = staff.map((s) => ({
-      id: `ATT-${s.id}`,
-      staffId: s.id,
-      staffName: s.name,
-      date,
-      clockIn: this.getRandomTime('09:00', '09:30'),
-      clockOut: this.getRandomTime('17:00', '18:00'),
-      status: this.getRandomAttendanceStatus(),
-      totalHours: 8,
-      notes: ''
-    }));
-    return of(records);
+  constructor(private http: HttpClient) {}
+
+  getAttendanceForDate(date: Date): Observable<AttendanceRecord[]> {
+    const dateStr = date.toISOString().split('T')[0];
+    return this.http.get<AttendanceDTO[]>(`${this.API}/date/${dateStr}`).pipe(
+      map(list => list.map(this.toRecord)),
+      catchError(err => {
+        console.error('Failed to load attendance:', err);
+        return of([]);
+      })
+    );
   }
 
-  // In a real app these would call an API
-  markAttendance(
-    record: AttendanceRecord,
-    status: AttendanceStatus
-  ): AttendanceRecord {
-    const updated: AttendanceRecord = { ...record, status };
-    if (status === 'PRESENT' || status === 'LATE') {
-      updated.clockIn = this.nowTime();
-    }
-    return updated;
+  getAttendanceForEmployee(employeeId: string): Observable<AttendanceRecord[]> {
+    return this.http.get<AttendanceDTO[]>(`${this.API}/employee/${employeeId}`).pipe(
+      map(list => list.map(this.toRecord)),
+      catchError(() => of([]))
+    );
   }
 
-  clockOut(record: AttendanceRecord): AttendanceRecord {
-    return {
-      ...record,
-      clockOut: this.nowTime()
+  getAttendanceForEmployeeRange(employeeId: string, start: Date, end: Date): Observable<AttendanceRecord[]> {
+    const s = start.toISOString().split('T')[0];
+    const e = end.toISOString().split('T')[0];
+    return this.http.get<AttendanceDTO[]>(
+      `${this.API}/employee/${employeeId}/range?start=${s}&end=${e}`
+    ).pipe(
+      map(list => list.map(this.toRecord)),
+      catchError(() => of([]))
+    );
+  }
+
+  markAttendance(staffId: string, status: AttendanceStatus, date?: Date, notes?: string): Observable<AttendanceRecord> {
+    const payload = {
+      employeeId: Number(staffId),
+      date: (date ?? new Date()).toISOString().split('T')[0],
+      status: status,
+      clockIn: status === 'PRESENT' || status === 'LATE' ? this.nowTime() : null,
+      notes: notes ?? ''
     };
+    return this.http.post<AttendanceDTO>(this.API, payload).pipe(
+      map(this.toRecord),
+      catchError(err => {
+        console.error('Failed to mark attendance:', err);
+        // Return a local optimistic record
+        const local: AttendanceRecord = {
+          id: `ATT-${staffId}`,
+          staffId,
+          staffName: '',
+          date: date ?? new Date(),
+          clockIn: payload.clockIn,
+          clockOut: null,
+          status,
+          totalHours: 0,
+          notes
+        };
+        return of(local);
+      })
+    );
   }
 
-  // ===== helpers (kept private, same behaviour as before) =====
-
-  private getRandomTime(start: string, end: string): string {
-    const startHour = parseInt(start.split(':')[0], 10);
-    const endHour = parseInt(end.split(':')[0], 10);
-    const hour =
-      Math.floor(Math.random() * (endHour - startHour + 1)) + startHour;
-    const minute = Math.floor(Math.random() * 60);
-    return `${hour.toString().padStart(2, '0')}:${minute
-      .toString()
-      .padStart(2, '0')}`;
+  clockOut(attendanceId: string): Observable<AttendanceRecord> {
+    return this.http.patch<AttendanceDTO>(`${this.API}/${attendanceId}/clockout`, {}).pipe(
+      map(this.toRecord),
+      catchError(err => {
+        console.error('Failed to clock out:', err);
+        return of({} as AttendanceRecord);
+      })
+    );
   }
 
-  private getRandomAttendanceStatus(): AttendanceStatus {
-    const rand = Math.random();
-    if (rand > 0.9) return 'ABSENT';
-    if (rand > 0.8) return 'LATE';
-    if (rand > 0.95) return 'ON_LEAVE';
-    return 'PRESENT';
+  // ─── Mappers ───────────────────────────────────────────────────────────────
+
+  private toRecord(dto: AttendanceDTO): AttendanceRecord {
+    return {
+      id: String(dto.id),
+      staffId: String(dto.employeeId),
+      staffName: dto.employeeName ?? '',
+      date: new Date(dto.date),
+      clockIn: dto.clockIn,
+      clockOut: dto.clockOut,
+      status: (dto.status ?? 'ABSENT') as AttendanceStatus,
+      totalHours: dto.totalHours ?? 0,
+      notes: dto.notes
+    };
   }
 
   private nowTime(): string {
     return new Date().toLocaleTimeString('en-US', {
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit'
+      hour12: false, hour: '2-digit', minute: '2-digit'
     });
   }
 }

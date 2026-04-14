@@ -1,358 +1,822 @@
-/* =====================================================
-   PAGE WRAPPER (POS DENSITY)
-===================================================== */
+/* ================================================================
+   ROLE MANAGEMENT — REDESIGNED CSS
+   rm- prefix, matching design-token system across all staff pages.
+================================================================ */
 
-.staff-role-mgmt {
-  min-height: 100vh;
-  background: #f8fafc; /* --color-bg */
-  padding: 16px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #111827; /* --color-text */
-}
-
-.staff-role-mgmt * {
-  box-sizing: border-box;
-}
-
-
-/* =====================================================
-   HEADER
-===================================================== */
-
-.staff-role-mgmt .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.staff-role-mgmt .header h1 {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-
-/* =====================================================
-   BUTTONS (POS STYLE)
-===================================================== */
-
-.staff-role-mgmt .btn {
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 6px; /* --radius-sm */
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: 0.2s ease; /* --transition */
-}
-
-.staff-role-mgmt .btn-primary {
-  background: linear-gradient(135deg, #2e7d32, #1b5e20); /* primary → primary-hover */
-  color: #fff;
-}
-
-.staff-role-mgmt .btn-primary:hover {
-  opacity: 0.95;
-}
-
-.staff-role-mgmt .btn-secondary {
-  background: #eef2f7;
-  color: #111827; /* --color-text */
-}
-
-
-/* =====================================================
-   ROLES GRID (POS PANELS)
-===================================================== */
-
-.staff-role-mgmt .roles-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-}
-
-
-/* =====================================================
-   ROLE CARD (MATCHES POS PANELS)
-===================================================== */
-
-.staff-role-mgmt .role-card {
-  background: #ffffff; /* --color-surface */
-  border: 1.5px solid #e5e7eb; /* --color-border */
-  border-radius: 12px; /* --radius-lg */
-  padding: 18px;
-  transition: 0.2s ease; /* --transition */
-}
-
-.staff-role-mgmt .role-card:hover {
-  border-color: #2e7d32; /* --color-primary */
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); /* --shadow-panel */
-}
-
-
-/* =====================================================
-   ROLE HEADER
-===================================================== */
-
-.staff-role-mgmt .role-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px dashed #e5e7eb; /* --color-border */
-  margin-bottom: 12px;
-}
-
-.staff-role-mgmt .role-title {
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.staff-role-mgmt .role-description {
-  font-size: 13px;
-  color: #6b7280; /* --color-text-secondary */
-  line-height: 1.4;
-  margin-top: 4px;
-}
-
-
-/* =====================================================
-   ACTION ICONS (POS CONTROLS)
-===================================================== */
-
-.staff-role-mgmt .role-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.staff-role-mgmt .icon-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px; /* --radius-sm */
-  border: 1px solid #e5e7eb; /* --color-border */
-  background: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: 0.2s ease; /* --transition */
-}
-
-.staff-role-mgmt .icon-btn:hover {
-  background: rgba(46, 125, 50, 0.12); /* --color-chip-bg */
-  border-color: #2e7d32; /* --color-primary */
-}
-
-.staff-role-mgmt .icon-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-
-/* =====================================================
-   PERMISSIONS (POS CHIPS)
-===================================================== */
-
-.staff-role-mgmt .permissions-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.staff-role-mgmt .permission-tag {
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 6px; /* --radius-sm */
-  background: rgba(46, 125, 50, 0.12); /* --color-chip-bg */
-  border: 1px solid rgba(46, 125, 50, 0.25); /* --color-chip-border */
-  color: #2e7d32; /* --color-primary */
-}
-
-
-/* =====================================================
-   EMPTY STATE
-===================================================== */
-
-.staff-role-mgmt .empty-state {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 40px 20px;
-  color: #6b7280; /* --color-text-secondary */
-}
-
-.staff-role-mgmt .empty-state svg {
-  width: 56px;
-  height: 56px;
-  opacity: 0.35;
-  margin-bottom: 12px;
-}
-
-.staff-role-mgmt .empty-state h3 {
-  font-size: 16px;
-  margin-bottom: 4px;
-}
-
-
-/* =====================================================
-   MODAL (POS DIALOG STYLE)
-===================================================== */
-
-.staff-role-mgmt .modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.staff-role-mgmt .modal.active {
-  display: flex;
-}
-
-.staff-role-mgmt .modal-content {
-  width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
-  background: #ffffff; /* --color-surface */
-  border-radius: 12px; /* --radius-lg */
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.staff-role-mgmt .modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e5e7eb; /* --color-border */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.staff-role-mgmt .modal-header h2 {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.staff-role-mgmt .close-btn {
-  background: none;
-  border: none;
-  font-size: 22px;
-  cursor: pointer;
-  color: #6b7280; /* --color-text-secondary */
-}
-
-.staff-role-mgmt .modal-body {
-  padding: 16px 20px;
-  overflow-y: auto;
-}
-
-
-/* =====================================================
-   FORM CONTROLS (POS INPUTS)
-===================================================== */
-
-.staff-role-mgmt .form-group {
-  margin-bottom: 14px;
-}
-
-.staff-role-mgmt .form-label {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 6px;
+:host {
+  --primary:        #16a34a;
+  --primary-dark:   #15803d;
+  --primary-light:  #dcfce7;
+  --red:            #dc2626;
+  --red-light:      #fee2e2;
+  --indigo:         #4f46e5;
+  --indigo-light:   #eef2ff;
+  --blue:           #2563eb;
+  --blue-light:     #eff6ff;
+  --amber:          #d97706;
+  --amber-light:    #fef3c7;
+  --teal:           #0f766e;
+  --teal-light:     #f0fdfa;
+  --bg:             #f1f5f9;
+  --card:           #ffffff;
+  --border:         #e2e8f0;
+  --text:           #0f172a;
+  --text-secondary: #64748b;
+  --text-muted:     #94a3b8;
   display: block;
 }
 
-.staff-role-mgmt .form-input {
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 6px; /* --radius-sm */
-  border: 1.5px solid #e5e7eb; /* --color-border */
-  font-size: 13px;
+/* ─── PAGE ──────────────────────────────────────────────────────── */
+
+.rm-page {
+  padding: 24px;
+  background: var(--bg);
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
-.staff-role-mgmt .form-input:focus {
-  outline: none;
-  border-color: #2e7d32; /* --color-primary */
+/* ─── HEADER ────────────────────────────────────────────────────── */
+
+.rm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
-
-/* =====================================================
-   PERMISSION GROUPS
-===================================================== */
-
-.staff-role-mgmt .permissions-section {
-  margin-top: 16px;
-}
-
-.staff-role-mgmt .permission-category {
-  border: 1px solid #e5e7eb; /* --color-border */
-  border-radius: 10px; /* --radius-md */
-  padding: 12px;
-  margin-bottom: 12px;
-  background: #f9fafb;
-}
-
-.staff-role-mgmt .category-title {
-  font-size: 14px;
+.rm-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
   font-weight: 700;
-  margin-bottom: 8px;
-  color: #2e7d32; /* --color-primary */
+  color: var(--text);
 }
 
-.staff-role-mgmt .permission-checkboxes {
+.rm-header-title svg { color: var(--primary); }
+
+/* ─── ROLES GRID ────────────────────────────────────────────────── */
+
+.rm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+/* ─── ROLE CARD ─────────────────────────────────────────────────── */
+
+.rm-role-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
 }
 
-.staff-role-mgmt .checkbox-wrapper {
+.rm-role-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 6px 20px rgba(22,163,74,.1);
+  transform: translateY(-2px);
+}
+
+.rm-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.rm-role-avatar {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--teal));
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rm-role-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rm-role-name {
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rm-role-desc {
+  font-size: .78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.rm-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.rm-perm-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 20px;
+  width: fit-content;
+}
+
+.rm-perm-summary svg { color: var(--text-muted); }
+
+.rm-perm-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rm-perm-tag {
+  padding: 3px 10px;
+  font-size: .72rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background: var(--primary-light);
+  border: 1px solid #bbf7d0;
+  color: var(--primary-dark);
+}
+
+.rm-perm-tag--more {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+/* ─── EMPTY STATE ───────────────────────────────────────────────── */
+
+.rm-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border-radius: 16px;
+  border: 2px dashed var(--border);
+}
+
+.rm-empty svg { color: var(--text-muted); opacity: .5; }
+
+.rm-empty h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.rm-empty p {
+  font-size: .88rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ─── ICON BUTTONS ──────────────────────────────────────────────── */
+
+.rm-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all .2s;
+}
+
+.rm-icon-btn:hover {
+  background: var(--bg);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.rm-icon-btn--danger:hover {
+  background: var(--red-light);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* ─── OVERLAY / MODAL ───────────────────────────────────────────── */
+
+.rm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,.5);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.rm-modal {
+  background: var(--card);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0,0,0,.22);
+  animation: rm-slide-up .22s ease;
+}
+
+.rm-modal--sm { max-width: 420px; }
+
+@keyframes rm-slide-up {
+  from { opacity: 0; transform: translateY(20px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.rm-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.rm-modal-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
 }
 
-.staff-role-mgmt input[type="checkbox"] {
-  accent-color: #2e7d32; /* --color-primary */
+.rm-modal-title svg { color: var(--primary); }
+.rm-modal-title--danger svg { color: var(--red); }
+.rm-modal-title--danger { color: var(--red); }
+
+.rm-close-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 8px;
+  border: none;
+  background: var(--bg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: background .2s, color .2s;
 }
 
+.rm-close-btn:hover { background: var(--border); color: var(--text); }
 
-/* =====================================================
-   MODAL FOOTER
-===================================================== */
+.rm-modal-body {
+  padding: 22px 24px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
 
-.staff-role-mgmt .modal-footer {
-  padding: 12px 20px;
-  border-top: 1px solid #e5e7eb; /* --color-border */
+.rm-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
 }
 
+/* ─── FORM ──────────────────────────────────────────────────────── */
 
-/* =====================================================
-   RESPONSIVE
-===================================================== */
+.rm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.rm-label {
+  font-size: .83rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.rm-required { color: var(--red); margin-left: 2px; }
+
+.rm-input {
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: .93rem;
+  color: var(--text);
+  background: var(--card);
+  transition: border-color .2s, box-shadow .2s;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.rm-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(22,163,74,.12);
+}
+
+.rm-textarea { resize: vertical; min-height: 64px; }
+
+/* ─── PERMISSIONS ───────────────────────────────────────────────── */
+
+.rm-perms-section { margin-top: 4px; }
+
+.rm-perms-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.rm-perms-title svg { color: var(--primary); }
+
+.rm-perm-category {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.rm-category-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.rm-category-label svg { color: var(--text-muted); }
+
+.rm-checkboxes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  padding: 8px;
+}
+
+.rm-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: .85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background .15s;
+  user-select: none;
+}
+
+.rm-checkbox-row:hover { background: var(--bg); }
+.rm-checkbox-row--checked { color: var(--text); }
+
+.rm-checkbox {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 5px;
+  border: 2px solid var(--border);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+}
+
+.rm-checkbox--checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.rm-checkbox--checked svg { color: #fff; }
+
+/* ─── DELETE CONFIRM ────────────────────────────────────────────── */
+
+.rm-delete-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+}
+
+.rm-delete-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--red-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--red);
+}
+
+.rm-delete-msg {
+  font-size: .92rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 320px;
+}
+
+.rm-delete-msg strong { color: var(--text); }
+
+/* ─── BUTTONS ───────────────────────────────────────────────────── */
+
+.rm-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+}
+
+.rm-btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+.rm-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.rm-btn-secondary:hover { background: var(--bg); }
+
+.rm-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+}
+
+.rm-btn-danger:hover { background: #b91c1c; transform: translateY(-1px); }
+
+/* ─── TOAST ─────────────────────────────────────────────────────── */
+
+.rm-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--primary);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: .88rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(22,163,74,.3);
+  z-index: 2000;
+  animation: rm-toast-in .25s ease;
+}
+
+.rm-toast svg { flex-shrink: 0; }
+
+.rm-toast--error {
+  background: var(--red);
+  box-shadow: 0 8px 24px rgba(220,38,38,.3);
+}
+
+@keyframes rm-toast-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── OWNER CARD ────────────────────────────────────────────────── */
+
+.rm-role-card--owner {
+  border-color: #fbbf24;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef9ee 100%);
+}
+
+.rm-role-card--owner:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 6px 20px rgba(245,158,11,.15);
+}
+
+.rm-owner-crown {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  width: fit-content;
+  letter-spacing: .03em;
+}
+
+.rm-role-avatar--owner {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+}
+
+.rm-lock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 3px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.rm-perm-tag--owner {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+/* ─── STAFF ROW ─────────────────────────────────────────────────── */
+
+.rm-staff-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.rm-staff-avatars {
+  display: flex;
+  align-items: center;
+}
+
+.rm-staff-avatar {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--card);
+  margin-left: -8px;
+}
+
+.rm-staff-avatars .rm-staff-avatar:first-child { margin-left: 0; }
+
+.rm-staff-avatar--more {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text-muted);
+  font-size: .65rem;
+}
+
+.rm-staff-avatar--sm {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rm-staff-count {
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.rm-staff-count--empty {
+  color: var(--text-muted);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ─── CATEGORY HEADER (select-all) ─────────────────────────────── */
+
+.rm-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #fafafa;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s;
+}
+
+.rm-category-header:hover { background: #f4f4f5; }
+
+.rm-checkbox--category {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 5px;
+  border: 2px solid var(--border);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+
+.rm-checkbox--category.rm-checkbox--checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.rm-checkbox--category.rm-checkbox--partial {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.rm-checkbox--partial svg { color: var(--primary); }
+
+/* ─── ASSIGNED STAFF (modal) ────────────────────────────────────── */
+
+.rm-assigned-staff {
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.rm-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: #fafafa;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.rm-assigned-list { padding: 6px 8px; }
+
+.rm-assigned-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  transition: background .15s;
+}
+
+.rm-assigned-member:hover { background: var(--bg); }
+
+.rm-member-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.rm-member-name {
+  font-size: .84rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rm-member-role {
+  font-size: .73rem;
+  color: var(--text-muted);
+}
+
+.rm-member-status {
+  font-size: .68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.rm-member-status--active {
+  background: var(--primary-light);
+  border-color: #bbf7d0;
+  color: var(--primary-dark);
+}
+
+.rm-no-members {
+  padding: 10px 14px;
+  font-size: .82rem;
+  color: var(--text-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+/* ─── DELETE WARN ───────────────────────────────────────────────── */
+
+.rm-delete-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: .8rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 7px;
+}
+
+/* ─── RESPONSIVE ────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
-  .staff-role-mgmt .roles-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .staff-role-mgmt .header {
-    flex-direction: column;
-    align-items: stretch;
-  }
+  .rm-grid { grid-template-columns: 1fr; }
+  .rm-header { flex-direction: column; align-items: flex-start; }
+  .rm-checkboxes { grid-template-columns: 1fr; }
+  .rm-modal { max-width: 100%; }
+  .rm-modal-footer { justify-content: stretch; }
+  .rm-modal-footer .rm-btn-primary,
+  .rm-modal-footer .rm-btn-secondary,
+  .rm-modal-footer .rm-btn-danger { flex: 1; justify-content: center; }
 }

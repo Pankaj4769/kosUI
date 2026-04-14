@@ -30,6 +30,7 @@ export interface AuthUser {
   onboardingStatus: OnboardingStatus;
   subscriptionPlan?: SubscriptionPlan;
   restaurantId?: string;
+  mustResetPassword?: boolean;
 }
 
 export interface SubscriptionPlanDetail {

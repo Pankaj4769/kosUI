@@ -1,14 +1,25 @@
 import { CommonModule } from '@angular/common';
-import { 
-  Component, 
-  EventEmitter, 
-  Input, 
-  Output, 
-  OnInit,       // FIXED: Added OnInit
-  OnChanges, 
-  SimpleChanges 
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  OnInit,
+  OnChanges,
+  OnDestroy,
+  SimpleChanges
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Subject, combineLatest } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+import { PayrollService } from '../../services/payroll.service';
+import { StaffService } from '../../services/staff.service';
+import { LeaveService } from '../../services/leave.service';
+import { ShiftService } from '../../services/shift.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { SalarySlip, CommissionRecord } from '../../models/payroll.model';
+import { LeaveRequest } from '../../models/leave.model';
 
 // --- Interfaces ---
 export type PayrollStatus = 'GENERATED' | 'SENT' | 'PAID' | 'HOLD';
@@ -86,7 +97,6 @@ export interface CommissionKpi {
   paid: number;
 }
 
-// FIXED: Added OnInit to implements
 @Component({
   selector: 'app-payroll',
   standalone: true,
@@ -94,7 +104,15 @@ export interface CommissionKpi {
   templateUrl: './payroll.component.html',
   styleUrls: ['./payroll.component.css']
 })
-export class PayrollComponent implements OnInit, OnChanges {
+export class PayrollComponent implements OnInit, OnChanges, OnDestroy {
+
+  constructor(
+    private payrollSvc: PayrollService,
+    private staffSvc: StaffService,
+    private leaveSvc: LeaveService,
+    private shiftSvc: ShiftService,
+    private authSvc: AuthService
+  ) {}
 
   // ============= INPUTS =============
   @Input() salarySlips: SalarySlipView[] = [];
@@ -102,7 +120,7 @@ export class PayrollComponent implements OnInit, OnChanges {
   @Input() commissionRecords: CommissionRecordView[] = [];
   @Input() commissionKpi!: CommissionKpi;
 
-  @Input() selectedMonth: string = new Date().toISOString().slice(0, 7); // FIXED: Default to current month
+  @Input() selectedMonth: string = new Date().toISOString().slice(0, 7);
   @Input() selectedStaffId: string = '';
 
   @Input() staffDirectory: StaffProfile[] = [];
@@ -126,142 +144,140 @@ export class PayrollComponent implements OnInit, OnChanges {
   previewSlip: SalarySlipView | null = null;
   showSalaryStatusModal = false;
   showBulkCommissionModal = false;
-
-  // FIXED: Properly typed salaryStatusFilter (referenced in HTML)
   salaryStatusFilter: 'paid' | 'hold' = 'paid';
+  loading = false;
 
-  // FIXED: Properly typed bulkCommissionForm
   bulkCommissionForm: { rate: number; month: string; salesTeam: string[] } = {
     rate: 1.5,
     month: '',
     salesTeam: []
   };
 
+  // Whether this component is embedded in a parent (inputs provided) or standalone
+  private standalone = false;
+  private destroy$ = new Subject<void>();
+
   // ============= CONSTANTS =============
-  readonly SHIFT_ALLOWANCE_RATE = 200;   // ₹200 per Night Shift
+  readonly SHIFT_ALLOWANCE_RATE = 200;
   readonly NIGHT_SHIFT_KEY = 'Night';
-  readonly PAID_LEAVE_LIMIT = 2;         // Free paid leave days per month
-
-  // ============= MOCK DATA (For Testing) =============
-
-  mockStaffDirectory: StaffProfile[] = [
-    { id: 'EMP001', name: 'John Doe',     role: 'Chef',       baseSalary: 45000, email: 'john@kitchen.com' },
-    { id: 'EMP002', name: 'Jane Smith',   role: 'Sous Chef',  baseSalary: 38000, email: 'jane@kitchen.com' },
-    { id: 'EMP003', name: 'Mike Johnson', role: 'Line Cook',  baseSalary: 32000, email: 'mike@kitchen.com' },
-    { id: 'EMP004', name: 'Sarah Wilson', role: 'Waiter',     baseSalary: 25000, email: 'sarah@kitchen.com' },
-    { id: 'EMP005', name: 'David Brown',  role: 'Bartender',  baseSalary: 28000, email: 'david@kitchen.com' }
-  ];
-
-  mockShiftRecords: ShiftRecord[] = [
-    { staffId: 'EMP001', date: '2026-02-01', shiftType: 'Night',   isPresent: true },
-    { staffId: 'EMP001', date: '2026-02-07', shiftType: 'Night',   isPresent: true },
-    { staffId: 'EMP002', date: '2026-02-02', shiftType: 'Night',   isPresent: true },
-    { staffId: 'EMP002', date: '2026-02-08', shiftType: 'Morning', isPresent: true },
-    { staffId: 'EMP003', date: '2026-02-03', shiftType: 'Night',   isPresent: true },
-    { staffId: 'EMP004', date: '2026-02-04', shiftType: 'General', isPresent: true },
-    { staffId: 'EMP005', date: '2026-02-05', shiftType: 'Evening', isPresent: true }
-  ];
-
-  mockLeaveRecords: LeaveRecord[] = [
-    { staffId: 'EMP001', startDate: '2026-02-05', endDate: '2026-02-06', type: 'UNPAID', days: 2 },
-    { staffId: 'EMP002', startDate: '2026-02-10', endDate: '2026-02-11', type: 'PAID',   days: 2 },
-    { staffId: 'EMP004', startDate: '2026-02-15', endDate: '2026-02-17', type: 'PAID',   days: 3 },
-    { staffId: 'EMP003', startDate: '2026-02-20', endDate: '2026-02-20', type: 'SICK',   days: 1 }
-  ];
-
-  mockCommissionRecords: CommissionRecordView[] = [
-    { id: 'COM001', staffId: 'EMP001', staffName: 'John Doe',     salesAmount: 120000, commissionRate: 1.5, commissionAmount: 1800, month: '2026-02', status: 'PAID',    paidDate: new Date('2026-02-28') },
-    { id: 'COM002', staffId: 'EMP002', staffName: 'Jane Smith',   salesAmount: 95000,  commissionRate: 1.5, commissionAmount: 1425, month: '2026-02', status: 'PAID',    paidDate: new Date('2026-02-28') },
-    { id: 'COM003', staffId: 'EMP004', staffName: 'Sarah Wilson', salesAmount: 75000,  commissionRate: 1.0, commissionAmount: 750,  month: '2026-02', status: 'PENDING' },
-    { id: 'COM004', staffId: 'EMP005', staffName: 'David Brown',  salesAmount: 88000,  commissionRate: 1.0, commissionAmount: 880,  month: '2026-02', status: 'PENDING' }
-  ];
-
-  mockSalarySlips: SalarySlipView[] = [
-    {
-      id: 'SLP001', staffId: 'EMP001', staffName: 'John Doe',
-      month: '2026-02', basicSalary: 18000, hra: 9000, shiftAllowance: 400,
-      leaveDeductions: 3000, commission: 1800, bonus: 0,
-      grossSalary: 47200, pf: 1800, tax: 0, netSalary: 42400,
-      status: 'PAID', generatedDate: new Date('2026-02-25'), paymentDate: new Date('2026-02-28')
-    },
-    {
-      id: 'SLP002', staffId: 'EMP002', staffName: 'Jane Smith',
-      month: '2026-02', basicSalary: 15200, hra: 7600, shiftAllowance: 200,
-      leaveDeductions: 0, commission: 1425, bonus: 0,
-      grossSalary: 39625, pf: 1800, tax: 0, netSalary: 37825,
-      status: 'PAID', generatedDate: new Date('2026-02-25'), paymentDate: new Date('2026-02-28')
-    },
-    {
-      id: 'SLP003', staffId: 'EMP003', staffName: 'Mike Johnson',
-      month: '2026-02', basicSalary: 12800, hra: 6400, shiftAllowance: 200,
-      leaveDeductions: 0, commission: 0, bonus: 0,
-      grossSalary: 32200, pf: 1536, tax: 0, netSalary: 30664,
-      status: 'GENERATED', generatedDate: new Date('2026-02-25')
-    },
-    {
-      id: 'SLP004', staffId: 'EMP004', staffName: 'Sarah Wilson',
-      month: '2026-02', basicSalary: 10000, hra: 5000, shiftAllowance: 0,
-      leaveDeductions: 833, commission: 0, bonus: 0,
-      grossSalary: 25000, pf: 1200, tax: 0, netSalary: 22967,
-      status: 'HOLD', generatedDate: new Date('2026-02-25')
-    },
-    {
-      id: 'SLP005', staffId: 'EMP005', staffName: 'David Brown',
-      month: '2026-02', basicSalary: 11200, hra: 5600, shiftAllowance: 0,
-      leaveDeductions: 0, commission: 0, bonus: 0,
-      grossSalary: 28000, pf: 1344, tax: 0, netSalary: 26656,
-      status: 'HOLD', generatedDate: new Date('2026-02-25')
-    }
-  ];
-
-  mockSalaryKpi: SalaryKpi = {
-    totalPayroll: 160789,
-    thisMonth: 160789,
-    processed: 3,
-    pending: 2,
-    paidCount: 2,
-    holdCount: 2
-  };
-
-  mockCommissionKpi: CommissionKpi = {
-    totalSales: 378000,
-    totalCommission: 4855,
-    pending: 1630,
-    paid: 3225
-  };
+  readonly PAID_LEAVE_LIMIT = 2;
 
   // ============= LIFECYCLE =============
 
   ngOnInit(): void {
-    // Load mock data if no real data provided
-    if (!this.staffDirectory || this.staffDirectory.length === 0) {
-      this.staffDirectory = this.mockStaffDirectory;
-    }
-    if (!this.shiftRecords || this.shiftRecords.length === 0) {
-      this.shiftRecords = this.mockShiftRecords;
-    }
-    if (!this.leaveRecords || this.leaveRecords.length === 0) {
-      this.leaveRecords = this.mockLeaveRecords;
-    }
-    if (!this.commissionRecords || this.commissionRecords.length === 0) {
-      this.commissionRecords = this.mockCommissionRecords;
-    }
-    if (!this.salarySlips || this.salarySlips.length === 0) {
-      this.salarySlips = this.mockSalarySlips;
-    }
-    if (!this.salaryKpi) {
-      this.salaryKpi = this.mockSalaryKpi;
-    }
-    if (!this.commissionKpi) {
-      this.commissionKpi = this.mockCommissionKpi;
+    // Detect standalone mode: no parent has provided salaryKpi
+    this.standalone = !this.salaryKpi;
+
+    if (this.standalone) {
+      this.salaryKpi    = { totalPayroll: 0, thisMonth: 0, processed: 0, pending: 0, paidCount: 0, holdCount: 0 };
+      this.commissionKpi = { totalSales: 0, totalCommission: 0, pending: 0, paid: 0 };
+      this.loadStaffDirectory();
+      this.loadPayrollData();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Recalculate when staff or month selection changes
     if (changes['selectedStaffId'] || changes['selectedMonth']) {
       this.calculatePreview();
     }
+    // If parent changes the month and we are standalone, reload
+    if (this.standalone && changes['selectedMonth'] && !changes['selectedMonth'].firstChange) {
+      this.loadPayrollData();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ============= STANDALONE DATA LOADING =============
+
+  private loadStaffDirectory(): void {
+    const restaurantId = this.authSvc.currentUser?.restaurantId ?? '';
+    if (restaurantId) this.staffSvc.loadStaff(restaurantId);
+
+    this.staffSvc.staff$.pipe(takeUntil(this.destroy$)).subscribe(members => {
+      this.staffDirectory = members.map(m => ({
+        id: m.id,
+        name: m.name,
+        role: m.position || m.roleName || '',
+        baseSalary: m.salary || 0,
+        email: m.email
+      }));
+
+      // Also map shift records for the current month
+      this.shiftRecords = this.shiftSvc.assignments
+        .filter(a => new Date(a.date).toISOString().slice(0, 7) === this.selectedMonth)
+        .map(a => ({
+          staffId: a.staffId,
+          date: new Date(a.date).toISOString().split('T')[0],
+          shiftType: a.shiftName,
+          isPresent: true
+        }));
+    });
+  }
+
+  loadPayrollData(): void {
+    if (this.loading) return;
+    this.loading = true;
+
+    combineLatest([
+      this.payrollSvc.getSalarySlips(this.selectedMonth),
+      this.payrollSvc.getCommissionRecords(this.selectedMonth),
+      this.leaveSvc.getLeaveRequests()
+    ]).pipe(takeUntil(this.destroy$)).subscribe(([slips, commissions, leaves]) => {
+      this.salarySlips = slips.map(s => this.toSalarySlipView(s));
+      this.commissionRecords = commissions as CommissionRecordView[];
+      this.leaveRecords = leaves
+        .filter((l: LeaveRequest) => l.status === 'APPROVED')
+        .map((l: LeaveRequest) => this.toLeaveRecord(l));
+      this.computeKpi();
+      this.loading = false;
+    });
+  }
+
+  private computeKpi(): void {
+    const slips = this.salarySlips;
+    this.salaryKpi = {
+      totalPayroll: slips.reduce((s, x) => s + x.netSalary, 0),
+      thisMonth:    slips.reduce((s, x) => s + x.netSalary, 0),
+      processed:    slips.filter(x => x.status !== 'GENERATED').length,
+      pending:      slips.filter(x => x.status === 'GENERATED').length,
+      paidCount:    slips.filter(x => x.status === 'PAID').length,
+      holdCount:    slips.filter(x => x.status === 'HOLD').length
+    };
+    const comm = this.commissionRecords;
+    this.commissionKpi = {
+      totalSales:      comm.reduce((s, c) => s + c.salesAmount, 0),
+      totalCommission: comm.reduce((s, c) => s + c.commissionAmount, 0),
+      pending: comm.filter(c => c.status === 'PENDING').reduce((s, c) => s + c.commissionAmount, 0),
+      paid:    comm.filter(c => c.status === 'PAID').reduce((s, c) => s + c.commissionAmount, 0)
+    };
+  }
+
+  private toSalarySlipView(s: SalarySlip): SalarySlipView {
+    return {
+      id: s.id, staffId: s.staffId, staffName: s.staffName, month: s.month,
+      basicSalary: s.basicSalary, hra: s.hra, shiftAllowance: s.shiftAllowance,
+      leaveDeductions: s.leaveDeductions, commission: s.commission, bonus: s.bonus,
+      grossSalary: s.grossSalary, pf: s.pf, tax: s.tax, netSalary: s.netSalary,
+      status: s.status as PayrollStatus, generatedDate: s.generatedDate,
+      paymentDate: s.paymentDate
+    };
+  }
+
+  private toLeaveRecord(l: LeaveRequest): LeaveRecord {
+    const typeMap: Record<string, 'PAID' | 'UNPAID' | 'SICK'> = {
+      SICK: 'SICK', UNPAID: 'UNPAID', CASUAL: 'PAID', EARNED: 'PAID'
+    };
+    return {
+      staffId: l.staffId,
+      startDate: new Date(l.startDate).toISOString().split('T')[0],
+      endDate:   new Date(l.endDate).toISOString().split('T')[0],
+      type: typeMap[l.leaveType] ?? 'PAID',
+      days: l.days
+    };
   }
 
   // ============= CALCULATION LOGIC =============
@@ -275,11 +291,9 @@ export class PayrollComponent implements OnInit, OnChanges {
     const staff = this.staffDirectory.find(s => s.id === this.selectedStaffId);
     if (!staff) return;
 
-    // Base Components
     const basic = staff.baseSalary * 0.4;
-    const hra = staff.baseSalary * 0.2;
+    const hra   = staff.baseSalary * 0.2;
 
-    // Shift Allowance: Count night shifts for this staff in this month
     const nightShifts = this.shiftRecords.filter(s =>
       s.staffId === this.selectedStaffId &&
       s.date.startsWith(this.selectedMonth) &&
@@ -287,64 +301,32 @@ export class PayrollComponent implements OnInit, OnChanges {
     );
     const shiftAllowance = nightShifts.length * this.SHIFT_ALLOWANCE_RATE;
 
-    // Leave Deductions
     const staffLeaves = this.leaveRecords.filter(l =>
-      l.staffId === this.selectedStaffId &&
-      l.startDate.startsWith(this.selectedMonth)
+      l.staffId === this.selectedStaffId && l.startDate.startsWith(this.selectedMonth)
     );
 
-    let unpaidDays = 0;
-    let paidDaysTaken = 0;
-
+    let unpaidDays = 0, paidDaysTaken = 0;
     staffLeaves.forEach(leave => {
-      if (leave.type === 'UNPAID') {
-        unpaidDays += leave.days;
-      } else if (leave.type === 'PAID') {
-        paidDaysTaken += leave.days;
-      }
-      // SICK leave is always free (no deduction)
+      if (leave.type === 'UNPAID') unpaidDays += leave.days;
+      else if (leave.type === 'PAID') paidDaysTaken += leave.days;
     });
+    if (paidDaysTaken > this.PAID_LEAVE_LIMIT) unpaidDays += (paidDaysTaken - this.PAID_LEAVE_LIMIT);
 
-    // Excess paid leave treated as unpaid
-    if (paidDaysTaken > this.PAID_LEAVE_LIMIT) {
-      unpaidDays += (paidDaysTaken - this.PAID_LEAVE_LIMIT);
-    }
+    const leaveDeductions = Math.round(unpaidDays * (staff.baseSalary / 30));
 
-    const perDaySalary = staff.baseSalary / 30;
-    const leaveDeductions = Math.round(unpaidDays * perDaySalary);
-
-    // Commission: Only count already PAID commissions
     const commissions = this.commissionRecords
-      .filter(c =>
-        c.staffId === this.selectedStaffId &&
-        c.month === this.selectedMonth &&
-        c.status === 'PAID'
-      )
+      .filter(c => c.staffId === this.selectedStaffId && c.month === this.selectedMonth && c.status === 'PAID')
       .reduce((sum, c) => sum + c.commissionAmount, 0);
 
-    // Totals
     const gross = staff.baseSalary + shiftAllowance + commissions;
-    const pf = Math.min(basic * 0.12, 1800); // PF capped at ₹1800
-    const tax = 0;
-    const net = gross - pf - tax - leaveDeductions;
+    const pf    = Math.min(basic * 0.12, 1800);
+    const net   = gross - pf - leaveDeductions;
 
     this.previewSlip = {
-      id: `SLIP-${Date.now()}`,
-      staffId: staff.id,
-      staffName: staff.name,
-      month: this.selectedMonth,
-      basicSalary: basic,
-      hra: hra,
-      shiftAllowance: shiftAllowance,
-      leaveDeductions: leaveDeductions,
-      commission: commissions,
-      bonus: 0,
-      grossSalary: gross,
-      pf: pf,
-      tax: tax,
-      netSalary: Math.max(0, net), // Prevent negative salary
-      status: 'GENERATED',
-      generatedDate: new Date()
+      id: `SLIP-${Date.now()}`, staffId: staff.id, staffName: staff.name,
+      month: this.selectedMonth, basicSalary: basic, hra, shiftAllowance,
+      leaveDeductions, commission: commissions, bonus: 0, grossSalary: gross,
+      pf, tax: 0, netSalary: Math.max(0, net), status: 'GENERATED', generatedDate: new Date()
     };
   }
 
@@ -352,41 +334,32 @@ export class PayrollComponent implements OnInit, OnChanges {
 
   openBulkCommission(): void {
     this.bulkCommissionForm.month = this.selectedMonth || new Date().toISOString().slice(0, 7);
-    this.bulkCommissionForm.rate = 1.5;
-    this.showBulkCommissionModal = true;
+    this.bulkCommissionForm.rate  = 1.5;
+    this.showBulkCommissionModal  = true;
   }
 
   confirmBulkCommission(): void {
-    this.bulkCommission.emit({
-      rate: this.bulkCommissionForm.rate,
-      month: this.bulkCommissionForm.month
-    });
+    this.bulkCommission.emit({ rate: this.bulkCommissionForm.rate, month: this.bulkCommissionForm.month });
     this.showBulkCommissionModal = false;
   }
 
-  // Helper: Preview commission amount per staff for bulk modal
   getCommissionForStaff(staff: StaffProfile): number {
     return Math.round(staff.baseSalary * this.bulkCommissionForm.rate / 100);
   }
 
   // ============= SALARY STATUS MODAL =============
 
-  // FIXED: Accepts filter param to differentiate paid vs hold
   openSalaryStatus(filter: 'paid' | 'hold' = 'paid'): void {
-    this.salaryStatusFilter = filter;
+    this.salaryStatusFilter  = filter;
     this.showSalaryStatusModal = true;
   }
 
-  closeSalaryStatus(): void {
-    this.showSalaryStatusModal = false;
-  }
+  closeSalaryStatus(): void { this.showSalaryStatusModal = false; }
 
-  // Helper: Filter slips by status for modal table
   getSlipsByStatus(status: 'PAID' | 'HOLD'): SalarySlipView[] {
     return this.salarySlips.filter(s => s.status === status);
   }
 
-  // Helper: Lookup role from staffDirectory
   getRoleForStaff(staffId: string): string {
     return this.staffDirectory.find(s => s.id === staffId)?.role || '—';
   }
@@ -394,36 +367,68 @@ export class PayrollComponent implements OnInit, OnChanges {
   // ============= ACTIONS =============
 
   onGenerateSlip(): void {
-    if (this.previewSlip) {
+    if (!this.previewSlip) return;
+    if (this.standalone) {
+      // Standalone: call service directly, then reload
+      this.payrollSvc.generateSalarySlip({
+        employeeId: this.previewSlip.staffId,
+        month: this.previewSlip.month,
+        basicSalary: this.previewSlip.basicSalary,
+        hra: this.previewSlip.hra,
+        shiftAllowance: this.previewSlip.shiftAllowance,
+        leaveDeductions: this.previewSlip.leaveDeductions,
+        commission: this.previewSlip.commission,
+        bonus: this.previewSlip.bonus,
+        pf: this.previewSlip.pf,
+        tax: this.previewSlip.tax
+      } as any).pipe(takeUntil(this.destroy$)).subscribe(() => this.loadPayrollData());
+    } else {
       this.generateSlip.emit(this.previewSlip);
-      this.selectedStaffId = '';
-      this.previewSlip = null;
+    }
+    this.selectedStaffId = '';
+    this.previewSlip = null;
+  }
+
+  onDownloadSlip(id: string): void {
+    if (this.standalone) this.payrollSvc.downloadSalarySlip(id);
+    else this.downloadSlip.emit(id);
+  }
+
+  onEmailSlip(id: string): void {
+    if (this.standalone) this.payrollSvc.emailSalarySlip(id);
+    else this.emailSlip.emit(id);
+  }
+
+  onPayCommission(id: string): void {
+    if (this.standalone) {
+      const record = this.commissionRecords.find(c => c.id === id);
+      if (!record) return;
+      this.payrollSvc.markCommissionPaid(record as CommissionRecord)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.loadPayrollData());
+    } else {
+      this.payCommission.emit(id);
     }
   }
 
-  onDownloadSlip(id: string): void { this.downloadSlip.emit(id); }
-  onEmailSlip(id: string): void { this.emailSlip.emit(id); }
-  onPayCommission(id: string): void { this.payCommission.emit(id); }
-
   onCalculatorChange(): void {
-    this.calculator.commission = Math.round(
-      this.calculator.salesAmount * this.calculator.rate / 100
-    );
-    this.calculatorChange.emit({
-      salesAmount: this.calculator.salesAmount,
-      rate: this.calculator.rate
-    });
+    this.calculator.commission = Math.round(this.calculator.salesAmount * this.calculator.rate / 100);
+    this.calculatorChange.emit({ salesAmount: this.calculator.salesAmount, rate: this.calculator.rate });
   }
 
   onStaffChange(value: string): void {
     this.selectedStaffId = value;
     this.selectedStaffChange.emit(value);
-    this.calculatePreview(); // FIXED: Trigger recalc on inline change
+    this.calculatePreview();
   }
 
   onMonthChange(value: string): void {
     this.selectedMonth = value;
     this.selectedMonthChange.emit(value);
-    this.calculatePreview(); // FIXED: Trigger recalc on inline change
+    if (this.standalone) {
+      this.loadPayrollData();
+    } else {
+      this.calculatePreview();
+    }
   }
 }

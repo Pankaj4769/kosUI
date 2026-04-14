@@ -7,6 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatBadgeModule } from '@angular/material/badge';
@@ -21,6 +22,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 // Services
 import { InventoryService } from '../services/inventory.service';
 import { OrderManagementService } from '../../order/services/order-management.service';
+import { TableService } from '../../pos/services/table.service';
 
 // Models
 import { Order, OrderStatus, OrderType } from '../../order/models/order.model';
@@ -96,6 +98,7 @@ interface Notification {
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
+    MatProgressSpinnerModule,
     MatTooltipModule,
     MatChipsModule,
     MatBadgeModule,
@@ -109,7 +112,7 @@ interface Notification {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  
+
   private destroy$ = new Subject<void>();
 
   // State
@@ -134,7 +137,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Filters
   selectedDateRange: 'today' | 'week' | 'month' = 'today';
   selectedCategory = 'all';
-  
+
   dateRangeOptions = [
     { value: 'today', label: 'Today' },
     { value: 'week', label: 'This Week' },
@@ -145,12 +148,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { value: 'all', label: 'All Categories' }
   ];
 
-  // ✅ NEW FEATURES DATA
-  ordersByStatus = {
-    pending: 0,
-    preparing: 0,
-    ready: 0
-  };
+  ordersByStatus = { pending: 0, preparing: 0, ready: 0 };
 
   revenueByHour: { hour: string; amount: number }[] = [];
 
@@ -160,38 +158,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
     currentStatus: 'normal' as 'quiet' | 'normal' | 'busy' | 'peak'
   };
 
-  tableStatus = {
-    occupied: 0,
-    reserved: 0,
-    available: 0,
-    total: 20
-  };
+  tableStatus = { occupied: 0, reserved: 0, available: 0, total: 0 };
 
   waiterStats: { name: string; orders: number; revenue: number }[] = [];
 
   orderTypeStats = {
-    dineIn: { count: 0, percent: 0 },
-    takeaway: { count: 0, percent: 0 },
-    delivery: { count: 0, percent: 0 }
+    dineIn:    { count: 0, percent: 0 },
+    takeaway:  { count: 0, percent: 0 },
+    delivery:  { count: 0, percent: 0 }
   };
 
-  avgWaitTime = {
-    minutes: 0,
-    status: 'good' as 'good' | 'warning' | 'critical'
-  };
+  avgWaitTime = { minutes: 0, status: 'good' as 'good' | 'warning' | 'critical' };
 
-  dailyGoal = {
-    target: 50000,
-    current: 0,
-    percent: 0,
-    remaining: 0
-  };
+  dailyGoal = { target: 50000, current: 0, percent: 0, remaining: 0 };
 
   unreadNotifications = 0;
 
   constructor(
     private inventoryService: InventoryService,
     private orderManagementService: OrderManagementService,
+    private tableService: TableService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -199,7 +185,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.initializeDashboard();
     this.subscribeToData();
     this.startClock();
-    this.generateMockNotifications();
   }
 
   ngOnDestroy(): void {
@@ -214,7 +199,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private initializeDashboard(): void {
     this.loading = true;
     this.loadInventoryData();
-    this.generateAlerts();
     this.loading = false;
     this.cdr.markForCheck();
   }
@@ -223,7 +207,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     combineLatest([
       this.orderManagementService.activeOrders$,
       this.orderManagementService.completedOrders$,
-      this.orderManagementService.allOrders$
+      this.orderManagementService.allOrders$,
+      this.tableService.tables$
     ])
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -231,10 +216,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.liveOrders = active;
           this.completedOrders = completed;
           this.allOrders = all;
-          
+
           this.calculateAllMetrics();
+          this.generateNotifications();
           this.lastUpdated = new Date();
-          
+
           this.cdr.markForCheck();
         },
         error: (err) => {
@@ -265,6 +251,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.calculateOrderTypeStats();
     this.calculateAvgWaitTime();
     this.calculateDailyGoal();
+    this.generateAlerts();
   }
 
   // ============================================================
@@ -272,52 +259,91 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ============================================================
 
   private loadInventoryData(): void {
-    try {
-      this.inventoryItems = this.inventoryService.getAllItems();
+    if (this.inventoryService.getLoadedCategories().length === 0) {
+      this.inventoryService.getMenuCategoryList()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(cats => {
+          this.inventoryService.populateMenuCategories(cats);
+          this.buildCategoryOptions();
+          this.cdr.markForCheck();
+        });
+    }
+
+    const cached = this.inventoryService.getAllItems();
+    if (cached.length > 0) {
+      this.inventoryItems = cached;
       this.calculateCategoryStats();
-      //this.buildCategoryOptions();
-    } catch (error) {
-      console.error('Error loading inventory:', error);
-      this.addAlert('error', 'Inventory Error', 'Failed to load inventory data');
+      this.buildCategoryOptions();
+      this.calculateMetrics();
+      this.cdr.markForCheck();
+    } else {
+      this.inventoryService.getItemlist()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (items) => {
+            this.inventoryService.populateItems(items);
+            this.inventoryItems = items;
+            this.calculateCategoryStats();
+            this.buildCategoryOptions();
+            this.calculateMetrics();
+            this.cdr.markForCheck();
+          },
+          error: (err) => {
+            console.error('Error loading inventory:', err);
+            this.addAlert('error', 'Inventory Error', 'Failed to load inventory data');
+          }
+        });
     }
   }
 
-  // private buildCategoryOptions(): void {
-  //   const categories = [...new Set(this.inventoryItems.map(item => item.category))];
-  //   this.categoryOptions = [
-  //     { value: 'all', label: 'All Categories' },
-  //     ...categories.map(cat => ({ value: cat, label: cat }))
-  //   ];
-  // }
+  private buildCategoryOptions(): void {
+    const loaded = this.inventoryService.getLoadedCategories();
+    const names: string[] = loaded.length > 0
+      ? loaded.map(c => c.name)
+      : [...new Set(this.inventoryItems.map(item => item.category[0]).filter(Boolean))];
+    this.categoryOptions = [
+      { value: 'all', label: 'All Categories' },
+      ...names.map(cat => ({ value: cat, label: cat }))
+    ];
+  }
 
   // ============================================================
   // CORE METRICS CALCULATION
   // ============================================================
 
+  private calculateTrendChange(current: number, previous: number): { change: number; trend: 'up' | 'down' | 'neutral' } {
+    if (previous === 0) return { change: 0, trend: 'neutral' };
+    const change = Math.round(((current - previous) / previous) * 100);
+    return { change, trend: change > 0 ? 'up' : change < 0 ? 'down' : 'neutral' };
+  }
+
   private calculateMetrics(): void {
     const filteredOrders = this.getFilteredOrders();
     const filteredCompleted = filteredOrders.filter(o => o.status === OrderStatus.SERVED);
-    
+
+    // Yesterday comparison for trend badges
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    const yesterdayEnd = new Date(yesterday);
+    yesterdayEnd.setHours(23, 59, 59, 999);
+    const yesterdayOrders = this.allOrders.filter(o => {
+      const t = new Date(o.orderTime).getTime();
+      return t >= yesterday.getTime() && t <= yesterdayEnd.getTime();
+    });
+    const yesterdayCompleted = yesterdayOrders.filter(o => o.status === OrderStatus.SERVED);
+    const yesterdayRevenue = yesterdayCompleted.reduce((sum, o) => sum + o.totalAmount, 0);
+
     const totalRevenue = filteredCompleted.reduce((sum, o) => sum + o.totalAmount, 0);
-    const avgOrderValue = filteredCompleted.length > 0 
-      ? totalRevenue / filteredCompleted.length 
-      : 0;
+    const avgOrderValue = filteredCompleted.length > 0 ? totalRevenue / filteredCompleted.length : 0;
 
-    const inventoryValue = this.inventoryItems.reduce((sum, item) => {
-      const stock = this.getItemStock(item);
-      return sum + (stock * item.price);
-    }, 0);
+    const inventoryValue = this.inventoryService.getInventoryValue();
+    const lowStockCount = this.inventoryService.getLowStockCount();
+    const soldOutCount = this.inventoryService.getSoldOutCount();
 
-    const lowStockCount = this.inventoryItems.filter(item => {
-      const stock = this.getItemStock(item);
-      const minStock = this.getItemMinStock(item);
-      return stock > 0 && stock <= minStock;
-    }).length;
-
-    const soldOutCount = this.inventoryItems.filter(item => {
-      const stock = this.getItemStock(item);
-      return stock === 0;
-    }).length;
+    const ordersTrend   = this.calculateTrendChange(filteredOrders.length, yesterdayOrders.length);
+    const completedTrend = this.calculateTrendChange(filteredCompleted.length, yesterdayCompleted.length);
+    const revenueTrend  = this.calculateTrendChange(totalRevenue, yesterdayRevenue);
 
     this.metrics = [
       {
@@ -325,26 +351,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
         value: filteredOrders.length,
         displayValue: filteredOrders.length.toString(),
         icon: 'shopping_cart',
-        color: '#3b82f6',
-        bgColor: 'rgba(59, 130, 246, 0.1)',
-        subtitle: `${this.liveOrders.length} active`
+        color: '#2563eb', bgColor: '#eff6ff',
+        subtitle: `${this.liveOrders.length} active`,
+        change: ordersTrend.change, trend: ordersTrend.trend
       },
       {
         label: 'Completed',
         value: filteredCompleted.length,
         displayValue: filteredCompleted.length.toString(),
         icon: 'check_circle',
-        color: '#10b981',
-        bgColor: 'rgba(16, 185, 129, 0.1)',
-        subtitle: 'Orders served'
+        color: '#059669', bgColor: '#f0fdf4',
+        subtitle: 'Orders served',
+        change: completedTrend.change, trend: completedTrend.trend
       },
       {
         label: 'Pending',
         value: this.liveOrders.length,
         displayValue: this.liveOrders.length.toString(),
         icon: 'schedule',
-        color: '#f59e0b',
-        bgColor: 'rgba(245, 158, 11, 0.1)',
+        color: '#d97706', bgColor: '#fffbeb',
         subtitle: 'In kitchen'
       },
       {
@@ -352,17 +377,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
         value: totalRevenue,
         displayValue: this.formatCurrency(totalRevenue),
         icon: 'payments',
-        color: '#8b5cf6',
-        bgColor: 'rgba(139, 92, 246, 0.1)',
-        subtitle: `Avg: ${this.formatCurrency(avgOrderValue)}`
+        color: '#7c3aed', bgColor: '#f5f3ff',
+        subtitle: `Avg: ${this.formatCurrency(avgOrderValue)}`,
+        change: revenueTrend.change, trend: revenueTrend.trend
       },
       {
         label: 'Inventory Value',
         value: inventoryValue,
         displayValue: this.formatCurrency(inventoryValue),
         icon: 'inventory',
-        color: '#06b6d4',
-        bgColor: 'rgba(6, 182, 212, 0.1)',
+        color: '#0284c7', bgColor: '#f0f9ff',
         subtitle: `${this.inventoryItems.length} items`
       },
       {
@@ -370,8 +394,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         value: lowStockCount,
         displayValue: lowStockCount.toString(),
         icon: 'warning',
-        color: '#f59e0b',
-        bgColor: 'rgba(245, 158, 11, 0.1)',
+        color: '#ea580c', bgColor: '#fff7ed',
         subtitle: 'Need restock'
       },
       {
@@ -379,8 +402,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         value: soldOutCount,
         displayValue: soldOutCount.toString(),
         icon: 'error',
-        color: '#ef4444',
-        bgColor: 'rgba(239, 68, 68, 0.1)',
+        color: '#dc2626', bgColor: '#fff1f2',
         subtitle: 'Unavailable'
       },
       {
@@ -388,8 +410,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         value: this.categoryStats.length,
         displayValue: this.categoryStats.length.toString(),
         icon: 'category',
-        color: '#ec4899',
-        bgColor: 'rgba(236, 72, 153, 0.1)',
+        color: '#9333ea', bgColor: '#faf5ff',
         subtitle: 'Active types'
       }
     ];
@@ -397,19 +418,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private calculateCategoryStats(): void {
     const categoryMap = new Map<string, { count: number; value: number }>();
-    
+
     this.inventoryItems.forEach(item => {
-      const existing = categoryMap.get(item.category[0]) || { count: 0, value: 0 };
-      const stock = this.getItemStock(item);
-      
-      categoryMap.set(item.category[0], {
+      const key = item.category[0] || 'Other';
+      const existing = categoryMap.get(key) || { count: 0, value: 0 };
+      categoryMap.set(key, {
         count: existing.count + 1,
-        value: existing.value + (stock * item.price)
+        value: existing.value + (item.qty * item.price)
       });
     });
 
-    const total = this.inventoryItems.length;
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+    const total = this.inventoryItems.length || 1;
+    const colors = ['#2563eb', '#059669', '#d97706', '#dc2626', '#7c3aed', '#9333ea', '#0284c7', '#ea580c'];
 
     this.categoryStats = Array.from(categoryMap.entries())
       .map(([name, data], index) => ({
@@ -431,7 +451,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         order.items.forEach(orderItem => {
           const existing = itemSales.get(orderItem.name) || { quantity: 0, revenue: 0, category: '' };
           const inventoryItem = this.inventoryItems.find(i => i.name === orderItem.name);
-          
           itemSales.set(orderItem.name, {
             quantity: existing.quantity + orderItem.quantity,
             revenue: existing.revenue + (orderItem.price * orderItem.quantity),
@@ -445,8 +464,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .map(([name, data], index) => {
         const inventoryItem = this.inventoryItems.find(i => i.name === name);
         return {
-          id: index + 1,
-          name,
+          id: index + 1, name,
           category: data.category,
           quantity: data.quantity,
           revenue: data.revenue,
@@ -477,20 +495,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // ============================================================
-  // ✅ NEW FEATURES CALCULATIONS
+  // CALCULATIONS
   // ============================================================
 
   private calculateOrdersByStatus(): void {
     this.ordersByStatus = {
-      pending: this.liveOrders.filter(o => o.status === OrderStatus.PENDING).length,
+      pending:  this.liveOrders.filter(o => o.status === OrderStatus.PENDING).length,
       preparing: this.liveOrders.filter(o => o.status === OrderStatus.PREPARING).length,
-      ready: this.liveOrders.filter(o => o.status === OrderStatus.READY).length
+      ready:    this.liveOrders.filter(o => o.status === OrderStatus.READY).length
     };
   }
 
   private calculateRevenueByHour(): void {
     const hourMap = new Map<number, number>();
-    
     this.getFilteredOrders()
       .filter(o => o.status === OrderStatus.SERVED)
       .forEach(order => {
@@ -499,62 +516,49 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
 
     this.revenueByHour = Array.from(hourMap.entries())
-      .map(([hour, amount]) => ({
-        hour: `${hour}:00`,
-        amount
-      }))
+      .map(([hour, amount]) => ({ hour: `${hour}:00`, amount }))
       .sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
   }
 
   private calculatePeakHours(): void {
     const hourCounts = new Map<number, number>();
-    
     this.allOrders.forEach(order => {
       const hour = new Date(order.orderTime).getHours();
       hourCounts.set(hour, (hourCounts.get(hour) || 0) + 1);
     });
 
     const sorted = Array.from(hourCounts.entries()).sort((a, b) => b[1] - a[1]);
-    
-    this.peakHours.busiest = sorted[0] ? `${sorted[0][0]}:00 - ${sorted[0][0] + 1}:00` : 'N/A';
-    this.peakHours.quietest = sorted[sorted.length - 1] 
-      ? `${sorted[sorted.length - 1][0]}:00 - ${sorted[sorted.length - 1][0] + 1}:00` 
+    this.peakHours.busiest  = sorted[0] ? `${sorted[0][0]}:00 - ${sorted[0][0] + 1}:00` : 'N/A';
+    this.peakHours.quietest = sorted[sorted.length - 1]
+      ? `${sorted[sorted.length - 1][0]}:00 - ${sorted[sorted.length - 1][0] + 1}:00`
       : 'N/A';
 
-    const currentHour = new Date().getHours();
+    const currentHour  = new Date().getHours();
     const currentCount = hourCounts.get(currentHour) || 0;
-    const avg = Array.from(hourCounts.values()).reduce((a, b) => a + b, 0) / hourCounts.size;
+    const avg = Array.from(hourCounts.values()).reduce((a, b) => a + b, 0) / (hourCounts.size || 1);
 
-    if (currentCount > avg * 1.5) this.peakHours.currentStatus = 'peak';
-    else if (currentCount > avg) this.peakHours.currentStatus = 'busy';
+    if (currentCount > avg * 1.5)      this.peakHours.currentStatus = 'peak';
+    else if (currentCount > avg)       this.peakHours.currentStatus = 'busy';
     else if (currentCount < avg * 0.5) this.peakHours.currentStatus = 'quiet';
-    else this.peakHours.currentStatus = 'normal';
+    else                               this.peakHours.currentStatus = 'normal';
   }
 
   private calculateTableStatus(): void {
-    const occupiedTables = new Set(
-      this.liveOrders
-        .filter(o => o.type === OrderType.DINE_IN && o.tableName)
-        .map(o => o.tableName)
-    );
-    
-    this.tableStatus.occupied = occupiedTables.size;
-    this.tableStatus.available = this.tableStatus.total - this.tableStatus.occupied;
+    const stats = this.tableService.getTableStats();
+    this.tableStatus.total     = stats.total;
+    this.tableStatus.occupied  = stats.occupied;
+    this.tableStatus.reserved  = stats.reserved;
+    this.tableStatus.available = stats.available;
   }
 
   private calculateWaiterStats(): void {
     const waiterMap = new Map<string, { orders: number; revenue: number }>();
-    
     this.getFilteredOrders()
       .filter(o => o.status === OrderStatus.SERVED)
       .forEach(order => {
         const waiter = order.waiterName || 'Unknown';
         const existing = waiterMap.get(waiter) || { orders: 0, revenue: 0 };
-        
-        waiterMap.set(waiter, {
-          orders: existing.orders + 1,
-          revenue: existing.revenue + order.totalAmount
-        });
+        waiterMap.set(waiter, { orders: existing.orders + 1, revenue: existing.revenue + order.totalAmount });
       });
 
     this.waiterStats = Array.from(waiterMap.entries())
@@ -568,53 +572,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const total = filtered.length || 1;
 
     this.orderTypeStats = {
-      dineIn: {
-        count: filtered.filter(o => o.type === OrderType.DINE_IN).length,
-        percent: 0
-      },
-      takeaway: {
-        count: filtered.filter(o => o.type === OrderType.TAKEAWAY).length,
-        percent: 0
-      },
-      delivery: {
-        count: filtered.filter(o => o.type === OrderType.DELIVERY).length,
-        percent: 0
-      }
+      dineIn:   { count: filtered.filter(o => o.type === OrderType.DINE_IN).length,   percent: 0 },
+      takeaway: { count: filtered.filter(o => o.type === OrderType.TAKEAWAY).length,  percent: 0 },
+      delivery: { count: filtered.filter(o => o.type === OrderType.DELIVERY).length,  percent: 0 }
     };
-
-    this.orderTypeStats.dineIn.percent = (this.orderTypeStats.dineIn.count / total) * 100;
+    this.orderTypeStats.dineIn.percent   = (this.orderTypeStats.dineIn.count / total) * 100;
     this.orderTypeStats.takeaway.percent = (this.orderTypeStats.takeaway.count / total) * 100;
     this.orderTypeStats.delivery.percent = (this.orderTypeStats.delivery.count / total) * 100;
   }
 
   private calculateAvgWaitTime(): void {
     const completedToday = this.getFilteredOrders().filter(o => o.status === OrderStatus.SERVED);
-
     if (completedToday.length === 0) {
       this.avgWaitTime.minutes = 0;
+      this.avgWaitTime.status  = 'good';
       return;
     }
 
-    // Mock calculation (15-45 min range)
-    const avgMinutes = 20 + Math.floor(Math.random() * 25);
-    this.avgWaitTime.minutes = avgMinutes;
+    const withPrepTime = completedToday.filter(o => o.prepTime && o.prepTime > 0);
+    const avgMinutes = withPrepTime.length > 0
+      ? Math.round(withPrepTime.reduce((sum, o) => sum + (o.prepTime || 0), 0) / withPrepTime.length)
+      : Math.round(completedToday.reduce((sum, o) => {
+          return sum + (Date.now() - new Date(o.orderTime).getTime()) / 60000;
+        }, 0) / completedToday.length);
 
-    if (this.avgWaitTime.minutes < 20) this.avgWaitTime.status = 'good';
+    this.avgWaitTime.minutes = Math.min(avgMinutes, 120);
+    if (this.avgWaitTime.minutes < 20)      this.avgWaitTime.status = 'good';
     else if (this.avgWaitTime.minutes < 35) this.avgWaitTime.status = 'warning';
-    else this.avgWaitTime.status = 'critical';
+    else                                    this.avgWaitTime.status = 'critical';
   }
 
   private calculateDailyGoal(): void {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     const todayOrders = this.allOrders.filter(o => new Date(o.orderTime) >= today);
-    
-    this.dailyGoal.current = todayOrders
-      .filter(o => o.status === OrderStatus.SERVED)
-      .reduce((sum, o) => sum + o.totalAmount, 0);
-    
-    this.dailyGoal.percent = (this.dailyGoal.current / this.dailyGoal.target) * 100;
+    this.dailyGoal.current   = todayOrders.filter(o => o.status === OrderStatus.SERVED).reduce((sum, o) => sum + o.totalAmount, 0);
+    this.dailyGoal.percent   = (this.dailyGoal.current / this.dailyGoal.target) * 100;
     this.dailyGoal.remaining = Math.max(0, this.dailyGoal.target - this.dailyGoal.current);
   }
 
@@ -626,102 +619,62 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.alerts = [];
     let alertId = 1;
 
-    const soldOut = this.inventoryItems.filter(item => this.getItemStock(item) === 0);
-    if (soldOut.length > 0) {
-      soldOut.slice(0, 3).forEach(item => {
-        this.alerts.push({
-          id: alertId++,
-          type: 'error',
-          title: `${item.name} is Sold Out`,
-          message: 'Item is currently unavailable. Restock immediately.',
-          icon: 'error',
-          timestamp: new Date()
-        });
+    this.inventoryItems.filter(item => item.qty === 0)
+      .slice(0, 3)
+      .forEach(item => {
+        this.alerts.push({ id: alertId++, type: 'error', title: `${item.name} is Sold Out`, message: 'Item is unavailable. Restock immediately.', icon: 'error', timestamp: new Date() });
       });
-    }
 
-    const lowStock = this.inventoryItems.filter(item => {
-      const stock = this.getItemStock(item);
-      const minStock = this.getItemMinStock(item);
-      return stock > 0 && stock <= minStock;
-    });
-    
-    if (lowStock.length > 0) {
-      lowStock.slice(0, 3).forEach(item => {
-        this.alerts.push({
-          id: alertId++,
-          type: 'warning',
-          title: `${item.name} running low`,
-          message: `Only ${this.getItemStock(item)} units remaining. Consider restocking.`,
-          icon: 'warning',
-          timestamp: new Date()
-        });
+    this.inventoryItems.filter(item => item.qty > 0 && item.qty <= 5)
+      .slice(0, 3)
+      .forEach(item => {
+        this.alerts.push({ id: alertId++, type: 'warning', title: `${item.name} running low`, message: `Only ${item.qty} units remaining.`, icon: 'warning', timestamp: new Date() });
       });
-    }
 
     if (this.liveOrders.length > 10) {
-      this.alerts.push({
-        id: alertId++,
-        type: 'info',
-        title: 'High Order Volume',
-        message: `${this.liveOrders.length} orders currently in kitchen. Monitor wait times.`,
-        icon: 'info',
-        timestamp: new Date()
-      });
+      this.alerts.push({ id: alertId++, type: 'info', title: 'High Order Volume', message: `${this.liveOrders.length} orders in kitchen. Monitor wait times.`, icon: 'info', timestamp: new Date() });
     }
 
     if (this.avgWaitTime.status === 'critical') {
-      this.alerts.push({
-        id: alertId++,
-        type: 'warning',
-        title: 'Long Wait Times Detected',
-        message: `Average wait time is ${this.avgWaitTime.minutes} minutes. Consider adding kitchen staff.`,
-        icon: 'schedule',
-        timestamp: new Date()
-      });
+      this.alerts.push({ id: alertId++, type: 'warning', title: 'Long Wait Times', message: `Avg wait is ${this.avgWaitTime.minutes} min. Consider adding kitchen staff.`, icon: 'schedule', timestamp: new Date() });
     }
   }
 
-  private generateMockNotifications(): void {
-    this.notifications = [
-      {
-        id: 1,
-        text: 'Order #1234 is ready for pickup',
-        time: '2 min ago',
-        read: false,
-        type: 'order'
-      },
-      {
-        id: 2,
-        text: 'Low stock alert: Paneer Tikka',
-        time: '5 min ago',
-        read: false,
-        type: 'inventory'
-      },
-      {
-        id: 3,
-        text: 'New order received: Table 12',
-        time: '8 min ago',
-        read: false,
-        type: 'order'
-      },
-      {
-        id: 4,
-        text: 'Daily revenue goal 80% achieved',
-        time: '15 min ago',
-        read: true,
-        type: 'system'
-      },
-      {
-        id: 5,
-        text: 'Kitchen capacity at 90%',
-        time: '20 min ago',
-        read: true,
-        type: 'system'
-      }
-    ];
+  private generateNotifications(): void {
+    const notifications: Notification[] = [];
+    let id = 1;
 
-    this.unreadNotifications = this.notifications.filter(n => !n.read).length;
+    this.liveOrders.filter(o => o.status === OrderStatus.READY).slice(0, 3).forEach(order => {
+      notifications.push({ id: id++, text: `Order ${order.orderNumber} is ready for pickup`, time: this.getRelativeTime(order.orderTime), read: false, type: 'order' });
+    });
+
+    this.inventoryItems.filter(item => item.qty > 0 && item.qty <= 5 && item.enabled).slice(0, 3).forEach(item => {
+      notifications.push({ id: id++, text: `Low stock: ${item.name} (${item.qty} left)`, time: 'Now', read: false, type: 'inventory' });
+    });
+
+    this.inventoryItems.filter(item => item.qty === 0 && item.enabled).slice(0, 2).forEach(item => {
+      notifications.push({ id: id++, text: `${item.name} is sold out`, time: 'Now', read: false, type: 'inventory' });
+    });
+
+    if (this.liveOrders.length > 10) {
+      notifications.push({ id: id++, text: `High order volume: ${this.liveOrders.length} active orders`, time: 'Now', read: false, type: 'system' });
+    }
+
+    if (this.dailyGoal.percent >= 80 && this.dailyGoal.percent < 100) {
+      notifications.push({ id: id++, text: `Daily goal ${this.dailyGoal.percent.toFixed(0)}% achieved`, time: 'Today', read: true, type: 'system' });
+    } else if (this.dailyGoal.percent >= 100) {
+      notifications.push({ id: id++, text: 'Daily revenue goal reached!', time: 'Today', read: true, type: 'system' });
+    }
+
+    this.notifications = notifications;
+    this.unreadNotifications = notifications.filter(n => !n.read).length;
+  }
+
+  private getRelativeTime(date: Date): string {
+    const diffMin = Math.floor((Date.now() - new Date(date).getTime()) / 60000);
+    if (diffMin < 1)  return 'Just now';
+    if (diffMin < 60) return `${diffMin} min ago`;
+    return `${Math.floor(diffMin / 60)} hr ago`;
   }
 
   // ============================================================
@@ -730,50 +683,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private getFilteredOrders(): Order[] {
     let filtered = [...this.allOrders];
-
-    const now = new Date();
+    const now   = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     switch (this.selectedDateRange) {
       case 'today':
         filtered = filtered.filter(o => new Date(o.orderTime) >= today);
         break;
-      case 'week':
+      case 'week': {
         const weekAgo = new Date(today);
         weekAgo.setDate(weekAgo.getDate() - 7);
         filtered = filtered.filter(o => new Date(o.orderTime) >= weekAgo);
         break;
-      case 'month':
+      }
+      case 'month': {
         const monthAgo = new Date(today);
         monthAgo.setMonth(monthAgo.getMonth() - 1);
         filtered = filtered.filter(o => new Date(o.orderTime) >= monthAgo);
         break;
+      }
     }
-
     return filtered;
   }
 
-  onDateRangeChange(): void {
-    this.calculateAllMetrics();
-    this.cdr.markForCheck();
-  }
-
-  onCategoryChange(): void {
-    this.cdr.markForCheck();
-  }
+  onDateRangeChange(): void { this.calculateAllMetrics(); this.cdr.markForCheck(); }
+  onCategoryChange(): void  { this.cdr.markForCheck(); }
 
   get filteredCategoryStats(): CategoryStats[] {
-    if (this.selectedCategory === 'all') {
-      return this.categoryStats;
-    }
-    return this.categoryStats.filter(c => c.name === this.selectedCategory);
+    return this.selectedCategory === 'all'
+      ? this.categoryStats
+      : this.categoryStats.filter(c => c.name === this.selectedCategory);
   }
 
   get filteredTopSelling(): TopSellingItem[] {
-    if (this.selectedCategory === 'all') {
-      return this.topSellingItems;
-    }
-    return this.topSellingItems.filter(i => i.category === this.selectedCategory);
+    return this.selectedCategory === 'all'
+      ? this.topSellingItems
+      : this.topSellingItems.filter(i => i.category === this.selectedCategory);
   }
 
   // ============================================================
@@ -781,7 +726,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ============================================================
 
   get tableOccupancyPercent(): number {
-    return (this.tableStatus.occupied / this.tableStatus.total) * 100;
+    return this.tableStatus.total > 0 ? (this.tableStatus.occupied / this.tableStatus.total) * 100 : 0;
   }
 
   getRevenueBarHeight(amount: number): number {
@@ -794,38 +739,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // HELPER METHODS
   // ============================================================
 
-  getTotalQuantitySold(): number {
-    return this.filteredTopSelling.reduce((sum, item) => sum + item.quantity, 0);
-  }
-
-  getTotalRevenueSold(): number {
-    return this.filteredTopSelling.reduce((sum, item) => sum + item.revenue, 0);
-  }
-
-  private getItemStock(item: Item): number {
-    return (item as any).stockQuantity || 
-           (item as any).currentStock || 
-           (item as any).quantity || 
-           0;
-  }
-
-  private getItemMinStock(item: Item): number {
-    return (item as any).minStock || 
-           (item as any).lowStockThreshold || 
-           5;
-  }
+  getTotalQuantitySold(): number { return this.filteredTopSelling.reduce((sum, item) => sum + item.quantity, 0); }
+  getTotalRevenueSold():  number { return this.filteredTopSelling.reduce((sum, item) => sum + item.revenue,  0); }
 
   private getOrderItemCount(order: Order): number {
-    if (!order.items) return 0;
-    return order.items.reduce((sum, item) => sum + item.quantity, 0);
+    return order.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
   }
 
   private getStatusLabel(status: OrderStatus): string {
     const labels: Record<OrderStatus, string> = {
-      [OrderStatus.PENDING]: 'Pending',
+      [OrderStatus.PENDING]:   'Pending',
       [OrderStatus.PREPARING]: 'Preparing',
-      [OrderStatus.READY]: 'Ready',
-      [OrderStatus.SERVED]: 'Completed',
+      [OrderStatus.READY]:     'Ready',
+      [OrderStatus.SERVED]:    'Completed',
       [OrderStatus.CANCELLED]: 'Cancelled'
     };
     return labels[status] || 'Unknown';
@@ -833,13 +759,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private getStatusColor(status: OrderStatus): string {
     const colors: Record<OrderStatus, string> = {
-      [OrderStatus.PENDING]: '#f59e0b',
-      [OrderStatus.PREPARING]: '#3b82f6',
-      [OrderStatus.READY]: '#10b981',
-      [OrderStatus.SERVED]: '#22c55e',
-      [OrderStatus.CANCELLED]: '#ef4444'
+      [OrderStatus.PENDING]:   '#d97706',
+      [OrderStatus.PREPARING]: '#2563eb',
+      [OrderStatus.READY]:     '#059669',
+      [OrderStatus.SERVED]:    '#16a34a',
+      [OrderStatus.CANCELLED]: '#dc2626'
     };
-    return colors[status] || '#6b7280';
+    return colors[status] || '#64748b';
   }
 
   formatCurrency(amount: number): string {
@@ -847,26 +773,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private formatTime(date: Date): string {
-    return new Date(date).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   }
 
   private addAlert(type: 'error' | 'warning' | 'info', title: string, message: string): void {
-    this.alerts.unshift({
-      id: Date.now(),
-      type,
-      title,
-      message,
-      icon: type,
-      timestamp: new Date()
-    });
-    
-    if (this.alerts.length > 20) {
-      this.alerts = this.alerts.slice(0, 20);
-    }
-    
+    this.alerts.unshift({ id: Date.now(), type, title, message, icon: type, timestamp: new Date() });
+    if (this.alerts.length > 20) this.alerts = this.alerts.slice(0, 20);
     this.cdr.markForCheck();
   }
 
@@ -874,68 +786,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // USER ACTIONS
   // ============================================================
 
-  dismissAlert(alertId: number): void {
-    this.alerts = this.alerts.filter(a => a.id !== alertId);
-    this.cdr.markForCheck();
-  }
-
-  clearAllAlerts(): void {
-    this.alerts = [];
-    this.cdr.markForCheck();
-  }
+  dismissAlert(alertId: number): void { this.alerts = this.alerts.filter(a => a.id !== alertId); this.cdr.markForCheck(); }
+  clearAllAlerts(): void               { this.alerts = []; this.cdr.markForCheck(); }
 
   markAsRead(id: number): void {
     const notif = this.notifications.find(n => n.id === id);
-    if (notif && !notif.read) {
-      notif.read = true;
-      this.unreadNotifications--;
-      this.cdr.markForCheck();
-    }
+    if (notif && !notif.read) { notif.read = true; this.unreadNotifications--; this.cdr.markForCheck(); }
   }
 
-  markAllAsRead(): void {
-    this.notifications.forEach(n => n.read = true);
-    this.unreadNotifications = 0;
-    this.cdr.markForCheck();
-  }
+  markAllAsRead(): void { this.notifications.forEach(n => n.read = true); this.unreadNotifications = 0; this.cdr.markForCheck(); }
 
-  viewOrderDetails(order: RecentOrderDisplay): void {
-    console.log('View order:', order);
-    // Navigate to order details
-  }
+  viewOrderDetails(order: RecentOrderDisplay): void { console.log('View order:', order); }
 
   refreshDashboard(): void {
     this.loading = true;
     this.loadInventoryData();
     this.orderManagementService.refreshAllOrders();
-    this.generateAlerts();
-    this.generateMockNotifications();
-    this.calculateAllMetrics();
     this.lastUpdated = new Date();
     this.loading = false;
     this.cdr.markForCheck();
   }
 
   exportData(): void {
-    const data = {
-      metrics: this.metrics,
-      topSelling: this.topSellingItems,
-      recentOrders: this.recentOrders,
-      revenueByHour: this.revenueByHour,
-      waiterStats: this.waiterStats,
-      exportDate: new Date().toISOString()
-    };
-
+    const data = { metrics: this.metrics, topSelling: this.topSellingItems, recentOrders: this.recentOrders, revenueByHour: this.revenueByHour, waiterStats: this.waiterStats, exportDate: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `dashboard-${Date.now()}.json`;
-    a.click();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `dashboard-${Date.now()}.json`; a.click();
     URL.revokeObjectURL(url);
   }
 
-  trackById(index: number, item: any): any {
-    return item.id || index;
-  }
+  trackById(index: number, item: any): any { return item.id || index; }
 }

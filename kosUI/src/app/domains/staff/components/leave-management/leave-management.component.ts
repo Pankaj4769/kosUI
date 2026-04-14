@@ -1,20 +1,18 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-  OnInit
-} from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Subject, of } from 'rxjs';
+import { catchError, takeUntil } from 'rxjs/operators';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { StaffService } from '../../services/staff.service';
+import { LeaveService } from '../../services/leave.service';
+import { LeaveType, LeaveStatus } from '../../models/leave.model';
 
-// ============= TYPES =============
-export type LeaveType   = 'SICK' | 'CASUAL' | 'EARNED' | 'UNPAID';
-export type LeaveStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
-export type FilterType  = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
-export type ViewMode    = 'employee' | 'manager';
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-// ============= INTERFACES =============
+export type FilterType = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
+export type ViewMode   = 'employee' | 'manager';
+
 export interface LeaveRequestView {
   id: string;
   staffId: string;
@@ -61,6 +59,8 @@ export interface NewLeaveForm {
   reason: string;
 }
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 @Component({
   selector: 'app-leave-management',
   standalone: true,
@@ -68,45 +68,27 @@ export interface NewLeaveForm {
   templateUrl: './leave-management.component.html',
   styleUrls: ['./leave-management.component.css']
 })
-export class LeaveManagementComponent implements OnInit {
+export class LeaveManagementComponent implements OnInit, OnDestroy {
 
-  // ============= INPUTS =============
-  @Input() requests: LeaveRequestView[]  = [];
-  @Input() kpi!: LeaveKpi;
-  @Input() filter: FilterType            = 'ALL';
-  @Input() leaveBalances: LeaveBalance[] = [];
-  @Input() staffOptions: { id: string; name: string; role: string }[] = [];
-  @Input() currentStaffId: string        = 'EMP001';
-  @Input() currentStaffName: string      = 'John Doe';
-  @Input() currentStaffRole: string      = 'Chef';
-  @Input() hasManagerAccess: boolean     = true;
+  private destroy$ = new Subject<void>();
 
-  // ============= OUTPUTS =============
-  @Output() filterChange     = new EventEmitter<FilterType>();
-  @Output() approve          = new EventEmitter<string>();
-  @Output() reject           = new EventEmitter<{ id: string; reason: string }>();
-  @Output() openRequestModal = new EventEmitter<void>();
-  @Output() submitLeave      = new EventEmitter<NewLeaveForm>();
+  // ── Session ──────────────────────────────────────────────────────────────
+  currentStaffId   = '';   // EM employee id
+  currentStaffName = '';
+  currentStaffRole = '';
+  hasManagerAccess = false;
 
-  // ============= CONSTANTS =============
+  // ── Data ─────────────────────────────────────────────────────────────────
+  requests: LeaveRequestView[]  = [];
+  kpi: LeaveKpi = { pending: 0, approved: 0, rejected: 0, totalDays: 0, onLeaveToday: 0 };
+  leaveBalances: LeaveBalance[] = [];
+  staffOptions: { id: string; name: string; role: string }[] = [];
+  loading = false;
+  errorMessage: string | null = null;
 
-  // FIX: Typed arrays to avoid NG5 type inference errors in *ngFor
-  readonly filterOptions: FilterType[] = ['ALL', 'PENDING', 'APPROVED', 'REJECTED'];
-  readonly leaveTypeOptions: LeaveType[] = ['SICK', 'CASUAL', 'EARNED', 'UNPAID'];
-
-  readonly leaveTypeColors: Record<LeaveType, string> = {
-    SICK:   '#ef4444',
-    CASUAL: '#f59e0b',
-    EARNED: '#10b981',
-    UNPAID: '#6b7280'
-  };
-
-  readonly ALLOTMENT: Record<LeaveType, number> = {
-    SICK: 12, CASUAL: 8, EARNED: 15, UNPAID: 0
-  };
-
-  // ============= STATE =============
+  // ── View State ───────────────────────────────────────────────────────────
   viewMode: ViewMode = 'employee';
+  filter: FilterType = 'ALL';
   activeTab: 'requests' | 'balances' | 'calendar' = 'requests';
   empTab: 'overview' | 'history' | 'calendar'     = 'overview';
   empHistoryFilter: FilterType = 'ALL';
@@ -122,90 +104,135 @@ export class LeaveManagementComponent implements OnInit {
   calendarDate  = new Date();
   calendarWeeks: Date[][] = [];
 
-  // ============= MOCK DATA =============
+  // ── Constants ────────────────────────────────────────────────────────────
+  readonly filterOptions: FilterType[] = ['ALL', 'PENDING', 'APPROVED', 'REJECTED'];
+  readonly leaveTypeOptions: LeaveType[] = ['SICK', 'CASUAL', 'EARNED', 'UNPAID'];
 
-  private mockRequests: LeaveRequestView[] = [
-    {
-      id: 'LV001', staffId: 'EMP001', staffName: 'John Doe', role: 'Chef',
-      leaveType: 'SICK', startDate: new Date('2026-02-05'), endDate: new Date('2026-02-06'),
-      days: 2, reason: 'Fever and cold', status: 'APPROVED',
-      appliedDate: new Date('2026-02-04'), approvedBy: 'Manager', approvedDate: new Date('2026-02-04')
-    },
-    {
-      id: 'LV002', staffId: 'EMP002', staffName: 'Jane Smith', role: 'Sous Chef',
-      leaveType: 'CASUAL', startDate: new Date('2026-02-10'), endDate: new Date('2026-02-11'),
-      days: 2, reason: 'Personal work', status: 'APPROVED',
-      appliedDate: new Date('2026-02-08'), approvedBy: 'Manager', approvedDate: new Date('2026-02-09')
-    },
-    {
-      id: 'LV003', staffId: 'EMP003', staffName: 'Mike Johnson', role: 'Line Cook',
-      leaveType: 'EARNED', startDate: new Date('2026-02-18'), endDate: new Date('2026-02-20'),
-      days: 3, reason: 'Family trip', status: 'PENDING',
-      appliedDate: new Date('2026-02-15')
-    },
-    {
-      id: 'LV004', staffId: 'EMP004', staffName: 'Sarah Wilson', role: 'Waiter',
-      leaveType: 'CASUAL', startDate: new Date('2026-02-15'), endDate: new Date('2026-02-17'),
-      days: 3, reason: 'Medical procedure', status: 'PENDING',
-      appliedDate: new Date('2026-02-13')
-    },
-    {
-      id: 'LV005', staffId: 'EMP005', staffName: 'David Brown', role: 'Bartender',
-      leaveType: 'CASUAL', startDate: new Date('2026-02-12'), endDate: new Date('2026-02-12'),
-      days: 0.5, isHalfDay: true, reason: 'Doctor appointment', status: 'REJECTED',
-      appliedDate: new Date('2026-02-11'), rejectionReason: 'Understaffed on that day'
-    },
-    {
-      id: 'LV006', staffId: 'EMP001', staffName: 'John Doe', role: 'Chef',
-      leaveType: 'CASUAL', startDate: new Date('2026-02-20'), endDate: new Date('2026-02-21'),
-      days: 2, reason: 'Personal errand', status: 'PENDING',
-      appliedDate: new Date('2026-02-17')
-    }
-  ];
-
-  private mockKpi: LeaveKpi = {
-    pending: 3, approved: 2, rejected: 1, totalDays: 10, onLeaveToday: 1
+  readonly leaveTypeColors: Record<LeaveType, string> = {
+    SICK:   '#ef4444',
+    CASUAL: '#f59e0b',
+    EARNED: '#10b981',
+    UNPAID: '#6b7280'
   };
 
-  private mockBalances: LeaveBalance[] = [
-    { staffId: 'EMP001', staffName: 'John Doe',     sick: 10, casual: 5, earned: 14, unpaid: 0, totalUsed: 6,  totalAllotted: 35 },
-    { staffId: 'EMP002', staffName: 'Jane Smith',   sick: 12, casual: 6, earned: 13, unpaid: 0, totalUsed: 6,  totalAllotted: 35 },
-    { staffId: 'EMP003', staffName: 'Mike Johnson', sick: 11, casual: 8, earned: 12, unpaid: 0, totalUsed: 7,  totalAllotted: 35 },
-    { staffId: 'EMP004', staffName: 'Sarah Wilson', sick: 9,  casual: 5, earned: 12, unpaid: 2, totalUsed: 12, totalAllotted: 35 },
-    { staffId: 'EMP005', staffName: 'David Brown',  sick: 12, casual: 7, earned: 15, unpaid: 0, totalUsed: 1,  totalAllotted: 35 }
-  ];
+  readonly ALLOTMENT: Record<LeaveType, number> = {
+    SICK: 12, CASUAL: 8, EARNED: 15, UNPAID: 0
+  };
 
-  private mockStaffOptions = [
-    { id: 'EMP001', name: 'John Doe',     role: 'Chef' },
-    { id: 'EMP002', name: 'Jane Smith',   role: 'Sous Chef' },
-    { id: 'EMP003', name: 'Mike Johnson', role: 'Line Cook' },
-    { id: 'EMP004', name: 'Sarah Wilson', role: 'Waiter' },
-    { id: 'EMP005', name: 'David Brown',  role: 'Bartender' }
-  ];
-
-  // ============= LIFECYCLE =============
+  // ── Lifecycle ────────────────────────────────────────────────────────────
+  constructor(
+    private auth: AuthService,
+    private staffSvc: StaffService,
+    private leaveSvc: LeaveService
+  ) {}
 
   ngOnInit(): void {
-    if (!this.requests      || this.requests.length === 0)      this.requests      = this.mockRequests;
-    if (!this.kpi)                                              this.kpi           = this.mockKpi;
-    if (!this.leaveBalances || this.leaveBalances.length === 0) this.leaveBalances = this.mockBalances;
-    if (!this.staffOptions  || this.staffOptions.length === 0)  this.staffOptions  = this.mockStaffOptions;
-    this.viewMode = 'employee';
+    this.resolveSession();
     this.generateCalendar();
   }
 
-  // ============= VIEW TOGGLE =============
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
+  // ── Session ──────────────────────────────────────────────────────────────
+  private resolveSession(): void {
+    const user = this.auth.currentUser;
+    if (!user) return;
+
+    this.currentStaffName = user.name;
+    this.currentStaffRole = user.role;
+    this.hasManagerAccess = user.role === 'OWNER' || user.role === 'MANAGER';
+
+    const restaurantId = user.restaurantId ?? '';
+    this.staffSvc.loadStaff(restaurantId);
+    this.staffSvc.staff$.pipe(takeUntil(this.destroy$)).subscribe(staffList => {
+      // Build staff options for manager view (dropdown)
+      this.staffOptions = staffList
+        .filter(s => s.emId)
+        .map(s => ({ id: s.emId!, name: s.name, role: s.roleName }));
+
+      // Find current user's EM id
+      const me = staffList.find(s => s.id === String(user.staffId));
+      if (me?.emId) {
+        this.currentStaffId = me.emId;
+      }
+
+      this.loadLeaves();
+    });
+  }
+
+  // ── Data Loading ─────────────────────────────────────────────────────────
+  loadLeaves(): void {
+    this.loading = true;
+    this.errorMessage = null;
+
+    const source$ = (this.hasManagerAccess && this.viewMode === 'manager')
+      ? this.leaveSvc.getLeaveRequests()
+      : this.currentStaffId
+        ? this.leaveSvc.getLeavesByEmployee(this.currentStaffId)
+        : of([]);
+
+    source$.pipe(
+      catchError(() => {
+        this.errorMessage = 'Failed to load leave requests.';
+        return of([]);
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe(leaves => {
+      this.requests = leaves.map(l => ({ ...l } as LeaveRequestView));
+      this.refreshKpi();
+      this.buildBalances();
+      this.loading = false;
+    });
+  }
+
+  // Build leave balances from loaded requests (remaining = allotted - approved days)
+  private buildBalances(): void {
+    const byStaff = new Map<string, { name: string; used: Record<LeaveType, number> }>();
+
+    this.requests
+      .filter(r => r.status === 'APPROVED')
+      .forEach(r => {
+        if (!byStaff.has(r.staffId)) {
+          byStaff.set(r.staffId, {
+            name: r.staffName,
+            used: { SICK: 0, CASUAL: 0, EARNED: 0, UNPAID: 0 }
+          });
+        }
+        byStaff.get(r.staffId)!.used[r.leaveType] += r.days;
+      });
+
+    this.leaveBalances = Array.from(byStaff.entries()).map(([staffId, data]) => {
+      const totalUsed = Object.values(data.used).reduce((a, b) => a + b, 0);
+      const totalAllotted = Object.values(this.ALLOTMENT).reduce((a, b) => a + b, 0);
+      return {
+        staffId,
+        staffName:    data.name,
+        sick:         this.ALLOTMENT.SICK   - data.used.SICK,
+        casual:       this.ALLOTMENT.CASUAL - data.used.CASUAL,
+        earned:       this.ALLOTMENT.EARNED - data.used.EARNED,
+        unpaid:       this.ALLOTMENT.UNPAID - data.used.UNPAID,
+        totalUsed,
+        totalAllotted
+      };
+    });
+  }
+
+  // ── View Toggle ──────────────────────────────────────────────────────────
   switchToManager(): void {
-    if (this.hasManagerAccess) this.viewMode = 'manager';
+    if (!this.hasManagerAccess) return;
+    this.viewMode = 'manager';
+    this.loadLeaves();
   }
 
   switchToEmployee(): void {
     this.viewMode = 'employee';
+    this.loadLeaves();
   }
 
-  // ============= EMPLOYEE VIEW HELPERS =============
-
+  // ── Employee View Helpers ─────────────────────────────────────────────────
   get myRequests(): LeaveRequestView[] {
     return this.requests.filter(r => r.staffId === this.currentStaffId);
   }
@@ -223,9 +250,7 @@ export class LeaveManagementComponent implements OnInit {
   get myPendingCount():  number { return this.myRequests.filter(r => r.status === 'PENDING').length; }
   get myApprovedCount(): number { return this.myRequests.filter(r => r.status === 'APPROVED').length; }
   get myTotalDaysUsed(): number {
-    return this.myRequests
-      .filter(r => r.status === 'APPROVED')
-      .reduce((s, r) => s + r.days, 0);
+    return this.myRequests.filter(r => r.status === 'APPROVED').reduce((s, r) => s + r.days, 0);
   }
 
   getMyBalanceForType(type: LeaveType): number {
@@ -242,19 +267,15 @@ export class LeaveManagementComponent implements OnInit {
   }
 
   getUsedPercent(type: LeaveType): number {
-    const used  = this.getMyUsedForType(type);
-    const total = this.ALLOTMENT[type];
-    return this.getBalancePercent(used, total);
+    return this.getBalancePercent(this.getMyUsedForType(type), this.ALLOTMENT[type]);
   }
 
-  // FIX 1: Replaces missing filterByEmpStatus pipe — resolves NG8004
   getCountByEmpStatus(status: FilterType): number {
     if (status === 'ALL') return this.myRequests.length;
     return this.myRequests.filter(r => r.status === status).length;
   }
 
-  // ============= MANAGER FILTER =============
-
+  // ── Manager Filter ────────────────────────────────────────────────────────
   get filteredRequests(): LeaveRequestView[] {
     return this.filter === 'ALL'
       ? this.requests
@@ -263,7 +284,6 @@ export class LeaveManagementComponent implements OnInit {
 
   onFilterChange(value: FilterType): void {
     this.filter = value;
-    this.filterChange.emit(value);
   }
 
   getCountByStatus(status: FilterType): number {
@@ -271,17 +291,23 @@ export class LeaveManagementComponent implements OnInit {
     return this.requests.filter(r => r.status === status).length;
   }
 
-  // ============= APPROVE =============
-
+  // ── Approve ───────────────────────────────────────────────────────────────
   onApprove(id: string): void {
-    const req = this.requests.find(r => r.id === id);
-    if (req) { req.status = 'APPROVED'; req.approvedBy = 'Manager'; req.approvedDate = new Date(); }
-    this.approve.emit(id);
-    this.refreshKpi();
+    this.leaveSvc.approve(id, this.currentStaffName).pipe(takeUntil(this.destroy$)).subscribe({
+      next: updated => {
+        const idx = this.requests.findIndex(r => r.id === id);
+        if (idx !== -1) {
+          this.requests[idx] = { ...this.requests[idx], status: 'APPROVED',
+            approvedBy: updated.approvedBy, approvedDate: updated.approvedDate };
+        }
+        this.refreshKpi();
+        this.buildBalances();
+      },
+      error: () => { this.errorMessage = 'Failed to approve leave.'; }
+    });
   }
 
-  // ============= REJECT MODAL =============
-
+  // ── Reject Modal ──────────────────────────────────────────────────────────
   openRejectModal(id: string): void {
     this.rejectTargetId  = id;
     this.rejectReason    = '';
@@ -290,62 +316,61 @@ export class LeaveManagementComponent implements OnInit {
 
   confirmReject(): void {
     if (!this.rejectReason.trim()) return;
-    const req = this.requests.find(r => r.id === this.rejectTargetId);
-    if (req) { req.status = 'REJECTED'; req.rejectionReason = this.rejectReason; }
-    this.reject.emit({ id: this.rejectTargetId, reason: this.rejectReason });
+    this.leaveSvc.reject(this.rejectTargetId, this.rejectReason).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        const idx = this.requests.findIndex(r => r.id === this.rejectTargetId);
+        if (idx !== -1) {
+          this.requests[idx] = { ...this.requests[idx], status: 'REJECTED', rejectionReason: this.rejectReason };
+        }
+        this.refreshKpi();
+        this.buildBalances();
+      },
+      error: () => { this.errorMessage = 'Failed to reject leave.'; }
+    });
     this.showRejectModal = false;
-    this.refreshKpi();
   }
 
-  // ============= NEW REQUEST MODAL =============
-
+  // ── New Request Modal ─────────────────────────────────────────────────────
   openNewRequestModal(): void {
     this.newLeaveForm = this.getEmptyForm();
     if (this.viewMode === 'employee') {
       this.newLeaveForm.staffId = this.currentStaffId;
     }
     this.showNewRequestModal = true;
-    this.openRequestModal.emit();
   }
 
   submitNewRequest(): void {
     if (!this.newLeaveForm.staffId || !this.newLeaveForm.startDate || !this.newLeaveForm.reason.trim()) return;
 
-    const days  = this.newLeaveForm.isHalfDay
-      ? 0.5
-      : this.calcDays(this.newLeaveForm.startDate, this.newLeaveForm.endDate || this.newLeaveForm.startDate);
-    const staff = this.staffOptions.find(s => s.id === this.newLeaveForm.staffId);
-
-    const newReq: LeaveRequestView = {
-      id:          `LV${Date.now()}`,
-      staffId:     this.newLeaveForm.staffId,
-      staffName:   staff?.name || this.currentStaffName,
-      role:        staff?.role || this.currentStaffRole,
-      leaveType:   this.newLeaveForm.leaveType,
-      startDate:   new Date(this.newLeaveForm.startDate),
-      endDate:     new Date(this.newLeaveForm.endDate || this.newLeaveForm.startDate),
-      days,
-      isHalfDay:   this.newLeaveForm.isHalfDay,
-      reason:      this.newLeaveForm.reason,
-      status:      'PENDING',
-      appliedDate: new Date()
+    const payload = {
+      staffId:   this.newLeaveForm.staffId,
+      staffName: this.staffOptions.find(s => s.id === this.newLeaveForm.staffId)?.name ?? this.currentStaffName,
+      leaveType: this.newLeaveForm.leaveType,
+      startDate: new Date(this.newLeaveForm.startDate),
+      endDate:   new Date(this.newLeaveForm.endDate || this.newLeaveForm.startDate),
+      days:      this.newLeaveForm.isHalfDay
+        ? 0.5
+        : this.calcDays(this.newLeaveForm.startDate, this.newLeaveForm.endDate || this.newLeaveForm.startDate),
+      reason:    this.newLeaveForm.reason
     };
 
-    this.requests = [newReq, ...this.requests];
-    this.submitLeave.emit(this.newLeaveForm);
-    this.showNewRequestModal = false;
-    this.refreshKpi();
+    this.leaveSvc.submitRequest(payload).pipe(takeUntil(this.destroy$)).subscribe({
+      next: saved => {
+        this.requests = [saved as LeaveRequestView, ...this.requests];
+        this.refreshKpi();
+        this.showNewRequestModal = false;
+      },
+      error: () => { this.errorMessage = 'Failed to submit leave request.'; }
+    });
   }
 
-  // ============= DETAIL MODAL =============
-
+  // ── Detail Modal ──────────────────────────────────────────────────────────
   openDetail(req: LeaveRequestView): void {
     this.selectedRequest = req;
     this.showDetailModal = true;
   }
 
-  // ============= CALENDAR =============
-
+  // ── Calendar ──────────────────────────────────────────────────────────────
   generateCalendar(): void {
     const year  = this.calendarDate.getFullYear();
     const month = this.calendarDate.getMonth();
@@ -399,8 +424,7 @@ export class LeaveManagementComponent implements OnInit {
     return d.getMonth() !== this.calendarDate.getMonth();
   }
 
-  // ============= HELPERS =============
-
+  // ── Helpers ───────────────────────────────────────────────────────────────
   refreshKpi(): void {
     const today = new Date(); today.setHours(12,0,0,0);
     this.kpi = {
@@ -436,7 +460,6 @@ export class LeaveManagementComponent implements OnInit {
     return map[type] || '';
   }
 
-  // FIX 3: Typed lookup — resolves NG3 (string can't index Record<LeaveType>)
   getLeaveColor(type: LeaveType): string {
     return this.leaveTypeColors[type];
   }

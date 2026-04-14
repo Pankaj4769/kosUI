@@ -1,0 +1,143 @@
+<div class="ha-page">
+  <div class="ha-header">
+    <div class="ha-header-title">
+      <h1>HR Analytics</h1>
+      <p>Workforce insights — headcount, attendance, payroll &amp; leave trends</p>
+    </div>
+    <div class="ha-header-right">
+      <select class="ha-select" [(ngModel)]="filterYear" (change)="load()">
+        <option [value]="2025">2025</option>
+        <option [value]="2026">2026</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="ha-loading" *ngIf="loading">
+    <span class="material-icons spin">autorenew</span> Loading analytics…
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- KPI Strip -->
+    <div class="ha-kpis">
+      <div class="ha-kpi" *ngFor="let k of kpis">
+        <div class="ha-kpi-icon" [style.background]="k.color+'18'" [style.color]="k.color">
+          <span class="material-icons">{{ k.icon }}</span>
+        </div>
+        <div>
+          <div class="ha-kpi-val">{{ k.value }}</div>
+          <div class="ha-kpi-lbl">{{ k.label }}</div>
+          <div class="ha-kpi-sub" *ngIf="k.sub">{{ k.sub }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="ha-charts">
+
+      <!-- Attendance % trend -->
+      <div class="ha-card">
+        <div class="ha-card-title"><span class="material-icons">check_circle</span> Attendance Rate (%)</div>
+        <div class="ha-bar-chart">
+          <div class="ha-bar-col" *ngFor="let d of attendanceTrend">
+            <div class="ha-bar-wrap">
+              <div class="ha-bar" style="background:#16a34a"
+                [style.height.%]="barHeight(d.value, 100)">
+                <span class="ha-bar-tip">{{ d.value }}%</span>
+              </div>
+            </div>
+            <div class="ha-bar-label">{{ d.month }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leave days trend -->
+      <div class="ha-card">
+        <div class="ha-card-title"><span class="material-icons">calendar_today</span> Leave Days Taken</div>
+        <div class="ha-bar-chart">
+          <div class="ha-bar-col" *ngFor="let d of leaveTrend">
+            <div class="ha-bar-wrap">
+              <div class="ha-bar" style="background:#f59e0b"
+                [style.height.%]="barHeight(d.value, maxVal(leaveTrend))">
+                <span class="ha-bar-tip" *ngIf="d.value > 0">{{ d.value }}</span>
+              </div>
+            </div>
+            <div class="ha-bar-label">{{ d.month }}</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="ha-charts">
+
+      <!-- Dept Headcount -->
+      <div class="ha-card">
+        <div class="ha-card-title"><span class="material-icons">corporate_fare</span> Department Headcount</div>
+        <div class="ha-dept-empty" *ngIf="deptHeadcount.length === 0">No department data</div>
+        <div class="ha-dept-list" *ngIf="deptHeadcount.length > 0">
+          <div class="ha-dept-row" *ngFor="let d of deptHeadcount">
+            <span class="ha-dept-name">{{ d.name }}</span>
+            <div class="ha-dept-bar-wrap">
+              <div class="ha-dept-bar" [style.background]="d.color"
+                [style.width.%]="(d.count / deptTotal()) * 100"></div>
+            </div>
+            <span class="ha-dept-count" [style.color]="d.color">{{ d.count }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leave Type Breakdown -->
+      <div class="ha-card">
+        <div class="ha-card-title"><span class="material-icons">donut_small</span> Leave Type Breakdown</div>
+        <div class="ha-dept-empty" *ngIf="leaveTypeBreakdown.length === 0">No leave data</div>
+        <div class="ha-leave-types" *ngIf="leaveTypeBreakdown.length > 0">
+          <div class="ha-leave-row" *ngFor="let l of leaveTypeBreakdown">
+            <div class="ha-leave-dot" [style.background]="l.color"></div>
+            <span class="ha-leave-type">{{ l.type }}</span>
+            <div class="ha-dept-bar-wrap">
+              <div class="ha-dept-bar" [style.background]="l.color"
+                [style.width.%]="(l.days / totalLeaveDays()) * 100"></div>
+            </div>
+            <span class="ha-dept-count" [style.color]="l.color">{{ l.days }}d</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Payroll Trend -->
+    <div class="ha-card ha-card-wide">
+      <div class="ha-card-title"><span class="material-icons">payments</span> Monthly Payroll Cost (₹)</div>
+      <div class="ha-bar-chart ha-bar-chart-wide">
+        <div class="ha-bar-col" *ngFor="let d of payrollTrend">
+          <div class="ha-bar-wrap">
+            <div class="ha-bar" style="background:#8b5cf6"
+              [style.height.%]="barHeight(d.value, maxVal(payrollTrend))">
+              <span class="ha-bar-tip" *ngIf="d.value > 0">₹{{ (d.value/1000) | number:'1.0-0' }}K</span>
+            </div>
+          </div>
+          <div class="ha-bar-label">{{ d.month }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Turnover -->
+    <div class="ha-card ha-card-wide">
+      <div class="ha-card-title"><span class="material-icons">trending_down</span> Staff Turnover (exits per month)</div>
+      <div class="ha-bar-chart ha-bar-chart-wide">
+        <div class="ha-bar-col" *ngFor="let d of turnoverTrend">
+          <div class="ha-bar-wrap">
+            <div class="ha-bar" style="background:#ef4444"
+              [style.height.%]="barHeight(d.value, maxVal(turnoverTrend))">
+              <span class="ha-bar-tip" *ngIf="d.value > 0">{{ d.value }}</span>
+            </div>
+          </div>
+          <div class="ha-bar-label">{{ d.month }}</div>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+</div>
