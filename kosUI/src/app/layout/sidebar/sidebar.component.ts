@@ -91,7 +91,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     },
     {
       label: 'Employee Management', icon: 'people',
-      externalUrl: 'http://localhost:4201',
+      externalUrl: 'http://173.255.113.108:4201',
       featureKey: 'staff-directory',
       expanded: false,
       children: [

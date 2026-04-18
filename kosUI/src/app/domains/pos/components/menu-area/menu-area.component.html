@@ -124,7 +124,7 @@
         class="menu-card"
         *ngFor="let item of filteredItems">
 
-        <div class="card-image">
+        <div class="card-image" (click)="quickAddItem(item)">
           <img
             [src]="'assets/images/image.png'"
             [alt]="item.name">
