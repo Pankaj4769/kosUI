@@ -598,6 +598,36 @@
   .hdr-page-title { max-width: 120px; }
 }
 
+/* Mobile hamburger — hidden on desktop */
+.hdr-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  padding: 6px;
+  margin-right: 4px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.hdr-hamburger:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #111;
+}
+
+.hdr-hamburger .material-icons {
+  font-size: 22px;
+  line-height: 1;
+}
+
+@media (max-width: 767px) {
+  .hdr-hamburger { display: flex; }
+}
+
 @media (max-width: 768px) {
   .hdr { grid-template-columns: auto 1fr; padding: 0 12px; }
   .hdr-center    { display: none; }
@@ -609,9 +639,22 @@
   .hdr-divider:not(:first-of-type) { display: none; }
 }
 
+@media (max-width: 767px) {
+  /* Hide dark-mode toggle — saves ~40px on narrow screens */
+  .hdr-icon-btn:not(.hdr-notif-btn) { display: none; }
+  /* Tighten icon button and right gap */
+  .hdr-right { gap: 2px; }
+  .hdr-icon-btn { width: 32px; height: 32px; }
+  /* Notification dropdown: keep it within viewport */
+  .hdr-notif-dd { right: 0; min-width: 260px; }
+  .hdr-user-dd  { right: 0; }
+}
+
 @media (max-width: 480px) {
   .hdr-page-ctx  { display: none; }
   .hdr-branch-name { max-width: 55px; }
+  /* Shrink logo on very small screens */
+  .t2k-logo { width: 140px; }
 }
 
 /* ── DARK MODE ──────────────────────────────────────────────── */

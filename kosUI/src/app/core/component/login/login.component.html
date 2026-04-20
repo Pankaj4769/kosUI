@@ -1,154 +1,212 @@
-<div class="login-wrapper">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400;1,600&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
 
-  <!-- ══ Left Brand Panel ══ -->
-  <div class="login-brand">
-    <div class="brand-content">
+<div class="ls-wrap">
 
-      <!-- Wordmark -->
-      <div class="brand-wordmark">
-        <span class="bw-tech">Tech</span><span class="bw-two">2</span><span class="bw-kitchen">Kitchen</span>
+  <!-- ═══ LEFT BRAND PANEL ═══ -->
+  <div class="ls-brand">
+
+    <!-- Background ember glows -->
+    <div class="lb-glow lb-glow--a"></div>
+    <div class="lb-glow lb-glow--b"></div>
+
+    <!-- Motion layer -->
+    <div class="lb-particles" aria-hidden="true">
+      <span class="lb-p" style="--x:8%;--d:0s;--s:3px;--dur:9s"></span>
+      <span class="lb-p" style="--x:22%;--d:2.5s;--s:5px;--dur:7s"></span>
+      <span class="lb-p" style="--x:40%;--d:4.2s;--s:3px;--dur:11s"></span>
+      <span class="lb-p" style="--x:55%;--d:1.2s;--s:4px;--dur:8.5s"></span>
+      <span class="lb-p" style="--x:70%;--d:3.8s;--s:3px;--dur:10s"></span>
+      <span class="lb-p" style="--x:82%;--d:0.8s;--s:5px;--dur:7.5s"></span>
+      <span class="lb-p" style="--x:93%;--d:5.5s;--s:2px;--dur:9s"></span>
+      <span class="lb-p" style="--x:33%;--d:6.5s;--s:4px;--dur:8s"></span>
+      <span class="lb-p" style="--x:62%;--d:7.2s;--s:3px;--dur:10.5s"></span>
+      <span class="lb-p" style="--x:15%;--d:8.1s;--s:4px;--dur:7.8s"></span>
+    </div>
+    <div class="lb-streak lb-streak--1" aria-hidden="true"></div>
+    <div class="lb-streak lb-streak--2" aria-hidden="true"></div>
+    <div class="lb-streak lb-streak--3" aria-hidden="true"></div>
+    <div class="lb-scan" aria-hidden="true"></div>
+
+    <div class="lb-content">
+
+      <!-- Monogram -->
+      <div class="lb-monogram">
+        <span class="lm-t">T</span><span class="lm-2">2</span><span class="lm-k">K</span>
       </div>
-      <p class="brand-tagline">CLOUD KITCHEN ERP</p>
 
-      <!-- Divider -->
-      <div class="brand-divider"></div>
+      <!-- Wordmark + tag -->
+      <div class="lb-wordmark">
+        <span class="lw-name">Tech2Kitchen</span>
+        <span class="lw-tag">CLOUD KITCHEN ERP</span>
+      </div>
+
+      <!-- Rule -->
+      <div class="lb-rule"></div>
 
       <!-- Headline -->
-      <h2 class="brand-headline">Run your cloud kitchen<br>smarter, faster.</h2>
-      <p class="brand-desc">Everything you need — from live orders to billing, inventory and beyond. All in one platform.</p>
+      <h2 class="lb-headline">Run your cloud kitchen<br><em>smarter, faster.</em></h2>
 
       <!-- Features -->
-      <ul class="brand-features">
+      <ul class="lb-features">
         <li>
-          <span class="feat-icon material-icons">bolt</span>
+          <span class="lf-dot"></span>
           <span>Real-time kitchen display &amp; orders</span>
         </li>
         <li>
-          <span class="feat-icon material-icons">point_of_sale</span>
+          <span class="lf-dot"></span>
           <span>Multi-outlet POS &amp; billing</span>
         </li>
         <li>
-          <span class="feat-icon material-icons">admin_panel_settings</span>
+          <span class="lf-dot"></span>
           <span>Role-based access control</span>
         </li>
         <li>
-          <span class="feat-icon material-icons">inventory_2</span>
+          <span class="lf-dot"></span>
           <span>Inventory &amp; recipe management</span>
         </li>
       </ul>
 
-      <ng-container *ngIf="showDevPanel">
-        <p class="brand-hint">⚡ Dev mode — click role to quick-fill</p>
-      </ng-container>
+      <!-- Version badge -->
+      <div class="lb-badge">v0.3 · Enterprise Ready</div>
+
+      <!-- Stats row -->
+      <div class="lb-stats">
+        <div class="lb-stat">
+          <span class="lbs-value">500+</span>
+          <span class="lbs-label">Restaurants</span>
+        </div>
+        <div class="lb-stat-divider"></div>
+        <div class="lb-stat">
+          <span class="lbs-value">1M+</span>
+          <span class="lbs-label">Orders Processed</span>
+        </div>
+        <div class="lb-stat-divider"></div>
+        <div class="lb-stat">
+          <span class="lbs-value">99.9%</span>
+          <span class="lbs-label">Uptime SLA</span>
+        </div>
+      </div>
+
+      <!-- Trust line -->
+      <p class="lb-trust">Trusted by cloud kitchens across India</p>
 
     </div>
+
+    <!-- Bottom decorative line -->
+    <div class="lb-bottom-line"></div>
   </div>
 
-  <!-- ══ Right Form Panel ══ -->
-  <div class="login-form-panel">
-    <div class="login-card">
+  <!-- ═══ RIGHT FORM PANEL ═══ -->
+  <div class="ls-form-panel">
 
-      <!-- ── Header ── -->
-      <div class="login-header">
-        <div class="t2k-mark">
-          <span class="tm-t">T</span><span class="tm-two">2</span><span class="tm-k">K</span>
-        </div>
-        <h2>Sign in to your account</h2>
-        <p>Welcome back — enter your credentials below</p>
+    <div class="lf-card">
+
+      <!-- Header -->
+      <div class="lf-header">
+        <h1 class="lf-title">Welcome <em>back.</em></h1>
+        <p class="lf-sub">Sign in to your account</p>
       </div>
 
-      <!-- ── Error Banner ── -->
-      <div class="error-banner" *ngIf="errorMessage" role="alert">
+      <!-- Error -->
+      <div class="lf-error" *ngIf="errorMessage" role="alert">
         <span class="material-icons">error_outline</span>
-        <span>{{ errorMessage }}</span>
+        {{ errorMessage }}
       </div>
 
-      <!-- ── Tab Switcher ── -->
-      <div class="tab-switcher">
+      <!-- Tabs -->
+      <div class="lf-tabs">
         <button type="button"
-                [class.active]="activeTab === 'password'"
+                [class.lft-active]="activeTab === 'password'"
                 (click)="setTab('password')">
           <span class="material-icons">lock</span>Password
         </button>
         <button type="button"
-                [class.active]="activeTab === 'mobile'"
+                [class.lft-active]="activeTab === 'mobile'"
                 (click)="setTab('mobile')">
           <span class="material-icons">smartphone</span>Mobile OTP
         </button>
       </div>
 
-      <!-- ══ Password Tab ══ -->
+      <!-- ── Password Form ── -->
       <form *ngIf="activeTab === 'password'"
             (ngSubmit)="onPasswordSubmit()" novalidate
-            class="login-form">
+            class="lf-form">
 
-        <div class="form-group">
-          <label for="username">Username</label>
-          <div class="input-wrapper">
-            <span class="material-icons input-icon">person</span>
+        <div class="lff-group">
+          <label class="lff-label" for="username">Username</label>
+          <div class="lff-field">
+            <span class="material-icons lff-ico">person</span>
             <input id="username" type="text"
                    [(ngModel)]="username" name="username"
                    placeholder="Enter your username"
                    autocomplete="username"
+                   class="lff-input"
                    [disabled]="isLoading" />
           </div>
         </div>
 
-        <div class="form-group">
-          <div class="label-row">
-            <label for="password">Password</label>
-            <button type="button" class="forgot-link" (click)="showForgotPassword = true">Forgot password?</button>
+        <div class="lff-group">
+          <div class="lff-label-row">
+            <label class="lff-label" for="password">Password</label>
+            <button type="button" class="lff-forgot" (click)="showForgotPassword = true">Forgot password?</button>
           </div>
-          <div class="input-wrapper">
-            <span class="material-icons input-icon">lock</span>
+          <div class="lff-field">
+            <span class="material-icons lff-ico">lock</span>
             <input id="password"
                    [type]="showPassword ? 'text' : 'password'"
                    [(ngModel)]="password" name="password"
                    placeholder="Enter your password"
                    autocomplete="current-password"
+                   class="lff-input"
                    [disabled]="isLoading" />
-            <span class="material-icons toggle-eye"
+            <span class="material-icons lff-eye"
                   (click)="togglePassword()"
-                  [title]="showPassword ? 'Hide password' : 'Show password'">
+                  [title]="showPassword ? 'Hide' : 'Show'">
               {{ showPassword ? 'visibility_off' : 'visibility' }}
             </span>
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="role">Role</label>
-          <div class="select-wrapper" [class.has-value]="selectedRole">
-            <span class="material-icons input-icon">badge</span>
-            <select id="role" [(ngModel)]="selectedRole" name="selectedRole" [disabled]="isLoading">
+        <div class="lff-group">
+          <label class="lff-label" for="role">Role</label>
+          <div class="lff-field lff-select-wrap" [class.lff-has-value]="selectedRole">
+            <span class="material-icons lff-ico">badge</span>
+            <select id="role" [(ngModel)]="selectedRole" name="selectedRole"
+                    class="lff-input lff-select"
+                    [disabled]="isLoading">
               <option value="" disabled hidden>Select your role</option>
               <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
             </select>
-            <span class="material-icons select-chevron">expand_more</span>
+            <span class="material-icons lff-chevron">expand_more</span>
           </div>
         </div>
 
-        <button type="submit" class="btn-login" [disabled]="isLoading">
-          <span class="material-icons spin" *ngIf="isLoading">autorenew</span>
+        <button type="submit" class="lff-submit" [disabled]="isLoading">
+          <span class="material-icons lff-spin" *ngIf="isLoading">autorenew</span>
           <span>{{ isLoading ? 'Signing in…' : 'Sign In' }}</span>
           <span class="material-icons" *ngIf="!isLoading">arrow_forward</span>
         </button>
 
       </form>
 
-      <!-- ══ Mobile OTP Tab ══ -->
+      <!-- ── Mobile OTP Form ── -->
       <form *ngIf="activeTab === 'mobile'"
             (ngSubmit)="onOtpSubmit()" novalidate
-            class="login-form">
+            class="lf-form">
 
-        <div class="form-group">
-          <label for="mobile">Mobile Number</label>
-          <div class="input-wrapper">
-            <span class="material-icons input-icon">smartphone</span>
+        <div class="lff-group">
+          <label class="lff-label" for="mobile">Mobile Number</label>
+          <div class="lff-field">
+            <span class="material-icons lff-ico">smartphone</span>
             <input id="mobile" type="tel"
                    [(ngModel)]="mobile" name="mobile"
                    placeholder="10-digit mobile number"
-                   maxlength="10" [disabled]="isLoading" />
-            <button type="button" class="btn-otp"
+                   maxlength="10"
+                   class="lff-input"
+                   [disabled]="isLoading" />
+            <button type="button" class="lff-otp-btn"
                     (click)="sendOtp()"
                     [disabled]="otpTimer > 0 || isLoading">
               <span class="material-icons" *ngIf="otpTimer === 0" style="font-size:13px">send</span>
@@ -157,67 +215,73 @@
           </div>
         </div>
 
-        <div class="form-group otp-field" *ngIf="otpSent">
-          <label for="otp">
-            Enter OTP
-            <span class="otp-hint">Sent to +91 {{ mobile }}</span>
+        <div class="lff-group" *ngIf="otpSent" style="animation: lfFadeUp 0.22s ease both">
+          <label class="lff-label" for="otp">
+            OTP <span class="lff-otp-hint">Sent to +91 {{ mobile }}</span>
           </label>
-          <div class="input-wrapper">
-            <span class="material-icons input-icon">pin</span>
+          <div class="lff-field">
+            <span class="material-icons lff-ico">pin</span>
             <input id="otp" type="text"
                    [(ngModel)]="otp" name="otp"
-                   placeholder="Enter 4–6 digit OTP"
+                   placeholder="4–6 digit OTP"
                    maxlength="6" inputmode="numeric"
+                   class="lff-input"
                    [disabled]="isLoading" />
           </div>
         </div>
 
-        <button type="submit" class="btn-login" [disabled]="isLoading || !otpSent">
-          <span class="material-icons spin" *ngIf="isLoading">autorenew</span>
+        <button type="submit" class="lff-submit" [disabled]="isLoading || !otpSent">
+          <span class="material-icons lff-spin" *ngIf="isLoading">autorenew</span>
           <span>{{ isLoading ? 'Verifying…' : 'Verify & Sign In' }}</span>
           <span class="material-icons" *ngIf="!isLoading">arrow_forward</span>
         </button>
 
       </form>
 
-      <!-- ── Divider ── -->
-      <div class="divider"><span>or continue with</span></div>
+      <!-- Divider -->
+      <div class="lf-divider"><span>or continue with</span></div>
 
-      <!-- ── Social Buttons ── -->
-      <div class="social-buttons">
-        <button class="btn-social btn-google" type="button"
-                (click)="loginWithGoogle()" [disabled]="isLoading">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18" height="18" style="flex-shrink:0">
+      <!-- Social -->
+      <div class="lf-social">
+        <button class="lfs-btn" type="button" (click)="loginWithGoogle()" [disabled]="isLoading">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="17" height="17">
             <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 7.9 2.9l5.9-5.9C34.2 3.4 29.4 1.5 24 1.5 14.8 1.5 7 7.1 3.6 15l6.9 5.4C12.2 13.9 17.6 9.5 24 9.5z"/>
             <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.7c4.3-4 6.8-9.9 6.8-16.9z"/>
             <path fill="#FBBC05" d="M10.5 28.4c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4L3.6 15C2.1 17.9 1.2 21.1 1.2 24.5s.9 6.6 2.4 9.5l6.9-5.6z"/>
             <path fill="#34A853" d="M24 47.5c5.4 0 10-1.8 13.3-4.8l-7.4-5.7c-1.8 1.2-4.1 1.9-5.9 1.9-6.4 0-11.8-4.3-13.5-10.5l-6.9 5.5C7 41.9 14.8 47.5 24 47.5z"/>
           </svg>
-          <span>Google</span>
+          Google
         </button>
-        <button class="btn-social btn-zoho" type="button"
-                (click)="loginWithZoho()" [disabled]="isLoading">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18" height="18" style="flex-shrink:0">
+        <button class="lfs-btn" type="button" (click)="loginWithZoho()" [disabled]="isLoading">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="17" height="17">
             <rect width="48" height="48" rx="8" fill="#E42527"/>
-            <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="22" font-family="Arial, sans-serif" font-weight="bold">Z</text>
+            <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="22" font-family="Arial,sans-serif" font-weight="bold">Z</text>
           </svg>
-          <span>Zoho Mail</span>
+          Zoho Mail
         </button>
       </div>
 
-      <!-- ── Footer ── -->
-      <div class="login-footer">
-        <p class="login-hint">First time? You'll be registered as <strong>Owner</strong></p>
-        <p class="signup-redirect">
-          New to Tech2Kitchen? <a routerLink="/signup">Create account</a>
-        </p>
+      <!-- Footer -->
+      <div class="lf-footer">
+        <div class="lf-footer-row">
+          <span class="lf-footer-hint">
+            <span class="material-icons">info_outline</span>
+            First time? Registered as <strong>Owner</strong>
+          </span>
+          <a routerLink="/signup" class="lf-footer-cta">
+            Create account
+            <span class="material-icons">arrow_forward</span>
+          </a>
+        </div>
       </div>
+
+      <p class="lf-dev" *ngIf="showDevPanel">⚡ Dev mode — click role to quick-fill</p>
 
     </div>
   </div>
 </div>
 
-<!-- ══ Forgot Password Popup ══ -->
+<!-- Forgot Password -->
 <app-forgot-password
   *ngIf="showForgotPassword"
   (close)="showForgotPassword = false">

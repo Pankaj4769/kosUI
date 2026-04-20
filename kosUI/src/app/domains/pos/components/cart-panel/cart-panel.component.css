@@ -1071,3 +1071,93 @@ app-payment-popup {
 
   .cart-notifications  { bottom: 120px; left: 6px; right: 6px; }
 }
+
+/* =====================================================
+   IN KITCHEN — session KOT rounds already sent
+===================================================== */
+
+.in-kitchen-section {
+  margin: 6px 10px;
+  border: 1px solid #e3f2fd;
+  border-radius: 8px;
+  background: #f8fbff;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.in-kitchen-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: #1976d2;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.in-kitchen-header mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.kot-count-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,0.25);
+  border-radius: 12px;
+  padding: 1px 8px;
+  font-size: 11px;
+}
+
+.kot-round-card {
+  padding: 6px 12px;
+  border-bottom: 1px solid #e3f2fd;
+}
+
+.kot-round-card:last-child { border-bottom: none; }
+
+.kot-round-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.kot-round-label {
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.kot-status {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.status-pending    { background: #fff3e0; color: #e65100; }
+.status-preparing  { background: #e3f2fd; color: #1565c0; }
+.status-ready      { background: #e8f5e9; color: #2e7d32; }
+
+.kot-round-amount {
+  margin-left: auto;
+  font-weight: 600;
+  color: #333;
+}
+
+.kot-round-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.kot-item-chip {
+  background: #e3f2fd;
+  color: #1565c0;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+}

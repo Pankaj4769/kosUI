@@ -3,6 +3,11 @@
   <!-- ══════════════════════════════ LEFT ══════════════════════════════ -->
   <div class="hdr-left">
 
+    <!-- Mobile hamburger -->
+    <button class="hdr-hamburger" type="button" (click)="layout.toggle()" aria-label="Toggle navigation">
+      <span class="material-icons">menu</span>
+    </button>
+
     <!-- Logo -->
     <a routerLink="/dashboard" class="hdr-logo-link" aria-label="Go to Dashboard">
       <svg class="t2k-logo" viewBox="0 0 195 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Tech2Kitchen">

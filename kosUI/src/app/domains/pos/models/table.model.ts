@@ -32,7 +32,8 @@ export interface Table {
   sessionDuration?: number;         // Cached duration in minutes
   
   // ✅ ADDED FOR PRIORITY FEATURE (Fixes Component Errors)
-  isPriority?: boolean;             
+  isPriority?: boolean;
+  billRequested?: boolean;
 }
 
 // ✅ EXISTING: TableStatusEnum (PRESERVED)

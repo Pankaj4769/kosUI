@@ -9,7 +9,8 @@ export class CartService {
 
   /* ================= STATE ================= */
 
-  private readonly STORAGE_KEY = 'temp_cart';
+  private readonly DEFAULT_KEY = 'temp_cart';
+  private currentStorageKey = this.DEFAULT_KEY;
 
   private cartSubject = new BehaviorSubject<CartItem[]>([]);
   public cart$ = this.cartSubject.asObservable();
@@ -17,35 +18,58 @@ export class CartService {
   private nextId = 1;
 
   constructor() {
-    this.loadCartFromStorage();
+    this.loadCartFromStorage(this.currentStorageKey);
   }
+
+  /* ================= SESSION SCOPING ================= */
+
+  /**
+   * Switch the active cart to the given session key.
+   * Saves current cart under the old key, then loads from the new key.
+   */
+  switchSession(sessionKey: string): void {
+    if (sessionKey === this.currentStorageKey) return;
+    // Save current state before switching
+    this.saveCartToStorage(this.cartSubject.value, this.currentStorageKey);
+    this.currentStorageKey = sessionKey;
+    this.loadCartFromStorage(sessionKey);
+  }
+
+  /** Clear only the cart for a specific session key (called on payment/close). */
+  clearSession(sessionKey: string): void {
+    try { localStorage.removeItem(sessionKey); } catch {}
+    if (sessionKey === this.currentStorageKey) {
+      this.cartSubject.next([]);
+    }
+  }
+
+  get activeSessionKey(): string { return this.currentStorageKey; }
 
   /* ================= LOCAL STORAGE ================= */
 
-  private loadCartFromStorage(): void {
-    const stored = localStorage.getItem(this.STORAGE_KEY);
+  private loadCartFromStorage(key: string): void {
+    const stored = localStorage.getItem(key);
 
-    if (!stored) return;
+    if (!stored) {
+      this.cartSubject.next([]);
+      this.nextId = 1;
+      return;
+    }
 
     try {
       const parsed: CartItem[] = JSON.parse(stored);
-
       this.cartSubject.next(parsed);
-
-      // Restore nextId safely
       const maxId = parsed.reduce((max, item) =>
         item.id && item.id > max ? item.id : max, 0);
-
       this.nextId = maxId + 1;
-
     } catch (err) {
       console.error('Failed to load cart from storage', err);
       this.cartSubject.next([]);
     }
   }
 
-  private saveCartToStorage(cart: CartItem[]): void {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(cart));
+  private saveCartToStorage(cart: CartItem[], key?: string): void {
+    localStorage.setItem(key ?? this.currentStorageKey, JSON.stringify(cart));
   }
 
   /**
@@ -128,6 +152,7 @@ export class CartService {
 
   clearCart(): void {
     this.updateCart([]);
+    try { localStorage.removeItem(this.currentStorageKey); } catch {}
   }
 
   updateItem(itemId: number, updates: Partial<CartItem>): void {

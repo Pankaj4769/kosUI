@@ -28,6 +28,10 @@ import { ConfirmDialogComponent } from '../../../common-popup/pages/confirm-dial
 // Models
 import { Table } from '../../models/table.model';
 import { TableService } from '../../services/table.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { StaffService } from '../../../staff/services/staff.service';
+import { OrderManagementService } from '../../../order/services/order-management.service';
+import { TableSessionService } from '../../../../core/services/table-session.service';
 
 
 /* ================= TYPES ================= */
@@ -81,6 +85,7 @@ export class OrderSidebarComponent implements OnInit, OnDestroy {
   @Output() orderTypeChange = new EventEmitter<OrderType>();
   @Output() tableSelect = new EventEmitter<number>();
   @Output() customerInfoChange = new EventEmitter<CustomerInfo | null>();
+  @Output() waiterChange = new EventEmitter<string>();
 
 
   /* ================= STATE ================= */
@@ -126,6 +131,15 @@ export class OrderSidebarComponent implements OnInit, OnDestroy {
   // NEW: Table Selector Popup State
   showTableSelectorPopup = false;
   tempSelectedTable: Table | null = null;
+  tempWaiterName = '';
+  availableWaiters: string[] = [];
+  tableViewMode: 'list' | 'grid' = 'list';
+
+  // Waiter Assignment Popup (step 2 after table selection)
+  showWaiterPopup = false;
+
+  // Live waiter list from EmpMgmt (role = WAITER)
+  staffWaiters: string[] = [];
 
   // NEW: UI Mode Toggle (set to true for new compact design)
   useCompactDesign = true;
@@ -142,7 +156,11 @@ export class OrderSidebarComponent implements OnInit, OnDestroy {
   constructor(
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
-    private tableService: TableService
+    private tableService: TableService,
+    private authService: AuthService,
+    private staffService: StaffService,
+    private orderMgmt: OrderManagementService,
+    private sessionSvc: TableSessionService
   ) {}
 
 
@@ -151,6 +169,7 @@ export class OrderSidebarComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadTables();
     this.initializeCustomerInfo();
+    this.loadWaiters();
   }
 
   ngOnDestroy(): void {
@@ -209,6 +228,23 @@ export class OrderSidebarComponent implements OnInit, OnDestroy {
       this.customerPhone   = this.customerInfo.phone;
       this.customerAddress = this.customerInfo.address || '';
     }
+  }
+
+  private loadWaiters(): void {
+    const restaurantId = this.authService.currentUser?.restaurantId;
+    if (restaurantId) {
+      this.staffService.loadStaff(restaurantId);
+    }
+    this.staffService.staff$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(staff => {
+        const waiterRoles = ['WAITER', 'SERVER'];
+        const fromStaff = staff
+          .filter(s => waiterRoles.includes(s.roleName?.toUpperCase()) && s.status === 'ACTIVE')
+          .map(s => s.name);
+        this.staffWaiters = fromStaff.length > 0 ? fromStaff : [];
+        this.cdr.markForCheck();
+      });
   }
 
   private calculateTotalBill(): void {
@@ -365,6 +401,14 @@ cancelOrderTypeChange(): void {
     this.showTableSelectorPopup = true;
     this.tempSelectedTable = this.getSelectedTableObject();
 
+    // Build waiter list: live staff from EmpMgmt, with current user always included
+    const currentUserName = this.authService.currentUser?.name || '';
+    const base = this.staffWaiters.length > 0
+      ? this.staffWaiters
+      : this.tables.filter(t => t.waiter).map(t => t.waiter as string); // fallback to table data
+    this.availableWaiters = [...new Set([currentUserName, ...base].filter(Boolean))];
+    this.tempWaiterName = this.tempSelectedTable?.waiter || currentUserName;
+
     this.searchQuery  = '';
     this.statusFilter = 'all';
     this.sortBy       = 'table';
@@ -387,6 +431,27 @@ cancelOrderTypeChange(): void {
   selectTableInPopup(table: Table): void {
     if (table.status === 'cleaning') return;
     this.tempSelectedTable = table;
+    // Pre-fill waiter from table if occupied, else keep current
+    if (table.waiter) this.tempWaiterName = table.waiter;
+    this.cdr.markForCheck();
+  }
+
+  autoAssignWaiter(): void {
+    this.tempWaiterName = this.authService.currentUser?.name || '';
+    this.cdr.markForCheck();
+  }
+
+  /** Called by "Select Table" button — closes table popup and opens waiter popup */
+  openWaiterPopup(): void {
+    if (!this.tempSelectedTable) return;
+    this.showTableSelectorPopup = false;
+    this.showWaiterPopup = true;
+    this.cdr.markForCheck();
+  }
+
+  closeWaiterPopup(): void {
+    this.showWaiterPopup = false;
+    this.showTableSelectorPopup = true;  // go back to table list
     this.cdr.markForCheck();
   }
 
@@ -395,22 +460,36 @@ cancelOrderTypeChange(): void {
 
     const tableNumber = this.tempSelectedTable.number;
     const table       = this.tempSelectedTable;
+    const waiter      = this.tempWaiterName.trim();
 
     if (table.status === 'available') {
       this.selectedTable = tableNumber;
       this.tableSelect.emit(tableNumber);
+      if (waiter) {
+        this.waiterChange.emit(waiter);
+        this.tableService.assignWaiter(table.id, waiter);
+      }
+      this.showWaiterPopup = false;
       this.closeTableSelectorPopup();
 
     } else if (table.status === 'occupied') {
-      // 🔴 CHANGE 2: Replaced window.confirm() with MatDialog
+      // Compute real totals from active session orders (accurate cross-device)
+      const session      = this.sessionSvc.getCached(table.id);
+      const sessionOrders = session
+        ? this.orderMgmt.getOrdersBySession(session.sessionId)
+        : [];
+      const realItemCount  = sessionOrders.reduce((s, o) => s + o.items.length, 0);
+      const realAmount     = sessionOrders.reduce((s, o) => s + o.totalAmount, 0);
+      const waiterDisplay  = table.waiter || session?.waiterName || 'N/A';
+
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
         width: '420px',
         data: {
           title: `Table ${tableNumber} is Occupied`,
           message:
-            `Waiter: ${table.waiter || 'N/A'}\n` +
-            `Items: ${table.itemCount ?? 0}\n` +
-            `Amount: ₹${table.totalAmount ?? 0}\n\n` +
+            `Waiter: ${waiterDisplay}\n` +
+            `Items: ${realItemCount || (table.itemCount ?? 0)}\n` +
+            `Amount: ₹${realAmount || (table.totalAmount ?? 0)}\n\n` +
             `Do you want to view this order?`,
           confirmText: 'View Order',
           confirmColor: 'primary'
@@ -421,13 +500,14 @@ cancelOrderTypeChange(): void {
         if (result === true) {
           this.selectedTable = tableNumber;
           this.tableSelect.emit(tableNumber);
+          if (waiter) this.waiterChange.emit(waiter);
+          this.showWaiterPopup = false;
           this.closeTableSelectorPopup();
         }
         this.cdr.markForCheck();
       });
 
     } else if (table.status === 'reserved') {
-      // 🔴 CHANGE 2: Replaced window.confirm() with MatDialog
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
         width: '400px',
         data: {
@@ -442,6 +522,11 @@ cancelOrderTypeChange(): void {
         if (result === true) {
           this.selectedTable = tableNumber;
           this.tableSelect.emit(tableNumber);
+          if (waiter) {
+            this.waiterChange.emit(waiter);
+            this.tableService.assignWaiter(table.id, waiter);
+          }
+          this.showWaiterPopup = false;
           this.closeTableSelectorPopup();
         }
         this.cdr.markForCheck();

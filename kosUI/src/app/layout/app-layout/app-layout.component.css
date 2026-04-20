@@ -202,6 +202,13 @@
 .auth-main      { padding-bottom: 36px; }
 
 /* =====================================================
+   MOBILE BACKDROP
+===================================================== */
+.sidebar-backdrop {
+  display: none;
+}
+
+/* =====================================================
    RESPONSIVE
 ===================================================== */
 @media (max-width: 767px) {
@@ -210,21 +217,26 @@
     top: 0;
     left: 0;
     height: 100%;
-    width: 72px !important;   /* always collapsed on mobile */
+    width: 240px !important;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.25, 0.8, 0.25, 1);
     z-index: 400;
   }
 
-  .content-column {
-    margin-left: 72px;
-  }
-}
-
-@media (max-width: 480px) {
-  .sidebar-wrapper {
-    display: none;
+  .sidebar-wrapper:not(.collapsed) {
+    transform: translateX(0);
   }
 
   .content-column {
     margin-left: 0;
+    width: 100%;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 399;
   }
 }

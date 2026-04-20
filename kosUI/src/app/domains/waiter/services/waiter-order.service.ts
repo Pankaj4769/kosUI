@@ -37,10 +37,30 @@ export interface TableOrder {
 @Injectable({ providedIn: 'root' })
 export class WaiterOrderService {
 
+  private readonly STORAGE_KEY = 'waiter_orders';
+
   constructor(
     private tableSvc: TableService,
     private inventorySvc: InventoryService,
-  ) {}
+  ) {
+    this.loadFromStorage();
+  }
+
+  private loadFromStorage(): void {
+    try {
+      const raw = localStorage.getItem(this.STORAGE_KEY);
+      if (raw) {
+        const entries: [number, WaiterOrderItem[]][] = JSON.parse(raw);
+        this.ordersMap = new Map(entries);
+      }
+    } catch {}
+  }
+
+  private saveToStorage(): void {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify([...this.ordersMap]));
+    } catch {}
+  }
 
   // ── Public accessors ────────────────────────────────
 
@@ -143,6 +163,7 @@ export class WaiterOrderService {
 
   private emit(): void {
     this.ordersSubject.next(new Map(this.ordersMap));
+    this.saveToStorage();
   }
 
   // ── Helpers ─────────────────────────────────────────

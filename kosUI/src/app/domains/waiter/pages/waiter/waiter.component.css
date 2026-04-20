@@ -1178,3 +1178,218 @@
   .w-menu-item { padding: 8px; gap: 6px; }
   .w-menu-item__desc { display: none; }
 }
+
+/* ── Notification bell button ────────────────────── */
+.w-bell-btn {
+  position: relative; background: transparent; border: none;
+  cursor: pointer; padding: 6px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #64748b; transition: background 0.2s;
+}
+.w-bell-btn:hover { background: #f1f5f9; }
+.w-bell-badge {
+  position: absolute; top: 2px; right: 2px;
+  background: #ef4444; color: #fff; border-radius: 10px;
+  font-size: 10px; font-weight: 700; min-width: 16px; height: 16px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; line-height: 1;
+}
+
+/* ── Ready Orders Panel (Gap 3) ──────────────────── */
+.w-ready-panel {
+  position: fixed; top: 60px; right: 12px; z-index: 1200;
+  background: #fff; border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  width: 320px; max-height: 480px;
+  display: flex; flex-direction: column;
+  border: 1px solid #e2e8f0;
+}
+.w-ready-panel__header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid #f1f5f9;
+  font-weight: 600; font-size: 14px; color: #1e293b;
+}
+.w-ready-panel__header mat-icon { color: #22c55e; vertical-align: middle; margin-right: 6px; }
+.w-ready-dismiss-all {
+  background: transparent; border: none; color: #64748b;
+  font-size: 12px; cursor: pointer; margin-right: 8px;
+  padding: 2px 6px; border-radius: 4px;
+}
+.w-ready-dismiss-all:hover { background: #f1f5f9; }
+.w-ready-close {
+  background: transparent; border: none; cursor: pointer;
+  color: #94a3b8; display: flex; align-items: center;
+}
+.w-ready-empty {
+  padding: 24px; text-align: center; color: #94a3b8; font-size: 13px;
+}
+.w-ready-empty mat-icon { font-size: 32px; display: block; margin-bottom: 8px; color: #22c55e; }
+.w-ready-list { overflow-y: auto; flex: 1; }
+.w-ready-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-bottom: 1px solid #f8fafc;
+  animation: slideIn 0.2s ease;
+}
+@keyframes slideIn { from { opacity:0; transform:translateY(-4px) } to { opacity:1; transform:none } }
+.w-ready-item__icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #dcfce7; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.w-ready-item__icon mat-icon { color: #16a34a; font-size: 20px; }
+.w-ready-item__info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.w-ready-item__info strong { font-size: 13px; color: #1e293b; }
+.w-ready-item__info span { font-size: 11px; color: #64748b; }
+.w-ready-meta { color: #64748b; }
+.w-ready-items-list { color: #475569; font-style: italic; font-size: 11px !important; }
+.w-ready-time {
+  display: flex; align-items: center; gap: 3px;
+  color: #94a3b8 !important; font-size: 11px;
+}
+.w-ready-time mat-icon { font-size: 12px; height: 12px; width: 12px; }
+.w-ready-time--warn { color: #f97316 !important; font-weight: 600; }
+.w-ready-count { font-size: 12px; font-weight: 700; color: #ef4444; margin-left: 4px; }
+.w-ready-dismiss {
+  background: transparent; border: none; cursor: pointer;
+  color: #94a3b8; display: flex; align-items: center;
+  padding: 4px;
+}
+.w-ready-dismiss:hover { color: #ef4444; }
+
+/* ── Bill requested badge on table card ──────────── */
+.w-table-card__bill {
+  position: absolute; top: 8px; left: 8px;
+  background: #fef9c3; border: 1px solid #fde047;
+  color: #713f12; border-radius: 6px;
+  font-size: 10px; font-weight: 600;
+  display: flex; align-items: center; gap: 2px;
+  padding: 2px 6px;
+}
+.w-table-card__bill mat-icon { font-size: 12px; height: 12px; width: 12px; }
+.w-table-card.bill-requested { border: 2px solid #fde047 !important; }
+
+/* ── KOT count badge ─────────────────────────────── */
+.w-badge--kot {
+  background: #fff3e0; color: #e65100;
+  border: 1px solid #ffb74d;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;
+}
+.w-badge--kot mat-icon { font-size: 14px; height: 14px; width: 14px; }
+
+/* ── Bill requested badge ────────────────────────── */
+.w-badge--bill {
+  background: #fef9c3; color: #713f12;
+  border: 1px solid #fde047;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;
+}
+.w-badge--bill mat-icon { font-size: 14px; height: 14px; width: 14px; }
+
+/* ── KOT round indicator ─────────────────────────── */
+.w-kot-round {
+  background: #dbeafe; color: #1e40af;
+  border-radius: 12px; padding: 1px 8px;
+  font-size: 11px; font-weight: 600; margin-left: 8px;
+}
+
+/* ── KOT sent banner ─────────────────────────────── */
+.w-kot-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+  border-radius: 8px; padding: 12px 16px; margin: 12px;
+  color: #166534;
+}
+.w-kot-banner mat-icon { color: #22c55e; flex-shrink: 0; }
+.w-kot-banner div { display: flex; flex-direction: column; gap: 2px; }
+.w-kot-banner strong { font-size: 13px; }
+.w-kot-banner span { font-size: 11px; color: #4ade80; }
+
+/* ── Request Bill button ─────────────────────────── */
+.w-action-btn--bill {
+  background: #fef9c3 !important;
+  color: #713f12 !important;
+  border: 1px solid #fde047 !important;
+}
+.w-action-btn--bill:hover:not(:disabled) {
+  background: #fef08a !important;
+}
+.w-action-btn--bill.bill-sent {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border-color: #86efac !important;
+}
+
+/* ── In Kitchen section ── */
+.w-in-kitchen {
+  margin: 6px 8px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.w-in-kitchen-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.w-in-kitchen-header mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+.w-kot-card {
+  padding: 6px 12px;
+  border-bottom: 1px solid #bfdbfe;
+}
+.w-kot-card:last-child { border-bottom: none; }
+
+.w-kot-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.w-kot-round  { font-weight: 700; color: #1d4ed8; }
+.w-kot-amt    { margin-left: auto; font-weight: 600; color: #1e293b; }
+
+.w-kot-status {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.wks-pending   { background: #fef3c7; color: #92400e; }
+.wks-preparing { background: #dbeafe; color: #1e40af; }
+.wks-ready     { background: #d1fae5; color: #065f46; }
+
+.w-kot-items { display: flex; flex-wrap: wrap; gap: 4px; }
+.w-kot-chip  { background: #dbeafe; color: #1e40af; border-radius: 10px; padding: 2px 8px; font-size: 11px; }
+
+/* ── Serve button in ready panel ── */
+.w-ready-serve-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: #16a34a;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.w-ready-serve-btn:hover { background: #15803d; }
+.w-ready-serve-btn mat-icon { font-size: 16px; width: 16px; height: 16px; }

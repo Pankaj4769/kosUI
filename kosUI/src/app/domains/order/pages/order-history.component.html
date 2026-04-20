@@ -1,264 +1,408 @@
-<div class="order-history">
+<div class="oh">
 
-  <!-- ================= FILTERS & SEARCH ================= -->
-  <div class="filters-section">
-    
-    <!-- Search Bar -->
-    <div class="search-box">
-      <input
-        type="text"
-        class="search-input"
-        placeholder="🔍 Search by order number, customer, table..."
-        [(ngModel)]="searchText"
-        (input)="applyFilters()">
+  <!-- ═══════ PAGE HEADER ═══════ -->
+  <header class="oh-header">
+    <div class="oh-header__left">
+      <h1 class="oh-title">Order History</h1>
+      <span class="oh-subtitle">{{ filteredOrders.length }} order(s) found</span>
+    </div>
+    <div class="oh-header__right">
+      <button class="oh-btn oh-btn--ghost" (click)="refreshOrders()">
+        <span class="oh-btn__icon">↻</span> Refresh
+      </button>
+      <button class="oh-btn oh-btn--accent" (click)="exportToCSV()">
+        <span class="oh-btn__icon">⬇</span> Export CSV
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════ STAT CARDS ═══════ -->
+  <section class="oh-stats">
+
+    <div class="oh-stat oh-stat--orders">
+      <div class="oh-stat__ring">📦</div>
+      <div class="oh-stat__body">
+        <span class="oh-stat__val">{{ stats.totalOrders }}</span>
+        <span class="oh-stat__lbl">Total Orders</span>
+      </div>
     </div>
 
-    <!-- Filter Row -->
-    <div class="filter-row">
-      
-      <!-- Date Range -->
-      <div class="filter-group">
-        <label class="filter-label">Date Range:</label>
-        <select class="filter-select" [(ngModel)]="selectedDateRange" (change)="applyDateFilter()">
+    <div class="oh-stat oh-stat--revenue">
+      <div class="oh-stat__ring">💰</div>
+      <div class="oh-stat__body">
+        <span class="oh-stat__val">₹{{ stats.totalRevenue | number:'1.0-0' }}</span>
+        <span class="oh-stat__lbl">Total Revenue</span>
+      </div>
+    </div>
+
+    <div class="oh-stat oh-stat--paid">
+      <div class="oh-stat__ring">✅</div>
+      <div class="oh-stat__body">
+        <span class="oh-stat__val">₹{{ stats.paidRevenue | number:'1.0-0' }}</span>
+        <span class="oh-stat__lbl">Paid Revenue</span>
+      </div>
+    </div>
+
+    <div class="oh-stat oh-stat--avg">
+      <div class="oh-stat__ring">📊</div>
+      <div class="oh-stat__body">
+        <span class="oh-stat__val">₹{{ stats.avgOrderValue | number:'1.0-0' }}</span>
+        <span class="oh-stat__lbl">Avg Value</span>
+      </div>
+    </div>
+
+    <div class="oh-stat oh-stat--completed">
+      <div class="oh-stat__ring">🍽️</div>
+      <div class="oh-stat__body">
+        <span class="oh-stat__val">{{ stats.completedOrders }}</span>
+        <span class="oh-stat__lbl">Served</span>
+      </div>
+    </div>
+
+    <div class="oh-stat oh-stat--cancelled">
+      <div class="oh-stat__ring">❌</div>
+      <div class="oh-stat__body">
+        <span class="oh-stat__val">{{ stats.cancelledOrders }}</span>
+        <span class="oh-stat__lbl">Cancelled</span>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════ TOOLBAR ═══════ -->
+  <section class="oh-toolbar">
+
+    <!-- Search -->
+    <div class="oh-search">
+      <span class="oh-search__icon">🔍</span>
+      <input
+        type="text"
+        class="oh-search__input"
+        placeholder="Search by order #, customer, table, waiter…"
+        [(ngModel)]="searchText"
+        (input)="applyFilters()">
+      <button class="oh-search__clear" *ngIf="searchText" (click)="searchText=''; applyFilters()">✕</button>
+    </div>
+
+    <!-- Filters Row -->
+    <div class="oh-filters">
+
+      <div class="oh-filter">
+        <label>Date Range</label>
+        <select [(ngModel)]="selectedDateRange" (change)="applyDateFilter()">
           <option value="all">All Time</option>
           <option value="today">Today</option>
           <option value="yesterday">Yesterday</option>
           <option value="week">This Week</option>
           <option value="month">This Month</option>
-          <option value="custom">Custom</option>
+          <option value="custom">Custom Range</option>
         </select>
       </div>
 
-      <!-- Custom Date Inputs -->
-      <div class="filter-group" *ngIf="selectedDateRange === 'custom'">
-        <input
-          type="date"
-          class="filter-input"
-          [(ngModel)]="customDateRange.start"
-          (change)="applyFilters()">
-        <span class="date-separator">to</span>
-        <input
-          type="date"
-          class="filter-input"
-          [(ngModel)]="customDateRange.end"
-          (change)="applyFilters()">
-      </div>
+      <ng-container *ngIf="selectedDateRange === 'custom'">
+        <div class="oh-filter">
+          <label>From</label>
+          <input type="date" [(ngModel)]="customDateRange.start" (change)="applyFilters()">
+        </div>
+        <div class="oh-filter">
+          <label>To</label>
+          <input type="date" [(ngModel)]="customDateRange.end" (change)="applyFilters()">
+        </div>
+      </ng-container>
 
-      <!-- Status Filter -->
-      <div class="filter-group">
-        <label class="filter-label">Status:</label>
-        <select class="filter-select" [(ngModel)]="selectedStatus" (change)="applyFilters()">
-          <option value="all">All Statuses</option>
-          <option [value]="OrderStatus.PENDING">Pending</option>
-          <option [value]="OrderStatus.PREPARING">Preparing</option>
-          <option [value]="OrderStatus.READY">Ready</option>
+      <div class="oh-filter">
+        <label>Status</label>
+        <select [(ngModel)]="selectedStatus" (change)="applyFilters()">
+          <option value="all">All</option>
           <option [value]="OrderStatus.SERVED">Served</option>
           <option [value]="OrderStatus.CANCELLED">Cancelled</option>
         </select>
       </div>
 
-      <!-- Order Type Filter -->
-      <div class="filter-group">
-        <label class="filter-label">Type:</label>
-        <select class="filter-select" [(ngModel)]="selectedType" (change)="applyFilters()">
-          <option value="all">All Types</option>
+      <div class="oh-filter">
+        <label>Type</label>
+        <select [(ngModel)]="selectedType" (change)="applyFilters()">
+          <option value="all">All</option>
           <option [value]="OrderType.DINE_IN">Dine-In</option>
           <option [value]="OrderType.TAKEAWAY">Takeaway</option>
           <option [value]="OrderType.DELIVERY">Delivery</option>
         </select>
       </div>
 
-      <!-- Export -->
-      <div class="filter-group" style="margin-left:auto;">
-        <button class="btn btn-export" (click)="exportToCSV()">📊 Export CSV</button>
-      </div>
-
-      <!-- Sort By -->
-      <div class="filter-group">
-        <label class="filter-label">Sort By:</label>
-        <select class="filter-select" [(ngModel)]="sortBy" (change)="applySorting()">
-          <option value="date-desc">Date (Newest)</option>
-          <option value="date-asc">Date (Oldest)</option>
-          <option value="amount-desc">Amount (High to Low)</option>
-          <option value="amount-asc">Amount (Low to High)</option>
-          <option value="order-number">Order Number</option>
+      <div class="oh-filter">
+        <label>Payment</label>
+        <select [(ngModel)]="selectedPaymentStatus" (change)="applyFilters()">
+          <option value="all">All</option>
+          <option [value]="PaymentStatus.PAID">Paid</option>
+          <option [value]="PaymentStatus.PENDING">Pending</option>
+          <option [value]="PaymentStatus.PARTIALLY_PAID">Partial</option>
+          <option [value]="PaymentStatus.REFUNDED">Refunded</option>
         </select>
       </div>
 
-    </div>
-
-  </div>
-
-  <!-- ================= STATS CARDS ================= -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon">📦</div>
-      <div class="stat-content">
-        <div class="stat-label">Total Orders</div>
-        <div class="stat-value">{{ stats.totalOrders }}</div>
+      <div class="oh-filter">
+        <label>Sort By</label>
+        <select [(ngModel)]="sortBy" (change)="applySorting()">
+          <option value="date-desc">Newest First</option>
+          <option value="date-asc">Oldest First</option>
+          <option value="amount-desc">Highest Amount</option>
+          <option value="amount-asc">Lowest Amount</option>
+          <option value="order-number">Order #</option>
+        </select>
       </div>
-    </div>
 
-    <div class="stat-card">
-      <div class="stat-icon">💰</div>
-      <div class="stat-content">
-        <div class="stat-label">Total Revenue</div>
-        <div class="stat-value">₹{{ stats.totalRevenue | number:'1.0-0' }}</div>
+      <div class="oh-filter oh-filter--action" *ngIf="hasActiveFilters()">
+        <label>&nbsp;</label>
+        <button class="oh-btn oh-btn--small oh-btn--ghost" (click)="clearFilters()">✕ Clear</button>
       </div>
-    </div>
 
-    <div class="stat-card">
-      <div class="stat-icon">📊</div>
-      <div class="stat-content">
-        <div class="stat-label">Average Order</div>
-        <div class="stat-value">₹{{ stats.avgOrderValue | number:'1.0-0' }}</div>
-      </div>
     </div>
+  </section>
 
-    <div class="stat-card">
-      <div class="stat-icon">✅</div>
-      <div class="stat-content">
-        <div class="stat-label">Completed</div>
-        <div class="stat-value">{{ stats.completedOrders }}</div>
-      </div>
-    </div>
-  </div>
+  <!-- ═══════ ORDERS TABLE ═══════ -->
+  <section class="oh-table-wrap">
 
-  <!-- ================= ORDERS TABLE ================= -->
-  <div class="table-container">
-    <table class="orders-table">
+    <table class="oh-table" *ngIf="paginatedOrders.length > 0">
       <thead>
         <tr>
           <th>Order #</th>
-          <th>Date & Time</th>
-          <th>Table/Customer</th>
+          <th>Date &amp; Time</th>
+          <th>Customer / Table</th>
           <th>Type</th>
           <th>Items</th>
-          <th>Amount</th>
+          <th class="text-right">Amount</th>
           <th>Status</th>
+          <th>Payment</th>
           <th>Waiter</th>
-          <th>Actions</th>
+          <th class="text-center">Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let order of paginatedOrders; trackBy: trackById" 
-            class="table-row">
-          
-          <td class="order-number">{{ order.orderNumber }}</td>
-          
-          <td class="order-date">
-            <div>{{ order.orderTime | date:'dd MMM yyyy' }}</div>
-            <div class="time-text">{{ order.orderTime | date:'hh:mm a' }}</div>
-          </td>
-          
+        <tr *ngFor="let order of paginatedOrders; trackBy: trackById" class="oh-row">
+
+          <!-- Order # -->
           <td>
-            <div class="customer-info">
-              <strong *ngIf="order.tableName">{{ order.tableName }}</strong>
-              <span>{{ order.customerName || 'Guest' }}</span>
+            <span class="oh-order-num">{{ order.orderNumber }}</span>
+          </td>
+
+          <!-- Date & Time -->
+          <td>
+            <div class="oh-date">
+              <span>{{ order.orderTime | date:'dd MMM yyyy' }}</span>
+              <span class="oh-time">{{ order.orderTime | date:'hh:mm a' }}</span>
             </div>
           </td>
-          
+
+          <!-- Customer / Table -->
           <td>
-            <span class="order-type-badge" [class]="'type-' + order.type.toLowerCase()">
-              {{ order.type === OrderType.DINE_IN ? '🍽️' : order.type === OrderType.TAKEAWAY ? '🥡' : '🛵' }}
-              {{ order.type.replace('_', ' ') }}
+            <div class="oh-customer">
+              <span class="oh-customer__name">{{ order.customerName || 'Guest' }}</span>
+              <span class="oh-customer__table" *ngIf="order.tableName">{{ order.tableName }}</span>
+            </div>
+          </td>
+
+          <!-- Type -->
+          <td>
+            <span class="oh-type" [attr.data-type]="order.type">
+              {{ getTypeIcon(order.type) }} {{ getTypeLabel(order.type) }}
             </span>
           </td>
-          
-          <td class="items-cell">
-            <div class="items-count" [title]="getItemsTooltip(order)">
-              {{ order.items.length }} item(s)
-            </div>
-          </td>
-          
-          <td class="amount-cell">
-            <strong>₹{{ order.totalAmount | number:'1.0-0' }}</strong>
-          </td>
-          
+
+          <!-- Items -->
           <td>
-            <span class="status-badge" [class]="'status-' + order.status.toLowerCase()">
+            <button class="oh-items-btn" (click)="viewOrderDetails(order)">
+              <span>{{ order.items.length }} item(s)</span>
+              <span class="oh-items-peek" *ngIf="order.items.length > 0">
+                {{ order.items[0].quantity }}× {{ order.items[0].name }}<ng-container *ngIf="order.items.length > 1"> +{{ order.items.length - 1 }} more</ng-container>
+              </span>
+            </button>
+          </td>
+
+          <!-- Amount -->
+          <td class="text-right">
+            <span class="oh-amount">₹{{ order.totalAmount | number:'1.0-0' }}</span>
+          </td>
+
+          <!-- Order Status -->
+          <td>
+            <span class="oh-badge" [attr.data-status]="order.status">
               {{ order.status }}
             </span>
           </td>
-          
-          <td>{{ order.waiterName || '-' }}</td>
-          
-          <td class="actions-cell">
-            <button class="btn-icon" (click)="viewOrderDetails(order)" title="View Details">
-              👁️
-            </button>
-            <button class="btn-icon" (click)="printReceipt(order)" title="Print Receipt">
-              🖨️
-            </button>
-          </td>
-        </tr>
 
-        <tr *ngIf="paginatedOrders.length === 0">
-          <td colspan="9" class="empty-row">
-            <div class="empty-state">
-              <span class="empty-icon">📭</span>
-              <p>No orders found</p>
+          <!-- Payment Status -->
+          <td>
+            <span class="oh-badge" [attr.data-payment]="order.paymentStatus ?? 'PENDING'">
+              {{ formatPayment(order.paymentStatus) }}
+            </span>
+            <span class="oh-pay-date" *ngIf="order.paymentDate">
+              {{ order.paymentDate | date:'dd MMM, hh:mm a' }}
+            </span>
+          </td>
+
+          <!-- Waiter -->
+          <td>
+            <span class="oh-waiter">{{ order.waiterName || '—' }}</span>
+          </td>
+
+          <!-- Actions -->
+          <td class="text-center">
+            <div class="oh-actions">
+              <button class="oh-action" title="View Details"   (click)="viewOrderDetails(order)">👁️</button>
+              <button class="oh-action" title="Print Receipt"  (click)="printReceipt(order)">🖨️</button>
+              <button class="oh-action oh-action--danger" title="Delete Order" (click)="deleteOrder(order.id)">🗑️</button>
             </div>
           </td>
+
         </tr>
       </tbody>
     </table>
-  </div>
 
-  <!-- ================= PAGINATION ================= -->
-  <div class="pagination" *ngIf="filteredOrders.length > 0">
-    <div class="pagination-info">
-      Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ filteredOrders.length }} orders
+    <!-- Empty State -->
+    <div class="oh-empty" *ngIf="paginatedOrders.length === 0">
+      <div class="oh-empty__icon">📭</div>
+      <h3>No orders found</h3>
+      <p>{{ hasActiveFilters() ? 'Try adjusting your filters or search terms.' : 'Completed orders will appear here.' }}</p>
+      <button class="oh-btn oh-btn--ghost oh-btn--small" *ngIf="hasActiveFilters()" (click)="clearFilters()">Clear Filters</button>
     </div>
 
-    <div class="pagination-controls">
-      <button 
-        class="pagination-btn"
-        [disabled]="currentPage === 1"
-        (click)="goToPage(1)">
-        ⏮️
-      </button>
+  </section>
 
-      <button 
-        class="pagination-btn"
-        [disabled]="currentPage === 1"
-        (click)="previousPage()">
-        ◀️
-      </button>
+  <!-- ═══════ PAGINATION ═══════ -->
+  <footer class="oh-pagination" *ngIf="filteredOrders.length > pageSize">
+    <span class="oh-pagination__info">
+      {{ startIndex + 1 }}–{{ endIndex }} of {{ filteredOrders.length }} orders
+    </span>
 
-      <span class="page-numbers">
-        <button
-          *ngFor="let page of getPageNumbers()"
-          class="page-btn"
-          [class.active]="page === currentPage"
-          (click)="goToPage(page)">
-          {{ page }}
-        </button>
-      </span>
-
-      <button 
-        class="pagination-btn"
-        [disabled]="currentPage === totalPages"
-        (click)="nextPage()">
-        ▶️
-      </button>
-
-      <button 
-        class="pagination-btn"
-        [disabled]="currentPage === totalPages"
-        (click)="goToPage(totalPages)">
-        ⏭️
-      </button>
+    <div class="oh-pagination__controls">
+      <button class="oh-pg" [disabled]="currentPage === 1"          (click)="goToPage(1)">«</button>
+      <button class="oh-pg" [disabled]="currentPage === 1"          (click)="previousPage()">‹</button>
+      <button
+        *ngFor="let p of getPageNumbers()"
+        class="oh-pg" [class.oh-pg--active]="p === currentPage"
+        (click)="goToPage(p)">{{ p }}</button>
+      <button class="oh-pg" [disabled]="currentPage === totalPages" (click)="nextPage()">›</button>
+      <button class="oh-pg" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">»</button>
     </div>
 
-    <div class="page-size-selector">
-      <label>Show:</label>
+    <div class="oh-pagination__size">
+      <span>Per page</span>
       <select [(ngModel)]="pageSize" (change)="changePageSize()">
         <option [value]="10">10</option>
         <option [value]="25">25</option>
         <option [value]="50">50</option>
         <option [value]="100">100</option>
       </select>
+    </div>
+  </footer>
+
+  <!-- ═══════ ORDER DETAIL MODAL ═══════ -->
+  <div class="oh-modal-backdrop" *ngIf="selectedOrder" (click)="closeDetails()">
+    <div class="oh-modal" (click)="$event.stopPropagation()">
+
+      <div class="oh-modal__header">
+        <div class="oh-modal__header-left">
+          <span class="oh-order-num">{{ selectedOrder.orderNumber }}</span>
+          <span class="oh-badge" [attr.data-status]="selectedOrder.status" style="margin-left:10px">
+            {{ selectedOrder.status }}
+          </span>
+        </div>
+        <button class="oh-modal__close" (click)="closeDetails()">✕</button>
+      </div>
+
+      <div class="oh-modal__body">
+
+        <!-- Meta grid -->
+        <div class="oh-detail-grid">
+          <div class="oh-detail">
+            <label>Date &amp; Time</label>
+            <span>{{ selectedOrder.orderTime | date:'dd MMM yyyy, hh:mm a' }}</span>
+          </div>
+          <div class="oh-detail">
+            <label>Customer</label>
+            <span>{{ selectedOrder.customerName || 'Guest' }}</span>
+          </div>
+          <div class="oh-detail">
+            <label>Table</label>
+            <span>{{ selectedOrder.tableName || '—' }}</span>
+          </div>
+          <div class="oh-detail">
+            <label>Waiter</label>
+            <span>{{ selectedOrder.waiterName || '—' }}</span>
+          </div>
+          <div class="oh-detail">
+            <label>Type</label>
+            <span class="oh-type" [attr.data-type]="selectedOrder.type">
+              {{ getTypeIcon(selectedOrder.type) }} {{ getTypeLabel(selectedOrder.type) }}
+            </span>
+          </div>
+          <div class="oh-detail">
+            <label>Priority</label>
+            <span>{{ selectedOrder.priority }}</span>
+          </div>
+          <div class="oh-detail">
+            <label>Payment Status</label>
+            <span class="oh-badge" [attr.data-payment]="selectedOrder.paymentStatus ?? 'PENDING'">
+              {{ formatPayment(selectedOrder.paymentStatus) }}
+            </span>
+          </div>
+          <div class="oh-detail">
+            <label>Payment Date</label>
+            <span>{{ selectedOrder.paymentDate ? (selectedOrder.paymentDate | date:'dd MMM yyyy, hh:mm a') : '—' }}</span>
+          </div>
+        </div>
+
+        <!-- Items table -->
+        <h3 class="oh-modal__section-title">Items Ordered</h3>
+        <table class="oh-modal__items">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Category</th>
+              <th class="text-center">Qty</th>
+              <th class="text-right">Price</th>
+              <th class="text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedOrder.items">
+              <td>
+                <strong>{{ item.name }}</strong>
+                <span class="oh-item-note" *ngIf="item.notes">{{ item.notes }}</span>
+              </td>
+              <td>{{ item.category || '—' }}</td>
+              <td class="text-center">{{ item.quantity }}</td>
+              <td class="text-right">₹{{ item.price | number:'1.0-0' }}</td>
+              <td class="text-right"><strong>₹{{ item.quantity * item.price | number:'1.0-0' }}</strong></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" class="text-right"><strong>Total</strong></td>
+              <td class="text-right">
+                <strong class="oh-amount">₹{{ selectedOrder.totalAmount | number:'1.0-0' }}</strong>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- Notes -->
+        <div class="oh-detail-notes" *ngIf="selectedOrder.notes">
+          <label>Order Notes</label>
+          <p>{{ selectedOrder.notes }}</p>
+        </div>
+
+      </div>
+
+      <div class="oh-modal__footer">
+        <button class="oh-btn oh-btn--ghost oh-btn--small"
+                (click)="deleteOrder(selectedOrder.id)">🗑️ Delete</button>
+        <button class="oh-btn oh-btn--ghost"
+                (click)="printReceipt(selectedOrder)">🖨️ Print Receipt</button>
+        <button class="oh-btn oh-btn--accent"
+                (click)="closeDetails()">Close</button>
+      </div>
+
     </div>
   </div>
 

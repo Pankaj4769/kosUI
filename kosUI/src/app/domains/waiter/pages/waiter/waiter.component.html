@@ -9,6 +9,50 @@
   </div>
 
   <!-- ══════════════════════════════════════════
+       READY ORDERS PANEL (Gap 3)
+  ══════════════════════════════════════════ -->
+  <div class="w-ready-panel" *ngIf="showReadyPanel">
+    <div class="w-ready-panel__header">
+      <span><mat-icon>notifications_active</mat-icon> Ready to Serve
+        <span class="w-ready-count" *ngIf="unreadCount > 0">({{ unreadCount }})</span>
+      </span>
+      <div>
+        <button class="w-ready-dismiss-all" (click)="dismissAllReady()" *ngIf="unreadCount > 0">
+          Clear all
+        </button>
+        <button class="w-ready-close" (click)="toggleReadyPanel()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div class="w-ready-empty" *ngIf="visibleReadyOrders.length === 0">
+      <mat-icon>check_circle</mat-icon>
+      <p>No pending notifications</p>
+    </div>
+    <div class="w-ready-list">
+      <div class="w-ready-item" *ngFor="let o of visibleReadyOrders; trackBy: trackReady">
+        <div class="w-ready-item__icon"><mat-icon>restaurant</mat-icon></div>
+        <div class="w-ready-item__info">
+          <strong>{{ o.tableName ?? o.orderNumber }}</strong>
+          <span class="w-ready-meta">{{ o.items.length }} item(s) · ₹{{ o.totalAmount }}</span>
+          <span class="w-ready-items-list">{{ getItemsSummary(o) }}</span>
+          <span class="w-ready-time" [class.w-ready-time--warn]="getReadyMinutes(o) >= 5">
+            <mat-icon>timer</mat-icon>
+            {{ getReadyMinutes(o) === 0 ? 'Just now' : getReadyMinutes(o) + ' min ago' }}
+          </span>
+        </div>
+        <button class="w-ready-serve-btn" (click)="markServed(o)" matTooltip="Mark as Served">
+          <mat-icon>check_circle</mat-icon>
+          Served
+        </button>
+        <button class="w-ready-dismiss" (click)="dismissReady(o.id)" matTooltip="Dismiss">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
        VIEW 1 — TABLES DASHBOARD
   ══════════════════════════════════════════ -->
   <ng-container *ngIf="view === 'tables'">
@@ -25,6 +69,11 @@
         </div>
       </div>
       <div class="w-header__right">
+        <!-- Notification bell (Gap 3) -->
+        <button class="w-bell-btn" (click)="toggleReadyPanel()" matTooltip="Order ready notifications">
+          <mat-icon>notifications</mat-icon>
+          <span class="w-bell-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+        </button>
         <div class="w-time">{{ currentTime }}</div>
       </div>
     </header>
@@ -74,6 +123,7 @@
         *ngFor="let t of filteredTables; trackBy: trackTable"
         [class]="'w-table-card--' + t.status"
         [class.priority]="t.isPriority"
+        [class.bill-requested]="t.billRequested"
         (click)="selectTable(t)">
 
         <!-- Status dot -->
@@ -82,6 +132,12 @@
         <!-- Priority badge -->
         <div class="w-table-card__priority" *ngIf="t.isPriority">
           <mat-icon>priority_high</mat-icon>
+        </div>
+
+        <!-- Bill requested badge -->
+        <div class="w-table-card__bill" *ngIf="t.billRequested">
+          <mat-icon>receipt</mat-icon>
+          Bill
         </div>
 
         <!-- Table number -->
@@ -141,7 +197,7 @@
         <mat-icon>arrow_back</mat-icon>
       </button>
       <div class="w-order-header__info">
-        <h2>Table {{ selectedTable.number }}</h2>
+        <h2>{{ selectedTable.name }}</h2>
         <span class="w-order-header__section">{{ selectedTable.section }} · {{ selectedTable.capacity }} seats</span>
       </div>
       <div class="w-order-header__badges">
@@ -152,7 +208,22 @@
           <mat-icon>shopping_cart</mat-icon>
           {{ orderItemCount }}
         </span>
+        <!-- KOT count badge (Gap 5) -->
+        <span class="w-badge w-badge--kot" *ngIf="kotCount > 0">
+          <mat-icon>kitchen</mat-icon>
+          {{ kotCount }} KOT{{ kotCount > 1 ? 's' : '' }} sent
+        </span>
+        <!-- Bill requested badge (Gap 6) -->
+        <span class="w-badge w-badge--bill" *ngIf="billRequested">
+          <mat-icon>receipt</mat-icon>
+          Bill Requested
+        </span>
       </div>
+      <!-- Notification bell in ordering view too -->
+      <button class="w-bell-btn" (click)="toggleReadyPanel()" matTooltip="Ready notifications">
+        <mat-icon>notifications</mat-icon>
+        <span class="w-bell-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+      </button>
       <!-- Mobile tab switcher -->
       <div class="w-mobile-tabs">
         <button [class.active]="mobileTab === 'menu'"  (click)="mobileTab = 'menu'">
@@ -270,6 +341,10 @@
           <div class="w-order-panel__title">
             <mat-icon>receipt_long</mat-icon>
             Current Order
+            <!-- KOT round counter (Gap 5) -->
+            <span class="w-kot-round" *ngIf="kotCount > 0">
+              Round {{ kotCount + 1 }}
+            </span>
           </div>
           <button
             class="w-clear-btn"
@@ -280,8 +355,35 @@
           </button>
         </div>
 
+        <!-- ── In Kitchen: sent KOT rounds ── -->
+        <div class="w-in-kitchen" *ngIf="sessionOrders.length > 0">
+          <div class="w-in-kitchen-header">
+            <mat-icon>kitchen</mat-icon>
+            <span>In Kitchen ({{ sessionOrders.length }} round{{ sessionOrders.length > 1 ? 's' : '' }})</span>
+          </div>
+          <div class="w-kot-card" *ngFor="let ord of sessionOrders; trackBy: trackReady">
+            <div class="w-kot-card-top">
+              <span class="w-kot-round">Round {{ ord.kotRound }}</span>
+              <span class="w-kot-status" [ngClass]="'wks-' + ord.status.toLowerCase()">{{ ord.status }}</span>
+              <span class="w-kot-amt">₹{{ ord.totalAmount }}</span>
+            </div>
+            <div class="w-kot-items">
+              <span class="w-kot-chip" *ngFor="let it of ord.items">{{ it.name }} ×{{ it.quantity }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- KOT sent info banner (Gap 5) -->
+        <div class="w-kot-banner" *ngIf="kotCount > 0 && !hasItems && sessionOrders.length === 0">
+          <mat-icon>kitchen</mat-icon>
+          <div>
+            <strong>{{ kotCount }} KOT{{ kotCount > 1 ? 's' : '' }} sent to kitchen</strong>
+            <span>Add more items to send another KOT</span>
+          </div>
+        </div>
+
         <!-- Empty state -->
-        <div class="w-order-empty" *ngIf="!hasItems">
+        <div class="w-order-empty" *ngIf="!hasItems && kotCount === 0 && sessionOrders.length === 0">
           <mat-icon>add_shopping_cart</mat-icon>
           <p>No items added yet</p>
           <span>Tap items in the menu to add them</span>
@@ -339,38 +441,45 @@
           <input
             type="text"
             [(ngModel)]="orderNote"
-            placeholder="Order-level note (e.g. birthday celebration)..." />
+            placeholder="Order note (e.g. birthday table, extra napkins)..." />
         </div>
 
         <!-- Summary -->
         <div class="w-order-summary" *ngIf="hasItems">
           <div class="w-summary-row">
-            <span>Items</span>
-            <span>{{ orderItemCount }}</span>
+            <span>Items</span><span>{{ orderItemCount }}</span>
           </div>
           <div class="w-summary-row">
-            <span>Subtotal</span>
-            <span>₹{{ orderTotal }}</span>
-          </div>
-          <div class="w-summary-row">
-            <span>Tax (5%)</span>
-            <span>₹{{ (orderTotal * 0.05) | number: '1.0-0' }}</span>
+            <span>Subtotal</span><span>₹{{ orderTotal }}</span>
           </div>
           <div class="w-summary-row total">
-            <span>Total</span>
+            <span>Approx. Total</span>
             <span>₹{{ (orderTotal * 1.05) | number: '1.0-0' }}</span>
           </div>
         </div>
 
         <!-- Action buttons -->
         <div class="w-order-actions">
+          <!-- Send KOT (Gap 5: stays on page after sending) -->
           <button
             class="w-action-btn w-action-btn--kot"
-            [disabled]="!hasItems || kotSent"
+            [disabled]="!hasItems"
             (click)="sendKOT()">
             <mat-icon>print</mat-icon>
-            <span>{{ kotSent ? 'KOT Sent ✓' : 'Send KOT' }}</span>
+            <span>{{ kotCount === 0 ? 'Send KOT' : 'Send KOT #' + (kotCount + 1) }}</span>
           </button>
+
+          <!-- Request Bill (Gap 6) -->
+          <button
+            class="w-action-btn w-action-btn--bill"
+            [class.bill-sent]="billRequested"
+            [disabled]="billRequested"
+            (click)="requestBill()">
+            <mat-icon>{{ billRequested ? 'check_circle' : 'receipt' }}</mat-icon>
+            <span>{{ billRequested ? 'Bill Requested' : 'Request Bill' }}</span>
+          </button>
+
+          <!-- Hold -->
           <button
             class="w-action-btn w-action-btn--hold"
             [disabled]="!hasItems"

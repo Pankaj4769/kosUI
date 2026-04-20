@@ -289,7 +289,7 @@ export class CustomerOrderComponent implements OnInit, OnDestroy {
       },
       error: () => {
         // Graceful fallback: show success even without backend
-        this.orderNumber   = `KOT-${Date.now().toString().slice(-6)}`;
+        this.orderNumber   = `ORD-${Date.now().toString().slice(-6)}`;
         this.estimatedMins = 15 + Math.floor(this.cart.length * 2);
         this.submitting    = false;
         this.step          = 'done';

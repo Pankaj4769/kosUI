@@ -174,6 +174,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   unreadNotifications = 0;
 
+  /** READY orders waiting to be served — owner oversight panel */
+  pendingDeliveries: Order[] = [];
+
   constructor(
     private inventoryService: InventoryService,
     private orderManagementService: OrderManagementService,
@@ -227,6 +230,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
           console.error('Error loading orders:', err);
           this.addAlert('error', 'Data Error', 'Failed to load order data');
         }
+      });
+
+    // Track READY orders for owner oversight panel
+    this.orderManagementService.readyOrders$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(orders => {
+        this.pendingDeliveries = orders.sort((a, b) =>
+          (a.readyAt?.getTime() ?? 0) - (b.readyAt?.getTime() ?? 0)
+        );
+        this.cdr.markForCheck();
       });
   }
 
@@ -817,4 +830,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   trackById(index: number, item: any): any { return item.id || index; }
+
+  getPendingMinutes(order: Order): number {
+    if (!order.readyAt) return 0;
+    return Math.floor((this.currentTime.getTime() - order.readyAt.getTime()) / 60000);
+  }
+
+  getPendingUrgency(order: Order): 'ok' | 'warn' | 'critical' {
+    const mins = this.getPendingMinutes(order);
+    if (mins >= 10) return 'critical';
+    if (mins >= 5)  return 'warn';
+    return 'ok';
+  }
+
+  getDeliveryItemsSummary(order: Order): string {
+    const names = order.items.slice(0, 3).map(i => i.name);
+    const extra = order.items.length > 3 ? ` +${order.items.length - 3}` : '';
+    return names.join(', ') + extra;
+  }
 }

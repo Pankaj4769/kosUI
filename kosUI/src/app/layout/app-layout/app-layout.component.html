@@ -11,6 +11,12 @@
   <!-- APP pages — sidebar + header + content -->
   <ng-container *ngIf="!isAuthPage">
 
+    <!-- Mobile backdrop — closes sidebar when tapped -->
+    <div class="sidebar-backdrop"
+         *ngIf="!layout.isSidebarCollapsed"
+         (click)="layout.collapse()"
+         aria-hidden="true"></div>
+
     <!-- Sidebar spacer wrapper — holds 72px/250px in flex flow, never resizes on hover -->
     <div class="sidebar-wrapper" [class.collapsed]="layout.isSidebarCollapsed">
       <app-sidebar></app-sidebar>
@@ -30,9 +36,24 @@
 
 <!-- ── Global Footer — visible on every page ── -->
 <footer class="app-footer">
-  <span class="footer-copy">
-    &copy; {{ currentYear }}&nbsp;
-    <span class="ft-tech">Tech</span><span class="ft-two">2</span><span class="ft-kitchen">Kitchen</span>.
-    All rights reserved.
-  </span>
+  <div class="footer-left">
+    <span class="footer-brand">
+      <span class="ft-tech">Tech</span><span class="ft-two">2</span><span class="ft-kitchen">Kitchen</span>
+    </span>
+    <span class="footer-sep">·</span>
+    <span class="footer-copy">&copy; {{ currentYear }} All rights reserved.</span>
+  </div>
+  <div class="footer-dev">
+    <span class="footer-dev-label">Developed by</span>
+    <a class="footer-dev-brand"
+       href="https://tech2software.com"
+       target="_blank"
+       rel="noopener noreferrer">Tech<span class="footer-dev-accent">2</span>Software</a>
+  </div>
+  <div class="footer-links">
+    <a class="footer-link" href="#">Privacy</a>
+    <a class="footer-link" href="#">Terms</a>
+    <a class="footer-link" href="#">Support</a>
+    <span class="footer-version">v0.3.0</span>
+  </div>
 </footer>

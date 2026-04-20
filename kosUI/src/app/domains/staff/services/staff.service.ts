@@ -58,7 +58,7 @@ interface EmployeeDTO {
 })
 export class StaffService {
   private readonly EM_API = `${EMPLOYEE_MGMT_URL}/api/employees`;
-  private readonly KOS_STAFF_API = `${BASE_URL}/auth/staff`;
+  private readonly KOS_STAFF_API = `${EMPLOYEE_MGMT_URL}/auth/staff`;
 
   private staffSubject = new BehaviorSubject<StaffMember[]>([]);
   public staff$ = this.staffSubject.asObservable();

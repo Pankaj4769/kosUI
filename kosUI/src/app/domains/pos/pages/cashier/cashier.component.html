@@ -48,6 +48,21 @@
         <div class="shortcut-hint"><kbd>Ctrl+N</kbd> New Order</div>
         <div class="shortcut-hint"><kbd>Esc</kbd> Close Popups</div>
 
+        <!-- KOT count badge -->
+        <div class="kot-sent-badge" *ngIf="kotCount > 0" matTooltip="KOT rounds sent">
+          <mat-icon>kitchen</mat-icon> KOT ×{{ kotCount }}
+        </div>
+
+        <!-- KOT sent indicator -->
+        <div class="kot-sent-badge kot-sent-badge--active" *ngIf="kotSent" matTooltip="KOT sent — kitchen has this order">
+          <mat-icon>local_fire_department</mat-icon> In Kitchen
+        </div>
+
+        <!-- Tax rate chip -->
+        <div class="tax-chip" matTooltip="Current tax rate">
+          Tax {{ taxRate }}%
+        </div>
+
       </div>
 
       <!-- Menu Panel fills remaining left column height -->
@@ -66,7 +81,8 @@
         [selectedTable]="selectedTable"
         [cartItemCount]="itemCount"
         (orderTypeChange)="onOrderTypeChange($event)"
-        (tableSelect)="onTableSelected($event)">
+        (tableSelect)="onTableSelected($event)"
+        (waiterChange)="onWaiterAssigned($event)">
       </app-order-sidebar>
 
       <app-cart-panel
@@ -77,9 +93,13 @@
         [total]="total"
         [orderType]="orderType"
         [tableNumber]="selectedTable"
+        [sessionOrders]="sessionOrders"
+        [sessionOrdersTotal]="sessionOrdersTotal"
+        [kotRound]="kotCount"
         (cartUpdate)="onCartUpdate($event)"
         (itemRemove)="onItemRemove($event)"
-        (checkout)="openPayment()">
+        (checkout)="openPayment()"
+        (kotRequested)="printKOT()">
       </app-cart-panel>
 
     </aside>
@@ -245,7 +265,7 @@
 <!-- ===== PAYMENT POPUP ===== -->
 <app-payment-popup
   *ngIf="showPayment"
-  [total]="total"
+  [total]="billTotal"
   [subtotal]="subtotal"
   [tax]="tax"
   [discount]="discount"

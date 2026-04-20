@@ -13,6 +13,12 @@ import { Order, OrderStatus, OrderPriority, OrderType } from '../models/order.mo
 
 type FilterType = OrderStatus | 'ALL';
 
+interface ReadyNotification {
+  id: number;
+  order: Order;
+  timestamp: Date;
+}
+
 @Component({
   selector: 'app-live-orders',
   standalone: true,
@@ -31,6 +37,11 @@ export class LiveOrdersComponent implements OnInit, OnDestroy {
   filteredOrders: Order[] = [];
   filter: FilterType = 'ALL';
 
+  /* ── Notification queue ── */
+  notifications: ReadyNotification[] = [];
+  private notificationIdCounter = 0;
+  private notificationAudio: HTMLAudioElement | null = null;
+
   /* ── Stats object ── */
   stats = {
     total:        0,
@@ -40,7 +51,6 @@ export class LiveOrdersComponent implements OnInit, OnDestroy {
     served:       0,
     totalRevenue: 0,
     avgPrepTime:  0,
-    // ✅ NEW — order-type counts
     dineIn:    0,
     takeaway:  0,
     delivery:  0
@@ -66,6 +76,14 @@ export class LiveOrdersComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       });
 
+    // Listen for "Order Ready" events from SSE
+    this.orderManagementService.orderReady$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(order => {
+        this.showReadyNotification(order);
+        this.cdr.markForCheck();
+      });
+
     // Auto-refresh every 5 s (elapsed-time display)
     interval(5000)
       .pipe(takeUntil(this.destroy$))
@@ -75,6 +93,56 @@ export class LiveOrdersComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /* ═══════════════════════════════════════════
+     ORDER READY NOTIFICATIONS
+  ═══════════════════════════════════════════ */
+  private showReadyNotification(order: Order): void {
+    const notification: ReadyNotification = {
+      id: ++this.notificationIdCounter,
+      order,
+      timestamp: new Date()
+    };
+    this.notifications = [notification, ...this.notifications];
+
+    // Play alert sound
+    this.playNotificationSound();
+
+    // Auto-dismiss after 15 seconds
+    const nId = notification.id;
+    setTimeout(() => this.dismissNotification(nId), 15000);
+  }
+
+  dismissNotification(id: number): void {
+    this.notifications = this.notifications.filter(n => n.id !== id);
+    this.cdr.markForCheck();
+  }
+
+  private playNotificationSound(): void {
+    try {
+      // Use Web Audio API to generate a pleasant chime (no external file needed)
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 chord
+
+      frequencies.forEach((freq, i) => {
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.15);
+
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime + i * 0.15);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.15 + 0.8);
+
+        oscillator.start(audioCtx.currentTime + i * 0.15);
+        oscillator.stop(audioCtx.currentTime + i * 0.15 + 0.8);
+      });
+    } catch (e) {
+      // Audio not available — fail silently
+    }
   }
 
   /* ═══════════════════════════════════════════

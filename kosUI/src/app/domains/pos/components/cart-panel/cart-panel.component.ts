@@ -32,6 +32,7 @@ import { TableService }   from '../../services/table.service';
 
 // Models
 import { CartItem } from '../../models/cart-item.model';
+import { Order, OrderStatus } from '../../../order/models/order.model';
 
 /* ================= TYPES ================= */
 
@@ -69,19 +70,25 @@ export class CartPanelComponent implements OnInit, OnChanges {
 
   /* ================= INPUTS ================= */
 
-  @Input() cart: CartItem[]           = [];
-  @Input() subtotal: number           = 0;
-  @Input() tax: number                = 0;
-  @Input() discount: number           = 0;
-  @Input() total: number              = 0;
-  @Input() orderType: OrderType       = 'Dine-In';
-  @Input() tableNumber: number | null = null;
+  @Input() cart: CartItem[]              = [];
+  @Input() subtotal: number              = 0;
+  @Input() tax: number                   = 0;
+  @Input() discount: number              = 0;
+  @Input() total: number                 = 0;
+  @Input() orderType: OrderType          = 'Dine-In';
+  @Input() tableNumber: number | null    = null;
+
+  // Session orders — KOT rounds already sent to kitchen
+  @Input() sessionOrders: Order[]        = [];
+  @Input() sessionOrdersTotal: number    = 0;
+  @Input() kotRound: number              = 0;
 
   /* ================= OUTPUTS ================= */
 
-  @Output() cartUpdate = new EventEmitter<CartItem[]>();
-  @Output() itemRemove = new EventEmitter<number>();
-  @Output() checkout   = new EventEmitter<void>();
+  @Output() cartUpdate    = new EventEmitter<CartItem[]>();
+  @Output() itemRemove    = new EventEmitter<number>();
+  @Output() checkout      = new EventEmitter<void>();
+  @Output() kotRequested  = new EventEmitter<void>();
 
   /* ================= STATE ================= */
 
@@ -147,7 +154,8 @@ export class CartPanelComponent implements OnInit, OnChanges {
   }
 
   get canCheckout(): boolean {
-    return this.hasItems && this.total > 0;
+    return (this.hasItems || this.sessionOrders.length > 0)
+      && (this.total + this.sessionOrdersTotal) > 0;
   }
 
   get requiresCustomerInfo(): boolean {
@@ -298,17 +306,7 @@ export class CartPanelComponent implements OnInit, OnChanges {
   }
 
   openPayment(): void {
-    if (!this.hasItems) {
-      this.showNotification('Cart is empty', 'error');
-      return;
-    }
-    if (this.requiresCustomerInfo) {
-      this.showCustomerInfo = true;
-      this.cdr.markForCheck();
-      return;
-    }
-    this.showPayment = true;
-    this.cdr.markForCheck();
+    this.proceedToCheckout();
   }
 
   onCustomerInfoSubmit(formData: CustomerInfo): void {
@@ -381,15 +379,10 @@ export class CartPanelComponent implements OnInit, OnChanges {
 
   printKOT(): void {
     if (!this.hasItems) {
-      this.showNotification('Cart is empty', 'error');
+      this.showNotification('No new items to send', 'error');
       return;
     }
-    console.log('Printing KOT...');
-    console.log('Order Number:', this.orderNumber);
-    console.log('Table:', this.tableNumber);
-    console.log('Items:', this.cart);
-    this.showNotification('KOT sent to kitchen', 'success');
-    // TODO: wire up actual KOT print service
+    this.kotRequested.emit();
   }
 
   saveOrder(): void {

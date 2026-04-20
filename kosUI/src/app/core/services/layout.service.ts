@@ -21,6 +21,10 @@ export class LayoutService {
   }
 
   init(): void {
+    if (typeof window !== 'undefined' && window.innerWidth <= 767) {
+      this.isSidebarCollapsed = true;
+      return;
+    }
     this.isSidebarCollapsed = localStorage.getItem('sidebar') === 'true';
   }
 }

@@ -360,11 +360,17 @@ export class TableDashboardComponent implements OnInit, OnDestroy {
 
   confirmAssignCaptain(): void {
     if (this.tableToAssign && this.selectedCaptain) {
-      this.tableService.occupyTable(
-        this.tableToAssign.id, 
-        this.tableToAssign.currentOrder || `ORD-${Date.now()}`, 
-        this.selectedCaptain
-      );
+      if (this.tableToAssign.status === 'occupied') {
+        // Table already occupied — just update the waiter
+        this.tableService.assignWaiter(this.tableToAssign.id, this.selectedCaptain);
+      } else {
+        // Table not yet occupied — mark as occupied with this waiter
+        this.tableService.occupyTable(
+          this.tableToAssign.id,
+          this.tableToAssign.currentOrder || `ORD-${Date.now()}`,
+          this.selectedCaptain
+        );
+      }
       this.closeAssignCaptainModal();
     }
   }

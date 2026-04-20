@@ -1,193 +1,221 @@
-<div class="live-orders">
+<div class="lo">
 
-  <!-- ================= KPI SUMMARY ================= -->
-  <div class="summary">
-
-    <div class="summary-card pending" title="Pending Orders">
-      <span class="label">⏳ Pending</span>
-      <strong>{{ stats.pending }}</strong>
+  <div class="lo-notifications" *ngIf="notifications.length > 0">
+    <div class="lo-toast" *ngFor="let n of notifications" (click)="dismissNotification(n.id)">
+      <div class="lo-toast__body">
+        <strong>Order Ready</strong>
+        <span>{{ n.order.orderNumber }} / {{ n.order.tableName || n.order.tableId || 'Walk-in' }}</span>
+        <span>{{ n.order.items.length }} item(s) / &#8377;{{ n.order.totalAmount | number:'1.0-0' }}</span>
+      </div>
+      <button class="lo-toast__close" (click)="dismissNotification(n.id); $event.stopPropagation()">x</button>
     </div>
-
-    <div class="summary-card preparing" title="Orders Being Prepared">
-      <span class="label">👨‍🍳 Preparing</span>
-      <strong>{{ stats.preparing }}</strong>
-    </div>
-
-    <div class="summary-card ready" title="Ready for Pickup">
-      <span class="label">✅ Ready</span>
-      <strong>{{ stats.ready }}</strong>
-    </div>
-
-    <div class="summary-card served" title="Served Orders">
-      <span class="label">🍽️ Served</span>
-      <strong>{{ stats.served }}</strong>
-    </div>
-
-    <div class="summary-card revenue" title="Total Revenue">
-      <span class="label">💰 Revenue</span>
-      <strong>₹ {{ stats.totalRevenue | number:'1.0-0' }}</strong>
-    </div>
-
-    <div class="summary-card avgtime" title="Average Prep Time">
-      <span class="label">⏱️ Avg Time</span>
-      <strong>{{ stats.avgPrepTime }} min</strong>
-    </div>
-
   </div>
 
-  <!-- ================= FILTER BAR ================= -->
-  <div class="filters" role="tablist" aria-label="Order status filters">
+  <header class="lo-header">
+    <div class="lo-header__left">
+      <h1 class="lo-title">Live Orders</h1>
+      <span class="lo-subtitle">{{ filteredOrders.length }} live order(s) in view</span>
+    </div>
 
-    <button
-      role="tab"
-      type="button"
-      (click)="setFilter('ALL')"
-      [attr.aria-selected]="filter === 'ALL'"
-      [class.active]="filter === 'ALL'">
-      All <span class="count">({{ stats.total }})</span>
-    </button>
+    <div class="lo-header__right">
+      <button class="lo-btn lo-btn--ghost" (click)="refreshOrders()">
+        <span class="lo-btn__icon">↻</span> Refresh
+      </button>
+      <div class="lo-pill">Active Queue: {{ stats.total }}</div>
+    </div>
+  </header>
 
-    <button
-      role="tab"
-      type="button"
-      (click)="setFilter(OrderStatus.PENDING)"
-      [attr.aria-selected]="filter === OrderStatus.PENDING"
-      [class.active]="filter === OrderStatus.PENDING">
-      Pending <span class="count">({{ stats.pending }})</span>
-    </button>
+  <section class="lo-stats">
+    <article class="lo-stat lo-stat--pending">
+      <div class="lo-stat__body">
+        <span class="lo-stat__val">{{ stats.pending }}</span>
+        <span class="lo-stat__lbl">Pending</span>
+      </div>
+    </article>
 
-    <button
-      role="tab"
-      type="button"
-      (click)="setFilter(OrderStatus.PREPARING)"
-      [attr.aria-selected]="filter === OrderStatus.PREPARING"
-      [class.active]="filter === OrderStatus.PREPARING">
-      Preparing <span class="count">({{ stats.preparing }})</span>
-    </button>
+    <article class="lo-stat lo-stat--preparing">
+      <div class="lo-stat__body">
+        <span class="lo-stat__val">{{ stats.preparing }}</span>
+        <span class="lo-stat__lbl">Preparing</span>
+      </div>
+    </article>
 
-    <button
-      role="tab"
-      type="button"
-      (click)="setFilter(OrderStatus.READY)"
-      [attr.aria-selected]="filter === OrderStatus.READY"
-      [class.active]="filter === OrderStatus.READY">
-      Ready <span class="count">({{ stats.ready }})</span>
-    </button>
+    <article class="lo-stat lo-stat--ready">
+      <div class="lo-stat__body">
+        <span class="lo-stat__val">{{ stats.ready }}</span>
+        <span class="lo-stat__lbl">Ready</span>
+      </div>
+    </article>
 
-    <button
-      role="tab"
-      type="button"
-      (click)="setFilter(OrderStatus.SERVED)"
-      [attr.aria-selected]="filter === OrderStatus.SERVED"
-      [class.active]="filter === OrderStatus.SERVED">
-      Served <span class="count">({{ stats.served }})</span>
-    </button>
+    <article class="lo-stat lo-stat--served">
+      <div class="lo-stat__body">
+        <span class="lo-stat__val">{{ stats.served }}</span>
+        <span class="lo-stat__lbl">Served</span>
+      </div>
+    </article>
 
-  </div>
+    <article class="lo-stat lo-stat--revenue">
+      <div class="lo-stat__body">
+        <span class="lo-stat__val">&#8377;{{ stats.totalRevenue | number:'1.0-0' }}</span>
+        <span class="lo-stat__lbl">Revenue</span>
+      </div>
+    </article>
 
-  <!-- ================= ORDERS GRID ================= -->
-  <div class="orders-grid">
+    <article class="lo-stat lo-stat--time">
+      <div class="lo-stat__body">
+        <span class="lo-stat__val">{{ stats.avgPrepTime }} min</span>
+        <span class="lo-stat__lbl">Avg Prep Time</span>
+      </div>
+    </article>
+  </section>
 
-    <div
+  <section class="lo-toolbar">
+    <div class="lo-toolbar__head">
+      <div class="lo-toolbar__title">
+        <span>Status Filters</span>
+      </div>
+      <div class="lo-queue-types">
+        <span class="lo-queue-chip">Dine-In {{ stats.dineIn }}</span>
+        <span class="lo-queue-chip">Takeaway {{ stats.takeaway }}</span>
+        <span class="lo-queue-chip">Delivery {{ stats.delivery }}</span>
+      </div>
+    </div>
+
+    <div class="lo-filters" role="tablist" aria-label="Order status filters">
+      <button
+        role="tab"
+        type="button"
+        (click)="setFilter('ALL')"
+        [attr.aria-selected]="filter === 'ALL'"
+        [class.active]="filter === 'ALL'">
+        All <span class="count">({{ stats.total }})</span>
+      </button>
+
+      <button
+        role="tab"
+        type="button"
+        (click)="setFilter(OrderStatus.PENDING)"
+        [attr.aria-selected]="filter === OrderStatus.PENDING"
+        [class.active]="filter === OrderStatus.PENDING">
+        Pending <span class="count">({{ stats.pending }})</span>
+      </button>
+
+      <button
+        role="tab"
+        type="button"
+        (click)="setFilter(OrderStatus.PREPARING)"
+        [attr.aria-selected]="filter === OrderStatus.PREPARING"
+        [class.active]="filter === OrderStatus.PREPARING">
+        Preparing <span class="count">({{ stats.preparing }})</span>
+      </button>
+
+      <button
+        role="tab"
+        type="button"
+        (click)="setFilter(OrderStatus.READY)"
+        [attr.aria-selected]="filter === OrderStatus.READY"
+        [class.active]="filter === OrderStatus.READY">
+        Ready <span class="count">({{ stats.ready }})</span>
+      </button>
+
+      <button
+        role="tab"
+        type="button"
+        (click)="setFilter(OrderStatus.SERVED)"
+        [attr.aria-selected]="filter === OrderStatus.SERVED"
+        [class.active]="filter === OrderStatus.SERVED">
+        Served <span class="count">({{ stats.served }})</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="lo-orders">
+    <article
       *ngFor="let order of filteredOrders; trackBy: trackById"
-      class="order-card"
-      [class.priority-urgent]="order.priority === OrderPriority.URGENT"
-      [class.priority-high]="order.priority === OrderPriority.HIGH"
-      [class.status-pending]="order.status === OrderStatus.PENDING"
-      [class.status-preparing]="order.status === OrderStatus.PREPARING"
-      [class.status-ready]="order.status === OrderStatus.READY">
+      class="lo-card"
+      [class.lo-card--urgent]="order.priority === OrderPriority.URGENT"
+      [class.lo-card--high]="order.priority === OrderPriority.HIGH"
+      [class.lo-card--pending]="order.status === OrderStatus.PENDING"
+      [class.lo-card--preparing]="order.status === OrderStatus.PREPARING"
+      [class.lo-card--ready]="order.status === OrderStatus.READY">
 
-      <!-- Order Header -->
-      <div class="order-header">
-        <div class="order-number">{{ order.orderNumber }}</div>
-        <div class="order-type" [class]="'type-' + order.type.toLowerCase()">
-          {{ order.type === OrderType.DINE_IN ? '🍽️' : order.type === OrderType.TAKEAWAY ? '🥡' : '🛵' }}
-          {{ order.type.replace('_', ' ') }}
+      <div class="lo-card__header">
+        <div class="lo-card__header-main">
+          <span class="lo-order-num">{{ order.orderNumber }}</span>
+          <div class="lo-card__tags">
+            <span class="lo-type" [attr.data-type]="order.type">{{ getOrderTypeLabel(order.type) }}</span>
+            <span class="lo-badge" [attr.data-status]="order.status">{{ order.status }}</span>
+          </div>
         </div>
+        <span class="lo-priority" [attr.data-priority]="order.priority">{{ getPriorityLabel(order.priority) }}</span>
       </div>
 
-      <!-- Table/Customer Info -->
-      <div class="order-info">
-        <div class="info-row" *ngIf="order.tableName">
-          <span class="label">Table:</span>
+      <div class="lo-card__info">
+        <div class="lo-info" *ngIf="order.tableName">
+          <span class="lo-info__label">Table</span>
           <strong>{{ order.tableName }}</strong>
         </div>
-        <div class="info-row" *ngIf="order.customerName">
-          <span class="label">Customer:</span>
+        <div class="lo-info" *ngIf="order.customerName">
+          <span class="lo-info__label">Customer</span>
           <span>{{ order.customerName }}</span>
         </div>
-        <div class="info-row" *ngIf="order.waiterName">
-          <span class="label">Waiter:</span>
+        <div class="lo-info" *ngIf="order.waiterName">
+          <span class="lo-info__label">Waiter</span>
           <span>{{ order.waiterName }}</span>
         </div>
       </div>
 
-      <!-- Items List -->
-      <div class="order-items">
-        <div class="item" *ngFor="let item of order.items">
-          <span class="item-qty">{{ item.quantity }}x</span>
-          <span class="item-name">{{ item.name }}</span>
-          <span class="item-price">₹{{ item.price }}</span>
+      <div class="lo-items">
+        <div class="lo-item" *ngFor="let item of order.items">
+          <span class="lo-item__qty">{{ item.quantity }}x</span>
+          <span class="lo-item__name">{{ item.name }}</span>
+          <span class="lo-item__price">&#8377;{{ item.price | number:'1.0-0' }}</span>
         </div>
       </div>
 
-      <!-- Order Meta -->
-      <div class="order-meta">
-        <div class="meta-item">
-          <span class="meta-label">Time:</span>
-          <span class="meta-value" [class]="getTimeClass(order)">
-            {{ getElapsedTime(order) }}
-          </span>
+      <div class="lo-card__meta">
+        <div class="lo-meta">
+          <span class="lo-meta__label">Elapsed</span>
+          <span class="lo-meta__value" [class]="getTimeClass(order)">{{ getElapsedTime(order) }}</span>
         </div>
-        <div class="meta-item">
-          <span class="meta-label">Total:</span>
-          <strong class="meta-value">₹{{ order.totalAmount }}</strong>
+        <div class="lo-meta lo-meta--amount">
+          <span class="lo-meta__label">Total</span>
+          <strong class="lo-meta__amount">&#8377;{{ order.totalAmount | number:'1.0-0' }}</strong>
         </div>
       </div>
 
-      <!-- Priority Badge -->
-      <div class="priority-badge" [class]="'priority-' + order.priority.toLowerCase()">
-        {{ getPriorityLabel(order.priority) }}
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="order-actions">
+      <div class="lo-actions">
         <button
           *ngIf="order.status === OrderStatus.PENDING"
-          class="btn btn-primary btn-sm"
+          class="lo-btn lo-btn--accent lo-btn--small"
           (click)="markAsPreparing(order)">
           Start Preparing
         </button>
 
         <button
           *ngIf="order.status === OrderStatus.PREPARING"
-          class="btn btn-success btn-sm"
+          class="lo-btn lo-btn--primary lo-btn--small"
           (click)="markAsReady(order)">
           Mark Ready
         </button>
 
-        <button
-          *ngIf="order.status === OrderStatus.READY"
-          class="btn btn-info btn-sm"
-          (click)="markAsServed(order)">
-          Mark Served
-        </button>
+        <!-- READY orders: waiter marks as Served via notification panel -->
+        <span *ngIf="order.status === OrderStatus.READY" class="lo-ready-note">
+          Awaiting waiter pickup
+        </span>
 
         <button
-          class="btn btn-danger btn-sm"
+          class="lo-btn lo-btn--danger lo-btn--small"
           (click)="cancelOrder(order)">
           Cancel
         </button>
       </div>
+    </article>
 
+    <div class="lo-empty" *ngIf="filteredOrders.length === 0">
+      <strong>No orders found</strong>
+      <p>Try another status filter or wait for new orders to enter the queue.</p>
     </div>
-
-    <!-- Empty State -->
-    <div class="empty-state" *ngIf="filteredOrders.length === 0">
-      <span class="icon">📋</span>
-      <span class="text">No orders found</span>
-    </div>
-
-  </div>
+  </section>
 
 </div>

@@ -152,6 +152,7 @@ export const routes: Routes = [
       // ✅ WAITER MODULE
       { path: 'waiter', title: 'Waiter | Kitchen Book', component: WaiterComponent, canActivate: [AuthGuard] },
 
+
       // ✅ REPORTS MODULE
       {
         path: 'reports',

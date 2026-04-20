@@ -307,7 +307,7 @@
 
     <div class="popup-sort-section">
       <span class="popup-sort-label">Sort by:</span>
-      <div class="popup-sort-buttons">
+      <div class="popup-sort-buttons" style="flex:1">
         <button
           class="popup-sort-btn"
           [class.active]="sortBy === 'table'"
@@ -333,9 +333,21 @@
           Amount
         </button>
       </div>
+      <!-- Grid / List toggle -->
+      <div class="popup-view-toggle">
+        <button class="popup-view-btn" [class.active]="tableViewMode === 'list'"
+          (click)="tableViewMode = 'list'" type="button" matTooltip="List view">
+          <mat-icon>view_list</mat-icon>
+        </button>
+        <button class="popup-view-btn" [class.active]="tableViewMode === 'grid'"
+          (click)="tableViewMode = 'grid'" type="button" matTooltip="Grid view">
+          <mat-icon>grid_view</mat-icon>
+        </button>
+      </div>
     </div>
 
-    <div class="popup-table-list">
+    <!-- LIST VIEW -->
+    <div class="popup-table-list" *ngIf="tableViewMode === 'list'">
 
       <div
         *ngFor="let table of filteredTables; trackBy: trackByTableId"
@@ -387,28 +399,101 @@
 
     </div>
 
+    <!-- GRID VIEW -->
+    <div class="popup-table-grid" *ngIf="tableViewMode === 'grid'">
+      <div
+        *ngFor="let table of filteredTables; trackBy: trackByTableId"
+        class="popup-grid-card"
+        [class.table-available]="table.status === 'available'"
+        [class.table-occupied]="table.status === 'occupied'"
+        [class.table-reserved]="table.status === 'reserved'"
+        [class.table-cleaning]="table.status === 'cleaning'"
+        [class.selected]="tempSelectedTable?.id === table.id"
+        (click)="selectTableInPopup(table)">
+        <div class="pgc-num">{{ table.number }}</div>
+        <div class="pgc-cap"><mat-icon>people</mat-icon>{{ table.capacity }}</div>
+        <div class="pgc-status">{{ table.status | titlecase }}</div>
+        <div class="pgc-waiter" *ngIf="table.waiter">{{ table.waiter }}</div>
+      </div>
+      <div class="popup-no-results" *ngIf="filteredTables.length === 0">
+        <mat-icon>search_off</mat-icon><p>No tables found</p>
+      </div>
+    </div>
+
     <div class="popup-footer">
       <p class="popup-footer-info">
         Showing {{ filteredTables.length }} table{{ filteredTables.length !== 1 ? 's' : '' }}
-        <span *ngIf="getAvailableCountInPopup() > 0">
-          ({{ getAvailableCountInPopup() }} available)
-        </span>
+        <span *ngIf="getAvailableCountInPopup() > 0">({{ getAvailableCountInPopup() }} available)</span>
       </p>
       <div class="popup-actions-new">
-        <button
-          class="popup-action-btn cancel"
-          (click)="closeTableSelectorPopup()"
-          type="button">
-          <mat-icon>close</mat-icon>
-          <span>Cancel</span>
+        <button class="popup-action-btn cancel" (click)="closeTableSelectorPopup()" type="button">
+          <mat-icon>close</mat-icon><span>Cancel</span>
         </button>
+        <button class="popup-action-btn primary" [disabled]="!tempSelectedTable"
+          (click)="openWaiterPopup()" type="button">
+          <mat-icon>arrow_forward</mat-icon><span>Next: Assign Waiter</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== WAITER ASSIGNMENT POPUP (step 2) ===== -->
+<div class="table-popup-overlay" *ngIf="showWaiterPopup" (click)="closeWaiterPopup()" tabindex="0">
+  <div class="table-popup-container waiter-popup-container" (click)="$event.stopPropagation()">
+
+    <div class="table-popup-header">
+      <div class="popup-header-left">
+        <mat-icon>person</mat-icon>
+        <div>
+          <h2>Assign Waiter</h2>
+          <span class="popup-sub">Table {{ tempSelectedTable?.number }} · {{ tempSelectedTable?.capacity }} seats</span>
+        </div>
+      </div>
+      <button class="popup-close-btn" (click)="closeWaiterPopup()" type="button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    </div>
+
+    <!-- Waiter grid -->
+    <div class="waiter-grid">
+      <div class="waiter-grid-label">Select a waiter:</div>
+      <div class="waiter-grid-cards">
         <button
-          class="popup-action-btn primary"
-          [disabled]="!tempSelectedTable"
-          (click)="confirmTableSelection()"
+          *ngFor="let w of availableWaiters"
+          class="waiter-card"
+          [class.selected]="tempWaiterName === w"
+          (click)="tempWaiterName = w"
           type="button">
-          <mat-icon>check</mat-icon>
-          <span>Select Table</span>
+          <mat-icon>person</mat-icon>
+          <span>{{ w }}</span>
+        </button>
+        <button class="waiter-card waiter-card--me"
+          [class.selected]="tempWaiterName === (availableWaiters[0] || '')"
+          (click)="autoAssignWaiter()" type="button">
+          <mat-icon>person_pin</mat-icon>
+          <span>Me</span>
+        </button>
+      </div>
+      <div class="waiter-manual-row">
+        <mat-icon>edit</mat-icon>
+        <input type="text" class="waiter-manual-input" [(ngModel)]="tempWaiterName"
+          placeholder="Or type waiter name..." autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="popup-footer">
+      <p class="popup-footer-info">
+        <span *ngIf="tempWaiterName">Assigned: <strong>{{ tempWaiterName }}</strong></span>
+        <span *ngIf="!tempWaiterName">No waiter assigned (optional)</span>
+      </p>
+      <div class="popup-actions-new">
+        <button class="popup-action-btn cancel" (click)="closeWaiterPopup()" type="button">
+          <mat-icon>arrow_back</mat-icon><span>Back</span>
+        </button>
+        <button class="popup-action-btn primary" (click)="confirmTableSelection()" type="button">
+          <mat-icon>check</mat-icon><span>Confirm Table</span>
         </button>
       </div>
     </div>

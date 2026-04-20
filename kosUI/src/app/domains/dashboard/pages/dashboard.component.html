@@ -187,6 +187,40 @@
   </div>
 
   <!-- ============================================================ -->
+  <!-- PENDING DELIVERIES — OWNER OVERSIGHT -->
+  <!-- ============================================================ -->
+  <section class="pending-delivery-section" *ngIf="pendingDeliveries.length > 0">
+    <div class="pd-header">
+      <mat-icon class="pd-header-icon">notifications_active</mat-icon>
+      <span class="pd-header-title">Waiter Pending</span>
+      <span class="pd-header-badge">{{ pendingDeliveries.length }}</span>
+      <span class="pd-header-sub">Orders ready in kitchen — not yet collected by waiter</span>
+    </div>
+    <div class="pd-grid">
+      <div class="pd-card" *ngFor="let o of pendingDeliveries; trackBy: trackById"
+           [ngClass]="'pd-card--' + getPendingUrgency(o)">
+        <div class="pd-card__top">
+          <span class="pd-table">{{ o.tableName ?? o.orderNumber }}</span>
+          <span class="pd-timer" [ngClass]="'pd-timer--' + getPendingUrgency(o)">
+            <mat-icon>timer</mat-icon>
+            {{ getPendingMinutes(o) === 0 ? 'Just now' : getPendingMinutes(o) + ' min' }}
+          </span>
+        </div>
+        <div class="pd-card__mid">
+          <span class="pd-waiter" *ngIf="o.waiterName">
+            <mat-icon>person</mat-icon>{{ o.waiterName }}
+          </span>
+          <span class="pd-waiter" *ngIf="!o.waiterName">
+            <mat-icon>person_off</mat-icon>Unassigned
+          </span>
+          <span class="pd-amount">₹{{ o.totalAmount }}</span>
+        </div>
+        <div class="pd-card__items">{{ getDeliveryItemsSummary(o) }}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
   <!-- MAIN CONTENT GRID -->
   <!-- ============================================================ -->
   <div class="content-grid">

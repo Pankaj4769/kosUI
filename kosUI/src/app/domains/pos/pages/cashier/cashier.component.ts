@@ -35,6 +35,10 @@ import { HoldService } from '../../services/hold.service';
 import { CartService } from '../../services/cart.service';
 import { CashierContextService } from '../../services/cashier-context.service';
 import { OrderManagementService } from '../../../order/services/order-management.service';
+import { RestaurantConfigService } from '../../../../core/services/restaurant-config.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { WaiterOrderService } from '../../../waiter/services/waiter-order.service';
+import { TableSessionService, TableSession } from '../../../../core/services/table-session.service';
 
 // Models
 import { CartItem } from '../../models/cart-item.model';
@@ -108,6 +112,26 @@ export class CashierComponent implements OnInit, OnDestroy {
   orderNumber = '';
   sessionId = '';
   waiterName = 'Cashier';
+  showWaiterInput = false;
+
+  // KOT tracking
+  kotSent = false;
+  kotOrderId: number | null = null;
+  kotCount = 0;
+
+  // Active session for current table
+  activeSession: TableSession | null = null;
+
+  // KOT rounds already sent for this session (shown in cart panel)
+  sessionOrders: Order[] = [];
+
+  get sessionOrdersTotal(): number {
+    return this.sessionOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  }
+
+  get billTotal(): number {
+    return this.total + this.sessionOrdersTotal;
+  }
 
   // Customer Info
   customerInfo: CustomerInfo | null = null;
@@ -129,7 +153,11 @@ export class CashierComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
     private cashierCtx: CashierContextService,
-    private orderManagementService: OrderManagementService
+    private orderManagementService: OrderManagementService,
+    private configService: RestaurantConfigService,
+    private authService: AuthService,
+    private waiterOrderSvc: WaiterOrderService,
+    private sessionSvc: TableSessionService
   ) {
     this.initializeSession();
     this.listenToRoute();
@@ -139,6 +167,7 @@ export class CashierComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscribeToCart();
+    this.subscribeToSessionOrders();
     this.startClock();
     this.loadSavedState();
   }
@@ -204,7 +233,9 @@ export class CashierComponent implements OnInit, OnDestroy {
   private initializeSession(): void {
     this.sessionId = `SES-${Date.now()}`;
     this.orderNumber = this.generateOrderNumber();
-    this.pushContext(); // Push initial context to header
+    const user = this.authService.currentUser;
+    if (user?.name) this.waiterName = user.name;
+    this.pushContext();
   }
 
   private generateOrderNumber(): string {
@@ -248,6 +279,36 @@ export class CashierComponent implements OnInit, OnDestroy {
     );
   }
 
+  private subscribeToSessionOrders(): void {
+    this.subscriptions.add(
+      this.orderManagementService.liveOrders$.subscribe(orders => {
+        const sid = this.activeSession?.sessionId;
+        this.sessionOrders = sid
+          ? orders.filter(o => o.sessionId === sid && o.status !== OrderStatus.CANCELLED)
+          : [];
+        this.cdr.markForCheck();
+      })
+    );
+  }
+
+  /**
+   * Fetch ALL orders for the current session from the backend DB.
+   * Includes orders created by waiter on any device — call before billing.
+   */
+  private refreshSessionOrdersFromBackend(): void {
+    const sid = this.activeSession?.sessionId;
+    if (!sid) return;
+    this.orderManagementService.fetchSessionOrdersFromBackend(sid).subscribe({
+      next: (orders) => {
+        this.sessionOrders = orders.filter(
+          o => o.status !== OrderStatus.CANCELLED
+        );
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.warn('[Cashier] Failed to refresh session orders', err)
+    });
+  }
+
   /* ================= COMPUTED PROPERTIES ================= */
 
   get subtotal(): number {
@@ -255,7 +316,11 @@ export class CashierComponent implements OnInit, OnDestroy {
   }
 
   get tax(): number {
-    return this.subtotal * 0.05;
+    return this.subtotal * (this.configService.taxRate / 100);
+  }
+
+  get taxRate(): number {
+    return this.configService.taxRate;
   }
 
   get discount(): number {
@@ -321,37 +386,69 @@ export class CashierComponent implements OnInit, OnDestroy {
   /* ================= TABLE MANAGEMENT ================= */
 
   private loadTable(tableNo: number): void {
-    this.loading = true;
-    this.error = null;
+    this.loading       = true;
+    this.error         = null;
+    this.selectedTable = tableNo;
 
-    try {
-      this.selectedTable = tableNo;
+    const tableObj     = this.tableService.getTableByNumber(tableNo);
+    const tableName    = tableObj?.name ?? `Table ${tableNo}`;
+    const restaurantId = this.authService.currentUser?.restaurantId ?? '';
+    const waiterArg    = this.waiterName !== 'Cashier' ? this.waiterName : (tableObj?.waiter ?? undefined);
 
-      const heldOrder = this.holdService.recallForTable(tableNo);
-      if (heldOrder?.length) {
-        this.cartService.setCart(heldOrder);
-        this.showNotification('Recalled held order', 'success');
-      } else {
-        const tableOrder = this.tableService.getOrderForTable(tableNo);
-        if (tableOrder?.length) {
-          this.cartService.setCart(tableOrder);
-          this.showNotification('Loaded table order', 'info');
+    // Cache hit → fires synchronously (of()); cache miss → one DB call
+    this.sessionSvc.getOrCreate(tableNo, tableName, restaurantId, waiterArg)
+      .subscribe({
+        next: (session) => {
+          this.activeSession = session;
+
+          if (session.waiterName) {
+            this.waiterName = session.waiterName;
+          } else if (tableObj?.waiter) {
+            this.waiterName = tableObj.waiter;
+          }
+
+          this.kotCount = session.kotRound - 1;
+
+          this.cartService.switchSession(this.sessionSvc.cartKey(tableNo));
+
+          if (!this.cartService.currentCart.length) {
+            const heldOrder = this.holdService.recallForTable(tableNo);
+            if (heldOrder?.length) {
+              this.cartService.setCart(heldOrder);
+              this.showNotification('Recalled held order', 'success');
+            } else if (tableObj) {
+              const waiterItems = this.waiterOrderSvc.getOrderForTable(tableObj.id);
+              if (waiterItems.length) {
+                this.cartService.setCart(waiterItems.map(wi => ({
+                  id: wi.menuItemId, name: wi.name, price: wi.price,
+                  qty: wi.qty, category: wi.category, notes: wi.note || undefined
+                })));
+                this.showNotification('Loaded waiter order', 'info');
+              }
+            }
+          } else {
+            this.showNotification('Session restored', 'info');
+          }
+
+          // Load any KOTs already sent by waiter for this session
+          if (session.kotRound > 1) {
+            this.refreshSessionOrdersFromBackend();
+          }
+
+          if (this.orderType !== 'Dine-In') this.orderType = 'Dine-In';
+          this.loading = false;
+          this.pushContext();
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.error = 'Failed to load table session';
+          console.error('Table load error:', err);
+          this.showNotification('Error loading table', 'error');
+          this.loading = false;
+          this.pushContext();
+          this.cdr.markForCheck();
         }
-      }
-
-      if (this.orderType !== 'Dine-In') {
-        this.orderType = 'Dine-In';
-      }
-
-    } catch (err) {
-      this.error = 'Failed to load table data';
-      console.error('Table load error:', err);
-      this.showNotification('Error loading table', 'error');
-    } finally {
-      this.loading = false;
-      this.pushContext(); // Push updated context to header
-      this.cdr.markForCheck();
-    }
+      });
   }
 
   private syncTableOrder(): void {
@@ -398,6 +495,16 @@ private pushContext(): void {
   onTableSelected(tableNo: number): void {
     if (this.selectedTable === tableNo) return;
     this.loadTable(tableNo);
+  }
+
+  onWaiterAssigned(name: string): void {
+    this.waiterName = name;
+    if (this.selectedTable) {
+      const tableObj     = this.tableService.getTableByNumber(this.selectedTable);
+      const tableName    = tableObj?.name ?? `Table ${this.selectedTable}`;
+      const restaurantId = this.authService.currentUser?.restaurantId ?? '';
+      this.sessionSvc.getOrCreate(this.selectedTable, tableName, restaurantId, name).subscribe();
+    }
   }
 
   /* ================= CART OPERATIONS ================= */
@@ -448,10 +555,13 @@ private pushContext(): void {
   /* ================= PAYMENT ================= */
 
   openPayment(): void {
-    if (!this.hasItems) {
-      this.showNotification('Cart is empty', 'error');
+    if (!this.hasItems && this.sessionOrders.length === 0) {
+      this.showNotification('Nothing to pay', 'error');
       return;
     }
+
+    // Refresh from backend to include waiter orders from other devices
+    this.refreshSessionOrdersFromBackend();
 
     if (this.requiresCustomerInfo) {
       this.showCustomerInfo = true;
@@ -462,46 +572,44 @@ private pushContext(): void {
   }
 
   onPaymentComplete(paymentData: any): void {
-    this.pushCompletedOrder(paymentData);
+    const sessionId = this.activeSession?.sessionId;
+
+    if (sessionId) {
+      // Mark ALL session orders (any KOT round) as SERVED
+      this.orderManagementService.getOrdersBySession(sessionId)
+        .filter(o => o.status === OrderStatus.PENDING || o.status === OrderStatus.PREPARING)
+        .forEach(o => this.orderManagementService.updateOrderStatus(o.id, OrderStatus.SERVED));
+    } else if (this.kotSent && this.selectedTable) {
+      // Fallback: scan by tableId
+      const tableObj = this.tableService.getTableByNumber(this.selectedTable);
+      if (tableObj) {
+        this.orderManagementService.getAllOrders()
+          .filter(o => o.tableId === tableObj.id &&
+            (o.status === OrderStatus.PENDING || o.status === OrderStatus.PREPARING))
+          .forEach(o => this.orderManagementService.updateOrderStatus(o.id, OrderStatus.SERVED));
+      }
+    }
+
+    // If items remain in cart (not yet KOT'd), create a direct SERVED order
+    if (this.hasItems) {
+      this.pushCompletedOrder(paymentData);
+    }
+
+    // Clear waiter-staged items for this table
+    if (this.selectedTable) {
+      const tableObj = this.tableService.getTableByNumber(this.selectedTable);
+      if (tableObj) this.waiterOrderSvc.clearOrder(tableObj.id);
+    }
+
+    this.kotSent = false;
+    this.kotOrderId = null;
     this.finalizeBill();
     this.showNotification('Payment successful!', 'success');
     this.showPayment = false;
   }
 
   private pushCompletedOrder(paymentData: any): void {
-    const typeMap: Record<OrderType, OmsOrderType> = {
-      'Dine-In':  OmsOrderType.DINE_IN,
-      'Takeaway': OmsOrderType.TAKEAWAY,
-      'Delivery': OmsOrderType.DELIVERY
-    };
-
-    const orderItems = this.cart.map((ci, idx) => ({
-      id: idx + 1,
-      name: ci.name,
-      quantity: ci.qty,
-      price: ci.price,
-      notes: ci.notes || '',
-      category: ci.category
-    }));
-
-    const totalAmount = orderItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-
-    const order: Order = {
-      id: Date.now(),
-      orderNumber: this.orderNumber,
-      tableId: this.selectedTable ?? undefined,
-      tableName: this.selectedTable ? `Table ${this.selectedTable}` : undefined,
-      status: OrderStatus.SERVED,
-      priority: OrderPriority.MEDIUM,
-      type: typeMap[this.orderType] ?? OmsOrderType.DINE_IN,
-      items: orderItems,
-      totalAmount,
-      customerName: this.customerInfo?.name || 'Guest',
-      waiterName: this.waiterName,
-      orderTime: new Date(),
-      prepTime: paymentData?.prepTime
-    };
-
+    const order = this.buildOrder(OrderStatus.SERVED);
     this.orderManagementService.addOrder(order);
   }
 
@@ -595,12 +703,109 @@ private pushContext(): void {
       return;
     }
 
-    console.log('Printing KOT...');
-    console.log('Order Number:', this.orderNumber);
-    console.log('Table:', this.selectedTable);
-    console.log('Items:', this.cart);
+    // Consume next KOT round from session
+    const kotRound = this.selectedTable
+      ? this.sessionSvc.nextKot(this.selectedTable)
+      : ++this.kotCount;
+    this.kotCount = this.activeSession?.kotRound
+      ? this.activeSession.kotRound - 1
+      : kotRound;
 
-    this.showNotification('KOT sent to kitchen', 'success');
+    const order = this.buildOrder(OrderStatus.PENDING);
+    order.kotRound = kotRound;
+    order.sessionId = this.activeSession?.sessionId;
+
+    // Optimistic local add + POST to backend (SSE broadcasts to all clients)
+    this.orderManagementService.sendKotOrder(order);
+    if (this.selectedTable) {
+      const tObj = this.tableService.getTableByNumber(this.selectedTable);
+      if (tObj) {
+        this.tableService.updateTableStatus(tObj.id, 'occupied');
+        const prevItems  = this.sessionOrders.reduce((s, o) => s + o.items.length, 0);
+        const prevAmount = this.sessionOrdersTotal;
+        this.tableService.updateTableOrderInfo(tObj.id, prevItems + order.items.length, prevAmount + order.totalAmount);
+      }
+    }
+    this.kotSent = true;
+    this.kotOrderId = order.id;
+
+    this.printKotTicket(order);
+
+    // Clear cart so cashier can add new items for next round
+    this.cartService.clearCart();
+    this.orderNumber = this.generateOrderNumber();
+
+    this.showNotification(`KOT Round ${kotRound} sent — ${order.orderNumber}`, 'success');
+    this.cdr.markForCheck();
+  }
+
+  private printKotTicket(order: Order): void {
+    const printWindow = window.open('', '_blank', 'width=320,height=600');
+    if (!printWindow) return;
+
+    const itemsHtml = order.items.map(i =>
+      `<tr>
+        <td style="padding:3px 4px">${i.name}${i.notes ? `<br><em style="font-size:11px">${i.notes}</em>` : ''}</td>
+        <td style="padding:3px 4px;text-align:right;font-weight:bold">x${i.quantity}</td>
+      </tr>`
+    ).join('');
+
+    printWindow.document.write(`<!DOCTYPE html><html><head>
+      <title>KOT - ${order.orderNumber}</title>
+      <style>
+        body{font-family:monospace;font-size:13px;max-width:300px;margin:0 auto;padding:8px}
+        h2{text-align:center;font-size:15px;margin:4px 0}
+        p{margin:2px 0}
+        table{width:100%;border-collapse:collapse}
+        .divider{border-top:1px dashed #000;margin:6px 0}
+        @media print{@page{size:80mm auto;margin:4mm}}
+      </style></head><body>
+      <h2>KITCHEN ORDER TICKET</h2>
+      <div class="divider"></div>
+      <p><strong>Order:</strong> ${order.orderNumber}</p>
+      <p><strong>Type:</strong> ${order.type.replace('_', '-')}</p>
+      ${order.tableName ? `<p><strong>Table:</strong> ${order.tableName}</p>` : ''}
+      ${order.waiterName ? `<p><strong>Waiter:</strong> ${order.waiterName}</p>` : ''}
+      <p><strong>Time:</strong> ${new Date(order.orderTime).toLocaleTimeString()}</p>
+      <div class="divider"></div>
+      <table>${itemsHtml}</table>
+      <div class="divider"></div>
+      ${order.notes ? `<p><strong>Note:</strong> ${order.notes}</p>` : ''}
+    </body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 300);
+  }
+
+  private buildOrder(status: OrderStatus): Order {
+    const typeMap: Record<OrderType, OmsOrderType> = {
+      'Dine-In':  OmsOrderType.DINE_IN,
+      'Takeaway': OmsOrderType.TAKEAWAY,
+      'Delivery': OmsOrderType.DELIVERY
+    };
+    const orderItems = this.cart.map((ci, idx) => ({
+      id: idx + 1,
+      name: ci.name,
+      quantity: ci.qty,
+      price: ci.price,
+      notes: ci.notes || '',
+      category: ci.category
+    }));
+    return {
+      id: Date.now(),
+      orderNumber: this.orderNumber,
+      tableId: this.selectedTable ?? undefined,
+      tableName: this.selectedTable ? `Table ${this.selectedTable}` : undefined,
+      status,
+      priority: OrderPriority.MEDIUM,
+      type: typeMap[this.orderType] ?? OmsOrderType.DINE_IN,
+      items: orderItems,
+      totalAmount: orderItems.reduce((sum, i) => sum + i.price * i.quantity, 0),
+      customerName: this.customerInfo?.name || 'Guest',
+      waiterName: this.waiterName,
+      orderTime: new Date(),
+      address: this.customerInfo?.address
+    };
   }
 
   saveOrder(): void {
@@ -620,10 +825,9 @@ private pushContext(): void {
       if (this.selectedTable) {
         this.holdService.clearTableHold(this.selectedTable);
         this.tableService.clearTable(this.selectedTable);
+        // Session stays open — owner/manager closes it explicitly when table is cleared
       }
-
       this.resetOrder();
-      
       this.showNotification('Order completed', 'success');
     } catch (err) {
       console.error('Finalize error:', err);
@@ -632,15 +836,22 @@ private pushContext(): void {
   }
 
   resetOrder(): void {
+    // Clear session-scoped cart, then reset to default storage
     this.cartService.clearCart();
-    this.selectedTable = null;
-    this.customerInfo = null;
-    this.orderNumber = this.generateOrderNumber();
-    this.sessionId = `SES-${Date.now()}`;
-    
-    // Clear saved state
+    this.cartService.switchSession('temp_cart');
+
+    this.activeSession   = null;
+    this.sessionOrders   = [];
+    this.selectedTable   = null;
+    this.customerInfo    = null;
+    this.orderNumber     = this.generateOrderNumber();
+    this.sessionId       = `SES-${Date.now()}`;
+    this.kotSent         = false;
+    this.kotOrderId      = null;
+    this.kotCount        = 0;
+
     localStorage.removeItem('cashier_state');
-    this.pushContext(); // Push updated context to header
+    this.pushContext();
     this.cdr.markForCheck();
   }
 

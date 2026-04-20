@@ -1,6 +1,7 @@
 // src/app/domains/pos/services/table.service.ts
 
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
@@ -15,6 +16,100 @@ import {
   ExtendedTableStats,
   TableHelpers
 } from '../models/table.model';
+import { BASE_URL } from '../../../apiUrls';
+import { AuthService } from '../../../core/auth/auth.service';
+
+/* ── Backend response shapes ── */
+interface BackendTable {
+  id: number;
+  tableNumber: number;
+  capacity: number;
+  status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'CLEANING';
+  areaName?: string;
+  orderNumber?: string;
+  waiter?: string;
+  startTime?: string;
+  restaurantId: string;
+}
+
+interface BackendReservation {
+  id: number;
+  tableId: number;
+  tableNumber?: number;
+  customerName: string;
+  customerPhone?: string;
+  partySize?: number;
+  reservationDate: string;
+  reservationTime: string;
+  status: 'UPCOMING' | 'CONFIRMED' | 'PENDING' | 'ARRIVED' | 'NO_SHOW' | 'CANCELLED';
+  restaurantId: string;
+  createdAt?: string;
+}
+
+/* ── Status mapping helpers ── */
+function toFrontendStatus(s: BackendTable['status']): TableStatus {
+  return s.toLowerCase() as TableStatus;
+}
+
+function toBackendStatus(s: TableStatus): string {
+  return s.toUpperCase();
+}
+
+function toFrontendResStatus(s: BackendReservation['status']): Reservation['status'] {
+  const map: Record<string, Reservation['status']> = {
+    UPCOMING: 'confirmed',
+    CONFIRMED: 'confirmed',
+    PENDING: 'pending',
+    ARRIVED: 'arrived',
+    NO_SHOW: 'no-show',
+    CANCELLED: 'cancelled'
+  };
+  return map[s] ?? 'pending';
+}
+
+function toBackendResStatus(s: Reservation['status']): string {
+  const map: Record<string, string> = {
+    confirmed: 'CONFIRMED',
+    pending: 'PENDING',
+    arrived: 'ARRIVED',
+    'no-show': 'NO_SHOW',
+    cancelled: 'CANCELLED'
+  };
+  return map[s] ?? 'PENDING';
+}
+
+function mapBackendTable(b: BackendTable): Table {
+  const startTime = b.startTime ? new Date(b.startTime) : undefined;
+  return {
+    id: b.id,
+    number: b.tableNumber,
+    name: `Table ${b.tableNumber}`,
+    status: toFrontendStatus(b.status),
+    capacity: b.capacity,
+    area: (b.areaName as AreaType) || 'main-hall',
+    currentOrder: b.orderNumber,
+    waiter: b.waiter,
+    startTime,
+    timeOccupied: startTime,
+    amount: 0
+  };
+}
+
+function mapBackendReservation(b: BackendReservation): Reservation {
+  return {
+    id: b.id,
+    tableId: b.tableId,
+    tableNumber: b.tableNumber ?? 0,
+    customerName: b.customerName,
+    phoneNumber: b.customerPhone ?? '',
+    guests: b.partySize ?? 1,
+    date: b.reservationDate,
+    time: b.reservationTime,
+    status: toFrontendResStatus(b.status),
+    createdAt: b.createdAt ?? new Date().toISOString(),
+    source: 'phone'
+  };
+}
 
 /* ================= SERVICE ================= */
 
@@ -23,9 +118,9 @@ import {
 })
 export class TableService {
 
-  /* ================= STATE (PRESERVED + EXTENDED) ================= */
+  private readonly baseUrl = BASE_URL;
 
-  // ✅ EXISTING: Core observables (PRESERVED)
+  /* ── State ── */
   private tablesSubject = new BehaviorSubject<Table[]>([]);
   public tables$ = this.tablesSubject.asObservable();
 
@@ -34,261 +129,362 @@ export class TableService {
 
   private tableOrders = new Map<number, any>();
 
-  // ✨ NEW: Additional observables for enhanced features
   private reservationsSubject = new BehaviorSubject<Reservation[]>([]);
   public reservations$: Observable<Reservation[]> = this.reservationsSubject.asObservable();
 
   private layoutPositions = new Map<number, {x: number, y: number}>();
 
-  /* ================= CONSTRUCTOR (PRESERVED) ================= */
+  /* ── Waitlist (no backend yet, kept as local state) ── */
+  private waitlistSubject = new BehaviorSubject<WaitlistEntry[]>([]);
+  public waitlist$ = this.waitlistSubject.asObservable();
 
-  constructor() {
-    this.initializeTables();
-    // ✨ NEW: Load additional data
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {
     this.loadLayoutPositions();
-    this.initializeReservations();
+    this.loadTables();
+    this.loadReservations();
   }
 
-  /* ================= INITIALIZATION (PRESERVED + ENHANCED) ================= */
-
-  // ✅ EXISTING: Initialize tables (PRESERVED)
-  private initializeTables(): void {
-    const tables = this.generateInitialTables();
-    this.tablesSubject.next(tables);
+  /* ── Helpers ── */
+  private get restaurantId(): string {
+    return this.authService.currentUser?.restaurantId ?? '';
   }
 
-  // ✅ EXISTING: Generate initial tables (PRESERVED + ENHANCED)
-  private generateInitialTables(): Table[] {
-    const now = new Date();
+  /* ================= LOAD FROM BACKEND ================= */
 
-    return [
-      // Section A (Tables 1-8)
-      { id: 1, number: 1, name: 'Table 1', status: 'available', capacity: 4, section: 'A', position: { x: 0, y: 0 }, area: 'main-hall' },
-      { id: 2, number: 2, name: 'Table 2', status: 'occupied', capacity: 2, section: 'A', position: { x: 1, y: 0 }, area: 'main-hall',
-        currentOrder: 'ORD-2026-001', waiter: 'John Doe', timeOccupied: new Date(now.getTime() - 30 * 60000),
-        startTime: new Date(now.getTime() - 30 * 60000), amount: 450 },
-      { id: 3, number: 3, name: 'Table 3', status: 'available', capacity: 4, section: 'A', position: { x: 2, y: 0 }, area: 'main-hall' },
-      { id: 4, number: 4, name: 'Table 4', status: 'available', capacity: 6, section: 'A', position: { x: 3, y: 0 }, area: 'main-hall' },
-      { id: 5, number: 5, name: 'Table 5', status: 'reserved', capacity: 4, section: 'A', position: { x: 0, y: 1 }, area: 'main-hall' },
-      { id: 6, number: 6, name: 'Table 6', status: 'occupied', capacity: 2, section: 'A', position: { x: 1, y: 1 }, area: 'main-hall',
-        currentOrder: 'ORD-2026-002', waiter: 'Sarah Smith', timeOccupied: new Date(now.getTime() - 15 * 60000),
-        startTime: new Date(now.getTime() - 15 * 60000), amount: 280 },
-      { id: 7, number: 7, name: 'Table 7', status: 'available', capacity: 4, section: 'A', position: { x: 2, y: 1 }, area: 'main-hall' },
-      { id: 8, number: 8, name: 'Table 8', status: 'cleaning', capacity: 8, section: 'A', position: { x: 3, y: 1 }, area: 'main-hall' },
-
-      // Section B (Tables 9-16)
-      { id: 9, number: 9, name: 'Table 9', status: 'available', capacity: 2, section: 'B', position: { x: 0, y: 2 }, area: 'terrace' },
-      { id: 10, number: 10, name: 'Table 10', status: 'available', capacity: 4, section: 'B', position: { x: 1, y: 2 }, area: 'terrace' },
-      { id: 11, number: 11, name: 'Table 11', status: 'occupied', capacity: 6, section: 'B', position: { x: 2, y: 2 }, area: 'terrace',
-        currentOrder: 'ORD-2026-003', waiter: 'Mike Johnson', timeOccupied: new Date(now.getTime() - 45 * 60000),
-        startTime: new Date(now.getTime() - 45 * 60000), amount: 680 },
-      { id: 12, number: 12, name: 'Table 12', status: 'available', capacity: 4, section: 'B', position: { x: 3, y: 2 }, area: 'terrace' },
-      { id: 13, number: 13, name: 'Table 13', status: 'available', capacity: 2, section: 'B', position: { x: 0, y: 3 }, area: 'terrace' },
-      { id: 14, number: 14, name: 'Table 14', status: 'reserved', capacity: 4, section: 'B', position: { x: 1, y: 3 }, area: 'terrace' },
-      { id: 15, number: 15, name: 'Table 15', status: 'available', capacity: 4, section: 'B', position: { x: 2, y: 3 }, area: 'terrace' },
-      { id: 16, number: 16, name: 'Table 16', status: 'available', capacity: 6, section: 'B', position: { x: 3, y: 3 }, area: 'terrace' },
-
-      // Section C (Tables 17-24)
-      { id: 17, number: 17, name: 'Table 17', status: 'occupied', capacity: 4, section: 'C', position: { x: 0, y: 4 }, area: 'vip-lounge',
-        currentOrder: 'ORD-2026-004', waiter: 'Emma Wilson', timeOccupied: new Date(now.getTime() - 20 * 60000),
-        startTime: new Date(now.getTime() - 20 * 60000), amount: 520 },
-      { id: 18, number: 18, name: 'Table 18', status: 'available', capacity: 2, section: 'C', position: { x: 1, y: 4 }, area: 'vip-lounge' },
-      { id: 19, number: 19, name: 'Table 19', status: 'available', capacity: 4, section: 'C', position: { x: 2, y: 4 }, area: 'vip-lounge' },
-      { id: 20, number: 20, name: 'Table 20', status: 'available', capacity: 8, section: 'C', position: { x: 3, y: 4 }, area: 'vip-lounge' },
-      { id: 21, number: 21, name: 'Table 21', status: 'occupied', capacity: 4, section: 'C', position: { x: 0, y: 5 }, area: 'vip-lounge',
-        currentOrder: 'ORD-2026-005', waiter: 'David Brown', timeOccupied: new Date(now.getTime() - 60 * 60000),
-        startTime: new Date(now.getTime() - 60 * 60000), amount: 1200 },
-      { id: 22, number: 22, name: 'Table 22', status: 'available', capacity: 2, section: 'C', position: { x: 1, y: 5 }, area: 'vip-lounge' },
-      { id: 23, number: 23, name: 'Table 23', status: 'reserved', capacity: 6, section: 'C', position: { x: 2, y: 5 }, area: 'vip-lounge' },
-      { id: 24, number: 24, name: 'Table 24', status: 'available', capacity: 4, section: 'C', position: { x: 3, y: 5 }, area: 'vip-lounge' },
-
-      // VIP Section (Tables 25-28)
-      { id: 25, number: 25, name: 'VIP Table 1', status: 'available', capacity: 8, section: 'VIP', position: { x: 0, y: 6 }, area: 'bar' },
-      { id: 26, number: 26, name: 'VIP Table 2', status: 'occupied', capacity: 10, section: 'VIP', position: { x: 1, y: 6 }, area: 'bar',
-        currentOrder: 'ORD-2026-006', waiter: 'Lisa Anderson', timeOccupied: new Date(now.getTime() - 90 * 60000),
-        startTime: new Date(now.getTime() - 90 * 60000), amount: 2500 },
-      { id: 27, number: 27, name: 'VIP Table 3', status: 'reserved', capacity: 6, section: 'VIP', position: { x: 2, y: 6 }, area: 'bar' },
-      { id: 28, number: 28, name: 'VIP Table 4', status: 'available', capacity: 8, section: 'VIP', position: { x: 3, y: 6 }, area: 'bar' }
-    ];
+  private loadTables(): void {
+    const restId = this.restaurantId;
+    if (!restId) return;
+    this.http.get<BackendTable[]>(`${this.baseUrl}/api/tables/${restId}`)
+      .subscribe({
+        next: tables => this.tablesSubject.next(tables.map(mapBackendTable)),
+        error: err => console.error('Failed to load tables', err)
+      });
   }
 
-  /* ================= GET TABLES (ALL EXISTING METHODS PRESERVED) ================= */
+  private loadReservations(): void {
+    const restId = this.restaurantId;
+    if (!restId) return;
+    this.http.get<BackendReservation[]>(`${this.baseUrl}/api/reservations/${restId}`)
+      .subscribe({
+        next: reservations => this.reservationsSubject.next(reservations.map(mapBackendReservation)),
+        error: err => console.error('Failed to load reservations', err)
+      });
+  }
 
-  // ✅ EXISTING: Get all tables (PRESERVED)
+  /* ================= GET TABLES ================= */
+
   getTables(): Table[] {
     return this.tablesSubject.value;
   }
 
-  // ✅ EXISTING: Get all table statuses (PRESERVED)
   getAllTableStatuses(): Table[] {
     return this.getTables();
   }
 
-  // ✅ EXISTING: Get table by ID (PRESERVED)
   getTableById(id: number): Table | undefined {
-    return this.tablesSubject.value.find(table => table.id === id);
+    return this.tablesSubject.value.find(t => t.id === id);
   }
 
-  // ✅ EXISTING: Get table by number (PRESERVED)
   getTableByNumber(number: number): Table | undefined {
-    return this.tablesSubject.value.find(table => table.number === number);
+    return this.tablesSubject.value.find(t => t.number === number);
   }
 
-  // ✅ EXISTING: Get tables by section (PRESERVED)
   getTablesBySection(section: string): Table[] {
-    return this.tablesSubject.value.filter(table => table.section === section);
+    return this.tablesSubject.value.filter(t => t.section === section);
   }
 
-  // ✅ EXISTING: Get tables by status (PRESERVED)
   getTablesByStatus(status: TableStatus): Table[] {
-    return this.tablesSubject.value.filter(table => table.status === status);
+    return this.tablesSubject.value.filter(t => t.status === status);
   }
 
-  // ✅ EXISTING: Get available tables (PRESERVED)
   getAvailableTables(): Table[] {
     return this.getTablesByStatus('available');
   }
 
-  // ✅ EXISTING: Get occupied tables (PRESERVED)
   getOccupiedTables(): Table[] {
     return this.getTablesByStatus('occupied');
   }
 
-  // ✅ EXISTING: Get reserved tables (PRESERVED)
   getReservedTables(): Table[] {
     return this.getTablesByStatus('reserved');
   }
 
-  /* ================= UPDATE TABLES (ALL EXISTING METHODS PRESERVED) ================= */
+  /* ================= UPDATE TABLES ================= */
 
-  // ✅ EXISTING: Update table status (PRESERVED + ENHANCED)
   updateTableStatus(tableId: number, status: TableStatus): boolean {
     const tables = this.tablesSubject.value;
-    const tableIndex = tables.findIndex(t => t.id === tableId);
+    const idx = tables.findIndex(t => t.id === tableId);
+    if (idx === -1) return false;
 
-    if (tableIndex === -1) {
-      console.error(`Table with ID ${tableId} not found`);
-      return false;
-    }
-
-    const updatedTable = { ...tables[tableIndex], status };
-
+    // Optimistic local update
+    const updatedTable = { ...tables[idx], status };
     if (status === 'available') {
       updatedTable.currentOrder = undefined;
       updatedTable.waiter = undefined;
       updatedTable.timeOccupied = undefined;
-      // ✨ ENHANCED: Also clear new fields
       updatedTable.startTime = undefined;
       updatedTable.amount = 0;
       updatedTable.serverName = undefined;
     }
-
-    // ✨ ENHANCED: Set startTime when occupying
     if (status === 'occupied' && !updatedTable.startTime) {
       updatedTable.startTime = new Date();
       updatedTable.timeOccupied = new Date();
     }
+    const updated = [...tables];
+    updated[idx] = updatedTable;
+    this.tablesSubject.next(updated);
 
-    const updatedTables = [...tables];
-    updatedTables[tableIndex] = updatedTable;
+    // Persist to backend
+    this.http.put(`${this.baseUrl}/api/tables/${tableId}/status`, { status: toBackendStatus(status) })
+      .subscribe({ error: err => console.error('updateTableStatus failed', err) });
 
-    this.tablesSubject.next(updatedTables);
     return true;
   }
 
-  // ✅ EXISTING: Occupy table (PRESERVED)
   occupyTable(tableId: number, orderNumber: string, waiter: string): boolean {
     const tables = this.tablesSubject.value;
-    const tableIndex = tables.findIndex(t => t.id === tableId);
+    const idx = tables.findIndex(t => t.id === tableId);
+    if (idx === -1) return false;
+    if (tables[idx].status === 'occupied') return false;
 
-    if (tableIndex === -1) {
-      console.error(`Table with ID ${tableId} not found`);
-      return false;
-    }
-
-    if (tables[tableIndex].status === 'occupied') {
-      console.warn(`Table ${tableId} is already occupied`);
-      return false;
-    }
-
+    // Optimistic update
+    const now = new Date();
     const updatedTable: Table = {
-      ...tables[tableIndex],
+      ...tables[idx],
       status: 'occupied',
       currentOrder: orderNumber,
-      waiter: waiter,
-      timeOccupied: new Date(),
-      startTime: new Date(),
+      waiter,
+      timeOccupied: now,
+      startTime: now,
       serverName: waiter
     };
+    const updated = [...tables];
+    updated[idx] = updatedTable;
+    this.tablesSubject.next(updated);
 
-    const updatedTables = [...tables];
-    updatedTables[tableIndex] = updatedTable;
+    // Backend call
+    this.http.put(`${this.baseUrl}/api/tables/${tableId}/occupy`, {
+      orderNumber,
+      waiter,
+      startTime: now.toISOString()
+    }).subscribe({ error: err => console.error('occupyTable failed', err) });
 
-    this.tablesSubject.next(updatedTables);
     return true;
   }
 
-  // ✅ EXISTING: Release table (PRESERVED)
   releaseTable(tableId: number): boolean {
-    return this.updateTableStatus(tableId, 'available');
+    const tables = this.tablesSubject.value;
+    const idx = tables.findIndex(t => t.id === tableId);
+    if (idx === -1) return false;
+
+    // Optimistic update
+    const updated = [...tables];
+    updated[idx] = {
+      ...updated[idx],
+      status: 'available',
+      currentOrder: undefined,
+      waiter: undefined,
+      timeOccupied: undefined,
+      startTime: undefined,
+      amount: 0,
+      serverName: undefined
+    };
+    this.tablesSubject.next(updated);
+
+    // Backend call
+    this.http.put(`${this.baseUrl}/api/tables/${tableId}/release`, {})
+      .subscribe({ error: err => console.error('releaseTable failed', err) });
+
+    return true;
   }
 
-  // ✅ EXISTING: Reserve table (PRESERVED)
   reserveTable(tableId: number): boolean {
     const table = this.getTableById(tableId);
-
-    if (!table) {
-      console.error(`Table with ID ${tableId} not found`);
-      return false;
-    }
-
-    if (table.status !== 'available') {
-      console.warn(`Cannot reserve table ${tableId}. Current status: ${table.status}`);
-      return false;
-    }
-
+    if (!table || table.status !== 'available') return false;
     return this.updateTableStatus(tableId, 'reserved');
   }
 
-  // ✅ EXISTING: Set table cleaning (PRESERVED)
   setTableCleaning(tableId: number): boolean {
     return this.updateTableStatus(tableId, 'cleaning');
   }
 
-  /* ================= ORDER MANAGEMENT (ALL EXISTING METHODS PRESERVED) ================= */
+  // Assign or reassign a waiter to an already-occupied table
+  assignWaiter(tableId: number, waiter: string): void {
+    const tables = this.tablesSubject.value;
+    const idx = tables.findIndex(t => t.id === tableId);
+    if (idx === -1) return;
 
-  // ✅ EXISTING: Get order for table (PRESERVED)
+    // Optimistic update
+    const updated = [...tables];
+    updated[idx] = { ...updated[idx], waiter, serverName: waiter };
+    this.tablesSubject.next(updated);
+
+    // Persist — reuse the occupy endpoint which accepts waiter updates
+    const table = updated[idx];
+    this.http.put(`${this.baseUrl}/api/tables/${tableId}/occupy`, {
+      orderNumber: table.currentOrder,
+      waiter,
+      startTime: table.startTime ? new Date(table.startTime).toISOString() : new Date().toISOString()
+    }).subscribe({ error: err => console.error('assignWaiter failed', err) });
+  }
+
+  /* ================= TABLE CRUD ================= */
+
+  addTable(table: Partial<Table>): void {
+    const restId = this.restaurantId;
+    const tables = this.tablesSubject.value;
+    const maxNumber = tables.length > 0 ? Math.max(...tables.map(t => t.number)) : 0;
+    const tableNumber = table.number ?? (maxNumber + 1);
+
+    const payload = {
+      tableNumber,
+      capacity: table.capacity ?? 4,
+      areaName: table.area ?? 'main-hall',
+      status: 'AVAILABLE',
+      restaurantId: restId
+    };
+
+    this.http.post<BackendTable>(`${this.baseUrl}/api/tables`, payload)
+      .subscribe({
+        next: saved => {
+          const mapped = mapBackendTable(saved);
+          this.tablesSubject.next([...this.tablesSubject.value, mapped]);
+        },
+        error: err => console.error('addTable failed', err)
+      });
+  }
+
+  removeTable(tableId: number): void {
+    const table = this.getTableById(tableId);
+    if (!table || table.status !== 'available') {
+      console.warn(`Cannot remove table ${tableId} - not available`);
+      return;
+    }
+
+    // Optimistic
+    this.tablesSubject.next(this.tablesSubject.value.filter(t => t.id !== tableId));
+
+    this.http.delete(`${this.baseUrl}/api/tables/${tableId}`)
+      .subscribe({ error: err => {
+        console.error('removeTable failed', err);
+        this.loadTables(); // rollback by reloading
+      }});
+  }
+
+  updateTableArea(tableId: number, area: AreaType): void {
+    const tables = this.tablesSubject.value;
+    const idx = tables.findIndex(t => t.id === tableId);
+    if (idx === -1) return;
+
+    const updated = [...tables];
+    updated[idx] = { ...updated[idx], area };
+    this.tablesSubject.next(updated);
+
+    this.http.put(`${this.baseUrl}/api/tables/${tableId}/area`, { areaName: area })
+      .subscribe({ error: err => console.error('updateTableArea failed', err) });
+  }
+
+  updateTableCapacity(tableId: number, capacity: number): void {
+    const tables = this.tablesSubject.value;
+    const idx = tables.findIndex(t => t.id === tableId);
+    if (idx !== -1) {
+      const updated = [...tables];
+      updated[idx] = { ...updated[idx], capacity };
+      this.tablesSubject.next(updated);
+    }
+  }
+
+  updateTableAmount(tableId: number, amount: number): void {
+    const tables = this.tablesSubject.value;
+    const idx = tables.findIndex(t => t.id === tableId);
+    if (idx !== -1) {
+      const updated = [...tables];
+      updated[idx] = { ...updated[idx], amount };
+      this.tablesSubject.next(updated);
+    }
+  }
+
+  updateTableOrderInfo(tableId: number, itemCount: number, totalAmount: number): void {
+    const tables = this.tablesSubject.value;
+    const idx = tables.findIndex(t => t.id === tableId);
+    if (idx === -1) return;
+    const updated = [...tables];
+    updated[idx] = { ...updated[idx], itemCount, totalAmount };
+    this.tablesSubject.next(updated);
+  }
+
+  /* ================= BULK OPERATIONS ================= */
+
+  updateMultipleTables(updates: Array<{ tableId: number; status: TableStatus }>): boolean {
+    const tables = [...this.tablesSubject.value];
+    updates.forEach(u => {
+      const idx = tables.findIndex(t => t.id === u.tableId);
+      if (idx !== -1) {
+        tables[idx] = { ...tables[idx], status: u.status };
+        if (u.status === 'available') {
+          tables[idx].currentOrder = undefined;
+          tables[idx].waiter = undefined;
+          tables[idx].timeOccupied = undefined;
+          tables[idx].startTime = undefined;
+          tables[idx].amount = 0;
+        }
+      }
+    });
+    this.tablesSubject.next(tables);
+
+    this.http.put(`${this.baseUrl}/api/tables/bulk-status`, {
+      tableIds: updates.map(u => u.tableId),
+      status: toBackendStatus(updates[0]?.status ?? 'available')
+    }).subscribe({ error: err => console.error('bulkUpdateStatus failed', err) });
+
+    return true;
+  }
+
+  /* ================= ORDER MANAGEMENT ================= */
+
   getOrderForTable(tableNumber: number): any | null {
     return this.tableOrders.get(tableNumber) || null;
   }
 
-  // ✅ EXISTING: Set order for table (PRESERVED)
   setOrderForTable(tableNumber: number, orderData: any): void {
     this.tableOrders.set(tableNumber, orderData);
-
     const table = this.getTableByNumber(tableNumber);
     if (table && orderData) {
-      this.occupyTable(
-        table.id, 
-        orderData.orderNumber || `ORD-${Date.now()}`,
-        orderData.waiter || 'Staff'
-      );
+      this.occupyTable(table.id, orderData.orderNumber || `ORD-${Date.now()}`, orderData.waiter || 'Staff');
     }
   }
 
-  // ✅ EXISTING: Clear table (PRESERVED)
   clearTable(tableNumber: number): void {
     this.tableOrders.delete(tableNumber);
-
     const table = this.getTableByNumber(tableNumber);
     if (table) {
       this.releaseTable(table.id);
     }
   }
 
-  /* ================= TABLE STATISTICS (EXISTING METHOD PRESERVED) ================= */
+  requestBill(tableId: number): void {
+    const tables = this.tablesSubject.value;
+    const idx = tables.findIndex(t => t.id === tableId);
+    if (idx === -1) return;
+    const updated = [...tables];
+    updated[idx] = { ...updated[idx], billRequested: true };
+    this.tablesSubject.next(updated);
+  }
 
-  // ✅ EXISTING: Get table stats (PRESERVED)
+  clearBillRequest(tableId: number): void {
+    const tables = this.tablesSubject.value;
+    const idx = tables.findIndex(t => t.id === tableId);
+    if (idx === -1) return;
+    const updated = [...tables];
+    updated[idx] = { ...updated[idx], billRequested: false };
+    this.tablesSubject.next(updated);
+  }
+
+  /* ================= TABLE STATISTICS ================= */
+
   getTableStats(): TableStats {
     const tables = this.tablesSubject.value;
     const total = tables.length;
@@ -297,243 +493,138 @@ export class TableService {
     const reserved = tables.filter(t => t.status === 'reserved').length;
     const cleaning = tables.filter(t => t.status === 'cleaning').length;
     const occupancyRate = total > 0 ? (occupied / total) * 100 : 0;
-
-    return {
-      total,
-      available,
-      occupied,
-      reserved,
-      cleaning,
-      occupancyRate: Math.round(occupancyRate * 10) / 10
-    };
+    return { total, available, occupied, reserved, cleaning, occupancyRate: Math.round(occupancyRate * 10) / 10 };
   }
 
-  /* ================= TABLE BOOKINGS (ALL EXISTING METHODS PRESERVED) ================= */
+  /* ================= TABLE BOOKINGS ================= */
 
-  // ✅ EXISTING: Get bookings (PRESERVED)
   getBookings(): TableBooking[] {
     return this.bookingsSubject.value;
   }
 
-  // ✅ EXISTING: Add booking (PRESERVED)
   addBooking(booking: Omit<TableBooking, 'id'>): string {
-    const newBooking: TableBooking = {
-      ...booking,
-      id: this.generateBookingId()
-    };
-
-    const bookings = [...this.bookingsSubject.value, newBooking];
-    this.bookingsSubject.next(bookings);
+    const newBooking: TableBooking = { ...booking, id: this.generateBookingId() };
+    this.bookingsSubject.next([...this.bookingsSubject.value, newBooking]);
     this.reserveTable(booking.tableId);
-
     return newBooking.id;
   }
 
-  // ✅ EXISTING: Cancel booking (PRESERVED)
   cancelBooking(bookingId: string): boolean {
     const bookings = this.bookingsSubject.value;
     const booking = bookings.find(b => b.id === bookingId);
-
-    if (!booking) {
-      console.error(`Booking with ID ${bookingId} not found`);
-      return false;
-    }
-
+    if (!booking) return false;
     this.releaseTable(booking.tableId);
-    const updatedBookings = bookings.filter(b => b.id !== bookingId);
-    this.bookingsSubject.next(updatedBookings);
-
+    this.bookingsSubject.next(bookings.filter(b => b.id !== bookingId));
     return true;
   }
 
-  // ✅ EXISTING: Get bookings by table (PRESERVED)
   getBookingsByTable(tableId: number): TableBooking[] {
     return this.bookingsSubject.value.filter(b => b.tableId === tableId);
   }
 
-  // ✅ EXISTING: Generate booking ID (PRESERVED)
   private generateBookingId(): string {
     return `BKG-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
   }
 
-  /* ================= SEARCH & FILTER (ALL EXISTING METHODS PRESERVED) ================= */
+  /* ================= SEARCH & FILTER ================= */
 
-  // ✅ EXISTING: Search tables (PRESERVED)
   searchTables(query: string): Table[] {
-    const lowerQuery = query.toLowerCase();
-    return this.tablesSubject.value.filter(table =>
-      table.number.toString().includes(lowerQuery) ||
-      table.name.toLowerCase().includes(lowerQuery) ||
-      table.section?.toLowerCase().includes(lowerQuery) ||
-      table.status.toLowerCase().includes(lowerQuery) ||
-      table.capacity.toString().includes(lowerQuery) ||
-      table.waiter?.toLowerCase().includes(lowerQuery) ||
-      table.currentOrder?.toLowerCase().includes(lowerQuery)
+    const q = query.toLowerCase();
+    return this.tablesSubject.value.filter(t =>
+      t.number.toString().includes(q) ||
+      t.name.toLowerCase().includes(q) ||
+      t.section?.toLowerCase().includes(q) ||
+      t.status.toLowerCase().includes(q) ||
+      t.capacity.toString().includes(q) ||
+      t.waiter?.toLowerCase().includes(q) ||
+      t.currentOrder?.toLowerCase().includes(q)
     );
   }
 
-  // ✅ EXISTING: Filter tables by capacity (PRESERVED)
   filterTablesByCapacity(minCapacity: number, maxCapacity?: number): Table[] {
-    return this.tablesSubject.value.filter(table => {
-      if (maxCapacity) {
-        return table.capacity >= minCapacity && table.capacity <= maxCapacity;
-      }
-      return table.capacity >= minCapacity;
-    });
+    return this.tablesSubject.value.filter(t =>
+      maxCapacity ? t.capacity >= minCapacity && t.capacity <= maxCapacity : t.capacity >= minCapacity
+    );
   }
 
-  /* ================= UTILITY METHODS (ALL EXISTING METHODS PRESERVED) ================= */
+  /* ================= UTILITY METHODS ================= */
 
-  // ✅ EXISTING: Get time occupied (PRESERVED)
   getTimeOccupied(tableId: number): number | null {
     const table = this.getTableById(tableId);
-
-    if (!table || !table.timeOccupied) {
-      return null;
-    }
-
-    const now = new Date();
-    return now.getTime() - table.timeOccupied.getTime();
+    if (!table || !table.timeOccupied) return null;
+    return new Date().getTime() - new Date(table.timeOccupied).getTime();
   }
 
-  // ✅ EXISTING: Get formatted time occupied (PRESERVED)
   getFormattedTimeOccupied(tableId: number): string {
     const time = this.getTimeOccupied(tableId);
-
     if (!time) return '';
-
     const minutes = Math.floor(time / 60000);
-
-    if (minutes < 60) {
-      return `${minutes} min`;
-    } else {
-      const hours = Math.floor(minutes / 60);
-      const remainingMinutes = minutes % 60;
-      return `${hours}h ${remainingMinutes}m`;
-    }
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ${minutes % 60}m`;
   }
 
-  // ✅ EXISTING: Is table available (PRESERVED)
   isTableAvailable(tableId: number): boolean {
-    const table = this.getTableById(tableId);
-    return table?.status === 'available';
+    return this.getTableById(tableId)?.status === 'available';
   }
 
-  // ✅ EXISTING: Can reserve table (PRESERVED)
   canReserveTable(tableId: number): boolean {
-    const table = this.getTableById(tableId);
-    return table?.status === 'available';
+    return this.getTableById(tableId)?.status === 'available';
   }
 
-  // ✅ EXISTING: Get section names (PRESERVED)
   getSectionNames(): string[] {
     const sections = this.tablesSubject.value
       .map(t => t.section)
-      .filter((section): section is string => section !== undefined);
-
+      .filter((s): s is string => s !== undefined);
     return Array.from(new Set(sections));
   }
 
-  /* ================= RESET & REFRESH (ALL EXISTING METHODS PRESERVED) ================= */
-
-  // ✅ EXISTING: Refresh tables (PRESERVED)
-  refreshTables(): void {
-    const tables = this.generateInitialTables();
-    this.tablesSubject.next(tables);
+  findSuitableTable(guestCount: number, preferredArea?: AreaType): Table | undefined {
+    let available = this.tablesSubject.value
+      .filter(t => t.status === 'available' && t.capacity >= guestCount);
+    if (preferredArea) {
+      const areaFiltered = available.filter(t => {
+        const a = t.area || TableHelpers.mapSectionToArea(t.section);
+        return a === preferredArea;
+      });
+      if (areaFiltered.length > 0) available = areaFiltered;
+    }
+    return available.sort((a, b) => a.capacity - b.capacity)[0];
   }
 
-  // ✅ EXISTING: Reset all tables (PRESERVED)
-  resetAllTables(): void {
-    const tables = this.tablesSubject.value.map(table => ({
-      ...table,
-      status: 'available' as TableStatus,
-      currentOrder: undefined,
-      waiter: undefined,
-      timeOccupied: undefined,
-      startTime: undefined,
-      amount: 0,
-      serverName: undefined
-    }));
+  getTableCountByStatus(status: TableStatus): number {
+    return this.tablesSubject.value.filter(t => t.status === status).length;
+  }
 
+  /* ================= RESET & REFRESH ================= */
+
+  refreshTables(): void {
+    this.loadTables();
+  }
+
+  resetAllTables(): void {
+    const tables = this.tablesSubject.value.map(t => ({
+      ...t, status: 'available' as TableStatus,
+      currentOrder: undefined, waiter: undefined,
+      timeOccupied: undefined, startTime: undefined,
+      amount: 0, serverName: undefined
+    }));
     this.tablesSubject.next(tables);
     this.bookingsSubject.next([]);
   }
 
-  /* ================= BULK OPERATIONS (EXISTING METHOD PRESERVED) ================= */
+  /* ================= AREA MANAGEMENT ================= */
 
-  // ✅ EXISTING: Update multiple tables (PRESERVED)
-  updateMultipleTables(updates: Array<{ tableId: number; status: TableStatus }>): boolean {
-    const tables = [...this.tablesSubject.value];
-    let allSuccessful = true;
-
-    updates.forEach(update => {
-      const tableIndex = tables.findIndex(t => t.id === update.tableId);
-
-      if (tableIndex !== -1) {
-        tables[tableIndex] = {
-          ...tables[tableIndex],
-          status: update.status
-        };
-
-        if (update.status === 'available') {
-          tables[tableIndex].currentOrder = undefined;
-          tables[tableIndex].waiter = undefined;
-          tables[tableIndex].timeOccupied = undefined;
-          tables[tableIndex].startTime = undefined;
-          tables[tableIndex].amount = 0;
-        }
-      } else {
-        allSuccessful = false;
-      }
-    });
-
-    this.tablesSubject.next(tables);
-    return allSuccessful;
-  }
-
-  /* ================= EXPORT DATA (ALL EXISTING METHODS PRESERVED) ================= */
-
-  // ✅ EXISTING: Export tables data (PRESERVED)
-  exportTablesData(): string {
-    return JSON.stringify(this.tablesSubject.value, null, 2);
-  }
-
-  // ✅ EXISTING: Export bookings data (PRESERVED)
-  exportBookingsData(): string {
-    return JSON.stringify(this.bookingsSubject.value, null, 2);
-  }
-
-  /* ================= NEW METHODS - AREA MANAGEMENT ================= */
-
-  // ✨ NEW: Get tables by area
   getTablesByArea(area: AreaType): Observable<Table[]> {
     return this.tables$.pipe(
       map(tables => tables.filter(t => {
-        const tableArea = t.area || TableHelpers.mapSectionToArea(t.section);
-        return tableArea === area;
+        const a = t.area || TableHelpers.mapSectionToArea(t.section);
+        return a === area;
       }))
     );
   }
 
-  // ✨ NEW: Update table area
-  updateTableArea(tableId: number, area: AreaType): void {
-    const tables = this.tablesSubject.value;
-    const tableIndex = tables.findIndex(t => t.id === tableId);
-
-    if (tableIndex !== -1) {
-      const updatedTables = [...tables];
-      updatedTables[tableIndex] = { ...updatedTables[tableIndex], area };
-      this.tablesSubject.next(updatedTables);
-    }
-  }
-
-  // ✨ NEW: Get area statistics
-  getAreaStats(area: AreaType): Observable<{
-    total: number;
-    available: number;
-    occupied: number;
-    reserved: number;
-  }> {
+  getAreaStats(area: AreaType): Observable<{ total: number; available: number; occupied: number; reserved: number; }> {
     return this.getTablesByArea(area).pipe(
       map(tables => ({
         total: tables.length,
@@ -544,381 +635,147 @@ export class TableService {
     );
   }
 
-  /* ================= NEW METHODS - TABLE CRUD ================= */
+  /* ================= LAYOUT MANAGEMENT ================= */
 
-  // ✨ NEW: Add new table
-  addTable(table: Partial<Table>): void {
-    const tables = this.tablesSubject.value;
-
-    const maxId = tables.length > 0 ? Math.max(...tables.map(t => t.id)) : 0;
-    const maxNumber = tables.length > 0 ? Math.max(...tables.map(t => t.number)) : 0;
-
-    const newTable: Table = {
-      id: table.id || maxId + 1,
-      number: table.number || maxNumber + 1,
-      name: table.name || `Table ${maxNumber + 1}`,
-      status: table.status || 'available',
-      capacity: table.capacity || 4,
-      section: table.section,
-      position: table.position,
-      area: table.area || 'main-hall',
-      amount: 0
-    };
-
-    const updatedTables = [...tables, newTable];
-    this.tablesSubject.next(updatedTables);
-
-    console.log(`Table ${newTable.id} added successfully`);
-  }
-
-  // ✨ NEW: Remove table
-  removeTable(tableId: number): void {
-    const tables = this.tablesSubject.value;
-    const table = tables.find(t => t.id === tableId);
-
-    if (table && table.status === 'available') {
-      const updatedTables = tables.filter(t => t.id !== tableId);
-      this.tablesSubject.next(updatedTables);
-      console.log(`Table ${tableId} removed successfully`);
-    } else {
-      console.warn(`Cannot remove table ${tableId} - table is not available`);
-    }
-  }
-
-  // ✨ NEW: Update table capacity
-  updateTableCapacity(tableId: number, capacity: number): void {
-    const tables = this.tablesSubject.value;
-    const tableIndex = tables.findIndex(t => t.id === tableId);
-
-    if (tableIndex !== -1) {
-      const updatedTables = [...tables];
-      updatedTables[tableIndex] = { ...updatedTables[tableIndex], capacity };
-      this.tablesSubject.next(updatedTables);
-    }
-  }
-
-  // ✨ NEW: Update table amount
-  updateTableAmount(tableId: number, amount: number): void {
-    const tables = this.tablesSubject.value;
-    const tableIndex = tables.findIndex(t => t.id === tableId);
-
-    if (tableIndex !== -1) {
-      const updatedTables = [...tables];
-      updatedTables[tableIndex] = { ...updatedTables[tableIndex], amount };
-      this.tablesSubject.next(updatedTables);
-    }
-  }
-
-  /* ================= NEW METHODS - LAYOUT MANAGEMENT ================= */
-
-  // ✨ NEW: Update table position
   updateTablePosition(tableId: number, position: {x: number, y: number}): void {
     const tables = this.tablesSubject.value;
-    const tableIndex = tables.findIndex(t => t.id === tableId);
-
-    if (tableIndex !== -1) {
-      const updatedTables = [...tables];
-      updatedTables[tableIndex] = { ...updatedTables[tableIndex], position };
-      this.tablesSubject.next(updatedTables);
-
+    const idx = tables.findIndex(t => t.id === tableId);
+    if (idx !== -1) {
+      const updated = [...tables];
+      updated[idx] = { ...updated[idx], position };
+      this.tablesSubject.next(updated);
       this.layoutPositions.set(tableId, position);
       this.saveLayoutPositions();
     }
   }
 
-  // ✨ NEW: Get table position
   getTablePosition(tableId: number): {x: number, y: number} | undefined {
     return this.layoutPositions.get(tableId);
   }
 
-  // ✨ NEW: Save layout positions to localStorage
   private saveLayoutPositions(): void {
     const positions: LayoutPosition[] = [];
-    this.layoutPositions.forEach((pos, tableId) => {
-      positions.push({ tableId, x: pos.x, y: pos.y });
-    });
+    this.layoutPositions.forEach((pos, tableId) => positions.push({ tableId, x: pos.x, y: pos.y }));
     localStorage.setItem('tableLayoutPositions', JSON.stringify(positions));
   }
 
-  // ✨ NEW: Load layout positions from localStorage
   private loadLayoutPositions(): void {
     const saved = localStorage.getItem('tableLayoutPositions');
     if (saved) {
       try {
         const positions: LayoutPosition[] = JSON.parse(saved);
-        positions.forEach(pos => {
-          this.layoutPositions.set(pos.tableId, { x: pos.x, y: pos.y });
-        });
+        positions.forEach(pos => this.layoutPositions.set(pos.tableId, { x: pos.x, y: pos.y }));
       } catch (e) {
         console.error('Failed to load layout positions', e);
       }
     }
   }
 
-  // ✨ NEW: Reset layout to default
   resetLayout(): void {
     this.layoutPositions.clear();
     localStorage.removeItem('tableLayoutPositions');
-
-    const tables = this.tablesSubject.value.map(t => {
-      const updated = {...t};
-      // Keep original positions from generateInitialTables
-      return updated;
-    });
-    this.tablesSubject.next(tables);
   }
 
-  /* ================= NEW METHODS - RESERVATIONS ================= */
+  /* ================= RESERVATIONS ================= */
 
-  // ✨ NEW: Initialize reservations
-  private initializeReservations(): void {
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    const tomorrow  = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    const dayAfter  = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0];
-    const nextWeek  = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
-
-    const mockReservations: Reservation[] = [
-      // ── Today ──
-      { id: 1,  tableNumber: 12, tableId: 12, customerName: 'Robert Fox',      phoneNumber: '+91-9876543210', guests: 4, date: today,     time: '12:30', status: 'arrived',   createdAt: new Date().toISOString(), source: 'phone',    reminderSent: true  },
-      { id: 2,  tableNumber: 3,  tableId: 3,  customerName: 'Jane Cooper',     phoneNumber: '+91-9876543211', guests: 2, date: today,     time: '13:00', status: 'arrived',   createdAt: new Date().toISOString(), source: 'online',   reminderSent: true  },
-      { id: 3,  tableNumber: 7,  tableId: 7,  customerName: 'Arjun Mehta',     phoneNumber: '+91-9845001122', guests: 6, date: today,     time: '19:00', status: 'confirmed', createdAt: new Date().toISOString(), source: 'whatsapp', reminderSent: true,  specialRequests: 'Window seat preferred' },
-      { id: 4,  tableNumber: 15, tableId: 15, customerName: 'Sneha Patil',     phoneNumber: '+91-9845003344', guests: 3, date: today,     time: '19:30', status: 'confirmed', createdAt: new Date().toISOString(), source: 'phone',    reminderSent: false },
-      { id: 5,  tableNumber: 20, tableId: 20, customerName: 'Vikram Rao',      phoneNumber: '+91-9845005566', guests: 8, date: today,     time: '20:00', status: 'pending',   createdAt: new Date().toISOString(), source: 'online',   specialRequests: 'Birthday celebration, need cake' },
-      { id: 6,  tableNumber: 4,  tableId: 4,  customerName: 'Deepa Iyer',      phoneNumber: '+91-9845007788', guests: 2, date: today,     time: '20:30', status: 'pending',   createdAt: new Date().toISOString(), source: 'walk-in'   },
-      { id: 7,  tableNumber: 9,  tableId: 9,  customerName: 'Rahul Gupta',     phoneNumber: '+91-9845009900', guests: 4, date: today,     time: '14:00', status: 'no-show',   createdAt: new Date().toISOString(), source: 'phone'     },
-      // ── Yesterday ──
-      { id: 8,  tableNumber: 5,  tableId: 5,  customerName: 'Meena Das',       phoneNumber: '+91-9811001122', guests: 3, date: yesterday, time: '19:00', status: 'arrived',   createdAt: new Date().toISOString(), source: 'online'    },
-      { id: 9,  tableNumber: 11, tableId: 11, customerName: 'Suresh Nair',     phoneNumber: '+91-9811003344', guests: 5, date: yesterday, time: '20:00', status: 'arrived',   createdAt: new Date().toISOString(), source: 'phone'     },
-      { id: 10, tableNumber: 6,  tableId: 6,  customerName: 'Kavya Reddy',     phoneNumber: '+91-9811005566', guests: 2, date: yesterday, time: '21:00', status: 'no-show',   createdAt: new Date().toISOString(), source: 'online'    },
-      { id: 11, tableNumber: 13, tableId: 13, customerName: 'Mohan Singh',     phoneNumber: '+91-9811007788', guests: 4, date: yesterday, time: '13:00', status: 'cancelled', createdAt: new Date().toISOString(), source: 'walk-in'   },
-      // ── Tomorrow ──
-      { id: 12, tableNumber: 23, tableId: 23, customerName: 'Priya Sharma',    phoneNumber: '+91-9822001122', guests: 6, date: tomorrow,  time: '19:00', status: 'confirmed', createdAt: new Date().toISOString(), source: 'whatsapp', reminderSent: false, specialRequests: 'Vegetarian menu only' },
-      { id: 13, tableNumber: 16, tableId: 16, customerName: 'Kiran Joshi',     phoneNumber: '+91-9822003344', guests: 4, date: tomorrow,  time: '19:30', status: 'confirmed', createdAt: new Date().toISOString(), source: 'online',   reminderSent: false },
-      { id: 14, tableNumber: 10, tableId: 10, customerName: 'Anika Bose',      phoneNumber: '+91-9822005566', guests: 2, date: tomorrow,  time: '20:00', status: 'pending',   createdAt: new Date().toISOString(), source: 'phone'     },
-      { id: 15, tableNumber: 24, tableId: 24, customerName: 'Dev Kapoor',      phoneNumber: '+91-9822007788', guests: 10,date: tomorrow,  time: '20:30', status: 'confirmed', createdAt: new Date().toISOString(), source: 'online',   specialRequests: 'Anniversary dinner' },
-      // ── Day after ──
-      { id: 16, tableNumber: 19, tableId: 19, customerName: 'Fatima Sheikh',   phoneNumber: '+91-9833001122', guests: 4, date: dayAfter,  time: '18:30', status: 'confirmed', createdAt: new Date().toISOString(), source: 'whatsapp'  },
-      { id: 17, tableNumber: 8,  tableId: 8,  customerName: 'Ajay Verma',      phoneNumber: '+91-9833003344', guests: 3, date: dayAfter,  time: '19:00', status: 'pending',   createdAt: new Date().toISOString(), source: 'phone'     },
-      // ── Next week ──
-      { id: 18, tableNumber: 27, tableId: 27, customerName: 'Ramesh Pillai',   phoneNumber: '+91-9844001122', guests: 6, date: nextWeek,  time: '19:00', status: 'confirmed', createdAt: new Date().toISOString(), source: 'online'    },
-      { id: 19, tableNumber: 28, tableId: 28, customerName: 'Anita Kulkarni',  phoneNumber: '+91-9844003344', guests: 8, date: nextWeek,  time: '20:00', status: 'pending',   createdAt: new Date().toISOString(), source: 'whatsapp', specialRequests: 'Rooftop table if available' },
-    ];
-
-    this.reservationsSubject.next(mockReservations);
-  }
-
-  // ✨ NEW: Get all reservations
   getReservations(): Observable<Reservation[]> {
     return this.reservations$;
   }
 
-  // ✨ NEW: Get upcoming reservations
   getUpcomingReservations(): Observable<Reservation[]> {
     return this.reservations$.pipe(
       map(reservations => {
         const now = new Date();
         return reservations
           .filter(r => r.status === 'confirmed' || r.status === 'pending')
-          .filter(r => {
-            const resDate = new Date(r.date + ' ' + r.time);
-            return resDate >= now;
-          })
-          .sort((a, b) => {
-            const dateA = new Date(a.date + ' ' + a.time);
-            const dateB = new Date(b.date + ' ' + b.time);
-            return dateA.getTime() - dateB.getTime();
-          });
+          .filter(r => new Date(r.date + ' ' + r.time) >= now)
+          .sort((a, b) => new Date(a.date + ' ' + a.time).getTime() - new Date(b.date + ' ' + b.time).getTime());
       })
     );
   }
 
-  // ✨ NEW: Add reservation
   addReservation(reservation: Omit<Reservation, 'id' | 'createdAt'>): void {
-    const reservations = this.reservationsSubject.value;
-    const maxId = reservations.length > 0 ? Math.max(...reservations.map(r => r.id)) : 0;
-
-    const newReservation: Reservation = {
-      ...reservation,
-      id: maxId + 1,
-      createdAt: new Date().toISOString()
+    const restId = this.restaurantId;
+    const payload = {
+      tableId: reservation.tableId,
+      tableNumber: reservation.tableNumber,
+      customerName: reservation.customerName,
+      customerPhone: reservation.phoneNumber,
+      partySize: reservation.guests,
+      reservationDate: reservation.date,
+      reservationTime: reservation.time,
+      status: toBackendResStatus(reservation.status),
+      restaurantId: restId
     };
 
-    this.reservationsSubject.next([...reservations, newReservation]);
-    this.updateTableStatus(reservation.tableId, 'reserved');
-  }
-
-  // ✨ NEW: Mark reservation as arrived
-  markReservationArrived(reservationId: number): void {
-    const reservations = this.reservationsSubject.value;
-    const resIndex = reservations.findIndex(r => r.id === reservationId);
-
-    if (resIndex !== -1) {
-      const updatedReservations = [...reservations];
-      updatedReservations[resIndex] = {
-        ...updatedReservations[resIndex],
-        status: 'arrived'
-      };
-      this.reservationsSubject.next(updatedReservations);
-
-      const tableId = updatedReservations[resIndex].tableId;
-      this.updateTableStatus(tableId, 'occupied');
-    }
-  }
-
-  // ✨ NEW: Cancel reservation
-  cancelReservation(reservationId: number): void {
-    const reservations = this.reservationsSubject.value;
-    const resIndex = reservations.findIndex(r => r.id === reservationId);
-
-    if (resIndex !== -1) {
-      const updatedReservations = [...reservations];
-      const tableId = updatedReservations[resIndex].tableId;
-
-      updatedReservations[resIndex] = {
-        ...updatedReservations[resIndex],
-        status: 'cancelled'
-      };
-      this.reservationsSubject.next(updatedReservations);
-      this.updateTableStatus(tableId, 'available');
-    }
-  }
-
-  /* ================= NEW METHODS - EXTENDED STATISTICS ================= */
-
-  // ✨ NEW: Get extended statistics with revenue
-  getExtendedStats(): Observable<ExtendedTableStats> {
-    return this.tables$.pipe(
-      map(tables => {
-        const baseStats = this.getTableStats();
-        const revenue = tables.reduce((sum, t) => sum + (t.amount || 0), 0);
-        const occupiedTables = tables.filter(t => t.status === 'occupied');
-
-        let avgSessionTime = 0;
-        if (occupiedTables.length > 0) {
-          const totalTime = occupiedTables.reduce((sum, t) => {
-            if (t.startTime || t.timeOccupied) {
-              const duration = TableHelpers.calculateSessionDuration(t.startTime || t.timeOccupied!);
-              return sum + duration;
-            }
-            return sum;
-          }, 0);
-          avgSessionTime = Math.round(totalTime / occupiedTables.length);
-        }
-
-        return {
-          ...baseStats,
-          dirty: baseStats.cleaning,
-          pending: baseStats.occupied + baseStats.reserved,
-          revenue,
-          avgSessionTime
-        };
-      })
-    );
-  }
-
-  // ✨ NEW: Get statistics by area
-  getStatisticsByArea(): Observable<Map<AreaType, ExtendedTableStats>> {
-    return this.tables$.pipe(
-      map(tables => {
-        const areaStats = new Map<AreaType, ExtendedTableStats>();
-        const areas: AreaType[] = ['main-hall', 'terrace', 'vip-lounge', 'bar'];
-
-        areas.forEach(area => {
-          const areaTables = tables.filter(t => {
-            const tableArea = t.area || TableHelpers.mapSectionToArea(t.section);
-            return tableArea === area;
-          });
-
-          const total = areaTables.length;
-          const available = areaTables.filter(t => t.status === 'available').length;
-          const occupied = areaTables.filter(t => t.status === 'occupied').length;
-          const reserved = areaTables.filter(t => t.status === 'reserved').length;
-          const cleaning = areaTables.filter(t => t.status === 'cleaning').length;
-          const revenue = areaTables.reduce((sum, t) => sum + (t.amount || 0), 0);
-
-          areaStats.set(area, {
-            total,
-            available,
-            occupied,
-            reserved,
-            cleaning,
-            dirty: cleaning,
-            pending: occupied + reserved,
-            revenue,
-            occupancyRate: total > 0 ? Math.round((occupied / total) * 1000) / 10 : 0
-          });
-        });
-
-        return areaStats;
-      })
-    );
-  }
-
-  /* ================= NEW UTILITY METHODS ================= */
-
-  // ✨ NEW: Find suitable table for guests
-  findSuitableTable(guestCount: number, preferredArea?: AreaType): Table | undefined {
-    let availableTables = this.tablesSubject.value
-      .filter(t => t.status === 'available')
-      .filter(t => t.capacity >= guestCount);
-
-    if (preferredArea) {
-      const areaFiltered = availableTables.filter(t => {
-        const tableArea = t.area || TableHelpers.mapSectionToArea(t.section);
-        return tableArea === preferredArea;
+    this.http.post<BackendReservation>(`${this.baseUrl}/api/reservations`, payload)
+      .subscribe({
+        next: saved => {
+          const mapped = mapBackendReservation(saved);
+          this.reservationsSubject.next([...this.reservationsSubject.value, mapped]);
+          this.updateTableStatus(reservation.tableId, 'reserved');
+        },
+        error: err => console.error('addReservation failed', err)
       });
-
-      if (areaFiltered.length > 0) {
-        availableTables = areaFiltered;
-      }
-    }
-
-    return availableTables.sort((a, b) => a.capacity - b.capacity)[0];
   }
 
-  // ✨ NEW: Get table count by status
-  getTableCountByStatus(status: TableStatus): number {
-    return this.tablesSubject.value.filter(t => t.status === status).length;
+  markReservationArrived(reservationId: number): void {
+    this.http.patch<BackendReservation>(`${this.baseUrl}/api/reservations/${reservationId}/arrived`, {})
+      .subscribe({
+        next: saved => {
+          this._patchLocalReservation(reservationId, { status: 'arrived' });
+          this.updateTableStatus(saved.tableId, 'occupied');
+        },
+        error: err => console.error('markReservationArrived failed', err)
+      });
   }
 
-  // ✨ NEW: Import table data
-  importTableData(jsonData: string): void {
-    try {
-      const tables: Table[] = JSON.parse(jsonData);
-      this.tablesSubject.next(tables);
-      console.log('Table data imported successfully');
-    } catch (e) {
-      console.error('Failed to import table data', e);
-    }
+  cancelReservation(reservationId: number): void {
+    this.http.delete(`${this.baseUrl}/api/reservations/${reservationId}`)
+      .subscribe({
+        next: () => {
+          const res = this.reservationsSubject.value.find(r => r.id === reservationId);
+          if (res) {
+            this._patchLocalReservation(reservationId, { status: 'cancelled' });
+            this.updateTableStatus(res.tableId, 'available');
+          }
+        },
+        error: err => console.error('cancelReservation failed', err)
+      });
   }
 
-  /* ================= RESERVATION EXTENDED METHODS ================= */
-
-  // Confirm a pending reservation
   confirmReservation(reservationId: number): void {
-    this.patchReservation(reservationId, { status: 'confirmed' });
+    this.http.patch<BackendReservation>(`${this.baseUrl}/api/reservations/${reservationId}/status`,
+      { status: 'CONFIRMED' })
+      .subscribe({
+        next: () => this._patchLocalReservation(reservationId, { status: 'confirmed' }),
+        error: err => console.error('confirmReservation failed', err)
+      });
   }
 
-  // Mark reservation as no-show
   markNoShow(reservationId: number): void {
-    const reservations = this.reservationsSubject.value;
-    const idx = reservations.findIndex(r => r.id === reservationId);
-    if (idx !== -1) {
-      const updated = [...reservations];
-      const tableId = updated[idx].tableId;
-      updated[idx] = { ...updated[idx], status: 'no-show' };
-      this.reservationsSubject.next(updated);
-      this.updateTableStatus(tableId, 'available');
+    const res = this.reservationsSubject.value.find(r => r.id === reservationId);
+    this.http.patch<BackendReservation>(`${this.baseUrl}/api/reservations/${reservationId}/status`,
+      { status: 'NO_SHOW' })
+      .subscribe({
+        next: () => {
+          this._patchLocalReservation(reservationId, { status: 'no-show' });
+          if (res) this.updateTableStatus(res.tableId, 'available');
+        },
+        error: err => console.error('markNoShow failed', err)
+      });
+  }
+
+  updateReservation(reservationId: number, changes: Partial<Reservation>): void {
+    this._patchLocalReservation(reservationId, changes);
+    if (changes.status) {
+      this.http.patch(`${this.baseUrl}/api/reservations/${reservationId}/status`,
+        { status: toBackendResStatus(changes.status) })
+        .subscribe({ error: err => console.error('updateReservation failed', err) });
     }
   }
 
-  // Update any reservation fields
-  updateReservation(reservationId: number, changes: Partial<Reservation>): void {
-    this.patchReservation(reservationId, changes);
-  }
-
-  private patchReservation(id: number, changes: Partial<Reservation>): void {
+  private _patchLocalReservation(id: number, changes: Partial<Reservation>): void {
     const reservations = this.reservationsSubject.value;
     const idx = reservations.findIndex(r => r.id === id);
     if (idx !== -1) {
@@ -928,14 +785,72 @@ export class TableService {
     }
   }
 
-  /* ================= WAITLIST ================= */
+  /* ================= EXTENDED STATISTICS ================= */
 
-  private waitlistSubject = new BehaviorSubject<WaitlistEntry[]>([
-    { id: 1, customerName: 'Amit Sharma',  phoneNumber: '+91-9800001111', guests: 3, addedAt: new Date(Date.now() - 12 * 60000), estimatedWait: 15, status: 'waiting' },
-    { id: 2, customerName: 'Priya Nair',   phoneNumber: '+91-9800002222', guests: 2, addedAt: new Date(Date.now() - 25 * 60000), estimatedWait: 10, status: 'waiting' },
-    { id: 3, customerName: 'Ravi Kumar',   phoneNumber: '+91-9800003333', guests: 5, addedAt: new Date(Date.now() -  5 * 60000), estimatedWait: 25, status: 'waiting' },
-  ]);
-  public waitlist$ = this.waitlistSubject.asObservable();
+  getExtendedStats(): Observable<ExtendedTableStats> {
+    return this.tables$.pipe(
+      map(tables => {
+        const baseStats = this.getTableStats();
+        const revenue = tables.reduce((sum, t) => sum + (t.amount || 0), 0);
+        const occupiedTables = tables.filter(t => t.status === 'occupied');
+        let avgSessionTime = 0;
+        if (occupiedTables.length > 0) {
+          const totalTime = occupiedTables.reduce((sum, t) => {
+            if (t.startTime || t.timeOccupied) {
+              return sum + TableHelpers.calculateSessionDuration(t.startTime || t.timeOccupied!);
+            }
+            return sum;
+          }, 0);
+          avgSessionTime = Math.round(totalTime / occupiedTables.length);
+        }
+        return { ...baseStats, dirty: baseStats.cleaning, pending: baseStats.occupied + baseStats.reserved, revenue, avgSessionTime };
+      })
+    );
+  }
+
+  getStatisticsByArea(): Observable<Map<AreaType, ExtendedTableStats>> {
+    return this.tables$.pipe(
+      map(tables => {
+        const areaStats = new Map<AreaType, ExtendedTableStats>();
+        const areas: AreaType[] = ['main-hall', 'terrace', 'vip-lounge', 'bar'];
+        areas.forEach(area => {
+          const areaTables = tables.filter(t => (t.area || TableHelpers.mapSectionToArea(t.section)) === area);
+          const total = areaTables.length;
+          const available = areaTables.filter(t => t.status === 'available').length;
+          const occupied = areaTables.filter(t => t.status === 'occupied').length;
+          const reserved = areaTables.filter(t => t.status === 'reserved').length;
+          const cleaning = areaTables.filter(t => t.status === 'cleaning').length;
+          const revenue = areaTables.reduce((sum, t) => sum + (t.amount || 0), 0);
+          areaStats.set(area, {
+            total, available, occupied, reserved, cleaning,
+            dirty: cleaning, pending: occupied + reserved, revenue,
+            occupancyRate: total > 0 ? Math.round((occupied / total) * 1000) / 10 : 0
+          });
+        });
+        return areaStats;
+      })
+    );
+  }
+
+  /* ================= EXPORT ================= */
+
+  exportTablesData(): string {
+    return JSON.stringify(this.tablesSubject.value, null, 2);
+  }
+
+  exportBookingsData(): string {
+    return JSON.stringify(this.bookingsSubject.value, null, 2);
+  }
+
+  importTableData(jsonData: string): void {
+    try {
+      this.tablesSubject.next(JSON.parse(jsonData));
+    } catch (e) {
+      console.error('Failed to import table data', e);
+    }
+  }
+
+  /* ================= WAITLIST (local only) ================= */
 
   getWaitlist(): Observable<WaitlistEntry[]> {
     return this.waitlist$;
@@ -944,12 +859,7 @@ export class TableService {
   addToWaitlist(entry: Omit<WaitlistEntry, 'id' | 'addedAt' | 'status'>): void {
     const list = this.waitlistSubject.value;
     const maxId = list.length > 0 ? Math.max(...list.map(e => e.id)) : 0;
-    this.waitlistSubject.next([...list, {
-      ...entry,
-      id: maxId + 1,
-      addedAt: new Date(),
-      status: 'waiting'
-    }]);
+    this.waitlistSubject.next([...list, { ...entry, id: maxId + 1, addedAt: new Date(), status: 'waiting' }]);
   }
 
   seatWaitlistEntry(entryId: number): void {
@@ -963,8 +873,6 @@ export class TableService {
   }
 
   removeWaitlistEntry(entryId: number): void {
-    this.waitlistSubject.next(
-      this.waitlistSubject.value.filter(e => e.id !== entryId)
-    );
+    this.waitlistSubject.next(this.waitlistSubject.value.filter(e => e.id !== entryId));
   }
 }

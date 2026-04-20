@@ -1404,6 +1404,7 @@
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
   animation: slideUp 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  font-family: 'Inter', 'Roboto', sans-serif;
 }
 
 @keyframes slideUp {
@@ -2524,3 +2525,235 @@
   height: 15px;
 }
 
+
+/* ── Popup Waiter Assignment ── */
+.popup-waiter-section {
+  padding: 10px 16px;
+  background: #1a2332;
+  border-top: 1px solid #2d3748;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.popup-waiter-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.popup-waiter-label mat-icon {
+  font-size: 15px;
+  height: 15px;
+  width: 15px;
+}
+
+.popup-waiter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.popup-waiter-select {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #f1f5f9;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.popup-waiter-select:focus { outline: none; border-color: #3b82f6; }
+
+.popup-waiter-input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #f1f5f9;
+  font-size: 13px;
+}
+
+.popup-waiter-input:focus { outline: none; border-color: #3b82f6; }
+.popup-waiter-input::placeholder { color: #64748b; }
+
+.popup-waiter-auto-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #1d4ed8;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.popup-waiter-auto-btn:hover { background: #1e40af; }
+.popup-waiter-auto-btn mat-icon { font-size: 16px; height: 16px; width: 16px; }
+
+/* ── Grid/List view toggle ── */
+.popup-view-toggle {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  align-items: center;
+}
+
+.popup-view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.popup-view-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
+.popup-view-btn.active { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+.popup-view-btn:hover:not(.active) { background: #1e293b; color: #e2e8f0; }
+
+/* ── Popup sort section flex fix ── */
+.popup-sort-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Grid view ── */
+.popup-table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+  padding: 12px 16px;
+  overflow-y: auto;
+  max-height: 340px;
+}
+
+.popup-grid-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  border-top: 4px solid #e2e8f0;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.popup-grid-card:hover { box-shadow: 0 3px 8px rgba(0,0,0,0.12); transform: translateY(-1px); }
+.popup-grid-card.table-available { border-top-color: #4caf50; }
+.popup-grid-card.table-occupied  { border-top-color: #f44336; background: #fff5f5; }
+.popup-grid-card.table-reserved  { border-top-color: #ff9800; background: #fffbf0; }
+.popup-grid-card.table-cleaning  { border-top-color: #9e9e9e; opacity: 0.6; cursor: not-allowed; }
+.popup-grid-card.selected        { background: #e8f5e9 !important; border-color: #2e7d32 !important; border-top-color: #2e7d32 !important; box-shadow: 0 0 0 2px rgba(46,125,50,0.2); }
+
+.pgc-num  { font-size: 26px; font-weight: 800; color: #1a202c; }
+.pgc-cap  { display: flex; align-items: center; gap: 2px; font-size: 11px; color: #718096; }
+.pgc-cap mat-icon { font-size: 13px; width: 13px; height: 13px; }
+.pgc-status { font-size: 10px; color: #718096; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+.pgc-waiter { font-size: 11px; color: #2b6cb0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80px; }
+
+/* ── Popup sub-title ── */
+.popup-sub { font-size: 12px; color: #94a3b8; }
+
+/* ── Waiter popup container (smaller width) ── */
+.waiter-popup-container {
+  max-width: 480px !important;
+}
+
+/* ── Waiter grid ── */
+.waiter-grid {
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.waiter-grid-label {
+  font-size: 12px;
+  color: #718096;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.waiter-grid-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.waiter-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  color: #2d3748;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s;
+  min-width: 80px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.waiter-card mat-icon { font-size: 22px; width: 22px; height: 22px; color: #4a5568; }
+.waiter-card:hover    { border-color: #4caf50; background: #f0fdf4; color: #166534; }
+.waiter-card:hover mat-icon { color: #166534; }
+.waiter-card.selected { background: #e8f5e9; border-color: #2e7d32; color: #166534; box-shadow: 0 0 0 2px rgba(46,125,50,0.2); }
+.waiter-card.selected mat-icon { color: #2e7d32; }
+.waiter-card--me      { border-color: #bee3f8; }
+.waiter-card--me:hover, .waiter-card--me.selected { background: #ebf8ff; border-color: #2b6cb0; color: #1a365d; }
+
+.waiter-manual-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.waiter-manual-row mat-icon { color: #64748b; font-size: 18px; width: 18px; height: 18px; }
+
+.waiter-manual-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #2d3748;
+  font-size: 13px;
+}
+
+.waiter-manual-input:focus { outline: none; border-color: #4caf50; box-shadow: 0 0 0 2px rgba(76,175,80,0.15); }
+.waiter-manual-input::placeholder { color: #a0aec0; }

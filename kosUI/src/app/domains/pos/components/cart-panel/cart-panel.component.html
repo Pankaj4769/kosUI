@@ -231,7 +231,7 @@
   </div>
 
   <!-- ===== EMPTY CART ===== -->
-  <div class="empty-cart" *ngIf="!hasItems">
+  <div class="empty-cart" *ngIf="!hasItems && sessionOrders.length === 0">
     <div class="empty-icon">
       <mat-icon>shopping_cart</mat-icon>
     </div>
@@ -239,29 +239,55 @@
     <p>Start adding items from the menu</p>
   </div>
 
-  <!-- ===== PRICING SUMMARY ===== -->
-  <div class="cart-summary" *ngIf="hasItems">
+  <!-- ===== IN KITCHEN (session KOT rounds) ===== -->
+  <div class="in-kitchen-section" *ngIf="sessionOrders.length > 0">
+    <div class="in-kitchen-header">
+      <mat-icon>kitchen</mat-icon>
+      <span>In Kitchen</span>
+      <span class="kot-count-badge">{{ sessionOrders.length }} round{{ sessionOrders.length > 1 ? 's' : '' }}</span>
+    </div>
+    <div class="kot-round-card" *ngFor="let ord of sessionOrders">
+      <div class="kot-round-header">
+        <span class="kot-round-label">Round {{ ord.kotRound }}</span>
+        <span class="kot-status" [ngClass]="'status-' + ord.status.toLowerCase()">{{ ord.status }}</span>
+        <span class="kot-round-amount">{{ formatCurrency(ord.totalAmount) }}</span>
+      </div>
+      <div class="kot-round-items">
+        <span class="kot-item-chip" *ngFor="let item of ord.items">
+          {{ item.name }} ×{{ item.quantity }}
+        </span>
+      </div>
+    </div>
+  </div>
 
-    <div class="summary-row">
+  <!-- ===== PRICING SUMMARY ===== -->
+  <div class="cart-summary" *ngIf="hasItems || sessionOrders.length > 0">
+
+    <div class="summary-row" *ngIf="hasItems">
       <span class="summary-label">Subtotal</span>
       <span class="summary-value">{{ formatCurrency(subtotal) }}</span>
     </div>
 
-    <div class="summary-row" *ngIf="discount > 0">
+    <div class="summary-row" *ngIf="hasItems && discount > 0">
       <span class="summary-label discount">Discount</span>
       <span class="summary-value discount">-{{ formatCurrency(discount) }}</span>
     </div>
 
-    <div class="summary-row">
-      <span class="summary-label">Tax (5%)</span>
+    <div class="summary-row" *ngIf="hasItems">
+      <span class="summary-label">Tax</span>
       <span class="summary-value">{{ formatCurrency(tax) }}</span>
+    </div>
+
+    <div class="summary-row" *ngIf="sessionOrdersTotal > 0">
+      <span class="summary-label">In Kitchen</span>
+      <span class="summary-value">{{ formatCurrency(sessionOrdersTotal) }}</span>
     </div>
 
     <mat-divider></mat-divider>
 
     <div class="summary-row total-row">
-      <span class="summary-label">Total</span>
-      <span class="summary-value total">{{ formatCurrency(total) }}</span>
+      <span class="summary-label">{{ sessionOrdersTotal > 0 ? 'Bill Total' : 'Total' }}</span>
+      <span class="summary-value total">{{ formatCurrency(total + sessionOrdersTotal) }}</span>
     </div>
 
   </div>
@@ -274,12 +300,12 @@
 
       <button
         class="pay-now-btn"
-        (click)="openPayment()"
+        (click)="proceedToCheckout()"
         [disabled]="!canCheckout"
         type="button">
         <mat-icon>credit_card</mat-icon>
         <span>Pay Now</span>
-        <span class="checkout-amount">{{ formatCurrency(total) }}</span>
+        <span class="checkout-amount">{{ formatCurrency(total + sessionOrdersTotal) }}</span>
       </button>
 
       <!-- Close Table — Dine-In with table only -->

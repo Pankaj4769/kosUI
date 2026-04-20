@@ -1,0 +1,140 @@
+<div class="kds-shell">
+
+  <!-- ── Header ─────────────────────────────────────── -->
+  <header class="kds-header">
+    <div class="kds-header__brand">
+      <mat-icon>kitchen</mat-icon>
+      <span>Kitchen Display System</span>
+    </div>
+    <div class="kds-header__stats">
+      <div class="kds-stat kds-stat--pending">
+        <span class="kds-stat__val">{{ pendingOrders.length }}</span>
+        <span class="kds-stat__lbl">Pending</span>
+      </div>
+      <div class="kds-stat kds-stat--preparing">
+        <span class="kds-stat__val">{{ preparingOrders.length }}</span>
+        <span class="kds-stat__lbl">Preparing</span>
+      </div>
+    </div>
+    <div class="kds-clock">{{ currentTime }}</div>
+  </header>
+
+  <!-- ── Two-column board ───────────────────────────── -->
+  <div class="kds-board">
+
+    <!-- PENDING column -->
+    <section class="kds-col kds-col--pending">
+      <div class="kds-col__heading">
+        <mat-icon>hourglass_empty</mat-icon>
+        Pending
+        <span class="kds-col__count">{{ pendingOrders.length }}</span>
+      </div>
+
+      <div class="kds-empty" *ngIf="pendingOrders.length === 0">
+        <mat-icon>done_all</mat-icon>
+        <p>No pending orders</p>
+      </div>
+
+      <div class="kds-ticket"
+        *ngFor="let o of pendingOrders; trackBy: trackOrder"
+        [class.kds-ticket--overdue]="isOverdue(o)"
+        [class.kds-ticket--urgent]="isUrgent(o)">
+
+        <!-- Ticket header -->
+        <div class="kds-ticket__head">
+          <div class="kds-ticket__order">{{ o.orderNumber }}</div>
+          <div class="kds-ticket__meta">
+            <span class="kds-ticket__type">{{ o.type === 'DINE_IN' ? '🪑' : o.type === 'TAKEAWAY' ? '🛍' : '🛵' }}</span>
+            <span class="kds-ticket__table" *ngIf="o.tableName">{{ o.tableName }}</span>
+          </div>
+          <div class="kds-ticket__elapsed" [class.overdue]="isOverdue(o)" [class.urgent]="isUrgent(o)">
+            <mat-icon>schedule</mat-icon>{{ getElapsed(o) }}
+          </div>
+        </div>
+
+        <!-- Items -->
+        <ul class="kds-items">
+          <li *ngFor="let item of o.items" class="kds-item">
+            <span class="kds-item__qty">×{{ item.quantity }}</span>
+            <span class="kds-item__name">{{ item.name }}</span>
+            <span class="kds-item__note" *ngIf="item.notes">{{ item.notes }}</span>
+          </li>
+        </ul>
+
+        <!-- Note -->
+        <div class="kds-ticket__note" *ngIf="o.notes">
+          <mat-icon>edit_note</mat-icon>{{ o.notes }}
+        </div>
+
+        <!-- Waiter -->
+        <div class="kds-ticket__waiter" *ngIf="o.waiterName">
+          <mat-icon>person</mat-icon>{{ o.waiterName }}
+        </div>
+
+        <!-- Action -->
+        <button class="kds-btn kds-btn--start" (click)="startPreparing(o)">
+          <mat-icon>local_fire_department</mat-icon>
+          Start Preparing
+        </button>
+
+      </div>
+    </section>
+
+    <!-- PREPARING column -->
+    <section class="kds-col kds-col--preparing">
+      <div class="kds-col__heading">
+        <mat-icon>local_fire_department</mat-icon>
+        Preparing
+        <span class="kds-col__count">{{ preparingOrders.length }}</span>
+      </div>
+
+      <div class="kds-empty" *ngIf="preparingOrders.length === 0">
+        <mat-icon>check_circle_outline</mat-icon>
+        <p>Nothing in progress</p>
+      </div>
+
+      <div class="kds-ticket kds-ticket--prep"
+        *ngFor="let o of preparingOrders; trackBy: trackOrder"
+        [class.kds-ticket--overdue]="isOverdue(o)"
+        [class.kds-ticket--urgent]="isUrgent(o)">
+
+        <!-- Ticket header -->
+        <div class="kds-ticket__head">
+          <div class="kds-ticket__order">{{ o.orderNumber }}</div>
+          <div class="kds-ticket__meta">
+            <span class="kds-ticket__type">{{ o.type === 'DINE_IN' ? '🪑' : o.type === 'TAKEAWAY' ? '🛍' : '🛵' }}</span>
+            <span class="kds-ticket__table" *ngIf="o.tableName">{{ o.tableName }}</span>
+          </div>
+          <div class="kds-ticket__elapsed" [class.overdue]="isOverdue(o)" [class.urgent]="isUrgent(o)">
+            <mat-icon>schedule</mat-icon>{{ getElapsed(o) }}
+          </div>
+        </div>
+
+        <!-- Items -->
+        <ul class="kds-items">
+          <li *ngFor="let item of o.items" class="kds-item">
+            <span class="kds-item__qty">×{{ item.quantity }}</span>
+            <span class="kds-item__name">{{ item.name }}</span>
+            <span class="kds-item__note" *ngIf="item.notes">{{ item.notes }}</span>
+          </li>
+        </ul>
+
+        <div class="kds-ticket__note" *ngIf="o.notes">
+          <mat-icon>edit_note</mat-icon>{{ o.notes }}
+        </div>
+
+        <div class="kds-ticket__waiter" *ngIf="o.waiterName">
+          <mat-icon>person</mat-icon>{{ o.waiterName }}
+        </div>
+
+        <button class="kds-btn kds-btn--ready" (click)="markReady(o)">
+          <mat-icon>check_circle</mat-icon>
+          Mark Ready
+        </button>
+
+      </div>
+    </section>
+
+  </div>
+
+</div>

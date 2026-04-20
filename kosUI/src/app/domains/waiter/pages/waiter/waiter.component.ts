@@ -4,23 +4,26 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subscription } from 'rxjs';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 import { Table } from '../../../pos/models/table.model';
 import { Order, OrderStatus, OrderPriority, OrderType, OrderItem } from '../../../order/models/order.model';
 import { OrderManagementService } from '../../../order/services/order-management.service';
+import { TableService } from '../../../pos/services/table.service';
 import {
   WaiterOrderService,
   WaiterMenuItem,
   WaiterOrderItem
 } from '../../services/waiter-order.service';
+import { TableSessionService } from '../../../pos/../../core/services/table-session.service';
 
-type WaiterView = 'tables' | 'ordering';
-type MobileTab  = 'menu' | 'order';
-type TableFilter = 'all' | 'available' | 'occupied' | 'reserved';
+type WaiterView   = 'tables' | 'ordering';
+type MobileTab    = 'menu' | 'order';
+type TableFilter  = 'all' | 'available' | 'occupied' | 'reserved';
 
 @Component({
   selector: 'app-waiter',
@@ -33,7 +36,7 @@ type TableFilter = 'all' | 'available' | 'occupied' | 'reserved';
 export class WaiterComponent implements OnInit, OnDestroy {
 
   /* ── View state ───────────────────────────────────── */
-  view: WaiterView    = 'tables';
+  view: WaiterView     = 'tables';
   mobileTab: MobileTab = 'menu';
 
   /* ── Tables view ──────────────────────────────────── */
@@ -54,8 +57,19 @@ export class WaiterComponent implements OnInit, OnDestroy {
   /* ── Current order ────────────────────────────────── */
   orderItems: WaiterOrderItem[] = [];
   orderNote                     = '';
-  kotSent                       = false;
+  kotCount                      = 0;  // how many KOTs sent for this table session
   expandedNoteItemId: number | null = null;
+
+  /* ── Notifications (order ready) ──────────────────── */
+  readyOrders: Order[]         = [];
+  showReadyPanel               = false;
+  private dismissedReadyIds    = new Set<number>();
+
+  /* ── Session orders (sent KOT rounds) ────────────── */
+  sessionOrders: Order[] = [];
+
+  /* ── Bill request ─────────────────────────────────── */
+  billRequested = false;
 
   /* ── Time ─────────────────────────────────────────── */
   currentTime = '';
@@ -70,7 +84,9 @@ export class WaiterComponent implements OnInit, OnDestroy {
   constructor(
     private svc: WaiterOrderService,
     private orderMgmt: OrderManagementService,
-    private router: Router,
+    private tableSvc: TableService,
+    private sessionSvc: TableSessionService,
+    private authSvc: AuthService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -84,11 +100,60 @@ export class WaiterComponent implements OnInit, OnDestroy {
     this.applyTableFilter();
     this.applyMenuFilter();
 
+    // Sync live table list from TableService
+    this.sub.add(
+      this.tableSvc.tables$.subscribe(tables => {
+        this.tables = tables;
+        this.applyTableFilter();
+        // Keep selectedTable in sync
+        if (this.selectedTable) {
+          const updated = tables.find(t => t.id === this.selectedTable!.id);
+          if (updated) {
+            this.selectedTable = updated;
+            this.billRequested = !!updated.billRequested;
+          }
+        }
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Sync order items
     this.sub.add(
       this.svc.orders$.subscribe(() => {
         if (this.selectedTable) {
           this.orderItems = this.svc.getOrderForTable(this.selectedTable.id);
         }
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Subscribe to active orders to show "In Kitchen" for current session
+    this.sub.add(
+      this.orderMgmt.activeOrders$.subscribe(orders => {
+        const session = this.selectedTable
+          ? this.sessionSvc.getCached(this.selectedTable.id)
+          : null;
+        this.sessionOrders = session
+          ? orders.filter(o => o.sessionId === session.sessionId)
+          : [];
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Keep readyOrders in sync with live order state (survives navigation)
+    this.sub.add(
+      this.orderMgmt.readyOrders$.subscribe(orders => {
+        this.readyOrders = orders;
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Auto-open panel + toast when a NEW order transitions to READY
+    this.sub.add(
+      this.orderMgmt.orderReady$.subscribe(order => {
+        this.dismissedReadyIds.delete(order.id); // re-surface if previously dismissed
+        this.showReadyPanel = true;
+        this.showToast(`Order ready: ${order.tableName ?? order.orderNumber}`, 'success');
         this.cdr.markForCheck();
       })
     );
@@ -102,6 +167,50 @@ export class WaiterComponent implements OnInit, OnDestroy {
 
   private updateTime(): void {
     this.currentTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /* ── Notification helpers ─────────────────────────── */
+
+  get visibleReadyOrders(): Order[] {
+    return this.readyOrders.filter(o => !this.dismissedReadyIds.has(o.id));
+  }
+
+  get unreadCount(): number { return this.visibleReadyOrders.length; }
+
+  toggleReadyPanel(): void {
+    this.showReadyPanel = !this.showReadyPanel;
+    this.cdr.markForCheck();
+  }
+
+  dismissReady(orderId: number): void {
+    this.dismissedReadyIds.add(orderId);
+    if (this.visibleReadyOrders.length === 0) this.showReadyPanel = false;
+    this.cdr.markForCheck();
+  }
+
+  markServed(order: Order): void {
+    this.orderMgmt.updateOrderStatus(order.id, OrderStatus.SERVED);
+    this.dismissedReadyIds.add(order.id);
+    if (this.visibleReadyOrders.length === 0) this.showReadyPanel = false;
+    this.showToast(`Served: ${order.tableName ?? order.orderNumber}`, 'success');
+    this.cdr.markForCheck();
+  }
+
+  dismissAllReady(): void {
+    this.readyOrders.forEach(o => this.dismissedReadyIds.add(o.id));
+    this.showReadyPanel = false;
+    this.cdr.markForCheck();
+  }
+
+  getReadyMinutes(order: Order): number {
+    if (!order.readyAt) return 0;
+    return Math.floor((Date.now() - order.readyAt.getTime()) / 60000);
+  }
+
+  getItemsSummary(order: Order): string {
+    const names = order.items.slice(0, 3).map(i => i.name);
+    const extra = order.items.length > 3 ? ` +${order.items.length - 3} more` : '';
+    return names.join(', ') + extra;
   }
 
   /* ── Table helpers ────────────────────────────────── */
@@ -138,16 +247,27 @@ export class WaiterComponent implements OnInit, OnDestroy {
   selectTable(table: Table): void {
     this.selectedTable = table;
     this.orderItems    = this.svc.getOrderForTable(table.id);
-    this.kotSent       = false;
     this.orderNote     = '';
+    this.billRequested = !!table.billRequested;
     this.mobileTab     = 'menu';
     this.view          = 'ordering';
-    this.applyMenuFilter();
+
+    const restaurantId = this.authSvc.currentUser?.restaurantId ?? '';
+    // Cache hit → fires synchronously (of()); cache miss → one DB call
+    this.sessionSvc.getOrCreate(table.id, table.name, restaurantId, table.waiter ?? undefined)
+      .subscribe(session => {
+        this.kotCount      = session.kotRound - 1;
+        this.sessionOrders = this.orderMgmt.getOrdersBySession(session.sessionId)
+          .filter(o => o.status !== 'SERVED' && o.status !== 'CANCELLED');
+        this.applyMenuFilter();
+        this.cdr.markForCheck();
+      });
   }
 
   backToTables(): void {
     this.view          = 'tables';
     this.selectedTable = null;
+    this.sessionOrders = [];
   }
 
   getElapsed(table: Table): string {
@@ -189,13 +309,11 @@ export class WaiterComponent implements OnInit, OnDestroy {
   addItem(item: WaiterMenuItem): void {
     if (!this.selectedTable) return;
     this.svc.addItem(this.selectedTable.id, item);
-    this.kotSent = false;
   }
 
   removeItem(menuItemId: number): void {
     if (!this.selectedTable) return;
     this.svc.removeItem(this.selectedTable.id, menuItemId);
-    this.kotSent = false;
   }
 
   getItemQty(menuItemId: number): number {
@@ -223,48 +341,70 @@ export class WaiterComponent implements OnInit, OnDestroy {
     this.svc.updateItemNote(tableId, menuItemId, note);
   }
 
+  /* ── KOT ──────────────────────────────────────────── */
+
+  // Gap 5: Don't navigate away — stay on ordering view so waiter can add more items
   sendKOT(): void {
     if (!this.hasItems || !this.selectedTable) return;
 
-    const table = this.selectedTable;
-    const items = this.svc.getOrderForTable(table.id);
+    const table    = this.selectedTable;
+    const items    = this.svc.getOrderForTable(table.id);
+    const session  = this.sessionSvc.getCached(table.id);
+    if (!session) return;
+    const kotRound = this.sessionSvc.nextKot(table.id);
 
     const orderItems: OrderItem[] = items.map(i => ({
-      id: i.menuItemId,
-      name: i.name,
-      quantity: i.qty,
-      price: i.price,
-      notes: i.note || undefined,
-      category: i.category,
+      id: i.menuItemId, name: i.name, quantity: i.qty,
+      price: i.price, notes: i.note || undefined, category: i.category,
     }));
 
-    const existingOrders = this.orderMgmt.getAllOrders();
-    const nextId = existingOrders.length > 0
-      ? Math.max(...existingOrders.map(o => o.id)) + 1
-      : 1;
-
     const order: Order = {
-      id: nextId,
-      orderNumber: `KOT-${Date.now()}`,
-      tableId: table.id,
-      tableName: table.name,
-      status: OrderStatus.PENDING,
-      priority: OrderPriority.MEDIUM,
-      type: OrderType.DINE_IN,
-      items: orderItems,
+      id:          Date.now(),
+      orderNumber: `ORD-${Date.now().toString().slice(-6)}`,
+      tableId:     table.id,
+      tableName:   table.name,
+      status:      OrderStatus.PENDING,
+      priority:    OrderPriority.MEDIUM,
+      type:        OrderType.DINE_IN,
+      items:       orderItems,
       totalAmount: this.orderTotal,
-      waiterName: table.waiter ?? undefined,
-      orderTime: new Date(),
-      notes: this.orderNote || undefined,
+      waiterName:  table.waiter ?? session.waiterName ?? undefined,
+      orderTime:   new Date(),
+      notes:       this.orderNote || undefined,
+      sessionId:   session.sessionId,
+      kotRound,
     };
 
-    this.orderMgmt.addOrder(order);
-    this.svc.clearOrder(table.id);
-    this.orderNote = '';
-    this.kotSent = true;
+    // Snapshot BEFORE sendKotOrder fires activeOrders$ (which updates sessionOrders sync)
+    const prevItems  = this.sessionOrders.reduce((s, o) => s + o.items.length, 0);
+    const prevAmount = this.sessionOrders.reduce((s, o) => s + o.totalAmount, 0);
 
-    this.router.navigate(['/orders/live']);
+    // Optimistic local add + POST to backend (SSE broadcasts to cashier)
+    this.orderMgmt.sendKotOrder(order);
+    this.tableSvc.updateTableStatus(table.id, 'occupied');
+    this.tableSvc.updateTableOrderInfo(table.id, prevItems + orderItems.length, prevAmount + this.orderTotal);
+    const waiterName = session.waiterName ?? table.waiter;
+    if (waiterName) this.tableSvc.assignWaiter(table.id, waiterName);
+    this.svc.clearOrder(table.id);
+    this.orderNote  = '';
+    this.kotCount   = kotRound;
+
+    this.showToast(`KOT Round ${kotRound} sent — ${order.orderNumber}`, 'success');
+    this.cdr.markForCheck();
   }
+
+  /* ── Gap 6: Request Bill ──────────────────────────── */
+
+  requestBill(): void {
+    if (!this.selectedTable) return;
+    this.tableSvc.requestBill(this.selectedTable.id);
+    this.sessionSvc.setBilling(this.selectedTable.id);
+    this.billRequested = true;
+    this.showToast(`Bill requested for ${this.selectedTable.name}`, 'success');
+    this.cdr.markForCheck();
+  }
+
+  /* ── Hold / Clear ─────────────────────────────────── */
 
   holdOrder(): void {
     if (!this.hasItems) return;
@@ -274,7 +414,7 @@ export class WaiterComponent implements OnInit, OnDestroy {
   clearOrder(): void {
     if (!this.selectedTable || !this.hasItems) return;
     this.svc.clearOrder(this.selectedTable.id);
-    this.kotSent = false;
+    this.kotCount = 0;
     this.orderNote = '';
     this.showToast('Order cleared', 'info');
   }
@@ -288,11 +428,12 @@ export class WaiterComponent implements OnInit, OnDestroy {
     this.toastTimer = setTimeout(() => {
       this.toast = null;
       this.cdr.markForCheck();
-    }, 2800);
+    }, 3500);
   }
 
   /* ── TrackBy ──────────────────────────────────────── */
-  trackTable(_: number, t: Table): number          { return t.id; }
-  trackMenu(_: number, m: WaiterMenuItem): number  { return m.id; }
+  trackTable(_: number, t: Table): number           { return t.id; }
+  trackMenu(_: number, m: WaiterMenuItem): number   { return m.id; }
   trackOrder(_: number, o: WaiterOrderItem): number { return o.menuItemId; }
+  trackReady(_: number, o: Order): number           { return o.id; }
 }

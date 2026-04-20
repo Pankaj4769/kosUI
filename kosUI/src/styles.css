@@ -2,6 +2,9 @@
   --pos-green: #4f7c3a;
 }
 
+/* Ensure Angular Material dialogs always appear above custom overlay popups */
+.cdk-overlay-container { z-index: 99999 !important; }
+
 /* ── Plan-lock global styles ────────────────────────────────────────────────
    Applied by [appPlanLock] directive when a feature is blocked by plan tier.
 ─────────────────────────────────────────────────────────────────────────── */
