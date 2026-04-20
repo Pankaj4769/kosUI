@@ -33,9 +33,13 @@
   <!-- ══ Nav ══ -->
   <nav role="navigation" aria-label="Main navigation">
 
-    <p class="nav-label" *ngIf="!isCollapsedView">Menu</p>
-
     <ng-container *ngFor="let item of menuItems; trackBy: trackByLabel">
+
+      <!-- Group label — shown above first item of each section, hidden when collapsed -->
+      <p class="nav-label group-section-label"
+         *ngIf="item.groupLabel && !isCollapsedView">
+        {{ item.groupLabel }}
+      </p>
 
       <!-- SINGLE item -->
       <a
@@ -70,7 +74,6 @@
           </span>
         </button>
 
-        <!-- Submenu -->
         <div class="submenu" role="group">
           <a
             *ngFor="let child of item.children"

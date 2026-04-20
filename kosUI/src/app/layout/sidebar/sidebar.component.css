@@ -445,3 +445,13 @@ nav::-webkit-scrollbar-thumb    { background: rgba(255,255,255,0.08); border-rad
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
+
+
+/* ══════════════════════════
+   15. GROUP SECTION LABELS
+══════════════════════════ */
+/* Top spacing between consecutive group section labels */
+.menu-item ~ .group-section-label,
+.menu-group ~ .group-section-label {
+  margin-top: 8px;
+}

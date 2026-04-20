@@ -4,4 +4,6 @@ export interface SidebarItem {
   route?: string;
   children?: SidebarItem[];
   expanded?: boolean;
+  groupLabel?: string;
+  externalUrl?: string;
 }
