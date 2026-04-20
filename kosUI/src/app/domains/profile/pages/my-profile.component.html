@@ -105,7 +105,7 @@
           <span class="info-label">Restaurant ID</span>
           <span class="info-value mono">{{ user?.restaurantId || '—' }}</span>
         </div>
-        <div class="info-row">
+        <div class="info-row" *ngIf="user?.role?.toLowerCase() === 'owner'">
           <span class="info-label">Subscription</span>
           <span class="plan-badge">{{ planLabel }}</span>
         </div>
@@ -119,7 +119,7 @@
     </div>
 
     <!-- Subscription Plan -->
-    <div class="card subscription-card">
+    <div class="card subscription-card" *ngIf="user?.role?.toLowerCase() === 'owner'">
       <div class="card-header">
         <mat-icon>workspace_premium</mat-icon>
         <span>Subscription Plan</span>
