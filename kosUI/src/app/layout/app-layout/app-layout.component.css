@@ -61,38 +61,145 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 30px;
-  background: linear-gradient(90deg, #0a0f1e 0%, #0e1f45 35%, #1a0a2e 65%, #0a0f1e 100%);
-  border-top: 1px solid rgba(139, 92, 246, 0.25);
+  height: 36px;
+  /* Matches the app-layout dark shell — feels like the page's own floor */
+  background: #020617;
+  /* Split top-border: blue on left panel side, lighter on right panel side */
+  border-top: none;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding: 0 20px;
+  justify-content: space-between;
+  padding: 0 24px;
   z-index: 9999;
   pointer-events: none;
 }
 
-.footer-copy {
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+/* Top-edge line that mirrors both panel colours */
+.app-footer::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    #1e3a8a 0%,
+    #3b82f6 40%,
+    #059669 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-brand {
+  font-family: 'Syne', 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.ft-tech    { color: rgba(255,255,255,0.82); }
+.ft-two     { color: #60a5fa; font-weight: 900; }
+.ft-kitchen { color: rgba(255,255,255,0.82); }
+
+.footer-sep {
+  color: rgba(255,255,255,0.14);
   font-size: 0.72rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.38);
+}
+
+.footer-copy {
+  font-family: 'Syne', 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: rgba(255,255,255,0.58);
   letter-spacing: 0.2px;
   white-space: nowrap;
 }
 
-/* "Tech" — white */
-.ft-tech { color: rgba(248, 250, 252, 0.55); font-weight: 700; }
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  pointer-events: all;
+}
 
-/* "2" — amber accent */
-.ft-two  { color: #f59e0b; font-weight: 900; font-size: 0.80rem; }
+.footer-link {
+  font-family: 'Syne', 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.58);
+  text-decoration: none;
+  letter-spacing: 0.3px;
+  transition: color 0.15s;
+}
 
-/* "Kitchen" — sky blue */
-.ft-kitchen { color: #38bdf8; font-weight: 700; }
+.footer-link:hover {
+  color: #fff;
+  background: rgba(96,165,250,0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.footer-version {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: rgba(96,165,250,0.88);
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border: 1px solid rgba(96,165,250,0.45);
+  border-radius: 4px;
+}
+
+/* ── Dev credit (centre) ── */
+.footer-dev {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  pointer-events: all;
+}
+
+.footer-dev-label {
+  font-family: 'Syne', 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 400;
+  color: rgba(255,255,255,0.52);
+  letter-spacing: 0.3px;
+}
+
+.footer-dev-brand {
+  font-family: 'Syne', 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.72);
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.06);
+  transition: color 0.18s, background 0.18s, border-color 0.18s;
+}
+
+.footer-dev-brand:hover {
+  color: #93c5fd;
+  background: rgba(96,165,250,0.10);
+  border-color: rgba(96,165,250,0.22);
+}
+
+.footer-dev-accent {
+  color: #60a5fa;
+  font-weight: 900;
+}
 
 /* Push main-content up so footer never overlaps content */
-.main-content   { padding-bottom: 30px; }
-.auth-main      { padding-bottom: 30px; }
+.main-content   { padding-bottom: 36px; }
+.auth-main      { padding-bottom: 36px; }
 
 /* =====================================================
    RESPONSIVE
