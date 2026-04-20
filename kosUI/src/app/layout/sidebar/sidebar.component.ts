@@ -22,6 +22,7 @@ export interface SidebarMenu {
   expanded?:    boolean;
   featureKey?:  FeatureKey;  // plan + role gate
   adminOnly?:   boolean;     // visible to ADMIN role only
+  groupLabel?:  string;      // group section label
 }
 
 @Component({
@@ -43,6 +44,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       label: 'Admin Dashboard', icon: 'admin_panel_settings',
       adminOnly: true,
       expanded: false,
+      groupLabel: 'Admin',
       children: [
         { label: 'Admin Dashboard',              icon: 'dashboard',       route: '/admin',                  adminOnly: true },
         { label: 'User & Tenant Management',     icon: 'manage_accounts', route: '/admin/users',            adminOnly: true },
@@ -55,11 +57,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: 'AI Smart Control',             icon: 'psychology',      route: '/admin/ai-control',       adminOnly: true },
       ]
     },
-    { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
+    { label: 'Dashboard', icon: 'dashboard', route: '/dashboard', groupLabel: 'Main' },
     {
       label: 'Inventory', icon: 'inventory_2',
       featureKey: 'inventory-dashboard',
       expanded: false,
+      groupLabel: 'Operations',
       children: [
         { label: 'Inventory Dashboard', icon: 'analytics',  route: '/inventory/dashboard', featureKey: 'inventory-dashboard'       },
         { label: 'Manage Inventory',    icon: 'warehouse',   route: '/inventory/manage',    featureKey: 'stock-items'               },
@@ -73,13 +76,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
       label: 'POS', icon: 'point_of_sale',
       featureKey: 'cashier-panel',
       expanded: false,
+      groupLabel: 'Point of Sale',
       children: [
         { label: 'Cashier',  icon: 'payments',        route: '/pos',        featureKey: 'cashier-panel'       },
         { label: 'Menu',     icon: 'restaurant_menu', route: '/pos/menu',   featureKey: 'menu-management'     },
         { label: 'Tables',   icon: 'table_chart',     route: '/pos/tables', featureKey: 'table-management'    },
       ]
     },
-    { label: 'Waiter', icon: 'room_service', route: '/waiter', featureKey: 'table-management' },
+    { label: 'Waiter',  icon: 'room_service', route: '/waiter',  featureKey: 'table-management'    },
     {
       label: 'Orders', icon: 'shopping_cart',
       featureKey: 'live-order-tracking',
@@ -94,6 +98,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       externalUrl: 'http://localhost:4201',
       featureKey: 'staff-directory',
       expanded: false,
+      groupLabel: 'People',
       children: [
         { label: 'EM Dashboard',     icon: 'dashboard',              route: '/staff/em-dashboard',   featureKey: 'staff-directory'    },
         { label: 'Staff Directory',  icon: 'people_outline',         route: '/staff/directory',      featureKey: 'staff-directory'    },
@@ -120,6 +125,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       label: 'System', icon: 'settings',
       featureKey: 'settings',
       expanded: false,
+      groupLabel: 'Administration',
       children: [
         { label: 'Settings', icon: 'settings_applications', route: '/settings', featureKey: 'settings'  },
         { label: 'QR Codes', icon: 'qr_code',               route: '/qr',       featureKey: 'qr-codes'  },
@@ -129,6 +135,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       label: 'All Reports', icon: 'bar_chart',
       featureKey: 'sales-reports',
       expanded: false,
+      groupLabel: 'Reports',
       children: [
         { label: 'Sales Report',             icon: 'analytics',       route: '/reports/sales',     featureKey: 'sales-reports'                },
         { label: 'Expense Report',           icon: 'receipt',         route: '/reports/customer',  featureKey: 'expense-reports'              },
