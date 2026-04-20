@@ -1,48 +1,105 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400;1,600&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+
 <div class="signup-wrapper">
 
-  <!-- ══ Left Brand Panel ══ -->
-  <div class="signup-brand">
-    <div class="brand-content">
+  <!-- ═══ LEFT BRAND PANEL ═══ -->
+  <div class="su-brand">
 
-      <div class="brand-wordmark">
-        <span class="bw-tech">Tech</span><span class="bw-two">2</span><span class="bw-kitchen">Kitchen</span>
+    <!-- Background ember glows -->
+    <div class="lb-glow lb-glow--a"></div>
+    <div class="lb-glow lb-glow--b"></div>
+
+    <!-- Motion layer -->
+    <div class="lb-particles" aria-hidden="true">
+      <span class="lb-p" style="--x:8%;--d:0s;--s:3px;--dur:9s"></span>
+      <span class="lb-p" style="--x:22%;--d:2.5s;--s:5px;--dur:7s"></span>
+      <span class="lb-p" style="--x:40%;--d:4.2s;--s:3px;--dur:11s"></span>
+      <span class="lb-p" style="--x:55%;--d:1.2s;--s:4px;--dur:8.5s"></span>
+      <span class="lb-p" style="--x:70%;--d:3.8s;--s:3px;--dur:10s"></span>
+      <span class="lb-p" style="--x:82%;--d:0.8s;--s:5px;--dur:7.5s"></span>
+      <span class="lb-p" style="--x:93%;--d:5.5s;--s:2px;--dur:9s"></span>
+      <span class="lb-p" style="--x:33%;--d:6.5s;--s:4px;--dur:8s"></span>
+      <span class="lb-p" style="--x:62%;--d:7.2s;--s:3px;--dur:10.5s"></span>
+      <span class="lb-p" style="--x:15%;--d:8.1s;--s:4px;--dur:7.8s"></span>
+    </div>
+    <div class="lb-streak lb-streak--1" aria-hidden="true"></div>
+    <div class="lb-streak lb-streak--2" aria-hidden="true"></div>
+    <div class="lb-streak lb-streak--3" aria-hidden="true"></div>
+    <div class="lb-scan" aria-hidden="true"></div>
+
+    <div class="lb-content">
+
+      <!-- Monogram -->
+      <div class="lb-monogram">
+        <span class="lm-t">T</span><span class="lm-2">2</span><span class="lm-k">K</span>
       </div>
-      <p class="brand-tagline">CLOUD KITCHEN ERP</p>
 
-      <div class="brand-divider"></div>
+      <!-- Wordmark + tag -->
+      <div class="lb-wordmark">
+        <span class="lw-name">Tech2Kitchen</span>
+        <span class="lw-tag">CLOUD KITCHEN ERP</span>
+      </div>
 
-      <h2 class="brand-headline">Set up your kitchen<br>in minutes.</h2>
-      <p class="brand-desc">Create your account and get full access to orders, billing, inventory and your entire team — from day one.</p>
+      <!-- Rule -->
+      <div class="lb-rule"></div>
 
-      <ul class="brand-features">
+      <!-- Headline -->
+      <h2 class="lb-headline">Set up your kitchen<br><em>in minutes.</em></h2>
+
+      <!-- Features -->
+      <ul class="lb-features">
         <li>
-          <span class="feat-icon material-icons">bolt</span>
+          <span class="lf-dot"></span>
           <span>Real-time order &amp; kitchen display</span>
         </li>
         <li>
-          <span class="feat-icon material-icons">point_of_sale</span>
+          <span class="lf-dot"></span>
           <span>Multi-outlet POS &amp; billing</span>
         </li>
         <li>
-          <span class="feat-icon material-icons">admin_panel_settings</span>
+          <span class="lf-dot"></span>
           <span>Role-based access control</span>
         </li>
         <li>
-          <span class="feat-icon material-icons">inventory_2</span>
+          <span class="lf-dot"></span>
           <span>Inventory &amp; recipe management</span>
         </li>
         <li>
-          <span class="feat-icon material-icons">link</span>
+          <span class="lf-dot"></span>
           <span>Zoho &amp; Google SSO integration</span>
         </li>
       </ul>
 
-      <button class="quick-fill-btn" (click)="quickFill()">
-        <span class="material-icons" style="font-size:14px">flash_on</span>
-        Quick Fill (dev)
-      </button>
+      <!-- Version badge -->
+      <div class="lb-badge">v0.3 · Enterprise Ready</div>
+
+      <!-- Stats row -->
+      <div class="lb-stats">
+        <div class="lb-stat">
+          <span class="lbs-value">500+</span>
+          <span class="lbs-label">Restaurants</span>
+        </div>
+        <div class="lb-stat-divider"></div>
+        <div class="lb-stat">
+          <span class="lbs-value">1M+</span>
+          <span class="lbs-label">Orders Processed</span>
+        </div>
+        <div class="lb-stat-divider"></div>
+        <div class="lb-stat">
+          <span class="lbs-value">99.9%</span>
+          <span class="lbs-label">Uptime SLA</span>
+        </div>
+      </div>
+
+      <!-- Trust line -->
+      <p class="lb-trust">Trusted by cloud kitchens across India</p>
 
     </div>
+
+    <!-- Bottom decorative line -->
+    <div class="lb-bottom-line"></div>
   </div>
 
   <!-- ══ Right Form Panel ══ -->
