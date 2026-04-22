@@ -88,7 +88,6 @@ export class MenuAreaComponent implements OnInit, OnDestroy  {  // NEW: Added On
 
   @Output() itemAdd = new EventEmitter<Omit<CartItem, 'qty'>>();
   @Output() itemRemove = new EventEmitter<number>();
-  @Output() cartUpdate = new EventEmitter<CartItem[]>();
 
   /* ================= STATE ================= */
 
@@ -125,14 +124,33 @@ constructor(
 
 /* ================= LIFECYCLE ================= */
 
+// ngOnInit(): void {
+//   this.loading = true;
+//   this.inventoryservice.getItemlist().subscribe(res=>{
+//     this.inventoryservice.populateItems(res as Item[]);
+//     this.loadMenuData();
+//     this.loading = false;
+//   });
+  
+// }
+
 ngOnInit(): void {
   this.loading = true;
-  this.inventoryservice.getItemlist().subscribe(res=>{
-    this.inventoryservice.populateItems(res as Item[]);
-    this.loadMenuData();
-    this.loading = false;
+
+  this.inventoryservice.getItemlist().subscribe({
+    next: (res) => {
+      this.menuItems = res;
+      this.categories = this.generateCategories();
+      this.applyFilters();
+      this.loading = false;
+      this.cdr.markForCheck();
+    },
+    error: () => {
+      this.error = 'Failed to load menu';
+      this.loading = false;
+      this.cdr.markForCheck();
+    }
   });
-  
 }
 
 // NEW: Cleanup subscription on destroy
@@ -352,21 +370,42 @@ ngOnDestroy(): void {
 
   /* ================= ADD TO CART ================= */
 
-  quickAddItem(item: Item, portion?: 'Half' | 'Full'): void {
-    if(item.id != null){
-    const cartItem: Omit<CartItem, 'qty'> = {
+  // quickAddItem(item: Item, portion?: 'Half' | 'Full'): void {
+  //   if(item.id != null){
+  //   const cartItem: Omit<CartItem, 'qty'> = {
+  //     id: item.id,
+  //     name: item.name,
+  //     price: item.price,
+  //     category: item.category[0],
+  //     image: item.image,
+  //     addedToCartStatus: true,
+  //   };
+  //   item.addedToCartStatus = true;
+  //   item.qty += 1;
+  //   this.itemAdd.emit(cartItem);
+  //   this.cdr.markForCheck();  // NEW: Added to update item UI immediately
+  // }
+  // }
+
+  quickAddItem(item: Item): void {
+    if (!item.id) return;
+  
+    this.itemAdd.emit({
       id: item.id,
       name: item.name,
       price: item.price,
       category: item.category[0],
-      image: item.image,
-      addedToCartStatus: true,
-    };
-    item.addedToCartStatus = true;
-    item.qty += 1;
-    this.itemAdd.emit(cartItem);
-    this.cdr.markForCheck();  // NEW: Added to update item UI immediately
+      image: item.image
+    });
   }
+
+  getItemQty(itemId: number|null): number {
+    const cartItem = this.cart.find(i => i.id === itemId);
+    return cartItem ? cartItem.qty : 0;
+  }
+  
+  isItemInCart(itemId: number|null): boolean {
+    return this.cart.some(i => i.id === itemId);
   }
 
   addItemWithOptions(item: Item): void {
@@ -378,20 +417,25 @@ ngOnDestroy(): void {
     this.quickAddItem(item);
   }
 
+  // decrementQuantity(item: Item): void {
+
+  //   if(item.qty == 1){
+  //     item.addedToCartStatus = false;
+  //   }
+
+  //   if(item.id != null && item.qty >= 0){
+  //     item.qty -= 1;
+  //     this.cartService.decrementItem(item.id);
+  //   }
+
+  //   //this.cartUpdate.emit(this.cart);
+  //   this.cdr.markForCheck();  // NEW: Added to update item UI immediately
+  // }
+
   decrementQuantity(item: Item): void {
-
-    if(item.qty == 1){
-      item.addedToCartStatus = false;
-    }
-
-    if(item.id != null && item.qty >= 0){
-      item.qty -= 1;
+    if (item.id != null) {
       this.cartService.decrementItem(item.id);
     }
-
-    this.cdr.markForCheck();  // NEW: Added to update item UI immediately
- 
-    //this.cartUpdate.emit(updatedCart);
   }
 
   /* ================= ITEM MANAGEMENT ================= */

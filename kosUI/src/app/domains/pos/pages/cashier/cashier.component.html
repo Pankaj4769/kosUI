@@ -52,8 +52,10 @@
 
       <!-- Menu Panel fills remaining left column height -->
       <section class="center-panel">
-        <app-menu-area (itemAdd)="onItemAdd($event)">
-        </app-menu-area>
+        <app-menu-area
+        [cart]="cart"
+        (itemAdd)="onItemAdd($event)">
+      </app-menu-area>
       </section>
 
     </div>

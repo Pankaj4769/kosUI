@@ -162,14 +162,14 @@
               </button>
             </div>
 
-            <div class="quantity-controls" *ngIf="item.addedToCartStatus">
+            <div class="quantity-controls" *ngIf="isItemInCart(item.id)">
               <button
                 class="qty-btn"
                 (click)="decrementQuantity(item)"
                 type="button">
                 <mat-icon>remove</mat-icon>
               </button>
-              <span class="qty-value">{{ item.qty }}</span>
+              <span class="qty-value">{{ getItemQty(item.id) }}</span>
               <button
                 class="qty-btn"
                 (click)="incrementQuantity(item)"
