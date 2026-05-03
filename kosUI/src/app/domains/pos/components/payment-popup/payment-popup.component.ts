@@ -300,10 +300,8 @@ export class PaymentPopupComponent implements OnInit {
         items: this.cart,
         restaurantId: this.authService.currentUser?.restaurantId ?? ''
       };
-      console.log(data);
 
       this.paymentServie.processPayment(data).subscribe(res=>{
-        console.log(res);
         if (this.printAfterPayment) this.printReceipt();
         if (this.sendSMS && this.customerInfo?.phone) this.sendPaymentSMS();
   

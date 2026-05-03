@@ -185,6 +185,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.initializeDashboard();
     this.subscribeToData();
     this.startClock();
+    console.log(this.allOrders);
   }
 
   ngOnDestroy(): void {
