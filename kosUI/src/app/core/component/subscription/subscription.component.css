@@ -34,11 +34,17 @@
    2. HEADER
 ══════════════════════════════════════ */
 .sub-header {
+  position: relative;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   gap: 12px;
-  margin-bottom: 28px;
+}
+
+.logout {
+  position: absolute;
+  right: -20px;
+  top: 13px;
 }
 
 .sub-header-icon-wrap {
@@ -217,7 +223,24 @@
 
 .toggle-knob.annual { left: 23px; }
 
-.toggle-switch[aria-checked="true"] { background: #2563eb; }
+.toggle-switch[aria-checked="true"] { background: #e2e8f0; }
+
+.hdr-dd-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  text-align: left;
+  font-family: inherit;
+  transition: background .12s, color .12s;
+}
 
 .save-badge {
   display: inline-block;
@@ -1441,4 +1464,5 @@
   .deco-icon     { opacity: 0.04; }
   .plan-card.popular { transform: none; }
   .plan-card.popular:hover { transform: translateY(-4px); }
+  .comparison-section {display: none;}
 }

@@ -9,6 +9,11 @@
       <span class="brand-name">Kitchen <em>Book</em></span>
       <span class="brand-tagline">— CLOUD KITCHEN ERP —</span>
     </div>
+    <div class = "logout">
+      <button class="hdr-dd-item hdr-dd-item--danger" type="button" (click)="logout()">
+        Sign Out<span class="material-icons">logout</span>
+      </button>
+    </div>
   </header>
 
   <div class="stepper" *ngIf="step !== 'plan'">

@@ -305,6 +305,10 @@ export class SubscriptionComponent implements OnInit {
     this.step = 'payment';
   }
 
+  logout(){
+    this.auth.logout();
+  }
+
   submitPayment(): void {
     this.isLoading = true;
     this.errorMessage = null;
